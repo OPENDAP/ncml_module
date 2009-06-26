@@ -20,6 +20,8 @@
 
 #include "DDSLoader.h"
 
+using namespace ncml_module;
+
 unsigned int
 DDSLoader::_sNextID = 0;
 

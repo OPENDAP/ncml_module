@@ -23,6 +23,8 @@
 #include "NCMLParser.h"
 #include "DDSLoader.h"
 
+using namespace ncml_module;
+
 // HACK while we test the handler without a real NcML parser, this is the
 // location to be used as the original data location.
 static const string FLAT_LOCATION = "/data/temperature.csv";

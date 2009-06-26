@@ -25,12 +25,12 @@
 #include "BESDapError.h"
 #include "BESDebug.h"
 #include "DDSLoader.h"
+#include "NcmlParserSaxWrapper.h"
 
-static const string TEST_LOCATION("data/temperature.csv");
-static const string TEST_HDF_LOCATION("data/3B42.001003.5.HDF");
+using namespace ncml_module;
 
 // An attribute or variable with type "Structure" will match this string.
-static const string STRUCTURE_TYPE("Structure");
+const string NCMLParser::STRUCTURE_TYPE("Structure");
 
 DDS*
 NCMLParser::getDDS() const
@@ -265,12 +265,12 @@ NCMLParser::populateDASFromDDS(DAS* das, const DDS& dds_const)
     }
 
   // Copy over the global attributes table
-  BESDEBUG("ncml", "Coping global attribute tables from DDS to DAS..." << endl);
+  //BESDEBUG("ncml", "Coping global attribute tables from DDS to DAS..." << endl);
   *(das->get_top_level_attributes()) = dds.get_attr_table();
 
   // For each variable in the DDS, make a table in the DAS.
   //  If the variable in composite, then recurse
-  BESDEBUG("ncml", "Adding attribute tables for all DDS variables into DAS recursively..." << endl);
+ // BESDEBUG("ncml", "Adding attribute tables for all DDS variables into DAS recursively..." << endl);
   DDS::Vars_iter endIt = dds.var_end();
   for (DDS::Vars_iter it = dds.var_begin(); it != endIt; ++it)
     {
@@ -278,7 +278,7 @@ NCMLParser::populateDASFromDDS(DAS* das, const DDS& dds_const)
       BaseType* var = *it;
       assert(var);
 
-      BESDEBUG("ncml", "Adding attribute table for variable: " << var->name() << endl);
+     // BESDEBUG("ncml", "Adding attribute table for variable: " << var->name() << endl);
       AttrTable* clonedVarTable = new AttrTable(var->get_attr_table());
       das->add_table(var->name(), clonedVarTable);
 
@@ -436,175 +436,6 @@ NCMLParser::printScope() const
   BESDEBUG("ncml", "Current fully qualified scope is: " << getScopeString() << endl);
 }
 
-/////////////////////////////////////////////////////
-/// Test Drivers
-static bool
-flatDataTestDriver(NCMLParser& parser)
-{
-  const string& locationName = TEST_LOCATION;
-
-  // Testing a new global attribute.
-  const string globalAttrName("GLOBAL");
-  const string globalAttrType("string");
-  const string globalAttrValue("Test global attribute!");
-
-  // Testing adding new attribute to existing variable
-  const string variable("temperature_K");
-  const string newAttrName("units");
-  const string newAttrType("String");
-  const string newAttrValue("Kelvin");
-
-  // to test changing an existing variable
-  const string changeAttrName("type");
-  const string changeAttrType("String");  // new type for this variable since it's incorrectly Float32 now with value of "Float32"!!
-  const string changeAttrValue("Float32"); // the type name is actually a string.
-
-  parser.handleBeginLocation(locationName);
-
-  // Source metadata directives
-  // parser.handleExplicit();
-  // parser.handleReadMetadata();
-
-  // Global attributes
-  parser.handleBeginAttribute(globalAttrName, globalAttrType, globalAttrValue);
-  parser.handleEndAttribute(globalAttrName);
-
-  // Test changing attributes in an existing variable
-  parser.handleBeginVariable(variable);
-
-  // Test adding a new attribute
-  parser.handleBeginAttribute(newAttrName, newAttrType, newAttrValue);
-  parser.handleEndAttribute(newAttrName);
-
-  // Test changing an existing attribute.
-  parser.handleBeginAttribute(changeAttrName, changeAttrType, changeAttrValue);
-  parser.handleEndAttribute(changeAttrName);
-
-  parser.handleEndVariable(variable);
-
-  parser.handleEndLocation(locationName);
-  return true;
-}
-
-static bool
-nestedDataTestDrive(NCMLParser& parser)
-{
-  const string& locationName = TEST_HDF_LOCATION;
-
-  parser.handleBeginLocation(locationName);
-  parser.handleBeginVariable("DATA_GRANULE");
-  parser.handleBeginAttribute("units", "String", "inches");
-  parser.handleEndAttribute("units");
-  parser.handleEndVariable("percipitate");
-  parser.handleEndVariable("PlanetaryGrid");
-  parser.handleEndVariable("DATA_GRANULE");
-  parser.handleEndLocation(locationName);
-
-  return true;
-}
-
-static bool
-passthroughTest(NCMLParser& parser, const string& locationName)
-{
-  parser.handleBeginLocation(locationName);
-  parser.handleEndLocation(locationName);
-  return true;
-}
-
-static bool
-attributeStructureTestDriver(NCMLParser& parser)
-{
-  const string& locationName = TEST_LOCATION;
-
-  parser.handleBeginLocation(locationName);
-
-  // Nested Global Attributes
-  parser.handleBeginAttribute("GLOBAL_CONTAINER", STRUCTURE_TYPE, "");
-
-  parser.handleBeginAttribute("Atom1", "String", "Atom1_Value");
-  parser.handleEndAttribute("Atom1");
-  parser.handleBeginAttribute("Atom2", "String", "Atom2_Value");
-  parser.handleEndAttribute("Atom2");
-
-  parser.handleBeginAttribute("Nest1", STRUCTURE_TYPE, "");
-  parser.handleBeginAttribute("Atom1", "String", "Atom1_Value");
-  parser.handleEndAttribute("Atom1");
-  parser.handleBeginAttribute("Atom2", "String", "Atom2_Value");
-  parser.handleEndAttribute("Atom2");
-  parser.handleEndAttribute("Nest1");
-
-  parser.handleEndAttribute("GLOBAL_CONTAINER");
-
-
-  // Test adding nested attribute structures inside the scope of a variable
-  parser.handleBeginVariable("temperature_K");
-
-  // Test adding a new attribute
-  parser.handleBeginAttribute("units", "String", "Kelvin");
-  parser.handleEndAttribute("units");
-
-  // Nested Attributes Within Variable scope
-   parser.handleBeginAttribute("SampleInfo", STRUCTURE_TYPE, "");
-
-   parser.handleBeginAttribute("Atom1", "String", "Atom1_Value");
-   parser.handleEndAttribute("Atom1");
-   parser.handleBeginAttribute("Atom2", "String", "Atom2_Value");
-   parser.handleEndAttribute("Atom2");
-
-   parser.handleBeginAttribute("SensorInfo", STRUCTURE_TYPE, "");
-   parser.handleBeginAttribute("Atom1", "String", "Atom1_Value");
-   parser.handleEndAttribute("Atom1");
-   parser.handleBeginAttribute("Atom2", "String", "Atom2_Value");
-   parser.handleEndAttribute("Atom2");
-   parser.handleEndAttribute("SensorInfo");
-
-   // Test adding a new attribute
-   parser.handleBeginAttribute("resolution", "String", ".1");
-   parser.handleEndAttribute("resolution");
-
-   parser.handleEndAttribute("SampleInfo");
-
-  parser.handleEndVariable("temperature_K");
-
-  // A few more in the global space to make sure we walk back pointers properly
-  parser.handleBeginAttribute("ExtraGlobal", "String", "Atom1_Value");
-  parser.handleEndAttribute("ExtraGlobal");
-
-
-  parser.handleEndLocation(locationName);
-  return true;
-}
-
-// this will operate on the TEST_HDF_LOCATION and
-// try to change some of the metadata in the existing structures.
-static bool
-existingAttributeStructureTestDriver(NCMLParser &parser)
-{
-  const string& locationName = TEST_HDF_LOCATION;
-
-  parser.handleBeginLocation(locationName);
-
-  parser.handleBeginAttribute("CoreMetadata", "Structure", "");
-
-  parser.handleBeginAttribute("OrbitNumber", "Structure", "");
-  parser.handleBeginAttribute("Mandatory", "String", "TRUE");  // this is a replacement of FALSE in the orignal set.
-  parser.handleEndAttribute("Mandatory");
-  parser.handleEndAttribute("OrbitNumber");
-
-  // here's a new structure we add to the existing structure
-  parser.handleBeginAttribute("DocumentInfo", "Structure", "");
-  parser.handleBeginAttribute("Version", "String", "Testing NCML Handler!");
-  parser.handleEndAttribute("Version");
-  parser.handleEndAttribute("DocumentInfo");
-
-  parser.handleEndAttribute("CoreMetadata");
-
-  // TODO Maybe add some nested metadata low down in the nested structures too.
-
-  parser.handleEndLocation(locationName);
-  return true;
-}
-
 
 ////////////////////////////////////////
 ////// Public
@@ -645,38 +476,17 @@ NCMLParser::parse(const string& filename)
     }
 
   BESDEBUG("ncml", "Beginning NcML parse of file=" << filename << endl);
-  BESDEBUG("ncml", "WARNING: parse unimplemented, running test!" << endl);
 
   // In case we care.
   _filename = filename;
 
-  // eventually will run a SAX parser or something on filename to modify dds.
-  static int test_num = 5;
-
-  switch (test_num)
-  {
-    case 1:
-      passthroughTest(*this, TEST_HDF_LOCATION);
-      break;
-    case 2:
-      flatDataTestDriver(*this);
-      break;
-    case 3:
-      nestedDataTestDrive(*this);
-      break;
-    case 4:
-      attributeStructureTestDriver(*this);
-      break;
-    case 5:
-      existingAttributeStructureTestDriver(*this);
-      break;
-    default:
-      passthroughTest(*this, TEST_LOCATION);
-  }
+  // Make a SAX parser wrapper to set up the C callbacks.
+  // It will call us back through SaxParser interface.
+  NcmlParserSaxWrapper parser;
+  parser.parse(filename, *this);
 
   // Relinquish ownership to the caller.
-  BESDDSResponse* ret = _ddsResponse;
-  _ddsResponse = 0;
+  BESDDSResponse* ret = _ddsResponse; _ddsResponse = 0;
 
   // Prepare for a new parse.
   resetParseState();
@@ -716,9 +526,9 @@ NCMLParser::handleBeginLocation(const string& location)
 }
 
 void
-NCMLParser::handleEndLocation(const string& location)
+NCMLParser::handleEndLocation()
 {
-  BESDEBUG("ncml", "handleEndLocation called for location=" << location << endl);
+  BESDEBUG("ncml", "handleEndLocation called!" << endl);
 
   // For now, this will be the end of our parse, until aggregation.
   _parsingLocation = false;
@@ -766,11 +576,11 @@ NCMLParser::handleBeginVariable(const string& varName, const string& type /* = "
 }
 
 void
-NCMLParser::handleEndVariable(const string& varName)
+NCMLParser::handleEndVariable()
 {
   // pop the attr table back upwards to the previous one
   // I think we can just use the parent of the current...
-  BESDEBUG("ncml", "handleEndVariable called with varName=" << varName << endl);
+  BESDEBUG("ncml", "handleEndVariable called at scope:" << getScopeString() << endl);
   if (!withinVariable())
     {
       throw BESInternalError("handleEndVariable called when not parsing a variable element", __FILE__, __LINE__);
@@ -817,9 +627,9 @@ NCMLParser::handleBeginAttribute(const string& name, const string& type, const s
 }
 
 void
-NCMLParser::handleEndAttribute(const string& attrName)
+NCMLParser::handleEndAttribute()
 {
-  BESDEBUG("ncml", "handleEndAttribute called with attrName=" << attrName << endl);
+  BESDEBUG("ncml", "handleEndAttribute called at scope:" << getScopeString() << endl);
 
   // if it wasn't a container, just clear out this state
   if (_processingSimpleAttribute)
@@ -845,5 +655,115 @@ NCMLParser::handleEndAttribute(const string& attrName)
       printScope();
     }
 }
+
+
+bool
+NCMLParser::onStartDocument()
+{
+  return true;
+}
+
+bool
+NCMLParser::onEndDocument()
+{
+  return true;
+}
+
+bool
+NCMLParser::onStartElement(const std::string& name, const AttrMap& attrs)
+{
+  bool success = true;
+  // Dispatch to the right place, else ignore
+ if (name == "netcdf")
+   {
+     handleBeginLocation(SaxParser::findAttrValue(attrs, "location"));
+   }
+ else if (name == "explicit")
+   {
+     handleExplicit();
+   }
+ else if (name == "readMetaData")
+   {
+     handleReadMetadata();
+   }
+ else if (name == "attribute")
+   {
+     const string& attrName = SaxParser::findAttrValue(attrs, "name");
+     const string& type = SaxParser::findAttrValue(attrs,"type");
+     const string& value = SaxParser::findAttrValue(attrs, "value");
+     handleBeginAttribute(attrName, type, value);
+   }
+ else if (name == "variable")
+   {
+     const string& varName = SaxParser::findAttrValue(attrs, "name");
+     const string& type = SaxParser::findAttrValue(attrs,"type");
+     handleBeginVariable(varName, type);
+   }
+ else
+   {
+     BESDEBUG("ncml", "Start of <" << name << "> element unsupported currently, ignoring." << endl);
+   }
+  return success;
+}
+
+bool
+NCMLParser::onEndElement(const std::string& name)
+{
+  // BESDEBUG("ncml", "onEndElement got: " << name << endl);
+  bool success = true;
+  // Dispatch to the right place, else ignore
+  if (name == "netcdf")
+    {
+      handleEndLocation();
+    }
+  else if (name == "attribute")
+    {
+      handleEndAttribute();
+    }
+  else if (name == "variable")
+    {
+      handleEndVariable();
+    }
+  else
+    {
+      BESDEBUG("ncml", "End of <" << name << "> element unsupported currently, ignoring." << endl);
+    }
+  return success;
+}
+
+bool
+NCMLParser::onCharacters(const std::string& content)
+{
+  // TODO Once the scope stack is refactored and handles atomic attributes,
+  // implement this!!
+  if (!_processingSimpleAttribute)
+    {
+      // This is likely whitespace in the stream.  TODO make sure it's whitespace or else throw an error.
+      return true;
+    }
+  else
+    {
+       string msg = "onCharacters() currently unsupported!  Please add <attribute> values as <attribute value=\"...\".  Content was: " + content;
+       BESDEBUG("ncml", msg << endl);
+       throw BESInternalError(msg, __FILE__, __LINE__);
+    }
+  return true;
+}
+
+bool
+NCMLParser::onParseWarning(std::string msg)
+{
+  BESDEBUG("ncml", "PARSE WARNING: " << msg << endl);
+  return true;
+}
+
+// Pretty much have to give up on malformed XML.
+bool NCMLParser::onParseError(std::string msg)
+{
+  BESDEBUG("ncml", "PARSE ERROR: " << msg << ".  Terminating parse!" << endl);
+  throw new BESInternalError(msg, __FILE__, __LINE__);
+  return true;
+}
+
 
 

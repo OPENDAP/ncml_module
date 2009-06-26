@@ -1,0 +1,7 @@
+<netcdf location="/data/fnoc1.nc">
+  <variable name="u">
+       <attribute type="int32" name="max" value="2000"/>
+       <attribute type="int32" name="min" value="0"/>
+    </variable> 
+</netcdf>
+

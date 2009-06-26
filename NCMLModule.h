@@ -5,6 +5,8 @@
 
 #include "BESAbstractModule.h"
 
+namespace ncml_module
+{
 class NCMLModule : public BESAbstractModule
 {
 public:
@@ -14,7 +16,7 @@ public:
     virtual void		terminate( const string &modname ) ;
 
     virtual void		dump( ostream &strm ) const ;
-} ;
-
+} ; // class NCMLModule
+} // namespace ncml_module
 #endif // I_NCMLModule_H
 

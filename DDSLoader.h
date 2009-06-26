@@ -20,6 +20,9 @@ class BESDDSResponse;
 
   @author mjohnson <m.johnson@opendap.org>
  */
+namespace ncml_module
+{
+
 class DDSLoader
 {
 private:
@@ -94,6 +97,7 @@ private:
    void restoreDHI();
 
    static unsigned int sGetNewID() { return _sNextID++; }
-};
+}; // class DDSLoader
+} // namespace ncml_module
 
 #endif /* DDSLOADER_H_ */

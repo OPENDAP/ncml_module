@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+#include "SaxParser.h" // interface superclass
 #include "AttrTable.h" // needed due to parameter with AttrTable::Attr_iter
 
 //FDecls
@@ -18,47 +19,62 @@ namespace libdap
   class DDS;
 };
 class BESDDSResponse;
-class DDSLoader;
+
 
 using namespace libdap;
 using namespace std;
 
+namespace ncml_module
+{
+  class DDSLoader;
+}
 
 /**
- *  @brief INCOMPLETE  Test Driver Only!
+ *  @brief INCOMPLETE NcML Parser for adding AIS to existing local datasets.
  *
  *  Core engine for parsing an NcML structure and modifying the DDS of a single dataset by adding new metadata to it.
  *  (http://docs.opendap.org/index.php/AIS_Using_NcML).
  *
- *  Limitations: Currently only has the core engine calls that will be called by a SAX parser (or potentially a DOM tree walk)
- *  as well as some internal test drivers to simulate a SAX parser.  We only handle local (same BES) datasets with this version.
+ *  Limitations Expected for the initial version:
  *
- *  For the purposes of this class "scope" will mean the attribute table at some place in the DDX, be it at
+ *  o We only handle local (same BES) datasets with this version (hopefully we can relax this to allow remote dataset augmentation
+ *      as a bes.conf option or something.
+ *
+ *  o We can only handle a single <netcdf> node, i.e. we can only augment one location with metadata.  Future versions will allow aggregation, etc.
+ *
+ *  For the purposes of this class "scope" will mean the attribute table at some place in the DDX (populated DDS object), be it at
  *  the global attribute table, inside a nested attribute container, inside a variable, or inside a nested variable (Structure, e.g.).
- *  Considering a fully qualified container name, a scope could be "MetaData.SampleInfo" which could refer to an attribute container
- *  named SampleInfo inside an attribute container named MetaData inside the global attribute table for the DDX.  As another
- *  example, "PlanetaryData.temperature" might refer to the scope of the variable temperature inside the variable Structure named PlanetaryData.
+ *  This is basically the same as a "fully qualified name" in DAP 2 (ESE-RFC-004.1.1)
  *
- *  This parser can load a given DDX for a netcdf@location and then modify it by:
+ *  This parser can load a given DDX for a single netcdf@location and then modify it by:
  *
  *  0) Clearing all attributes if <explicit/> tag is given.
  *  1) Adding or modifying existing atomic attributes at any scope (global, variable, nested variable, nested attribute container)
  *  2) Adding (or traversing the scope of existing) attribute containers using <attribute type="Structure"> to refer to the container.
- *  3) Traversing a hierarchy of variable scopes to set the context for 1) or 2) for variable attributes at any depth.
+ *  3) Traversing a hierarchy of variable scopes to set the scope for 1) or 2)
  *
- *  @BUG Add ability to handle <attribute>some values></attribute> as well as <attribute value="some values"/>  NcML allows for both.
- *
- *  @BUG Fails to handle Constraints correctly now.
- *
- *  @BUG TODO Wrap this in a SAX parser to load and parse the NcML file rather than calling the testdriver.
+ *  We maintain a pointer to the currently active AttrTable as we get SAX parser calls.  As we enter/exit attribute containers or
+ *  Constructor variables we keep track of this on a scope stack which allows us to know the fully qualifed name of the current scope.
+ *  (We need a minor refactor to fix this for attribute containers, see below).
  *
  *  TODO Refactor the scope stack to handle more specific scope types for better error checking in the parse.  Included in this is
- *  rolling the attribute container stack and simple_attribute flag into this same structure to avoid the duplicated state.
+ *  rolling the attribute container stack and simple_attribute flag into the ScopeEntry/ScopeStack pattern to avoid the duplicated state
+ *  and simplify everything.  Also will allow us to know the scope of atomic attribute for values in the element content not attribute.
+ *
+ *  TODO @BUG We do not split atomic attribute values into a vector<string> on whitespace (or attribute@separator)
+ *
+ *  TODO @BUG Add ability to handle <attribute>some values></attribute> as well as <attribute value="some values"/>  NcML allows for both.
+ *
+ *  TODO @BUG Fails to handle Constraints at all now.  This needs to be thought through more.
+ *
+ *  TODO We don't handle attribute@separator or attribute@orgName now (will we?)
  *
  *  @author mjohnson <m.johnson@opendap.org>
  */
+namespace ncml_module
+{
 
-class NCMLParser
+class NCMLParser : public SaxParser
 {
 private:
 
@@ -213,6 +229,9 @@ private: //methods
 
 public: // Class Helpers  TODO These should get refactored somewhere else.
 
+  /** The string describing the type "Structure" */
+  static const string STRUCTURE_TYPE;
+
   /** Given we have a valid attribute tree inside of the DDS, recreate it in the DAS.
        @param das the das to clear and populate
        @param dds_const the source dds
@@ -256,9 +275,6 @@ public:
    *  On a parse error, an BESInternalError will be thrown.  TODO perhaps make my own exception for catching separately upstairs.
    *
    *  @return a new response object with the transformed DDS in it.  The caller assumes ownership of the returned object.
-   *
-   *  BUG: Currently this runs a test driver to simulate a SAX parse to test the internals and does NOT
-   *  parse the filename!!
   */
   BESDDSResponse* parse(const string& ncmlFilename);
 
@@ -280,7 +296,7 @@ public:
    * Called on </netcdf>.  Scope becomes empty as we are not in a dataset any longer.
    * Should be the last call before a document end.
    */
-  void handleEndLocation(const string& location);
+  void handleEndLocation();
 
   /**
    *  Called on <readMetadata/>
@@ -309,7 +325,7 @@ public:
    * Called on </variable>
    * Pops the variable's scope from the context.
    */
-  void handleEndVariable(const string& varName);
+  void handleEndVariable();
 
   /**
    * Called on <attribute name="foo" type="bar" value="baz">.
@@ -333,8 +349,21 @@ public:
    * Called on </attribute>.
    * If it was an attribute container, pops the scope of the attribute container from the context.
    */
-  void handleEndAttribute(const string& name);
+  void handleEndAttribute();
 
-};
+  //////////////////////////////
+  // Interface SaxParser
+
+  virtual bool onStartDocument();
+  virtual bool onEndDocument();
+  virtual bool onStartElement(const std::string& name, const AttrMap& attrs);
+  virtual bool onEndElement(const std::string& name);
+  virtual bool onCharacters(const std::string& content);
+  virtual bool onParseWarning(std::string msg);
+  virtual bool onParseError(std::string msg);
+
+}; // class NCMLParser
+
+} //namespace ncml_module
 
 #endif /* NCMLHELPER_H_ */

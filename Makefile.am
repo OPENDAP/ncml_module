@@ -5,7 +5,7 @@
 #
 # $Id: Makefile.am 12972 2006-01-05 15:41:07Z pwest $
 
-AUTOMAKE_OPTIONS = foreign check-news
+AUTOMAKE_OPTIONS = foreign check-news 
 
 ACLOCAL_AMFLAGS = -I conf
 
@@ -13,16 +13,23 @@ lib_besdir=$(libdir)/bes
 lib_bes_LTLIBRARIES = libncml_module.la
 dist_bin_SCRIPTS = bes-ncml-data.sh
 
+SUBDIRS = bes-testsuite
+
 NCML_SRCS:=
 
 NCML_HDRS:=
 
 BES_SRCS = \
-		NCMLModule.cc NCMLRequestHandler.cc NCMLParser.cc DDSLoader.cc
+		NCMLModule.cc NCMLRequestHandler.cc NCMLParser.cc \
+		DDSLoader.cc NcmlParserSaxWrapper.cc SaxParser.cc \
+		NCMLParser_TestDriver.cc
 
 BES_HDRS = \
 		NCMLModule.h NCMLRequestHandler.h \
-		NCMLResponseNames.h NCMLParser.h DDSLoader.h
+		NCMLResponseNames.h NCMLParser.h DDSLoader.h \
+		NcmlParserSaxWrapper.h SaxParser.h \
+		NCMLParser_TestDriver.h
+		
 
 libncml_module_la_SOURCES = $(NCML_SRCS) $(BES_SRCS) $(NCML_HDRS) $(BES_HDRS)
 libncml_module_la_CPPFLAGS = $(BES_CPPFLAGS)
@@ -35,8 +42,8 @@ EXTRA_DIST = COPYRIGHT COPYING bes-ncml-data.sh.in ncml_module.spec data
 
 CLEANFILES = *~ bes-ncml-data.sh
 
-sample_datadir = $(datadir)/hyrax/data/ncml
-sample_data_DATA = data/fnoc_improved.ncml
+#sample_datadir = $(datadir)/hyrax/data/ncml
+#sample_data_DATA = data/fnoc1_improved.ncml
 
 do_subst = sed -e 's,[@]sysconfdir[@],$(sysconfdir),g' \
 		   	   -e 's,[@]libdir[@],$(libdir),g' \

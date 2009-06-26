@@ -12,12 +12,14 @@ using std::endl ;
 #include "BESResponseNames.h"
 #include "NCMLResponseNames.h"
 
+using namespace ncml_module;
+
 void
 NCMLModule::initialize( const string &modname )
 {
-    BESDEBUG( modname, "Initializing NCML Module " << modname << endl )
+    BESDEBUG( modname, "Initializing NCML Module " << modname << endl );
 
-    BESDEBUG( modname, "    adding " << modname << " request handler" << endl )
+    BESDEBUG( modname, "    adding " << modname << " request handler" << endl );
     BESRequestHandlerList::TheList()->add_handler( modname, new NCMLRequestHandler( modname ) ) ;
 
     // If new commands are needed, then let's declare this once here. If
@@ -25,18 +27,18 @@ NCMLModule::initialize( const string &modname )
     string cmd_name ;
 
     // INIT_END
-    BESDEBUG( modname, "    adding NCML debug context" << endl )
+    BESDEBUG( modname, "    adding NCML debug context" << endl );
     BESDebug::Register( modname ) ;
 
-    BESDEBUG( modname, "Done Initializing NCML Module " << modname << endl )
+    BESDEBUG( modname, "Done Initializing NCML Module " << modname << endl );
 }
 
 void
 NCMLModule::terminate( const string &modname )
 {
-    BESDEBUG( modname, "Cleaning NCML module " << modname << endl )
+    BESDEBUG( modname, "Cleaning NCML module " << modname << endl );
 
-    BESDEBUG( modname, "    removing " << modname << " request handler" << endl )
+    BESDEBUG( modname, "    removing " << modname << " request handler" << endl );
     BESRequestHandler *rh = BESRequestHandlerList::TheList()->remove_handler( modname ) ;
     if( rh ) delete rh ;
 
@@ -45,7 +47,7 @@ NCMLModule::terminate( const string &modname )
     string cmd_name ;
 
     // TERM_END
-    BESDEBUG( modname, "Done Cleaning NCML module " << modname << endl )
+    BESDEBUG( modname, "Done Cleaning NCML module " << modname << endl );
 }
 
 extern "C"

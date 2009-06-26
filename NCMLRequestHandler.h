@@ -6,6 +6,8 @@
 #include "BESRequestHandler.h"
 #include "BESDDSResponse.h"
 
+namespace ncml_module
+{
 /**
  * Handler for AIS Using NCML
  */
@@ -29,7 +31,8 @@ public:
     static bool		ncml_build_data( BESDataHandlerInterface &dhi ) ;
     static bool		ncml_build_vers( BESDataHandlerInterface &dhi ) ;
     static bool		ncml_build_help( BESDataHandlerInterface &dhi ) ;
-};
+}; // class NCMLRequestHandler
+} // namespace ncml_module
 
 #endif // NCMLRequestHandler.h
 
