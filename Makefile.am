@@ -21,13 +21,15 @@ NCML_HDRS:=
 
 BES_SRCS = \
 		NCMLModule.cc NCMLRequestHandler.cc NCMLParser.cc \
-		DDSLoader.cc NcmlParserSaxWrapper.cc SaxParser.cc \
+		DDSLoader.cc SaxParserWrapper.cc SaxParser.cc \
+		SimpleLocationParser.cc \
 		NCMLParser_TestDriver.cc
 
 BES_HDRS = \
 		NCMLModule.h NCMLRequestHandler.h \
 		NCMLResponseNames.h NCMLParser.h DDSLoader.h \
-		NcmlParserSaxWrapper.h SaxParser.h \
+		SaxParserWrapper.h SaxParser.h \
+		SimpleLocationParser.h \
 		NCMLParser_TestDriver.h
 		
 

@@ -35,8 +35,12 @@
 namespace ncml_module
 {
   /**
-   * Interface class for the wrapper between libxml C parser and our NCMLParser engine.
+   * @brief Interface class for the wrapper between libxml C SAX parser and our NCMLParser.
+   *
    * Also contains definition for AttrMap, which is how the attrs will be returned to the parser.
+   * The user should also be careful about making copies of any returned const reference objects (string or AttrMap) as
+   * they are only valid in memory for the scope of the handler calls!
+   *
    * @author mjohnson <m.johnson@opendap.org>
    */
 class SaxParser
@@ -73,6 +77,7 @@ public:
 
   /** Called when characters are encountered within an element.
    * content is only valid for the call duration.
+   * Note: this will return all whitespace in the document as well, which makes it messy to use.
    */
   virtual bool onCharacters(const std::string& content) = 0;
 

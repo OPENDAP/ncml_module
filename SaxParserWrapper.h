@@ -43,20 +43,25 @@ namespace ncml_module
 namespace ncml_module
 {
 /**
- * @brief Wrapper for libxml SAX parser C callbacks.
+ * @brief Wrapper for libxml SAX parser C callbacks into C++.
  *
- * On a parse call, the filename is parsed using the libxml SAX parser
+ * On a parse() call, the filename is parsed using the libxml SAX parser
  * and the calls are passed into our C++ parser via the SaxParser interface class.
  *
  * TODO BUG What happens if the SaxParser calls throw an exception?  Do we need to
- * clean the memory of the parser?  This needs to be looked into.
+ * clean the memory of the libxml parser?  This needs to be looked into.  Please note that the
+ * BES also uses this library, so we can't just blow away static storage and there's no obvious
+ * calls to clean up the current parse.  We might have to hold onto the exception (defer it),
+ * go into a local (this calss) ERROR parsing state,
+ * let the libxml parse call finish up by ignoring any further callbacks,
+ * then finally throw the deferred BES exception then.
  *
- * TODO BUG The onParseWarning and onParseError do not get the error message back.
+ * TODO BUG The onParseWarning and onParseError do not get the proper error message back.
  * We need to use glib to generate a std::string I think...
  *
  * @author mjohnson <m.johnson@opendap.org>
  */
-class NcmlParserSaxWrapper
+class SaxParserWrapper
 {
 private:
   // Struct with all the callback functions in it used by parse.
@@ -65,8 +70,8 @@ private:
   xmlSAXHandler _handler;
 
 public:
-  NcmlParserSaxWrapper();
-  virtual ~NcmlParserSaxWrapper();
+  SaxParserWrapper();
+  virtual ~SaxParserWrapper();
 
   /** @brief Do a SAX parse of the ncmlFilename
    * and pass the calls to the engine.
@@ -76,7 +81,7 @@ public:
    * @return successful parse
    */
   bool parse(const string& ncmlFilename, ncml_module::SaxParser& engine);
-}; // class NcmlParserSaxWrapper
+}; // class SaxParserWrapper
 
 } // namespace ncml_module
 

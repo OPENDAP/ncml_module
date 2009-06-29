@@ -27,33 +27,30 @@
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
 #include "config.h"
-
 #include "NCMLParser.h"
-#include "BESDASResponse.h"
+
+#include "AttrTable.h"
+#include "BaseType.h"
+#include "BESConstraintFuncs.h"
+//#include "BESDASResponse.h"
 #include "BESDDSResponse.h"
-#include "BESDataDDSResponse.h"
+//#include "BESDapError.h"
+//#include "BESDataDDSResponse.h"
+#include "BESDebug.h"
 #include "BESInfo.h"
 #include "BESContainer.h"
 #include "BESVersionInfo.h"
 #include "BESDataNames.h"
-#include "BESResponseHandler.h"
-#include "BESResponseNames.h"
-#include "BESVersionInfo.h"
-#include "BESTextInfo.h"
-#include "BESDASResponse.h"
-#include "BESDDSResponse.h"
-#include "BESDataDDSResponse.h"
+//#include "BESResponseHandler.h"
+//#include "BESResponseNames.h"
+//#include "BESVersionInfo.h"
+//#include "BESTextInfo.h"
 #include "BESDataHandlerInterface.h"
-#include "DDS.h"
 #include "DAS.h"
-#include "AttrTable.h"
-#include "BaseTypeFactory.h"
-#include "BESConstraintFuncs.h"
-#include "InternalErr.h"
-#include "BESDapError.h"
-#include "BESDebug.h"
+#include "DDS.h"
 #include "DDSLoader.h"
-#include "NcmlParserSaxWrapper.h"
+#include "InternalErr.h"
+#include "SaxParserWrapper.h"
 
 using namespace ncml_module;
 
@@ -322,6 +319,8 @@ NCMLParser::populateDASFromDDS(DAS* das, const DDS& dds_const)
     }
 }
 
+// This function was added since DDS::operator= had some bugs we need to fix.
+// At that point, we can just use that function, probably.
 void
 NCMLParser::copyVariablesAndAttributesInto(DDS* dds_out, const DDS& dds_in)
 {
@@ -338,6 +337,8 @@ NCMLParser::copyVariablesAndAttributesInto(DDS* dds_out, const DDS& dds_in)
   dds_out->get_attr_table() = dds.get_attr_table();
 
   // copy the things pointed to by the variable list, not just the pointers
+  // add_var is designed to deepcopy *i, so this should get all the children
+  // as well.
   for (DDS::Vars_iter i = dds.var_begin(); i != dds.var_end(); ++i)
     {
        dds_out->add_var(*i); // add_var() dups the BaseType.
@@ -510,7 +511,7 @@ NCMLParser::parse(const string& filename)
 
   // Make a SAX parser wrapper to set up the C callbacks.
   // It will call us back through SaxParser interface.
-  NcmlParserSaxWrapper parser;
+  SaxParserWrapper parser;
   parser.parse(filename, *this);
 
   // Relinquish ownership to the caller.

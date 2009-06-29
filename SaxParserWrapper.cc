@@ -27,13 +27,14 @@
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
 
+#include "SaxParserWrapper.h"
+
 #include <string>
 #include <libxml/parser.h>
 #include <libxml/xmlstring.h>
 #include <iostream>
 
 #include "BESDebug.h"
-#include "NcmlParserSaxWrapper.h"
 #include "SaxParser.h"
 
 
@@ -150,19 +151,19 @@ static void setupParser(xmlSAXHandler& handler)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NcmlParserSaxWrapper::NcmlParserSaxWrapper()
+SaxParserWrapper::SaxParserWrapper()
 : _handler()
 {
   setupParser(_handler);
 }
 
-NcmlParserSaxWrapper::~NcmlParserSaxWrapper()
+SaxParserWrapper::~SaxParserWrapper()
 {
 
 }
 
 bool
-NcmlParserSaxWrapper::parse(const string& ncmlFilename, ncml_module::SaxParser& engine)
+SaxParserWrapper::parse(const string& ncmlFilename, ncml_module::SaxParser& engine)
 {
   return (xmlSAXUserParseFile(&_handler, &engine, ncmlFilename.c_str()) >= 0);
 }

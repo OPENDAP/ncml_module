@@ -27,12 +27,10 @@
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
 #include "config.h"
-
-#include "cgi_util.h"
 #include "NCMLRequestHandler.h"
+
 #include <BESResponseHandler.h>
 #include <BESResponseNames.h>
-#include "NCMLResponseNames.h"
 #include <BESVersionInfo.h>
 #include <BESTextInfo.h>
 #include "BESDataDDSResponse.h"
@@ -46,16 +44,14 @@
 #include <BESContainerStorage.h>
 #include <BESRequestHandlerList.h>
 #include <BESDebug.h>
-#include "NCMLParser.h"
+#include "cgi_util.h"
 #include "DDSLoader.h"
+#include "NCMLParser.h"
+#include "NCMLResponseNames.h"
+#include "SimpleLocationParser.h"
 
 using namespace ncml_module;
 
-// HACK while we test the handler without a real NcML parser, this is the
-// location to be used as the original data location.
-static const string FLAT_LOCATION = "/data/temperature.csv";
-static const string HDF_LOCATION("data/3B42.001003.5.HDF");
-static const string& TEST_LOCATION = HDF_LOCATION;
 
 NCMLRequestHandler::NCMLRequestHandler( const string &name )
     : BESRequestHandler( name )
@@ -71,6 +67,10 @@ NCMLRequestHandler::~NCMLRequestHandler()
 {
 }
 
+// This is the original example from Patrick or James for loading local file within the BES...
+// Still used by DataDDS call, but the other callbacks use DDSLoader
+// to get a brandy new DDX response.
+// @see DDSLoader
 bool
 NCMLRequestHandler::ncml_build_redirect( BESDataHandlerInterface &dhi, const string& location )
 {
@@ -82,8 +82,6 @@ NCMLRequestHandler::ncml_build_redirect( BESDataHandlerInterface &dhi, const str
     // If there are more than one locations in the ncml then we can't
     // set the context for dap_format to dap2. This will create a
     // structure for each of the locations in the resulting dap object.
-    //string location = "/data/nc/fnoc1.nc" ;
-    //  string location = TEST_LOCATION;
     string sym_name = dhi.container->get_symbolic_name() ;
     BESContainerStorageList *store_list = BESContainerStorageList::TheList() ;
     BESContainerStorage *store = store_list->find_persistence( "catalog" ) ;
@@ -111,18 +109,9 @@ NCMLRequestHandler::ncml_build_redirect( BESDataHandlerInterface &dhi, const str
     // response for this container. Might want to catch this
     BESRequestHandlerList::TheList()->execute_current( dhi ) ;
 
+    // clean up
     dhi.container = ncml_container ;
     store->del_container( new_sym ) ;
-    // once we have all this done we can return back to the calling
-    // function below (build_das, build_dds, build_data). and do
-    // whatever we need to do (add new attributes from the ncml file,
-    // whatever.
-
-    // if we are aggregating then the dhi needs to be updated with the
-    // aggregation information.
-
-    // ddx is built by building the dds object. The DDXResponseHandler
-    // does the right thing to make it a DDX object.
 
     return true;
 }
@@ -176,7 +165,7 @@ NCMLRequestHandler::ncml_build_dds( BESDataHandlerInterface &dhi )
     // TODO if we really got a DDX, need to now conjure up a DAS response from it.
     if (!loaded_bdds)
       {
-        throw BESInternalError("Null BESDDSResonse in ncml DAS handler.", __FILE__, __LINE__);
+        throw BESInternalError("Null BESDDSResonse in ncml DDS handler.", __FILE__, __LINE__);
       }
 
     // Grab the loaded DDS to mutate.
@@ -191,17 +180,17 @@ NCMLRequestHandler::ncml_build_dds( BESDataHandlerInterface &dhi )
     BESDDSResponse *bdds_out = dynamic_cast < BESDDSResponse * >(response);
     DDS *dds_out = bdds_out->get_dds();
 
-    // If we just use assignment, we get into trouble with copied
+    // If we just use DDS::operator=, we get into trouble with copied
     // pointers, bashing of the dataset name, etc etc so I specialize the copy for now.
     NCMLParser::copyVariablesAndAttributesInto(dds_out, *dds);
 
     // Also copy in the name of the original ncml request
-    dds_out->filename(filename);
+    // TODO @HACK Not sure I want just the basename for the filename,
+    // but since the DDS/DataDDS response fills the dataset name with it,
+    // Our bes-testsuite fails since we get local path info in the dataset name.
+    dds_out->filename(name_path(filename));
     dds_out->set_dataset_name(name_path(filename));
     // Is there anything else I need to shove in the DDS?
-
-    // Might want to just set the DDS rather than the copy into the existing one (and delete existing)
-    // but this seems fine for now.
 
     // Clean up the dynamic object I loaded
     delete loaded_bdds;
@@ -215,23 +204,40 @@ NCMLRequestHandler::ncml_build_data( BESDataHandlerInterface &dhi )
 {
   // The design doc says just load underlying data set and pass through,
   // which will be fine until we have the ability to add variables with ncml,
-  // then this won't work.
   // For now, we'll just passthrough.
 
-  // TODO implement this
-  throw new BESInternalError("Unimplemented Method Called!", __FILE__, __LINE__);
+  // First, parse the ncml to get the netcdf@location for the underlying dataset.
+  string ncmlFilename = dhi.container->access();
+  SimpleLocationParser parser;
+  string location = parser.parseAndGetLocation(ncmlFilename);
 
-    // Just redirect the dods call to the dataset at the new location.
-  bool ret = ncml_build_redirect(dhi, TEST_LOCATION);
+  BESDEBUG("ncml", "DataDDS request from NcML filename:" << ncmlFilename << " Redirecting to underlying location=" << location << endl);
 
-  /* BESResponseObject *response =
+  // Just redirect the dods call to the dataset at the new location to fill
+  // the dhi BESDataDDSResponse object.
+  bool ret = ncml_build_redirect(dhi, location);
+
+  // Change the dataset name to the ncml filename though, since technically that's what it is,
+  // though it's a "virtual" dataset.  It might make sense to automatically augment the global attribute table with a new
+  // attribute call "OriginalDataset" with the netcdf@location in it, or something as we move forward so
+  // clients can know where the un-AIS'd data lives.
+
+  BESResponseObject *response =
     dhi.response_handler->get_response_object();
   BESDataDDSResponse *bdds = dynamic_cast < BESDataDDSResponse * >(response);
-  */
-
-  // There's really nothing to do here since there's no metadata in dods now, right?
-  // Once we can add new variables, THEN we need to fix this pathway.
-  // TODO Handle new variables here for later ncml handler.
+  if (!bdds)
+    {
+      BESDEBUG("ncml", "Failed to make DataDDS for ncml file: " << ncmlFilename << endl);
+    }
+  else
+    {
+      DDS* dds = bdds->get_dds();
+      string datasetName = dhi.container->get_real_name();
+      // Use the basename... Is that what we want to do?  That's what nc handler does
+      // and this will make our make check work by not having local paths in the output...
+      dds->set_dataset_name(name_path(ncmlFilename));
+      dds->filename(name_path(ncmlFilename));
+    }
 
   return ret;
 }
