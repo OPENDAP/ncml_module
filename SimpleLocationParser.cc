@@ -49,34 +49,31 @@ SimpleLocationParser::~SimpleLocationParser()
 string
 SimpleLocationParser::parseAndGetLocation(const string& filename)
 {
-  SaxParserWrapper parser;
-  parser.parse(filename, *this);
+  SaxParserWrapper parser(*this);
+  parser.parse(filename);
   std::string ret = _location;
   _location = "";
   return ret;
 }
 
-bool
+void
 SimpleLocationParser::onStartElement(const string& name, const AttrMap& attrs)
 {
   if (name == "netcdf")
     {
       _location = SaxParser::findAttrValue(attrs, "location");
     }
-  return true;
 }
 
-bool
+void
 SimpleLocationParser::onParseWarning(std::string msg)
 {
   BESDEBUG("ncml", "Parse Warning:" << msg << endl);
-  return true;
 }
 
-bool
+void
 SimpleLocationParser::onParseError(std::string msg)
 {
   BESDEBUG("ncml", "Parse Error:" << msg << endl);
   // we'll just get an empty location out and handle it upstairs.
-  return true;
 }

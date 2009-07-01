@@ -88,6 +88,7 @@ NCMLParser::resetParseState()
 
   // if non-null, we still own it.
   delete _ddsResponse;
+  _ddsResponse = 0;
 }
 
 BaseType*
@@ -465,6 +466,19 @@ NCMLParser::printScope() const
   BESDEBUG("ncml", "Current fully qualified scope is: " << getScopeString() << endl);
 }
 
+void
+NCMLParser::cleanup()
+{
+  // we don't own any of the memory, unless _ddsResponse is non-null at the point
+  // this object is destructed (ie we have not finished a successful parse)
+  // On successfull parse, we hand this to caller and relinquish ownership (null it).
+  delete _ddsResponse;
+  _ddsResponse = 0;
+  // All other objects point into _ddsResponse temporarily, so nothing to destroy there.
+
+  // Just for completeness.
+  resetParseState();
+}
 
 ////////////////////////////////////////
 ////// Public
@@ -486,12 +500,7 @@ NCMLParser::NCMLParser(DDSLoader& loader)
 
 NCMLParser::~NCMLParser()
 {
-  // we don't own any of the memory, unless _ddsResponse is non-null at the point
-  // this object is destructed (ie we have not finished a successful parse)
-  // On successfull parse, we hand this to caller and relinquish ownership (null it).
-  delete _ddsResponse;
-
-  // All other objects point into _ddsResponse temporarily, so nothing to destroy there.
+  cleanup();
 }
 
 BESDDSResponse*
@@ -511,13 +520,14 @@ NCMLParser::parse(const string& filename)
 
   // Make a SAX parser wrapper to set up the C callbacks.
   // It will call us back through SaxParser interface.
-  SaxParserWrapper parser;
-  parser.parse(filename, *this);
+  SaxParserWrapper parser(*this);
+  parser.parse(filename);
 
   // Relinquish ownership to the caller.
-  BESDDSResponse* ret = _ddsResponse; _ddsResponse = 0;
+  BESDDSResponse* ret = _ddsResponse;
+  _ddsResponse = 0;
 
-  // Prepare for a new parse.
+  // Prepare for a new parse, making sure it's all cleaned up.
   resetParseState();
 
   return ret;
@@ -539,13 +549,15 @@ NCMLParser::handleBeginLocation(const string& location)
   // We can only process on location right now.
   if (_ddsResponse)
     {
+      cleanup(); // get rid of the storage, then exception
       string msg = "Parse Error: Got another <netcdf> node while already processing one!";
       BESDEBUG("ncml", msg << endl);
       throw BESInternalError(msg, __FILE__, __LINE__);
     }
 
   // Use the loader to load the location specified in the <netcdf> element.
-  _ddsResponse = _loader.createNewDDXForLocation(location);
+  // If not found, we'll throw an exception and just unwind out.
+  _ddsResponse = _loader.load(location);
 
   // Force the attribute table to be the global one for the DDS.
   if (getDDS())
@@ -686,22 +698,19 @@ NCMLParser::handleEndAttribute()
 }
 
 
-bool
+void
 NCMLParser::onStartDocument()
 {
-  return true;
 }
 
-bool
+void
 NCMLParser::onEndDocument()
 {
-  return true;
 }
 
-bool
+void
 NCMLParser::onStartElement(const std::string& name, const AttrMap& attrs)
 {
-  bool success = true;
   // Dispatch to the right place, else ignore
  if (name == "netcdf")
    {
@@ -732,14 +741,12 @@ NCMLParser::onStartElement(const std::string& name, const AttrMap& attrs)
    {
      BESDEBUG("ncml", "Start of <" << name << "> element unsupported currently, ignoring." << endl);
    }
-  return success;
 }
 
-bool
+void
 NCMLParser::onEndElement(const std::string& name)
 {
   // BESDEBUG("ncml", "onEndElement got: " << name << endl);
-  bool success = true;
   // Dispatch to the right place, else ignore
   if (name == "netcdf")
     {
@@ -757,10 +764,9 @@ NCMLParser::onEndElement(const std::string& name)
     {
       BESDEBUG("ncml", "End of <" << name << "> element unsupported currently, ignoring." << endl);
     }
-  return success;
 }
 
-bool
+void
 NCMLParser::onCharacters(const std::string& content)
 {
   // TODO Once the scope stack is refactored and handles atomic attributes,
@@ -768,7 +774,6 @@ NCMLParser::onCharacters(const std::string& content)
   if (!_processingSimpleAttribute)
     {
       // This is likely whitespace in the stream.  TODO make sure it's whitespace or else throw an error.
-      return true;
     }
   else
     {
@@ -776,22 +781,20 @@ NCMLParser::onCharacters(const std::string& content)
        BESDEBUG("ncml", msg << endl);
        throw BESInternalError(msg, __FILE__, __LINE__);
     }
-  return true;
 }
 
-bool
+void
 NCMLParser::onParseWarning(std::string msg)
 {
   BESDEBUG("ncml", "PARSE WARNING: " << msg << endl);
-  return true;
 }
 
 // Pretty much have to give up on malformed XML.
-bool NCMLParser::onParseError(std::string msg)
+void
+NCMLParser::onParseError(std::string msg)
 {
   BESDEBUG("ncml", "PARSE ERROR: " << msg << ".  Terminating parse!" << endl);
   throw new BESInternalError(msg, __FILE__, __LINE__);
-  return true;
 }
 
 

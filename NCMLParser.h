@@ -255,6 +255,9 @@ private: //methods
   // Print getScopeString using BESDEBUG
   void printScope() const;
 
+  //  Cleanup any _ddsResponse we're handing onto.
+  void cleanup();
+
 public: // Class Helpers  TODO These should get refactored somewhere else.
 
   /** The string describing the type "Structure" */
@@ -382,13 +385,13 @@ public:
   //////////////////////////////
   // Interface SaxParser
 
-  virtual bool onStartDocument();
-  virtual bool onEndDocument();
-  virtual bool onStartElement(const std::string& name, const AttrMap& attrs);
-  virtual bool onEndElement(const std::string& name);
-  virtual bool onCharacters(const std::string& content);
-  virtual bool onParseWarning(std::string msg);
-  virtual bool onParseError(std::string msg);
+  virtual void onStartDocument();
+  virtual void onEndDocument();
+  virtual void onStartElement(const std::string& name, const AttrMap& attrs);
+  virtual void onEndElement(const std::string& name);
+  virtual void onCharacters(const std::string& content);
+  virtual void onParseWarning(std::string msg);
+  virtual void onParseError(std::string msg);
 
 }; // class NCMLParser
 

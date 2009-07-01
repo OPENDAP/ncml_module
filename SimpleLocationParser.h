@@ -62,17 +62,17 @@ namespace ncml_module
     std::string parseAndGetLocation(const std::string& filename);
 
     /////////////// Interface SaxParser
-    virtual bool onStartDocument() { return true; }
-    virtual bool onEndDocument() { return true; }
+    virtual void onStartDocument() {  }
+    virtual void onEndDocument() {  }
 
     /** We only use this get the the nedcdf@location attribute out */
-    virtual bool onStartElement(const std::string& name, const AttrMap& attrs);
+    virtual void onStartElement(const std::string& name, const AttrMap& attrs);
 
-    virtual bool onEndElement(const std::string& /* name */) { return true; }
-    virtual bool onCharacters(const std::string& /* content */) { return true; };
+    virtual void onEndElement(const std::string& /* name */) {  }
+    virtual void onCharacters(const std::string& /* content */) {  };
 
-    virtual bool onParseWarning(std::string msg);
-    virtual bool onParseError(std::string msg);
+    virtual void onParseWarning(std::string msg);
+    virtual void onParseError(std::string msg);
   };
 
 }

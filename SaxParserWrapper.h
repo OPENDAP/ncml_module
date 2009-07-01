@@ -32,6 +32,7 @@
 
 #include <string>
 #include <libxml/parser.h>
+#include "BESError.h"
 
 using namespace std;
 
@@ -45,16 +46,17 @@ namespace ncml_module
 /**
  * @brief Wrapper for libxml SAX parser C callbacks into C++.
  *
- * On a parse() call, the filename is parsed using the libxml SAX parser
- * and the calls are passed into our C++ parser via the SaxParser interface class.
+ * On a parse(const string& ncmlFilename) call, the filename is parsed using the libxml C SAX parser
+ * and the C callbacks are passed onto our C++ parser via the SaxParser interface class.
  *
- * TODO BUG What happens if the SaxParser calls throw an exception?  Do we need to
- * clean the memory of the libxml parser?  This needs to be looked into.  Please note that the
- * BES also uses this library, so we can't just blow away static storage and there's no obvious
- * calls to clean up the current parse.  We might have to hold onto the exception (defer it),
- * go into a local (this calss) ERROR parsing state,
- * let the libxml parse call finish up by ignoring any further callbacks,
- * then finally throw the deferred BES exception then.
+ * Since the underlying libxml is C and uses its internal static memory pools
+ * which will be used by other parts of the BES, we have to be careful with exceptions.
+ * Any BESError thrown in a SaxParser callback is caught and deferred (stored in this).
+ * We enter an error state and ignore all further callbacks until the libxml parser exits cleanly.
+ * Then we rethrow the deferred exception.
+ *
+ * Any other exception types (...) are also caught and a local BESInternalError is thrown at parse end,
+ * so be careful with which exceptions are thrown in SaxParser callbacks.
  *
  * TODO BUG The onParseWarning and onParseError do not get the proper error message back.
  * We need to use glib to generate a std::string I think...
@@ -63,24 +65,89 @@ namespace ncml_module
  */
 class SaxParserWrapper
 {
-private:
-  // Struct with all the callback functions in it used by parse.
-  // We add them in the constructor.  They are all static functions
-  // in the impl file since they're callbacks from C.
+private: // Inner Classes
+
+  /** Describes the internal parser state.
+   *  NOT_PARSING is when we have not started a parse yet, or have finished one.
+   *  PARSING is when we have called the libxml parse function and are dispatching to SaxParser
+   *  EXCEPTION is when a SaxParser has thrown BESError and we need to clean up and rethrow it.
+   *  NUM_STATES is the number of valid states for error checking.
+   */
+  enum ParserState { NOT_PARSING=0, PARSING, EXCEPTION, NUM_STATES};
+
+private: // Data Rep
+
+  /** The SaxParser we are wrapping */
+  SaxParser& _parser;
+
+  /** Struct with all the callback functions in it used by parse.
+     We add them in the constructor.  They are all static functions
+     in the impl file since they're callbacks from C which call through
+     to the SaxParser interface.
+   */
   xmlSAXHandler _handler;
 
+  /** Current state of the parser.  If EXCEPTION, _error will be the deferred exception. */
+  ParserState _state;
+
+  /** If _state==EXCEPTION, these will be a copy of the
+   * deferred BESError's data to rethrow after the parser cleans up
+   * */
+  string _errorMsg;
+  int _errorType;
+  string _errorFile;
+  int _errorLine;
+
+private:
+  SaxParserWrapper(const SaxParserWrapper&); // illegal
+  SaxParserWrapper& operator=(const SaxParserWrapper&); // illegal
+
 public:
-  SaxParserWrapper();
+  /**
+   * @brief Create a wrapper for the given parser.
+   *
+   * @param parser Must exist for the duration of the life of the wrapper.
+   */
+  SaxParserWrapper(SaxParser& parser);
   virtual ~SaxParserWrapper();
 
   /** @brief Do a SAX parse of the ncmlFilename
-   * and pass the calls to the engine.
+   * and pass the calls to wrapper parser.
    *
-   * @throws Can throw if the engine handlers throw.
+   * @param path to the file to parse.
+   *
+   * @throws Can throw BESError via SaxParser
    *
    * @return successful parse
    */
-  bool parse(const string& ncmlFilename, ncml_module::SaxParser& engine);
+  bool parse(const string& ncmlFilename);
+
+  SaxParser& getParser() const { return _parser; }
+
+  ////////////////////////////
+  /// The remaining calls are for the internals of the parser, but need to be public
+
+  /** If we get a BESError exception thrown in a SaxParser call,
+   * defer it by entering the EXCEPTION state and copying the exception.
+   * In EXCEPTION state, we don't pass on any callbacks to SaxParser.
+   * When the underlying C parser completes and cleans up its storage,
+   * then we rethrow the exception.
+   * @see rethrowException
+   */
+  void deferException(BESError& theErr);
+
+  /** Used by the callbacks to know whether we have a deferred
+   * exception.
+   */
+  bool isExceptionState() const { return _state == EXCEPTION; }
+
+  /**
+   * If there's a deferred exception, this will throw the right subclass type
+   * from the preserved state at deferral time.
+   * Make sure the dtor cleans any volatile state.
+   */
+  void rethrowException();
+
 }; // class SaxParserWrapper
 
 } // namespace ncml_module

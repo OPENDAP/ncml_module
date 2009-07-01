@@ -62,30 +62,32 @@ public:
 
   virtual ~SaxParser() {};
 
-  virtual bool onStartDocument() = 0;
-  virtual bool onEndDocument() = 0;
+  virtual void onStartDocument() = 0;
+  virtual void onEndDocument() = 0;
 
   /** Called at the start of the element with the given name and attribute dictionary
     *  The args are only valid for the duration of the call, so copy if necessary to keep.
+    * @param name name of the element
+    * @param attrs a map of any attributes -> values.  Volatile for this call.
     * */
-  virtual bool onStartElement(const std::string& name, const AttrMap& attrs) = 0;
+  virtual void onStartElement(const std::string& name, const AttrMap& attrs) = 0;
 
   /** Called at the end of the element with the given name.
     *  The args are only valid for the duration of the call, so copy if necessary to keep.
     * */
-  virtual bool onEndElement(const std::string& name) = 0;
+  virtual void onEndElement(const std::string& name) = 0;
 
   /** Called when characters are encountered within an element.
    * content is only valid for the call duration.
    * Note: this will return all whitespace in the document as well, which makes it messy to use.
    */
-  virtual bool onCharacters(const std::string& content) = 0;
+  virtual void onCharacters(const std::string& content) = 0;
 
   /** A recoverable parse error occured. */
-  virtual bool onParseWarning(std::string msg) = 0;
+  virtual void onParseWarning(std::string msg) = 0;
 
   /** An unrecoverable parse error occurred */
-  virtual bool onParseError(std::string msg) = 0;
+  virtual void onParseError(std::string msg) = 0;
 
 }; // class SaxParser
 

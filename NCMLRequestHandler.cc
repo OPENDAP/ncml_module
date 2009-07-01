@@ -120,8 +120,11 @@ NCMLRequestHandler::ncml_build_redirect( BESDataHandlerInterface &dhi, const str
 bool
 NCMLRequestHandler::ncml_build_das( BESDataHandlerInterface &dhi )
 {
-    DDSLoader loader(dhi);
     string filename = dhi.container->access();
+
+    // Any exceptions winding through here will cause the loader and parser dtors
+    // to clean up dhi state, etc.
+    DDSLoader loader(dhi);
     NCMLParser parser(loader);
     BESDDSResponse* loaded_bdds = parser.parse(filename);
 
@@ -158,6 +161,9 @@ bool
 NCMLRequestHandler::ncml_build_dds( BESDataHandlerInterface &dhi )
 {
     string filename = dhi.container->access();
+
+    // Any exceptions winding through here will cause the loader and parser dtors
+    // to clean up dhi state, etc.
     DDSLoader loader(dhi);
     NCMLParser parser(loader);
     BESDDSResponse* loaded_bdds = parser.parse(filename);

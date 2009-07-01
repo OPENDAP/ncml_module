@@ -29,17 +29,24 @@
 #ifndef DDSLOADER_H_
 #define DDSLOADER_H_
 
+#include <string>
+
 class BESDataHandlerInterface;
 class BESContainerStorage;
 class BESDDSResponse;
 
-/**
-  @brief A helper class for loading the DDX of a local datafile.
 
-  The dhi handed in at creation will be hijacked to do the loading.
-  We store all the dhi state we mutate when we hijack in the instance
-  so that we can put it all back correctly if there's an exception
-  while getting the requested DDX.
+/**
+  @brief Helper class for temporarily hijacking an existing dhi to load a DDX response
+  for one particular file.
+
+  The dhi will hijacked at the start of the load() call and restored before the
+  DDX is returned.
+
+  For exception safety, if this object's dtor is called while the dhi is hijacked
+  or the response hasn't been relinquished, it will restore the dhi and clean memory, so the
+  caller can guarantee resources will be in their original (ctor time) state if this object
+  is destroyed via an exception stack unwind, etc.
 
   TODO see if there's another way to load these files without hijacking an existing dhi or
   if we want to refer to remote BES's rather than the local.  If we do this,
@@ -62,18 +69,22 @@ private:
   // whether we have actually hijacked the dhi, so restore knows.
   bool _hijacked;
 
+  // The file we are laoding if we're hijacked
+  std::string _filename;
+
+  // While we're loading, this is non-null.  We pass it to caller on successful load.
+  // Otherwise, it's null.
+  BESDDSResponse* _ddxResponse;
+
   // Remember the store so we can pull the location out in restoreDHI on exception as well.
   BESContainerStorage* _store;
 
   // DHI state we hijack, for putting back on exception.
-  string _containerSymbol;
-  string _origAction;
-  string _origActionName;
+  std::string _containerSymbol;
+  std::string _origAction;
+  std::string _origActionName;
   BESContainer* _origContainer;
   BESResponseObject* _origResponse;
-
-  // Used to generate unique symbols each time we load an object...
-  static unsigned int _sNextID;
 
 private:
   DDSLoader(const DDSLoader&); // disallow
@@ -81,51 +92,68 @@ private:
 
 public:
   /**
-   * the dhi to be used for the purposes of loading from this class.
-   * We mutate it temporarily in createNewDDXForLocation, but put
-   * the state back on return from the call.
+   * Create a loader that will hijack dhi on a load call, then restore it's state.
+   *
+   * @param dhi DHI to hijack during load, needs to be a valid object for the scope of this object's life.
    */
   DDSLoader(BESDataHandlerInterface &dhi);
 
+  /**
+   * Restores the state of the dhi to what it was when object if it is still hijacked (i.e. exception on load())
+   * Destroys the BESDDSResponse if non-null, which is also the case on failed load() call.
+   */
   virtual ~DDSLoader();
 
   /**
    * @brief Load and return a new DDX structure for the local dataset referred to by location.
-   * Ownership of the response object passes to the caller to destroy when done.
    *
-   * @param \c location  the local dataset to load the DDX for.
+   * Ownership of the response object passes to the caller.
    *
-   * @return a newly allocated DDX for the location.
+   * On exception, the dhi will be restored when this is destructed, or the user
+   * call directly call cleanup() to ensure this if they catch the exception and need the
+   * dhi restored immediately.
+   *
+   * @return a newly allocated DDS (DDX) for the location, ownership passed to caller.
    *
    * @exception if the underlying location cannot be loaded.
    */
-  BESDDSResponse* createNewDDXForLocation(const string& location);
+  BESDDSResponse* load(const std::string& location);
 
+  /**
+   * Ensures that the resources and dhi are all in the state they were at construction time.
+   * Probably not needed by users, but in case they want to catch an exception
+   * and then retry or something
+   */
+  void cleanup();
 
 private:
-  /**
-   * Helper that does the actual work of loading the location into ddsRespOut.
-   *
-   * Invariant: The _dhi is mutated during this call, but is required to be put back as it was at the start of the
-   * call when we return, even via exception.
-   */
-   void loadDDXForLocation(BESDDSResponse* ddsRespOut, const string& location);
 
    /**
-    *  Remember the state of the _dhi we plan to change.
-    *  Also remember the persistent store and the symbol we added
-    *  the location under so we can remove those as well.
+    *  Remember the current state of the _dhi we plan to change.
+    *  @see restoreDHI()
     */
-   void snapshotDHI(const string& newContainerSymbol, BESContainerStorage* store);
+   void snapshotDHI();
 
    /**
-    * Put back the _dhi state we hijacked.
-    * This must be called if an exception occurs by any function in here.
+    * if (_hijacked), put back all the _dhi state we hijacked. Inverse of snapshotDHI().
+    * At end of call, (_hijacked == false)
     */
    void restoreDHI();
 
-   static unsigned int sGetNewID() { return _sNextID++; }
-}; // class DDSLoader
+   /**
+    * Add a new symbol to the BESContainerStorageList singleton.
+    */
+   BESContainer* addNewContainerToStorage();
+
+   /** Remove the symbol we added in addNewContainerToStorage if it's there. */
+   void removeContainerFromStorage();
+
+   /** Make sure we clean up anything we've touched.
+    * On exit, everything should be in the same state as construction.
+    */
+   void ensureClean();
+
+  }; // class DDSLoader
 } // namespace ncml_module
 
 #endif /* DDSLOADER_H_ */
