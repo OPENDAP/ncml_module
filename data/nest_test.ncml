@@ -16,7 +16,7 @@
     i.e.  change existing "CoreMetadata.OrbitNumber.Mandatory" -->
   <attribute name="CoreMetadata" type="Structure">
     <attribute name="OrbitNumber" type="Structure">
-      <attribute name="Mandatory" type="String" value="TRUE"/>
+     <attribute name="Mandatory" type="String" value="TRUE"/>
     </attribute>
   </attribute>
   
@@ -43,6 +43,6 @@
       </variable>
     </variable>
   </variable>
-  
-</netcdf>
+
+  </netcdf>
 

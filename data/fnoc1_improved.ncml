@@ -2,6 +2,8 @@
   <variable name="u">
        <attribute type="int32" name="max" value="2000"/>
        <attribute type="int32" name="min" value="0"/>
+       <!-- test the values in the element content -->
+       <attribute type="int32" name="range">0 2000</attribute>
     </variable> 
 </netcdf>
 

@@ -31,9 +31,10 @@
 
 #include <exception>
 #include <iostream>
-#include <string>
 #include <libxml/parser.h>
 #include <libxml/xmlstring.h>
+#include <stdio.h> // for vsnprintf
+#include <string>
 
 #include "BESDebug.h"
 #include "BESError.h"
@@ -53,8 +54,8 @@ using namespace ncml_module;
 // convert to a string... Might want a way around this.
 static string makeString(const xmlChar* chars)
 {
-  // TODO HACK!  This cast might be dangerous, but I think we can assume non UTF-8 data...
-  // xmlChar is an unsigned char now.  I think we need Glib to do this right...
+  // TODO HACK!  This cast might be dangerous, but since DAP specifies Strings and URL's are US-ASCII, this
+  // cast _should_ do the right thing.  xmlChar is an unsigned char now.
   return string( (const char*)chars );
 }
 
@@ -106,18 +107,21 @@ static int toAttrMap(SaxParser::AttrMap& map, const xmlChar** attrs)
 #define END_SAFE_PARSER_BLOCK } \
       catch (BESError& theErr) \
       { \
+        BESDEBUG("ncml", "Caught BESError&, deferring..." << endl); \
         _spw_->deferException(theErr); \
       } \
       catch (std::exception& ex) \
       { \
+        BESDEBUG("ncml", "Caught std::exception&, wrapping and deferring..." << endl); \
         BESInternalError _badness_("Wrapped std::exception.what()=" + string(ex.what()), __FILE__, __LINE__);\
         _spw_->deferException(_badness_); \
       } \
-      catch (...) /* I dislike doing this in general... */ \
-      { \
-        BESInternalError _badness_("SaxParserWrapper:: Unknown Exception Type: ", __FILE__, __LINE__);\
-        _spw_->deferException(_badness_); \
-      } \
+      catch (...)  \
+      {   \
+        BESDEBUG("ncml", "Caught unknown (...) exception: deferring default error." << endl); \
+        BESInternalError _badness_("SaxParserWrapper:: Unknown Exception Type: ", __FILE__, __LINE__); \
+        _spw_->deferException(_badness_);  \
+      }  \
     } \
 }
 
@@ -193,16 +197,26 @@ static void ncmlCharacters(void* userData, const xmlChar* content, int len)
 static void ncmlWarning(void* userData, const char* msg, ...)
 {
   BEGIN_SAFE_PARSER_BLOCK(userData);
-  // TODO This seems to pass down some UTF varargs so we need GLib to generate the msg or something
-  parser.onParseWarning(msg);
+  char buffer[1024];
+  va_list(args);
+  va_start(args, msg);
+  unsigned int len = sizeof(buffer);
+  vsnprintf(buffer, len, msg, args);
+  va_end(args);
+  parser.onParseWarning(string(buffer));
   END_SAFE_PARSER_BLOCK;
 }
 
 static void ncmlFatalError(void* userData, const char* msg, ...)
 {
   BEGIN_SAFE_PARSER_BLOCK(userData);
-  // TODO This seems to pass down some UTF varargs so we need GLib to generate the msg or something
-  parser.onParseError(msg);
+  char buffer[1024];
+  va_list(args);
+  va_start(args, msg);
+  unsigned int len = sizeof(buffer);
+  vsnprintf(buffer, len, msg, args);
+  va_end(args);
+  parser.onParseError(string(buffer));
   END_SAFE_PARSER_BLOCK;
 }
 
@@ -310,6 +324,7 @@ SaxParserWrapper::rethrowException()
 
     default:
       throw BESInternalError("Unknown exception type.", __FILE__, __LINE__);
+      break;
   }
 }
 

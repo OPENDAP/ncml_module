@@ -13,6 +13,7 @@ Attributes {
         String scale_factor "0.005";
         Int32 max 2000;
         Int32 min 0;
+        Int32 range 0 2000;
     }
     v {
         String units "meter per second";

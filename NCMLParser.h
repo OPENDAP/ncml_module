@@ -38,6 +38,7 @@
 
 #include "SaxParser.h" // interface superclass
 #include "AttrTable.h" // needed due to parameter with AttrTable::Attr_iter
+#include "ScopeStack.h";
 
 //FDecls
 namespace libdap
@@ -47,7 +48,6 @@ namespace libdap
   class DDS;
 };
 class BESDDSResponse;
-
 
 using namespace libdap;
 using namespace std;
@@ -106,28 +106,13 @@ class NCMLParser : public SaxParser
 {
 private:
 
-  // The current scope is either global attribute table, within a variable's attribute table,
-  // or within an attribute container. (TODO add more specific contexts to this)
-  enum ScopeSource { GLOBAL=0, VARIABLE, ATTRIBUTE_CONTAINER};
-
-  // Each time we traverse down into containers, we'll
-  // push one of these on a stack to keep track of where we
-  // are in a parse for debugging.
-  // TODO refactor this class and the actual vector<ScopeEntry> into
-  // its own helper class rather than have it in place in NCMLParser.
-  struct ScopeEntry
-  {
-    ScopeEntry(ScopeSource the_type, string the_name)
-    : type(the_type)
-    , name(the_name)
-    {}
-
-    ScopeSource type;
-    string name;
-  };
-
-  // Default means we've seen no tag for thie lcoation yet, READ_METADATA says we saw <readMetadata/> and EXPLICIT means we saw <explicit/>
-  // Processed means the directive was already processed for the current location.
+  /**
+  * Whether <explicit/> or <readMetadata/> was specified.
+  * PERFORM_DEFAULT means we have not see either tag.
+  * READ_METADATA says we saw <readMetadata/>
+  * EXPLICIT means we saw <explicit/>
+  * PROCESSED means the directive was already processed for the current location since it happens only once.
+  */
   enum SourceMetadataDirective { PERFORM_DEFAULT=0, READ_METADATA, EXPLICIT, PROCESSED };
 
 private: // data rep
@@ -135,13 +120,14 @@ private: // data rep
 
   bool _parsingLocation; // true if we have entered a location element and not closed it yet. (todo consider making this a string with loc name)
 
-  // Handed in at creation, this is a helper to load a given DDS.
+  // Handed in at creation, this is a helper to load a given DDS.  It is assumed valid for the life of this.
   DDSLoader& _loader;
 
-  // The response object containing the DDS for the <netcdf> node we are processing.
+  // The response object containing the DDS for the <netcdf> node we are processing, or null if not processing.
   BESDDSResponse* _ddsResponse;
 
-  SourceMetadataDirective _metadataDirective; // what to do with existing metadata after it's read in from parent.
+  // what to do with existing metadata after it's read in from parent.
+  SourceMetadataDirective _metadataDirective;
 
   // pointer to currently processed variable, or NULL if none (ie we're at global level).
   BaseType* _pVar;
@@ -156,19 +142,20 @@ private: // data rep
   // we push them onto this stack to be sure we update state
   // properly as we close the elements and exit scope.
   // This will be empty unless we are in nested attribute.
-  stack<AttrTable*> _attrContainerStack;
-
-  // This will be true between a handleBeginAttribute and handleEndAttribute call for
-  // a simple type attribute, but not for a container.  Since these will be leaves,
-  // we shouldn't get any other calls except for the content string.
-  bool _processingSimpleAttribute;
+  // stack<AttrTable*> _attrContainerStack;
 
   // As we parse, we'll use this as a stack for keeping track of the current
   // scope we're in.  In other words, this stack will refer to the container where _pCurrTable is in the DDS.
   // if empty() then we're in global dataset scope (or no scope if not parsing location yet).
-  vector<ScopeEntry> _currentScope;
+  ScopeStack _scope;
 
 private: //methods
+
+  bool isScopeSimpleAttribute() const;
+  bool isScopeAttributeContainer() const;
+  bool isScopeSimpleVariable() const;
+  bool isScopeCompositeVariable() const;
+  bool isScopeGlobal() const;
 
   // Helper to get the dds from _ddsResponse
   // Error to call _ddsResponse is null.
@@ -196,6 +183,8 @@ private: //methods
    */
   void processAttributeAtCurrentScope(const string& name, const string& type, const string& value);
 
+
+
   /**
    * Given an attribute with type==Structure at current scope _pCurrentTable, either add a new container to if
    * one does not exist with /c name, otherwise assume we're just specifying a new scope for a later child attribute.
@@ -203,59 +192,77 @@ private: //methods
    */
   void processAttributeContainerAtCurrentScope(const string& name, const string& type, const string& value);
 
-  // Pulls global table out of the current DDS...  TODO figure out what to do about this when we aggregate
+  /**
+   *  Pulls global table out of the current DDS, or null if no current DDS.
+   */
   AttrTable* getGlobalAttrTable();
 
-  // Try and find an attribute with name in pTable without recursing.
-  // If found, attr will point to it, else pTable->attr_end().
-  // Return whether it was found or not
-  bool findAttribute(AttrTable* pTable, const string& name, AttrTable::Attr_iter& attr) const;
+  /**
+   * @return if the attribute with name already exists in the current scope.
+   * @param name name of the attribute
+  */
+  bool attributeExistsAtCurrentScope(const string& name);
 
-  // Create a new attribute and put it into pTable
+  /** Find an attribute with name in the current scope (_pCurrentTable) _without_ recursing.
+    * If found, attr will point to it, else pTable->attr_end().
+    * @return whether it was found
+    * */
+  bool findAttribute(const string& name, AttrTable::Attr_iter& attr) const;
+
+  /** Create a new attribute and put it into pTable
+   * @param pTable table to put it in
+   * @param name name of the attribute
+   * @param type DAP type of the attribute
+   * @param value attribute value as a string
+   */
   void addNewAttribute(AttrTable* pTable, const string& name, const string& type, const string& value);
 
-  // Return whether we are inside a location element <netcdf> at this point of the parse.
+  /**
+     * Change the existing attribute's value.
+     * It is an error to call this if !attributeExistsAtCurrentScope().
+     * If type.empty(), then just leave the type as it is now, otherwise use type.
+     * @param name local scope name of the attribute
+     * @param type type of the attribute, or "" to leave it the same.
+     * @param value new value for the attribute
+     */
+  void mutateAttributeAtCurrentScope(const string& name, const string& type, const string& value);
+
+  /** Return whether we are inside a location element <netcdf> at this point of the parse */
   bool withinLocation() const { return _parsingLocation; }
 
-  // Returns whether we are inside a variable element at current parse point.
-  // Note we could be nested down within multiple variables or attribute containers,
-  // but this will be true if anywhere in current scope we're within a variable.
+  /** Returns whether we are inside a variable element at current parse point.
+   *  Note we could be nested down within multiple variables or attribute containers,
+   *  but this will be true if anywhere in current scope we're within a variable.
+  */
   bool withinVariable() const { return _parsingLocation && _pVar; }
 
-  // Return whether the current scope is within an attribute container, ie a nested attribute.
-  // Since it's illegal to have variables within nested attribute containers,
-  // this refers only to the immediate scope, unlike /c withinVariable and /c withinLocation
-  // @see withinVariable
-  // @see withinLocation
-  bool isCurrentScopeAnAttributeContainer() const { return !_attrContainerStack.empty(); }
-
-  // Change the <explicit> vs <readMetadata> functionality, but doing error checking for parse errors.
+  /**
+   * Change the <explicit> vs <readMetadata> functionality, but doing error checking for parse errors
+   * @param newVal the new directive
+   */
   void changeMetadataDirective(SourceMetadataDirective newVal);
 
-  // If not already PROCESSED, will perform the metadata directive, effectively
-  // clearing the DDS attributes if if was set to explicit.
+  /** If not already PROCESSED, will perform the metadata directive, effectively
+    * clearing the DDS attributes if if was set to explicit.
+    * */
   void processMetadataDirectiveIfNeeded();
 
-  // If we got an explicit tag, we need to clear out all metadata before processing.
-  // This clears out the current DDS's metadata recursively.
-  void clearAllMetadata();
+  /** This clears out ALL the current DDS's AttrTable's recursively. */
+  void clearAllAttrTables();
 
-  // Clear the attribute table for \c var .  If composite, recurse.
+  /** Clear the attribute table for \c var .  If constructor variable, recurse.  */
   void clearVariableMetadataRecursively(BaseType* var);
 
-  // Push the new scope
-  void enterScope(const ScopeEntry& entry);
+  /** Push the new scope onto the stack. */
+  void enterScope(const string& name, ScopeStack::ScopeType type);
 
-  // Pop off the last scope to move up a level.
+  /** Pop off the last scope */
   void exitScope();
 
-  // Turn the current scope into a fully qualified name
-  string getScopeString() const;
-
-  // Print getScopeString using BESDEBUG
+  /** Print getScopeString using BESDEBUG */
   void printScope() const;
 
-  //  Cleanup any _ddsResponse we're handing onto.
+  /**  Cleanup state to as if we're a new object */
   void cleanup();
 
 public: // Class Helpers  TODO These should get refactored somewhere else.

@@ -20,16 +20,26 @@ NCML_SRCS:=
 NCML_HDRS:=
 
 BES_SRCS = \
-		NCMLModule.cc NCMLRequestHandler.cc NCMLParser.cc \
-		DDSLoader.cc SaxParserWrapper.cc SaxParser.cc \
+		NCMLModule.cc \
+		NCMLRequestHandler.cc \
+		NCMLParser.cc \
+		DDSLoader.cc \
+		SaxParserWrapper.cc \
+		SaxParser.cc \
 		SimpleLocationParser.cc \
+		ScopeStack.cc \
 		NCMLParser_TestDriver.cc
 
 BES_HDRS = \
-		NCMLModule.h NCMLRequestHandler.h \
-		NCMLResponseNames.h NCMLParser.h DDSLoader.h \
-		SaxParserWrapper.h SaxParser.h \
+		NCMLModule.h \
+		NCMLRequestHandler.h \
+		NCMLResponseNames.h \
+		NCMLParser.h \
+		DDSLoader.h \
+		SaxParserWrapper.h \
+		SaxParser.h \
 		SimpleLocationParser.h \
+		ScopeStack.h \
 		NCMLParser_TestDriver.h
 		
 
