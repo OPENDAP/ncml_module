@@ -49,6 +49,7 @@
 #include "NCMLParser.h"
 #include "NCMLResponseNames.h"
 #include "SimpleLocationParser.h"
+#include "NcmlUtil.h"
 
 using namespace ncml_module;
 
@@ -150,7 +151,7 @@ NCMLRequestHandler::ncml_build_das( BESDataHandlerInterface &dhi )
 
     // Copy the modified DDS attributes into the DAS response object!
     BESDEBUG("ncml", "Creating DAS response from the location DDX..." << endl);
-    NCMLParser::populateDASFromDDS(das, *dds);
+    NcmlUtil::populateDASFromDDS(das, *dds);
 
     // clean up!
     delete loaded_bdds;
@@ -188,7 +189,7 @@ NCMLRequestHandler::ncml_build_dds( BESDataHandlerInterface &dhi )
 
     // If we just use DDS::operator=, we get into trouble with copied
     // pointers, bashing of the dataset name, etc etc so I specialize the copy for now.
-    NCMLParser::copyVariablesAndAttributesInto(dds_out, *dds);
+    NcmlUtil::copyVariablesAndAttributesInto(dds_out, *dds);
 
     // Also copy in the name of the original ncml request
     // TODO @HACK Not sure I want just the basename for the filename,

@@ -28,6 +28,7 @@
 /////////////////////////////////////////////////////////////////////////////
 #include "config.h"
 #include "NCMLParser.h"
+#include <map>
 
 #include "AttrTable.h"
 #include "BaseType.h"
@@ -38,9 +39,12 @@
 #include "DAS.h"
 #include "DDS.h"
 #include "DDSLoader.h"
-#include <map>
+#include "NcmlUtil.h"
 #include "SaxParserWrapper.h"
-#include "util.h" // for downcase()
+// #include "util.h" // for downcase()
+
+// Turn on for more debug spew.
+#define DEBUG_NCML_PARSER_INTERNALS 1
 
 using namespace ncml_module;
 
@@ -261,7 +265,10 @@ NCMLParser::findAttribute(const string& name, AttrTable::Attr_iter& attr) const
 void
 NCMLParser::addNewAttribute(AttrTable* pTable, const string& name, const string& type, const string& value)
 {
-  pTable->append_attr(name, type, value);
+  // Split the value string properly if the type is one that can be a vector.
+  tokenizeValues(value, type);
+
+  pTable->append_attr(name, type, &(_tokens));
 }
 
 void
@@ -276,44 +283,81 @@ NCMLParser::mutateAttributeAtCurrentScope(const string& name, const string& type
       actualType = _pCurrentTable->get_type(name);
     }
 
+  // Split the values if needed.  Also uses current value of _separators in case an atomic attribute set it.
+  tokenizeValues(value, actualType);
+
   // Can't mutate, so just delete and reenter it.  This move change the ordering... Do we care?
   _pCurrentTable->del_attr(name);
-  _pCurrentTable->append_attr(name, actualType, value);
+  _pCurrentTable->append_attr(name, actualType, &(_tokens));
 }
 
-
-
-/** Recursion helper:
- *  Recurse on the members of composite variable consVar and recursively add their AttrTables
- *  to the given dasTable for the container.
- */
-static void populateAttrTableForContainerVariableRecursive(AttrTable* dasTable, Constructor* consVar)
+int
+NCMLParser::tokenizeValues(const string& values, const string& dapTypeName)
 {
-  BESDEBUG("ncml", "Recursively adding attribute tables for children of composite variable " << consVar->name() << "..." << endl);
-  Constructor::Vars_iter endIt = consVar->var_end();
-  for (Constructor::Vars_iter it = consVar->var_begin(); it != endIt; ++it)
+  // Convert the type string into a DAP AttrType to be sure
+  AttrType dapType = String_to_AttrType(dapTypeName);
+  if (dapType == Attr_unknown)
     {
-       BaseType* var = *it;
-       assert(var);
-       BESDEBUG("ncml", "Adding attribute table for var: " << var->name() << endl);
-       // Make a new table for the child variable
-       AttrTable* newTable = new AttrTable(var->get_attr_table());
-       // Add it to the DAS's attribute table for the consVar scope.
-       dasTable->append_container(newTable, var->name());
+      string msg = "Unknown DAP type found for: " + dapTypeName;
+      BESDEBUG("ncml", msg << endl);
+      throw BESInternalError(msg, __FILE__, __LINE__);
+    }
 
-       // If it's a container type, we need to recurse.
-       if (var->is_constructor_type())
-         {
-           Constructor* child = dynamic_cast<Constructor*>(var);
-           assert(child);
-           if (!child)
-             {
-               throw BESInternalError("Type cast error", __FILE__, __LINE__);
-             }
+  // If we're valid type, tokenize us according to type.
+  int numTokens = tokenizeValuesForDAPType(values, dapType);
 
-           BESDEBUG("ncml", "Var " << child->name() << " is composite, so recursively adding attribute tables" << endl);
-           populateAttrTableForContainerVariableRecursive(newTable, child);
-         }
+#if DEBUG_NCML_PARSER_INTERNALS
+
+  if (_separators != NcmlUtil::WHITESPACE)
+    {
+       BESDEBUG("ncml", "Got non-default separators for tokenize.  _separators=\"" << _separators << "\"" << endl);
+    }
+
+  string msg = "";
+  for (int i=0; i<numTokens; i++)
+    {
+      if (i > 0)
+        {
+          msg += ",";
+        }
+      msg += "\"";
+      msg += _tokens[i];
+      msg += "\"";
+    }
+  BESDEBUG("ncml", "Tokenize got " << numTokens << " tokens:\n" << msg << endl);
+#endif // DEBUG_NCML_PARSER_INTERNALS
+
+  return numTokens;
+}
+
+int
+NCMLParser::tokenizeValuesForDAPType(const string& values, AttrType dapType)
+{
+  _tokens.resize(0);  // Start empty.
+
+  // For URL and String, just push it onto the end, one token.
+  if (dapType ==  Attr_string || dapType == Attr_url)
+    {
+       _tokens.push_back(values);
+       return 1;
+    }
+  else if (dapType == Attr_unknown)
+    {
+      // Do out best to recover....
+      BESDEBUG("ncml", "Warning: tokenizeValuesForDAPType() got unknown DAP type!  Attempting to continue..." << endl);
+      _tokens.push_back(values);
+      return 1;
+    }
+  else if (dapType == Attr_container)
+    {
+      // Not supposed to have values, just push empty string....
+      BESDEBUG("ncml", "Warning: tokenizeValuesForDAPType() got container type, we should not have values!" << endl);
+      _tokens.push_back("");
+      return 1;
+    }
+  else // For all other atomic types, do a split.
+    {
+      return NcmlUtil::tokenize(values, _tokens, _separators);
     }
 }
 
@@ -394,88 +438,6 @@ NCMLParser::convertNcmlTypeToDapType(const string& ncmlType)
     {
       return it->second;
     }
-}
-
-// This is basically the opposite of transfer_attributes.
-void
-NCMLParser::populateDASFromDDS(DAS* das, const DDS& dds_const)
-{
-  BESDEBUG("ncml", "Populating a DAS from a DDS...." << endl);
-
-  // Make sure the DAS is empty tostart.
-  das->erase();
-
-  // dds is semantically const in this function, but the calls to it aren't...
-  DDS& dds = const_cast<DDS&>(dds_const);
-
-  // First, make sure we don't have a container at top level since we're assuming for now
-  // that we only have one dataset per call (right?)
-  if (dds.container())
-    {
-      BESDEBUG("ncml", "populateDASFromDDS got unexpected container " << dds.container_name() << " and is failing." << endl);
-      throw BESInternalError("Unexpected Container Error creating DAS from DDS in NCMLHandler", __FILE__, __LINE__);
-    }
-
-  // Copy over the global attributes table
-  //BESDEBUG("ncml", "Coping global attribute tables from DDS to DAS..." << endl);
-  *(das->get_top_level_attributes()) = dds.get_attr_table();
-
-  // For each variable in the DDS, make a table in the DAS.
-  //  If the variable in composite, then recurse
- // BESDEBUG("ncml", "Adding attribute tables for all DDS variables into DAS recursively..." << endl);
-  DDS::Vars_iter endIt = dds.var_end();
-  for (DDS::Vars_iter it = dds.var_begin(); it != endIt; ++it)
-    {
-      // For each BaseType*, copy its table and add to DAS under its name.
-      BaseType* var = *it;
-      assert(var);
-
-     // BESDEBUG("ncml", "Adding attribute table for variable: " << var->name() << endl);
-      AttrTable* clonedVarTable = new AttrTable(var->get_attr_table());
-      das->add_table(var->name(), clonedVarTable);
-
-      // If it's a container type, we need to recurse.
-      if (var->is_constructor_type())
-        {
-          Constructor* consVar = dynamic_cast<Constructor*>(var);
-          assert(consVar);
-          if (!consVar)
-            {
-              throw BESInternalError("Type cast error", __FILE__, __LINE__);
-            }
-
-          populateAttrTableForContainerVariableRecursive(clonedVarTable, consVar);
-        }
-    }
-}
-
-// This function was added since DDS::operator= had some bugs we need to fix.
-// At that point, we can just use that function, probably.
-void
-NCMLParser::copyVariablesAndAttributesInto(DDS* dds_out, const DDS& dds_in)
-{
-  // Avoid obvious bugs
-  if (dds_out == &dds_in)
-    {
-      return;
-    }
-
-  // handle semantic constness
-  DDS& dds = const_cast<DDS&>(dds_in);
-
-  // Copy the global attribute table
-  dds_out->get_attr_table() = dds.get_attr_table();
-
-  // copy the things pointed to by the variable list, not just the pointers
-  // add_var is designed to deepcopy *i, so this should get all the children
-  // as well.
-  for (DDS::Vars_iter i = dds.var_begin(); i != dds.var_end(); ++i)
-    {
-       dds_out->add_var(*i); // add_var() dups the BaseType.
-    }
-
-  // for safety, make sure the factory is 0.  If it isn't we might have a double delete.
-  assert(!dds_out->get_factory());
 }
 
 void
@@ -614,8 +576,11 @@ NCMLParser::NCMLParser(DDSLoader& loader)
 , _pVar(0)
 , _pCurrentTable(0)
 , _scope()
+, _tokens()
+, _separators(NcmlUtil::WHITESPACE)
 {
   BESDEBUG("ncml", "Created NCMLHelper." << endl);
+ _tokens.reserve(256); // not sure what a good number is, but better than resizing all the time.
 }
 
 NCMLParser::~NCMLParser()
@@ -735,7 +700,7 @@ NCMLParser::handleBeginVariable(const string& varName, const string& type /* = "
   // this sets the _pCurrentTable to the variable's table.
   setCurrentVariable(pVar);
 
-  // Add the new scope to the debugging stack
+  // Add the proper variable scope to the stack
   if (pVar->is_constructor_type())
     {
       enterScope(varName, ScopeStack::VARIABLE_CONSTRUCTOR);
@@ -860,6 +825,15 @@ NCMLParser::onStartElement(const std::string& name, const AttrMap& attrs)
      const string& attrName = SaxParser::findAttrValue(attrs, "name");
      const string& type = SaxParser::findAttrValue(attrs,"type");
      const string& value = SaxParser::findAttrValue(attrs, "value");
+     const string& separators = SaxParser::findAttrValue(attrs, "separator");
+     // If this was specified, then we want to store it for the parsing of this attrribute only
+     if (!separators.empty())
+       {
+#if DEBUG_NCML_PARSER_INTERNALS
+         BESDEBUG("ncml", "Got attribute@separator=\"" << separators << "\"  and using for the next attribute value." << endl);
+#endif // #if DEBUG_NCML_PARSER_INTERNALS
+         _separators = separators;
+       }
      handleBeginAttribute(attrName, type, value);
    }
  else if (name == "variable")
@@ -886,6 +860,8 @@ NCMLParser::onEndElement(const std::string& name)
   else if (name == "attribute")
     {
       handleEndAttribute();
+      // go back to our default as we leave an attribute.
+      _separators = NcmlUtil::WHITESPACE;
     }
   else if (name == "variable")
     {

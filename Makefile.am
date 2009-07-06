@@ -28,6 +28,7 @@ BES_SRCS = \
 		SaxParser.cc \
 		SimpleLocationParser.cc \
 		ScopeStack.cc \
+		NcmlUtil.cc \
 		NCMLParser_TestDriver.cc
 
 BES_HDRS = \
@@ -40,6 +41,7 @@ BES_HDRS = \
 		SaxParser.h \
 		SimpleLocationParser.h \
 		ScopeStack.h \
+		NcmlUtil.h \
 		NCMLParser_TestDriver.h
 		
 

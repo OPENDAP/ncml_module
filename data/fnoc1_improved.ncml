@@ -1,9 +1,14 @@
 <netcdf location="/data/fnoc1.nc">
+  <!-- although type attribute is required by the scheme, i have been
+  using type="" to mean "whatever type a variable with the name has since it has to exist" -->
   <variable name="u">
-       <attribute type="int" name="max" value="2000"/>
-       <attribute type="int" name="min" value="0"/>
-       <!-- test the values in the element content.  -->
-       <attribute type="int" name="range">0 2000</attribute>
-    </variable> 
+    <!-- Test adding new attributes to the variable -->   
+    <attribute type="int" name="max" value="2000"/>
+    <attribute type="int" name="min" value="0"/>
+    <!-- test putting the values in the element content.  -->
+    <attribute type="int" name="range">0 2000</attribute>
+    <!-- Test the separator attribute works as well. -->
+    <attribute type="int" name="oldRange" separator=",">-1,1023</attribute>
+  </variable> 
 </netcdf>
 

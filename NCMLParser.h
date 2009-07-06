@@ -149,6 +149,14 @@ private: // data rep
   // if empty() then we're in global dataset scope (or no scope if not parsing location yet).
   ScopeStack _scope;
 
+  // Temp storage for tokenizing value strings without constantly making new vector<string>'s.
+  std::vector<std::string> _tokens;
+
+  // Used by the tokenizer.  If we get attribute@separator attribute in handleBeginAttribute
+  // We set the given string here for the tokenizer to know for onCharacters call.
+  // It defaults to whitespace.
+  std::string _separators;
+
 private: //methods
 
   bool isScopeSimpleAttribute() const;
@@ -156,6 +164,16 @@ private: //methods
   bool isScopeSimpleVariable() const;
   bool isScopeCompositeVariable() const;
   bool isScopeGlobal() const;
+
+
+  /** Return whether we are inside a location element <netcdf> at this point of the parse */
+  bool withinLocation() const { return _parsingLocation; }
+
+  /** Returns whether we are inside a variable element at current parse point.
+   *  Note we could be nested down within multiple variables or attribute containers,
+   *  but this will be true if anywhere in current scope we're within a variable.
+  */
+  bool withinVariable() const { return _parsingLocation && _pVar; }
 
   // Helper to get the dds from _ddsResponse
   // Error to call _ddsResponse is null.
@@ -225,14 +243,22 @@ private: //methods
      */
   void mutateAttributeAtCurrentScope(const string& name, const string& type, const string& value);
 
-  /** Return whether we are inside a location element <netcdf> at this point of the parse */
-  bool withinLocation() const { return _parsingLocation; }
+  /** Do the proper tokenization of values for the given dapTypeName into _tokens
+   * using current _separators.
+   * Strings and URL types produce a single "token"
+   * @return the number of tokens added.
+   */
+  int tokenizeValues(const string& values, const string& dapTypeName);
 
-  /** Returns whether we are inside a variable element at current parse point.
-   *  Note we could be nested down within multiple variables or attribute containers,
-   *  but this will be true if anywhere in current scope we're within a variable.
-  */
-  bool withinVariable() const { return _parsingLocation && _pVar; }
+  /**
+   *  Tokenize the given string values for the DAP type using the given delimiters currently in _separators and
+   *  Result is stored in _tokens and valid until the next call or until we explicitly clear it.
+   *  Special Cases: dapType == String and URL will produce just one token, ignoring delimiters.
+   *  It is an error to have any values for dapType==Structure, but for this case
+   *  we push a single "" onto _tokens.
+   *  @return the number of tokens added to _tokens.
+   */
+  int tokenizeValuesForDAPType(const string& values, AttrType dapType);
 
   /**
    * Change the <explicit> vs <readMetadata> functionality, but doing error checking for parse errors
@@ -269,23 +295,9 @@ public: // Class Helpers  TODO These should get refactored somewhere else.
   static const string STRUCTURE_TYPE;
 
   /**
-   * Convert the NCML type in ncmlType into the DAP version.
-   */
+    * Convert the NCML type in ncmlType into the DAP version.
+    */
   static string convertNcmlTypeToDapType(const string& ncmlType);
-
-  /** Given we have a valid attribute tree inside of the DDS, recreate it in the DAS.
-       @param das the das to clear and populate
-       @param dds_const the source dds
-       */
-    static void populateDASFromDDS(DAS* das, const DDS& dds_const);
-
-    /** Make a deep copy of the global attributes and variables within dds_in
-     * into *dds_out.
-     * Doesn't affect any other top-level data.
-     * @param dds_out place to copy global attribute table and variables into
-     * @param dds_in source DDS
-     */
-    static void copyVariablesAndAttributesInto(DDS* dds_out, const DDS& dds_in);
 
 public:
   /**
