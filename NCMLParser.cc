@@ -38,7 +38,9 @@
 #include "DAS.h"
 #include "DDS.h"
 #include "DDSLoader.h"
+#include <map>
 #include "SaxParserWrapper.h"
+#include "util.h" // for downcase()
 
 using namespace ncml_module;
 
@@ -73,7 +75,6 @@ NCMLParser::isScopeGlobal() const
 {
   return _scope.empty();
 }
-
 
 DDS*
 NCMLParser::getDDS() const
@@ -157,8 +158,18 @@ NCMLParser::setCurrentVariable(BaseType* pVar)
 
 // TODO we'll need a version of this that takes a vector<string>* as well for handling arrays.
 void
-NCMLParser::processAttributeAtCurrentScope(const string& name, const string& type, const string& value)
+NCMLParser::processAttributeAtCurrentScope(const string& name, const string& ncmlType, const string& value)
 {
+  // Convert the NCML type to a DAP type here.
+  // "Structure" will remain as "Structure" for specialized processing.
+  string type = convertNcmlTypeToDapType(ncmlType);
+  if (type.empty())
+    {
+      string msg = "Unknown NCML type: " + ncmlType;
+      BESDEBUG("ncml", msg << endl);
+      throw BESInternalError(msg, __FILE__, __LINE__);
+    }
+
   printScope();
 
   // First, if the type is a Structure, we are dealing with nested attributes and need to handle it separately.
@@ -306,6 +317,84 @@ static void populateAttrTableForContainerVariableRecursive(AttrTable* dasTable, 
     }
 }
 
+////////////////////////////////////// Class Methods (Statics)
+
+// Used below to convert NcML data type to a DAP data type.
+typedef std::map<string, string> TypeConverter;
+
+/* Ncml DataType:
+  <xsd:enumeration value="char"/>
+  <xsd:enumeration value="byte"/>
+  <xsd:enumeration value="short"/>
+  <xsd:enumeration value="int"/>
+  <xsd:enumeration value="long"/>
+  <xsd:enumeration value="float"/>
+  <xsd:enumeration value="double"/>
+  <xsd:enumeration value="String"/>
+  <xsd:enumeration value="string"/>
+  <xsd:enumeration value="Structure"/>
+ */
+static TypeConverter* makeTypeConverter()
+{
+  TypeConverter* ptc = new TypeConverter();
+  TypeConverter& tc = *ptc;
+  // NcML to DAP conversions
+  tc["char"] = "Byte";
+  tc["byte"] = "Byte";
+  tc["short"] = "Int16";
+  tc["int"] = "Int32";
+  tc["long"] = "Int32"; // not sure of this one
+  tc["float"] = "Float32";
+  tc["double"] = "Float64";
+  tc["string"] = "String";
+  tc["String"] = "String";
+  tc["Structure"] = "Structure";
+  tc["structure"] = "Structure"; // allow lower case for this as well
+  return ptc;
+}
+
+// Singleton
+static const TypeConverter& getTypeConverter()
+{
+  static TypeConverter* singleton = 0;
+  if (!singleton)
+    {
+      singleton = makeTypeConverter();
+    }
+  return *singleton;
+}
+
+// Is the given type a DAP type?
+static bool isDAPType(const string& type)
+{
+  return (String_to_AttrType(type) != Attr_unknown);
+}
+
+// Whether we want to pass through DAP attribute types as well as NcML.
+static const bool ALLOW_DAP_ATTRIBUTE_TYPES = true;
+
+/* static */
+string
+NCMLParser::convertNcmlTypeToDapType(const string& ncmlType)
+{
+  // if we allow DAP types to be specified as an attribute type
+  // then just pass it through
+  if (ALLOW_DAP_ATTRIBUTE_TYPES && isDAPType(ncmlType))
+    {
+       return ncmlType;
+    }
+
+  const TypeConverter& tc = getTypeConverter();
+  TypeConverter::const_iterator it = tc.find(ncmlType);
+  if (it == tc.end())
+    {
+      return ""; // error condition
+    }
+  else
+    {
+      return it->second;
+    }
+}
 
 // This is basically the opposite of transfer_attributes.
 void

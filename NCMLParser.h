@@ -181,9 +181,7 @@ private: //methods
    *   If type=="Structure", we assume the attribute is a container and will handle it differently.
    *   @see processAttributeContainerForTable
    */
-  void processAttributeAtCurrentScope(const string& name, const string& type, const string& value);
-
-
+  void processAttributeAtCurrentScope(const string& name, const string& ncmlType, const string& value);
 
   /**
    * Given an attribute with type==Structure at current scope _pCurrentTable, either add a new container to if
@@ -269,6 +267,11 @@ public: // Class Helpers  TODO These should get refactored somewhere else.
 
   /** The string describing the type "Structure" */
   static const string STRUCTURE_TYPE;
+
+  /**
+   * Convert the NCML type in ncmlType into the DAP version.
+   */
+  static string convertNcmlTypeToDapType(const string& ncmlType);
 
   /** Given we have a valid attribute tree inside of the DDS, recreate it in the DAS.
        @param das the das to clear and populate

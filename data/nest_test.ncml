@@ -22,7 +22,7 @@
   
  <!-- 2) Add an entirely new attribute structure of our own to
        the "CoreMetadata" container in global (dataset) 
-       attribute container -->
+       attribute container.  Also notice use of DAP URL type. -->
   <attribute name="CoreMetadata" type="Structure">
     <attribute name="ExtraInfoURL" type="Structure">
       <attribute name="Value" type="URL" value="http://foo.bar.net"/>
