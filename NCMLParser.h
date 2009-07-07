@@ -83,19 +83,10 @@ namespace ncml_module
  *
  *  We maintain a pointer to the currently active AttrTable as we get SAX parser calls.  As we enter/exit attribute containers or
  *  Constructor variables we keep track of this on a scope stack which allows us to know the fully qualifed name of the current scope.
- *  (We need a minor refactor to fix this for attribute containers, see below).
- *
- *  TODO Refactor the scope stack to handle more specific scope types for better error checking in the parse.  Included in this is
- *  rolling the attribute container stack and simple_attribute flag into the ScopeEntry/ScopeStack pattern to avoid the duplicated state
- *  and simplify everything.  Also will allow us to know the scope of atomic attribute for values in the element content not attribute.
- *
- *  TODO @BUG We do not split atomic attribute values into a vector<string> on whitespace (or attribute@separator)
- *
- *  TODO @BUG Add ability to handle <attribute>some values></attribute> as well as <attribute value="some values"/>  NcML allows for both.
  *
  *  TODO @BUG Fails to handle Constraints at all now.  This needs to be thought through more.
  *
- *  TODO We don't handle attribute@separator or attribute@orgName now (will we?)
+ *  TODO REFACTOR We really need to get rid of all the long const string& paramater lists and make them into a struct to avoid misordering errors.
  *
  *  @author mjohnson <m.johnson@opendap.org>
  */
@@ -194,19 +185,28 @@ private: //methods
  void setCurrentVariable(BaseType* pVar);
 
   /**
+   *   @brief Top level call for handling all attribute types and operations (addition, rename, change values).
    *   At current scope (_pCurrentTable), either add the attribute given by type, name, value if it doesn't exist
    *   or change the value of the attribute if it does exist.
-   *   If type=="Structure", we assume the attribute is a container and will handle it differently.
-   *   @see processAttributeContainerForTable
+   *   If type=="Structure", we assume the attribute is a container and will handle it differently (@see processAttributeContainerForTable)
+   *   Also if orgName is !empty(), we need to look that name up in current scope and change it to \c name.
+   *   This calls the more specific functions:
+   *   @see processAtomicAttributeAtCurrentScope
+   *   @see processAttributeContainerAtCurrentScope
    */
-  void processAttributeAtCurrentScope(const string& name, const string& ncmlType, const string& value);
+  void processAttributeAtCurrentScope(const string& name, const string& ncmlType, const string& value, const string& orgName);
+
+  /**
+   * @brief Handle addition of, renaming of, and changing values of atomic attributes in current scope.
+   */
+  void processAtomicAttributeAtCurrentScope(const string& name, const string& type, const string& value, const string& orgName);
 
   /**
    * Given an attribute with type==Structure at current scope _pCurrentTable, either add a new container to if
    * one does not exist with /c name, otherwise assume we're just specifying a new scope for a later child attribute.
    * In either case, push the scope of the container into our instance's scope for future calls.
    */
-  void processAttributeContainerAtCurrentScope(const string& name, const string& type, const string& value);
+  void processAttributeContainerAtCurrentScope(const string& name, const string& type, const string& value, const string& orgName);
 
   /**
    *  Pulls global table out of the current DDS, or null if no current DDS.
@@ -221,6 +221,7 @@ private: //methods
 
   /** Find an attribute with name in the current scope (_pCurrentTable) _without_ recursing.
     * If found, attr will point to it, else pTable->attr_end().
+    * Note this works for both atomic and container attributes.
     * @return whether it was found
     * */
   bool findAttribute(const string& name, AttrTable::Attr_iter& attr) const;
@@ -229,7 +230,7 @@ private: //methods
    * @param pTable table to put it in
    * @param name name of the attribute
    * @param type DAP type of the attribute
-   * @param value attribute value as a string
+   * @param value attribute value as a string, could be unsplit list of tokens.
    */
   void addNewAttribute(AttrTable* pTable, const string& name, const string& type, const string& value);
 
@@ -239,9 +240,32 @@ private: //methods
      * If type.empty(), then just leave the type as it is now, otherwise use type.
      * @param name local scope name of the attribute
      * @param type type of the attribute, or "" to leave it the same.
-     * @param value new value for the attribute
+     * @param value new value for the attribute, could be unsplit list of tokens.
      */
   void mutateAttributeAtCurrentScope(const string& name, const string& type, const string& value);
+
+  /**
+   * @brief Rename the existing atomic attribute named \c orgName to \c newName
+   * If newValue is also specified, replace the old values, otherwise leave the old values intact.
+   * @param newName the new name for the attribute.  newName must not already exist at current scope or an exception will be thrown.
+   * @param newType a new type for the attribute or empty() if leave the same.
+   * @param newValue  new values for the renamed entry to replace the old.  Old values are kept if newValue.empty().
+   * @param orgName  the original name of the attribute to rename.  Must be atomic and exist at current scope.
+   *
+   * @exception Thrown if attribute orgName doesn't exist in scope
+   * @exception Thrown if attribute newNme already exists in scope
+   * @exception Thrown if attribute orgName is a container and not atomic.
+   */
+  void renameAtomicAttribute(const string& newName, const string& newType, const string& newValue, const string& orgName);
+
+  /**
+   * @brief Rename the existing attribute container at current scope with name orgName to newName.
+   * @param newName the new name for the container, must not exist in this scope.
+   * @param orgName the original name of the container at current scope, must exist and be a container.
+   * @exception thrown if orgName attribute container does not exist or is not an attribute container.
+   * @return the attribute container whose name we changed.
+   */
+  AttrTable* renameAttributeContainer(const string& newName, const string& orgName);
 
   /** Do the proper tokenization of values for the given dapTypeName into _tokens
    * using current _separators.
@@ -381,22 +405,45 @@ public:
   void handleEndVariable();
 
   /**
-   * Called on <attribute name="foo" type="bar" value="baz">.
+   * @brief Top level dispatch call on start of <attribute> element.
    *
-   * If type == "Structure", the attribute is considered a container (with no value!)
-   * If the named attribute container is not found, a new attribute container is added to the current scope.
-   * In both cases (found or new), the attribute container's scope is pushed onto the context.
+   * This call assumes the named attribute is to be added or modified at the current
+   * parse scope.  There are two cases we handle:
    *
-   * NOTE: A leaf attribute is not currently pushed, but this needs to be done to handle characters content, see below.
+   * 1) Attribute Containers:   if type=="Structure", the attribute element refers to an attribute container which
+   *                            will have no value itself but contain other attributes or attribute containers.
+   * 2) Atomic (leaf) Attributes:  these attributes can be of any of the other NcML types (not Structure) or DAP atomic types.
+   *
+   * If the attribute specified by \c name (or alternatively, \c orgName if non empty) is not found in the current
+   * scope, it is created and added with the given type and value.  This applies to containers as well, which must have no value.
+   * For the case of atomic attributes (scalar or vector), attribute@value may be empty and the value specified in the characters
+   * content of the element:
+   * i.e. <attribute name="foo" type="String" value="bar"/> == <attribute name="foo" type="String">bar</attribute>
+   *
+   * If the named attribute is found, we modify it to have the new type and value (essentially removing the old one and readding it).
+   *
+   * For vector-valued atomics, we assume whitespace is the separator for the values.  If attribute@separator is non-empty,
+   * we use it to split the values.
+   *
+   * If \c orgName is not empty, the attribute at this scope named \c orgName is to be renamed to \c name.
+   *
+   * @param name the name of the attribute to add or modify.  Also, the new name if orgName != "".
+   * @param type can be any of the NcML types (in which case they're mapped to a DAP type), or a DAP type.
+   *             If type == "Structure", the attribute is considered an attribute container and value must be "".
+   * @param value the untokenized value for the attribute as specified in the attribute@value.  Note this can be empty
+   *              and the value specified on the characters content of the element for the case of atomic types.
+   *              If type == "Structure", value.empty() must be true.  Note this can contain multiple tokens
+   *              for the case of vectors of atomic types.  Default separator is whitespace, although attribute@separator
+   *              can specify a new one.  This is handled at the top level dispatcher.
+   * @param separator  if non-empty, use the given characters as separators for vector data rather than whitespace.
+   * @param orgName If not empty(), this specifies that the attribute named orgName (which should exist) is to be renamed to
+   *                 name.
    *
    * @exception  An parse exception will be thrown if this call is made while already parsing a leaf attribute.
-   *
-   * TODO BUG Since NcML allows values as the character content of the element, I need to handle that.
-   * Currently, we expect the value string to be contained within value now.
-   *
-   * TODO BUG This fails to split() the value into a vector if type != (String or Structure)!
    */
-  void handleBeginAttribute(const string& name, const string& type, const string& value);
+  void handleBeginAttribute(const string& name, const string& type, const string& value,
+                            const string& separator=" \t",
+                            const string& orgName="");
 
   /**
    * Called on </attribute>.

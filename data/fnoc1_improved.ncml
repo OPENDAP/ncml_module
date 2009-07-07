@@ -1,4 +1,4 @@
-<netcdf location="/data/fnoc1.nc">
+<netcdf location="/data/fnoc1.nc" xmlns="http://www.unidata.ucar.edu/namespaces/netcdf/ncml-2.2">
   <!-- although type attribute is required by the scheme, i have been
   using type="" to mean "whatever type a variable with the name has since it has to exist" -->
   <variable name="u">

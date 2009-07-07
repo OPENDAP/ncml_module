@@ -53,25 +53,25 @@ const string NCMLParser::STRUCTURE_TYPE("Structure");
 
 bool NCMLParser::isScopeSimpleAttribute() const
 {
-  return _scope.topType() == ScopeStack::ATTRIBUTE_ATOMIC;
+  return (!_scope.empty()) && (_scope.topType() == ScopeStack::ATTRIBUTE_ATOMIC);
 }
 
 bool
 NCMLParser::isScopeAttributeContainer() const
 {
-  return _scope.topType() == ScopeStack::ATTRIBUTE_CONTAINER;
+  return (!_scope.empty()) && (_scope.topType() == ScopeStack::ATTRIBUTE_CONTAINER);
 }
 
 bool
 NCMLParser::isScopeSimpleVariable() const
 {
-  return _scope.topType() == ScopeStack::VARIABLE_ATOMIC;
+  return (!_scope.empty()) && (_scope.topType() == ScopeStack::VARIABLE_ATOMIC);
 }
 
 bool
 NCMLParser::isScopeCompositeVariable() const
 {
-  return _scope.topType() == ScopeStack::VARIABLE_CONSTRUCTOR;
+  return (!_scope.empty()) && (_scope.topType() == ScopeStack::VARIABLE_CONSTRUCTOR);
 }
 
 bool
@@ -162,7 +162,7 @@ NCMLParser::setCurrentVariable(BaseType* pVar)
 
 // TODO we'll need a version of this that takes a vector<string>* as well for handling arrays.
 void
-NCMLParser::processAttributeAtCurrentScope(const string& name, const string& ncmlType, const string& value)
+NCMLParser::processAttributeAtCurrentScope(const string& name, const string& ncmlType, const string& value, const string& orgName)
 {
   // Convert the NCML type to a DAP type here.
   // "Structure" will remain as "Structure" for specialized processing.
@@ -180,9 +180,19 @@ NCMLParser::processAttributeAtCurrentScope(const string& name, const string& ncm
   if (type == STRUCTURE_TYPE)
     {
       BESDEBUG("ncml", "Processing an attribute element with type Structure." << endl);
-      processAttributeContainerAtCurrentScope(name, type, value);
+      processAttributeContainerAtCurrentScope(name, type, value, orgName);
     }
   else // It's atomic, so look it up in the pTable and add a new one or mutate an existing one.
+    {
+      processAtomicAttributeAtCurrentScope(name, type, value, orgName);
+    }
+}
+
+void
+NCMLParser::processAtomicAttributeAtCurrentScope(const string& name, const string& type, const string& value, const string& orgName)
+{
+  // If no orgName, just process with name.
+  if (orgName.empty())
     {
       if (attributeExistsAtCurrentScope(name))
         {
@@ -194,15 +204,20 @@ NCMLParser::processAttributeAtCurrentScope(const string& name, const string& ncm
           BESDEBUG("ncml", "Didn't find attribute: " << name << " so adding it with type=" << type << " and value=" << value << endl );
           addNewAttribute(_pCurrentTable, name, type, value);
         }
-
-      // Also push the scope on the stack in case we get values as content.
-      enterScope(name, ScopeStack::ATTRIBUTE_ATOMIC);
     }
+
+  else // if orgName then we want to rename an existing attribute, handle that separately
+    {
+      renameAtomicAttribute(name, type, value, orgName);
+    }
+
+  // In all cases, also push the scope on the stack in case we get values as content.
+  enterScope(name, ScopeStack::ATTRIBUTE_ATOMIC);
 }
 
 
 void
-NCMLParser::processAttributeContainerAtCurrentScope(const string& name, const string& type, const string& value)
+NCMLParser::processAttributeContainerAtCurrentScope(const string& name, const string& type, const string& value, const string& orgName)
 {
   assert(type == STRUCTURE_TYPE);
   BESDEBUG("ncml", "Processing attribute container with name:" << name << endl);
@@ -210,25 +225,40 @@ NCMLParser::processAttributeContainerAtCurrentScope(const string& name, const st
   // Technically it's an error to have a value for a container, so just check and warn.
   if (!value.empty())
     {
-      BESDEBUG("ncml", "WARNING: processAttributeContainerForTable got a non-empty value for an attribute container.  Ignoring it.");
+      const string msg = "PARSE ERROR: processAttributeContainerForTable got a non-empty value for an attribute container scope=\"" +
+          _scope.getTypedScopeString() + "\"";
+      BESDEBUG("ncml", msg << endl);
+      throw BESInternalError(msg, __FILE__, __LINE__);
     }
 
-  // See if the attribute container already exists in pTable scope.
-  AttrTable* pAT = _pCurrentTable->find_container(name);
-  if (!pAT) // doesn't already exist
+  AttrTable* pAT = 0;
+  // If we're supposed to rename.
+  if (!orgName.empty())
     {
-       // So create a new one
-      pAT = _pCurrentTable->append_container(name);
-      BESDEBUG("ncml", "Attribute container was not found, creating new one name=" << name << " at scope=" << _scope.getScopeString() << endl);
+      pAT = renameAttributeContainer(name, orgName);
+      assert(pAT); // this should never be null.  We throw exceptions for parse errors.
     }
-  else
+  else // Not renaming, either new one or just a scope specification.
     {
-      BESDEBUG("ncml", "Found an attribute container name=" << name << " at scope=" << _scope.getScopeString() << endl);
+
+      // See if the attribute container already exists in pTable scope.
+      pAT = _pCurrentTable->find_container(name);
+      if (!pAT) // doesn't already exist
+        {
+          // So create a new one
+          pAT = _pCurrentTable->append_container(name);
+          BESDEBUG("ncml", "Attribute container was not found, creating new one name=" << name << " at scope=" << _scope.getScopeString() << endl);
+        }
+      else
+        {
+          BESDEBUG("ncml", "Found an attribute container name=" << name << " at scope=" << _scope.getScopeString() << endl);
+        }
     }
 
-  // Either way, pAT is now the new scope, so push it
+  // No matter how we get here, pAT is now the new scope, so push it under it's name
+  assert(pAT);
   _pCurrentTable = pAT;
-  enterScope(name, ScopeStack::ATTRIBUTE_CONTAINER);
+  enterScope(pAT->get_name(), ScopeStack::ATTRIBUTE_CONTAINER);
 }
 
 AttrTable*
@@ -289,6 +319,115 @@ NCMLParser::mutateAttributeAtCurrentScope(const string& name, const string& type
   // Can't mutate, so just delete and reenter it.  This move change the ordering... Do we care?
   _pCurrentTable->del_attr(name);
   _pCurrentTable->append_attr(name, actualType, &(_tokens));
+}
+
+void
+NCMLParser::renameAtomicAttribute(const string& newName, const string& newType, const string& newValue, const string& orgName)
+{
+  if (!attributeExistsAtCurrentScope(orgName))
+    {
+      const string msg = "PARSE ERROR: renameAtomicAttribute(): Couldn't find attribute with orgName=\"" + orgName +
+                         "\" at the current scope=\"" + _scope.getTypedScopeString() + "\"";
+      BESDEBUG("ncml", msg << endl);
+      throw BESInternalError(msg, __FILE__, __LINE__);
+    }
+
+  // If the name we're renaming to already exists, we'll assume that's an error as well, since the user probably
+  // wants to know that.
+  if (attributeExistsAtCurrentScope(newName))
+    {
+      const string msg = "PARSE ERROR: renameAtomicAttribute(): Renaming attribute orgName=\"" + orgName +
+                              "\" failed because the new name=\"" + newName + "\" already exists at the current scope=\""
+                              + _scope.getTypedScopeString() + "\"";
+      BESDEBUG("ncml", msg << endl);
+      throw BESInternalError(msg, __FILE__, __LINE__);
+    }
+
+  // OK, if it's there, let's rename it...  We'll need to:
+  // 1) Pull out the existing data from orgName
+  // 2) Delete the old entry for orgName
+  // 3) Add the new entry with the saved data under the new name
+  // 4) * (consider this) If value is !empty(), then mutate the entry or error?
+  AttrTable::Attr_iter it;
+  bool gotIt = findAttribute(orgName, it);
+  assert(gotIt);  // logic bug check, we check above
+
+  // Just to be safe... we shouldn't get down here if it is, but we can't proceed otherwise.
+  if (_pCurrentTable->is_container(it))
+    {
+      const string msg = "LOGIC ERROR: renameAtomicAttribute() got an attribute container where it expected an atomic attribute";
+      BESDEBUG("ncml", msg << endl);
+      throw BESInternalError(msg, __FILE__, __LINE__);
+    }
+
+  // 1) Copy the entire vector explicitly here!
+  vector<string> orgData(*(_pCurrentTable->get_attr_vector(it)));
+  AttrType orgType = _pCurrentTable->get_attr_type(it);
+
+  // 2) Out with the old
+  _pCurrentTable->del_attr(orgName);
+
+  // Hmm, what to do if the types are different?  I'd say use the new one....
+  string typeToUse = AttrType_to_String(orgType);
+  if (!newType.empty() && newType != typeToUse)
+  {
+     BESDEBUG("ncml", "Warning: renameAtomicAttribute().  New type did not match old type, using new type." << endl);
+     typeToUse = newType;
+  }
+
+  // 3) In with the new entry for the old data.
+  _pCurrentTable->append_attr(newName, typeToUse, &orgData);
+
+
+  // 4) If value was specified, let's go call mutate on the thing we just made to change the data.  Seems
+  // odd a user would do this, but it's allowable I think.
+  if (!newValue.empty())
+    {
+      mutateAttributeAtCurrentScope(newName, newType, newValue);
+    }
+}
+
+AttrTable*
+NCMLParser::renameAttributeContainer(const string& newName, const string& orgName)
+{
+  AttrTable* pAT = _pCurrentTable->find_container(orgName);
+    if (!pAT)
+      {
+        const string msg = "PARSE ERROR: Failed to find attribute container with orgName=\"" + orgName + "\" at scope=\"" +
+          _scope.getTypedScopeString() + "\"";
+        BESDEBUG("ncml", msg << endl);
+        throw BESInternalError(msg, __FILE__, __LINE__);
+      }
+
+    // Check that the new name doesn't exist either.
+    if (attributeExistsAtCurrentScope(newName))
+      {
+        const string msg = "PARSE ERROR: Renaming attribute container to name=\"" + newName +
+          "\" failed since an attribute already exists with that name at scope=\"" + _scope.getTypedScopeString() + "\"";
+        BESDEBUG("ncml", msg << endl);
+        throw BESInternalError(msg, __FILE__, __LINE__);
+      }
+
+    // Otherwise, we're good.
+    BESDEBUG("ncml", "Renaming attribute container orgName=\"" << orgName << "\" to name=\"" << newName << "\" at scope=\""
+          << _scope.getTypedScopeString() << "\"" << endl);
+
+    // Just changing the name doesn't work because of duplicated state and because
+    // the container may hash on name, so we have to remove it and readd it
+    // Get an iterator for the original.
+    AttrTable::Attr_iter it;
+    findAttribute(orgName, it);
+    // Erase the table at the iterator.  This leaves the memory alone, so pAT still valid.
+    // BUG TODO This call actually leaks the struct entry memory.  Submitted a ticket.
+    // Until it's fixed, we also leak.
+    _pCurrentTable->del_attr_table(it);
+
+    // Shove it back in with the new name
+    pAT->set_name(newName);
+    _pCurrentTable->append_container(pAT, newName);
+
+    // Return it as the new current scope.
+    return pAT;
 }
 
 int
@@ -364,6 +503,7 @@ NCMLParser::tokenizeValuesForDAPType(const string& values, AttrType dapType)
 ////////////////////////////////////// Class Methods (Statics)
 
 // Used below to convert NcML data type to a DAP data type.
+// TODO consider making this case-insensitive...
 typedef std::map<string, string> TypeConverter;
 
 /* Ncml DataType:
@@ -390,7 +530,7 @@ static TypeConverter* makeTypeConverter()
   tc["long"] = "Int32"; // not sure of this one
   tc["float"] = "Float32";
   tc["double"] = "Float64";
-  tc["string"] = "String";
+  tc["string"] = "String"; // allow lower case.
   tc["String"] = "String";
   tc["Structure"] = "Structure";
   tc["structure"] = "Structure"; // allow lower case for this as well
@@ -681,6 +821,7 @@ NCMLParser::handleBeginVariable(const string& varName, const string& type /* = "
 {
   BESDEBUG("ncml", "handleBeginVariable called with varName=" << varName << endl);
 
+  // Handle the metadata directive if this is the first call.
   processMetadataDirectiveIfNeeded();
 
   // Lookup the variable at this level.  If !_pVar, we assume we look on the DDS.
@@ -732,7 +873,7 @@ NCMLParser::handleEndVariable()
 }
 
 void
-NCMLParser::handleBeginAttribute(const string& name, const string& type, const string& value)
+NCMLParser::handleBeginAttribute(const string& name, const string& type, const string& value, const string& separators, const string& orgName)
 {
   // TODO might want to print our current container, be it global or a variable...
   BESDEBUG("ncml", "handleBeginAttribute called for attribute name=" << name << endl);
@@ -745,9 +886,21 @@ NCMLParser::handleBeginAttribute(const string& name, const string& type, const s
       throw BESInternalError("Parse error.", __FILE__, __LINE__);
     }
 
+  // Handle metadata directive if this is the first entry.
   processMetadataDirectiveIfNeeded();
 
-  // If we are processing a simple attribute, we should not get a new elemnent before closing the old!  Parse error!
+  // If this was specified, then we want to store it for the parsing of this attribute only.
+  // It will be set back to default in the next handleEndAttribute() call.
+  if (!separators.empty())
+    {
+      _separators = separators;
+
+#if DEBUG_NCML_PARSER_INTERNALS
+      BESDEBUG("ncml", "Got attribute@separator=\"" << separators << "\"  and using for the next attribute value." << endl);
+#endif // #if DEBUG_NCML_PARSER_INTERNALS
+    }
+
+  // If we are processing a simple attribute, we should not get a new element before closing the old!  Parse error!
   if (isScopeSimpleAttribute())
     {
       const string msg = "Parse error: handleBeginAttribute called before a an atomic attribute was closed!";
@@ -755,7 +908,7 @@ NCMLParser::handleBeginAttribute(const string& name, const string& type, const s
       throw BESInternalError(msg, __FILE__, __LINE__);
     }
 
-  processAttributeAtCurrentScope(name, type, value);
+  processAttributeAtCurrentScope(name, type, value, orgName);
 }
 
 void
@@ -826,15 +979,11 @@ NCMLParser::onStartElement(const std::string& name, const AttrMap& attrs)
      const string& type = SaxParser::findAttrValue(attrs,"type");
      const string& value = SaxParser::findAttrValue(attrs, "value");
      const string& separators = SaxParser::findAttrValue(attrs, "separator");
-     // If this was specified, then we want to store it for the parsing of this attrribute only
-     if (!separators.empty())
-       {
-#if DEBUG_NCML_PARSER_INTERNALS
-         BESDEBUG("ncml", "Got attribute@separator=\"" << separators << "\"  and using for the next attribute value." << endl);
-#endif // #if DEBUG_NCML_PARSER_INTERNALS
-         _separators = separators;
-       }
-     handleBeginAttribute(attrName, type, value);
+     const string& orgName = SaxParser::findAttrValue(attrs, "orgName");
+
+     //Process the attribute depending on what it is.
+     // If orgName is !empty(), we'll rename it.
+     handleBeginAttribute(attrName, type, value, separators, orgName);
    }
  else if (name == "variable")
    {
@@ -844,7 +993,7 @@ NCMLParser::onStartElement(const std::string& name, const AttrMap& attrs)
    }
  else
    {
-     BESDEBUG("ncml", "Start of <" << name << "> element unsupported currently, ignoring." << endl);
+     BESDEBUG("ncml", "Start of <" << name << "> element.  Element unsupported, ignoring." << endl);
    }
 }
 
