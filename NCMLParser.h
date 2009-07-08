@@ -27,8 +27,8 @@
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
 
-#ifndef NCMLHELPER_H_
-#define NCMLHELPER_H_
+#ifndef __NCML_MODULE_NCML_PARSER_H__
+#define __NCML_MODULE_NCML_PARSER_H__
 
 #include "config.h"
 
@@ -80,6 +80,7 @@ namespace ncml_module
  *  1) Adding or modifying existing atomic attributes at any scope (global, variable, nested variable, nested attribute container)
  *  2) Adding (or traversing the scope of existing) attribute containers using <attribute type="Structure"> to refer to the container.
  *  3) Traversing a hierarchy of variable scopes to set the scope for 1) or 2)
+ *  4) We handle orgName renaming for attribute@orgName only.
  *
  *  We maintain a pointer to the currently active AttrTable as we get SAX parser calls.  As we enter/exit attribute containers or
  *  Constructor variables we keep track of this on a scope stack which allows us to know the fully qualifed name of the current scope.
@@ -107,9 +108,16 @@ private:
   enum SourceMetadataDirective { PERFORM_DEFAULT=0, READ_METADATA, EXPLICIT, PROCESSED };
 
 private: // data rep
-  string _filename; // name of the ncml file we need to parse
 
-  bool _parsingLocation; // true if we have entered a location element and not closed it yet. (todo consider making this a string with loc name)
+  // If true, we will consider unknown ncml elements as parse errors and raise exception.
+  // If false, we just BESDEBUG the warning and ignore them entirely.
+  static bool sThrowExceptionOnUnknownElements;
+
+  // name of the ncml file we are parsing
+  string _filename;
+
+  // true if we have entered a location element and not closed it yet. (todo consider making this a string with loc name)
+  bool _parsingLocation;
 
   // Handed in at creation, this is a helper to load a given DDS.  It is assumed valid for the life of this.
   DDSLoader& _loader;
@@ -129,12 +137,6 @@ private: // data rep
   // the table for the scope at the current parse point.
   AttrTable* _pCurrentTable;
 
-  // As we handle nested attribute containers (nested attributes),
-  // we push them onto this stack to be sure we update state
-  // properly as we close the elements and exit scope.
-  // This will be empty unless we are in nested attribute.
-  // stack<AttrTable*> _attrContainerStack;
-
   // As we parse, we'll use this as a stack for keeping track of the current
   // scope we're in.  In other words, this stack will refer to the container where _pCurrTable is in the DDS.
   // if empty() then we're in global dataset scope (or no scope if not parsing location yet).
@@ -150,32 +152,55 @@ private: // data rep
 
 private: //methods
 
-  bool isScopeSimpleAttribute() const;
+  /** Is the innermost scope an atomic (leaf) attribute? */
+  bool isScopeAtomicAttribute() const;
+
+  /** Is the inntermost scope an attribute container? */
   bool isScopeAttributeContainer() const;
+
+  /** Is the innermost scope an non-Constructor variable? */
   bool isScopeSimpleVariable() const;
+
+  /** Is the innermost scope a hierarchical (Constructor) variable? */
   bool isScopeCompositeVariable() const;
+
+  /** Is the scope a variable of some sort? */
+  bool isScopeVariable() const { return (isScopeSimpleVariable() || isScopeCompositeVariable()); }
+
+  /** Is the scope the global attribute table of the DDS? */
   bool isScopeGlobal() const;
 
-
-  /** Return whether we are inside a location element <netcdf> at this point of the parse */
+  /**  Are we inside the scope of a location element <netcdf> at this point of the parse?
+   * Note that this means anywhere in the the scope stack, not the innermost (local) scope
+  */
   bool withinLocation() const { return _parsingLocation; }
 
-  /** Returns whether we are inside a variable element at current parse point.
+  /** Returns whether there is a variable element on the scope stack SOMEWHERE.
    *  Note we could be nested down within multiple variables or attribute containers,
-   *  but this will be true if anywhere in current scope we're within a variable.
+   *  but this will be true if anywhere in current scope we're nested within a variable.
   */
   bool withinVariable() const { return _parsingLocation && _pVar; }
 
-  // Helper to get the dds from _ddsResponse
-  // Error to call _ddsResponse is null.
+  /** Helper to get the dds from _ddsResponse
+   *  Error to call _ddsResponse is null.
+   */
   DDS* getDDS() const;
 
-  // Clear any volatile parse state (basically after each netcdf node).
+  /** Clear any volatile parse state (basically after each netcdf node).
+   * Also used by the dtor.
+   */
   void resetParseState();
 
-  // Look up the variable called varName in pContainer.  If !pContainer, look in _dds top level.
+  /** Look up the variable called varName in pContainer.
+       If !pContainer, look in _dds top level.
+       @return the BaseType* or NULL if not found.
+   */
  BaseType* getVariableInContainer(const string& varName, BaseType* pContainer);
 
+ /** Lookup and return the variable named varName in the DDS and return it.
+  * @param varName name of the variable to find in the top level getDDS().
+  * @return the variable pointer else NULL if not found.
+  */
  BaseType* getVariableInDDS(const string& varName);
 
  /**
@@ -183,6 +208,14 @@ private: //methods
   *  If pVar is null and there is a valid dds, then set _pCurrentTable to the global attribute table.
   */
  void setCurrentVariable(BaseType* pVar);
+
+ /** Return whether the actual type of \c var match the type \c expectedType.
+  *  Here expectedType is assumed to have been through the @@@
+  *  Special cases for NcML:
+  *  1) We map expectedType == "Structure" to match DAP Constructor types: Grid, Sequence, Structure.
+  *  2) We define expectedType.empty() to match ANY DAP type.
+  */
+ static bool typeCheckDAPVariable(const BaseType& var, const string& expectedType);
 
   /**
    *   @brief Top level call for handling all attribute types and operations (addition, rename, change values).
@@ -226,13 +259,13 @@ private: //methods
     * */
   bool findAttribute(const string& name, AttrTable::Attr_iter& attr) const;
 
-  /** Create a new attribute and put it into pTable
-   * @param pTable table to put it in
+  /** Create a new attribute and put it into _pCurrentTable (current scope).
    * @param name name of the attribute
    * @param type DAP type of the attribute
    * @param value attribute value as a string, could be unsplit list of tokens.
+   *              If so, they will be split using current _separators and added as an array.
    */
-  void addNewAttribute(AttrTable* pTable, const string& name, const string& type, const string& value);
+  void addNewAttribute(const string& name, const string& type, const string& value);
 
   /**
      * Change the existing attribute's value.
@@ -241,6 +274,7 @@ private: //methods
      * @param name local scope name of the attribute
      * @param type type of the attribute, or "" to leave it the same.
      * @param value new value for the attribute, could be unsplit list of tokens.
+     *              If so, they will be split using current _separators and added as an array.
      */
   void mutateAttributeAtCurrentScope(const string& name, const string& type, const string& value);
 
@@ -249,7 +283,7 @@ private: //methods
    * If newValue is also specified, replace the old values, otherwise leave the old values intact.
    * @param newName the new name for the attribute.  newName must not already exist at current scope or an exception will be thrown.
    * @param newType a new type for the attribute or empty() if leave the same.
-   * @param newValue  new values for the renamed entry to replace the old.  Old values are kept if newValue.empty().
+   * @param newValue  new value(s) for the renamed entry to replace the old.  Old values are kept if newValue.empty().
    * @param orgName  the original name of the attribute to rename.  Must be atomic and exist at current scope.
    *
    * @exception Thrown if attribute orgName doesn't exist in scope
@@ -319,9 +353,17 @@ public: // Class Helpers  TODO These should get refactored somewhere else.
   static const string STRUCTURE_TYPE;
 
   /**
-    * Convert the NCML type in ncmlType into the DAP version.
+    * Convert the NCML type in ncmlType into a canonical type we will use in the parser.
+    * Specifically, we map NcML types to their closest DAP equivalent type,
+    * but we leave Structure as Structure since it is assumed to mean Constructor for DAP
+    * which is a superclass type.
+    * Note this passes DAP types through unchanged as well.
+    * It is illegal for \c ncmlType to be empty().
+    * We return "" to indicate an error in conversion.
+    * @param ncmlType a non empty() string that could be an NcML type (or built-in DAP type)
+    * @return the converted type or "" if unknown type.
     */
-  static string convertNcmlTypeToDapType(const string& ncmlType);
+  static string convertNcmlTypeToCanonicalType(const string& ncmlType);
 
 public:
   /**
@@ -394,7 +436,8 @@ public:
    * Pushes the scope of the variable onto the context, whether simple or structure.
    *
    * NOTE: We default to empty type, assuming the caller doesn't want to type check, but
-   * just walk the hierarchy down since we cannot add new variables yet.
+   * just walk the hierarchy down since we cannot add new variables yet.  TODO Technically,
+   * NcML 2.2 has the type mandatory, so we might want to switch this.
    */
   void handleBeginVariable(const string& varName, const string& type="");
 
@@ -447,12 +490,12 @@ public:
 
   /**
    * Called on </attribute>.
-   * If it was an attribute container, pops the scope of the attribute container from the context.
+   * Pops the attribute scope from the stack
    */
   void handleEndAttribute();
 
   //////////////////////////////
-  // Interface SaxParser
+  // Interface SaxParser:  Wrapped calls from the libxml C SAX parser
 
   virtual void onStartDocument();
   virtual void onEndDocument();
@@ -466,4 +509,4 @@ public:
 
 } //namespace ncml_module
 
-#endif /* NCMLHELPER_H_ */
+#endif /* __NCML_MODULE_NCML_PARSER_H__ */

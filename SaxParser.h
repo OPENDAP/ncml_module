@@ -26,8 +26,8 @@
 //
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
-#ifndef SAXPARSER_H_
-#define SAXPARSER_H_
+#ifndef __NCML_MODULE__SAX_PARSER_H__
+#define __NCML_MODULE__SAX_PARSER_H__
 
 #include <string>
 #include <map>
@@ -93,4 +93,4 @@ public:
 
 } // namespace ncml_module
 
-#endif /* SAXPARSER_H_ */
+#endif /* __NCML_MODULE__SAX_PARSER_H__ */

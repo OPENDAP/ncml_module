@@ -31,6 +31,7 @@
 #include "BESInternalError.h"
 #include "DAS.h"
 #include "DDS.h"
+#include "NcmlDebug.h"
 
 using namespace libdap;
 using namespace std;
@@ -70,12 +71,15 @@ namespace ncml_module
    */
   static void populateAttrTableForContainerVariableRecursive(AttrTable* dasTable, Constructor* consVar)
   {
+    VALID_PTR(dasTable);
+    VALID_PTR(consVar);
+
     BESDEBUG("ncml", "Recursively adding attribute tables for children of composite variable " << consVar->name() << "..." << endl);
     Constructor::Vars_iter endIt = consVar->var_end();
     for (Constructor::Vars_iter it = consVar->var_begin(); it != endIt; ++it)
       {
          BaseType* var = *it;
-         assert(var);
+         VALID_PTR(var);
          BESDEBUG("ncml", "Adding attribute table for var: " << var->name() << endl);
          // Make a new table for the child variable
          AttrTable* newTable = new AttrTable(var->get_attr_table());
@@ -86,7 +90,6 @@ namespace ncml_module
          if (var->is_constructor_type())
            {
              Constructor* child = dynamic_cast<Constructor*>(var);
-             assert(child);
              if (!child)
                {
                  throw BESInternalError("Type cast error", __FILE__, __LINE__);
@@ -104,6 +107,8 @@ namespace ncml_module
   NcmlUtil::populateDASFromDDS(DAS* das, const DDS& dds_const)
   {
     BESDEBUG("ncml", "Populating a DAS from a DDS...." << endl);
+
+    VALID_PTR(das);
 
     // Make sure the DAS is empty tostart.
     das->erase();
@@ -131,17 +136,17 @@ namespace ncml_module
       {
         // For each BaseType*, copy its table and add to DAS under its name.
         BaseType* var = *it;
-        assert(var);
+        VALID_PTR(var);
 
        // BESDEBUG("ncml", "Adding attribute table for variable: " << var->name() << endl);
         AttrTable* clonedVarTable = new AttrTable(var->get_attr_table());
+        VALID_PTR(clonedVarTable);
         das->add_table(var->name(), clonedVarTable);
 
         // If it's a container type, we need to recurse.
         if (var->is_constructor_type())
           {
             Constructor* consVar = dynamic_cast<Constructor*>(var);
-            assert(consVar);
             if (!consVar)
               {
                 throw BESInternalError("Type cast error", __FILE__, __LINE__);
@@ -157,6 +162,8 @@ namespace ncml_module
   void
   NcmlUtil::copyVariablesAndAttributesInto(DDS* dds_out, const DDS& dds_in)
   {
+    VALID_PTR(dds_out);
+
     // Avoid obvious bugs
     if (dds_out == &dds_in)
       {

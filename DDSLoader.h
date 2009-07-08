@@ -26,8 +26,8 @@
 //
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
-#ifndef DDSLOADER_H_
-#define DDSLOADER_H_
+#ifndef __NCML_MODULE_DDSLOADER_H__
+#define __NCML_MODULE_DDSLOADER_H__
 
 #include <string>
 
@@ -156,4 +156,4 @@ private:
   }; // class DDSLoader
 } // namespace ncml_module
 
-#endif /* DDSLOADER_H_ */
+#endif /* __NCML_MODULE_DDSLOADER_H__ */

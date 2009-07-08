@@ -39,19 +39,23 @@
 #include "DAS.h"
 #include "DDS.h"
 #include "DDSLoader.h"
+#include "NcmlDebug.h"
 #include "NcmlUtil.h"
 #include "SaxParserWrapper.h"
-// #include "util.h" // for downcase()
 
 // Turn on for more debug spew.
 #define DEBUG_NCML_PARSER_INTERNALS 1
 
-using namespace ncml_module;
+namespace ncml_module {
+
+// Consider filling this with a compilation flag.
+/* static */ bool NCMLParser::sThrowExceptionOnUnknownElements = true;
 
 // An attribute or variable with type "Structure" will match this string.
 const string NCMLParser::STRUCTURE_TYPE("Structure");
 
-bool NCMLParser::isScopeSimpleAttribute() const
+bool
+NCMLParser::isScopeAtomicAttribute() const
 {
   return (!_scope.empty()) && (_scope.topType() == ScopeStack::ATTRIBUTE_ATOMIC);
 }
@@ -77,18 +81,13 @@ NCMLParser::isScopeCompositeVariable() const
 bool
 NCMLParser::isScopeGlobal() const
 {
-  return _scope.empty();
+  return withinLocation() && _scope.empty();
 }
 
 DDS*
 NCMLParser::getDDS() const
 {
-  assert(_ddsResponse); // find logic errors in debug build.
-  if (!_ddsResponse)
-    {
-      BESDEBUG("ncml", "Error: getDDS called when we're not processing a <netcdf> location and _ddsResponse is null!" << endl);
-      throw BESInternalError("Null pointer", __FILE__, __LINE__);
-    }
+  NCML_ASSERT_MSG(_ddsResponse, "getDDS() called when we're not processing a <netcdf> location and _ddsResponse is null!");
   return _ddsResponse->get_dds();
 }
 
@@ -100,11 +99,6 @@ NCMLParser::resetParseState()
   _metadataDirective = PERFORM_DEFAULT;
   _pVar = 0;
   _pCurrentTable = 0;
-
- // while (!_attrContainerStack.empty())
-  //  {
-  //    _attrContainerStack.pop();
-  //  }
 
   _scope.clear();
 
@@ -160,18 +154,39 @@ NCMLParser::setCurrentVariable(BaseType* pVar)
      }
 }
 
-// TODO we'll need a version of this that takes a vector<string>* as well for handling arrays.
+bool
+NCMLParser::typeCheckDAPVariable(const BaseType& var, const string& expectedType)
+{
+  // Match all types.
+  if (expectedType.empty())
+    {
+      return true;
+    }
+  else
+    {
+      // If the type specifies a Structure, it better be a Constructor type.
+      if (expectedType == STRUCTURE_TYPE)
+        {
+          // Calls like is_constructor_type really should be const...
+          BaseType& varSemanticConst = const_cast<BaseType&>(var);
+          return varSemanticConst.is_constructor_type();
+        }
+      else
+        {
+          return (var.type_name() == expectedType);
+        }
+    }
+}
+
 void
 NCMLParser::processAttributeAtCurrentScope(const string& name, const string& ncmlType, const string& value, const string& orgName)
 {
-  // Convert the NCML type to a DAP type here.
+  // Convert the NCML type to a canonical type here.
   // "Structure" will remain as "Structure" for specialized processing.
-  string type = convertNcmlTypeToDapType(ncmlType);
+  string type = convertNcmlTypeToCanonicalType(ncmlType);
   if (type.empty())
     {
-      string msg = "Unknown NCML type: " + ncmlType;
-      BESDEBUG("ncml", msg << endl);
-      throw BESInternalError(msg, __FILE__, __LINE__);
+      THROW_NCML_PARSE_ERROR("Unknown NCML type=" + ncmlType + " for attribute name=" + name + " at scope=" + _scope.getScopeString());
     }
 
   printScope();
@@ -202,7 +217,7 @@ NCMLParser::processAtomicAttributeAtCurrentScope(const string& name, const strin
       else
         {
           BESDEBUG("ncml", "Didn't find attribute: " << name << " so adding it with type=" << type << " and value=" << value << endl );
-          addNewAttribute(_pCurrentTable, name, type, value);
+          addNewAttribute(name, type, value);
         }
     }
 
@@ -219,16 +234,13 @@ NCMLParser::processAtomicAttributeAtCurrentScope(const string& name, const strin
 void
 NCMLParser::processAttributeContainerAtCurrentScope(const string& name, const string& type, const string& value, const string& orgName)
 {
-  assert(type == STRUCTURE_TYPE);
+  NCML_ASSERT_MSG(type == STRUCTURE_TYPE, "Logic error: processAttributeContainerAtCurrentScope called with non Structure type.");
   BESDEBUG("ncml", "Processing attribute container with name:" << name << endl);
 
   // Technically it's an error to have a value for a container, so just check and warn.
   if (!value.empty())
     {
-      const string msg = "PARSE ERROR: processAttributeContainerForTable got a non-empty value for an attribute container scope=\"" +
-          _scope.getTypedScopeString() + "\"";
-      BESDEBUG("ncml", msg << endl);
-      throw BESInternalError(msg, __FILE__, __LINE__);
+      THROW_NCML_PARSE_ERROR("Found non empty() value attribute for attribute container at scope=" + _scope.getTypedScopeString());
     }
 
   AttrTable* pAT = 0;
@@ -236,7 +248,7 @@ NCMLParser::processAttributeContainerAtCurrentScope(const string& name, const st
   if (!orgName.empty())
     {
       pAT = renameAttributeContainer(name, orgName);
-      assert(pAT); // this should never be null.  We throw exceptions for parse errors.
+      VALID_PTR(pAT); // this should never be null.  We throw exceptions for parse errors.
     }
   else // Not renaming, either new one or just a scope specification.
     {
@@ -256,7 +268,7 @@ NCMLParser::processAttributeContainerAtCurrentScope(const string& name, const st
     }
 
   // No matter how we get here, pAT is now the new scope, so push it under it's name
-  assert(pAT);
+  VALID_PTR(pAT);
   _pCurrentTable = pAT;
   enterScope(pAT->get_name(), ScopeStack::ATTRIBUTE_CONTAINER);
 }
@@ -293,18 +305,22 @@ NCMLParser::findAttribute(const string& name, AttrTable::Attr_iter& attr) const
  }
 
 void
-NCMLParser::addNewAttribute(AttrTable* pTable, const string& name, const string& type, const string& value)
+NCMLParser::addNewAttribute(const string& name, const string& type, const string& value)
 {
+  VALID_PTR(_pCurrentTable);
+
   // Split the value string properly if the type is one that can be a vector.
   tokenizeValues(value, type);
 
-  pTable->append_attr(name, type, &(_tokens));
+  _pCurrentTable->append_attr(name, type, &(_tokens));
 }
 
 void
 NCMLParser::mutateAttributeAtCurrentScope(const string& name, const string& type, const string& value)
 {
-  assert(attributeExistsAtCurrentScope(name)); // logic error to call this otherwise.
+  VALID_PTR(_pCurrentTable);
+  NCML_ASSERT_MSG(attributeExistsAtCurrentScope(name),
+      "Logic error. mutateAttributeAtCurrentScope called when attribute name=" + name + " didn't exist at scope=" + _scope.getTypedScopeString());
 
   // First, pull out the existing attribute's type if unspecified.
   string actualType = type;
@@ -324,23 +340,22 @@ NCMLParser::mutateAttributeAtCurrentScope(const string& name, const string& type
 void
 NCMLParser::renameAtomicAttribute(const string& newName, const string& newType, const string& newValue, const string& orgName)
 {
+  VALID_PTR(_pCurrentTable);
+
+  // Check for user errors
   if (!attributeExistsAtCurrentScope(orgName))
     {
-      const string msg = "PARSE ERROR: renameAtomicAttribute(): Couldn't find attribute with orgName=\"" + orgName +
-                         "\" at the current scope=\"" + _scope.getTypedScopeString() + "\"";
-      BESDEBUG("ncml", msg << endl);
-      throw BESInternalError(msg, __FILE__, __LINE__);
+      THROW_NCML_PARSE_ERROR("Failed to change name of non-existent attribute with orgName=" + orgName +
+                             " and new name=" + newName + " at the current scope=" + _scope.getScopeString());
     }
 
   // If the name we're renaming to already exists, we'll assume that's an error as well, since the user probably
   // wants to know that.
   if (attributeExistsAtCurrentScope(newName))
     {
-      const string msg = "PARSE ERROR: renameAtomicAttribute(): Renaming attribute orgName=\"" + orgName +
-                              "\" failed because the new name=\"" + newName + "\" already exists at the current scope=\""
-                              + _scope.getTypedScopeString() + "\"";
-      BESDEBUG("ncml", msg << endl);
-      throw BESInternalError(msg, __FILE__, __LINE__);
+      THROW_NCML_PARSE_ERROR("Failed to change name of existing attribute orgName=" + orgName +
+                             " because an attribute with the new name=" + newName +
+                             " already exists at the current scope=" + _scope.getScopeString());
     }
 
   // OK, if it's there, let's rename it...  We'll need to:
@@ -350,18 +365,17 @@ NCMLParser::renameAtomicAttribute(const string& newName, const string& newType, 
   // 4) * (consider this) If value is !empty(), then mutate the entry or error?
   AttrTable::Attr_iter it;
   bool gotIt = findAttribute(orgName, it);
-  assert(gotIt);  // logic bug check, we check above
+  NCML_ASSERT(gotIt);  // logic bug check, we check above
 
   // Just to be safe... we shouldn't get down here if it is, but we can't proceed otherwise.
-  if (_pCurrentTable->is_container(it))
-    {
-      const string msg = "LOGIC ERROR: renameAtomicAttribute() got an attribute container where it expected an atomic attribute";
-      BESDEBUG("ncml", msg << endl);
-      throw BESInternalError(msg, __FILE__, __LINE__);
-    }
+  NCML_ASSERT_MSG( !_pCurrentTable->is_container(it),
+      "LOGIC ERROR: renameAtomicAttribute() got an attribute container where it expected an atomic attribute!");
 
   // 1) Copy the entire vector explicitly here!
-  vector<string> orgData(*(_pCurrentTable->get_attr_vector(it)));
+  vector<string>* pAttrVec = _pCurrentTable->get_attr_vector(it);
+  NCML_ASSERT_MSG(pAttrVec, "Unexpected NULL from get_attr_vector()");
+  // Copy it!
+  vector<string> orgData = *pAttrVec;
   AttrType orgType = _pCurrentTable->get_attr_type(it);
 
   // 2) Out with the old
@@ -390,36 +404,35 @@ NCMLParser::renameAtomicAttribute(const string& newName, const string& newType, 
 AttrTable*
 NCMLParser::renameAttributeContainer(const string& newName, const string& orgName)
 {
+  VALID_PTR(_pCurrentTable);
   AttrTable* pAT = _pCurrentTable->find_container(orgName);
-    if (!pAT)
-      {
-        const string msg = "PARSE ERROR: Failed to find attribute container with orgName=\"" + orgName + "\" at scope=\"" +
-          _scope.getTypedScopeString() + "\"";
-        BESDEBUG("ncml", msg << endl);
-        throw BESInternalError(msg, __FILE__, __LINE__);
-      }
+  if (!pAT)
+    {
+      THROW_NCML_PARSE_ERROR("renameAttributeContainer: Failed to find attribute container with orgName=" + orgName +
+          " at scope=" + _scope.getScopeString());
+    }
 
     // Check that the new name doesn't exist either.
     if (attributeExistsAtCurrentScope(newName))
       {
-        const string msg = "PARSE ERROR: Renaming attribute container to name=\"" + newName +
-          "\" failed since an attribute already exists with that name at scope=\"" + _scope.getTypedScopeString() + "\"";
-        BESDEBUG("ncml", msg << endl);
-        throw BESInternalError(msg, __FILE__, __LINE__);
+        THROW_NCML_PARSE_ERROR("Renaming attribute container with orgName=" + orgName +
+            " to new name=" + newName +
+            " failed since an attribute already exists with that name at scope=" + _scope.getScopeString());
       }
 
-    // Otherwise, we're good.
-    BESDEBUG("ncml", "Renaming attribute container orgName=\"" << orgName << "\" to name=\"" << newName << "\" at scope=\""
-          << _scope.getTypedScopeString() << "\"" << endl);
+    // Otherwise, we're good, let the curious know.
+    BESDEBUG("ncml", "Renaming attribute container orgName=" << orgName << " to name=" << newName << " at scope="
+          << _scope.getTypedScopeString() << endl);
 
-    // Just changing the name doesn't work because of duplicated state and because
-    // the container may hash on name, so we have to remove it and readd it
-    // Get an iterator for the original.
+    // Just changing the name doesn't work because of how AttrTable stores names, so we need to remove and readdit under new na,e.
     AttrTable::Attr_iter it;
-    findAttribute(orgName, it);
+    bool gotIt = findAttribute(orgName, it);
+    NCML_ASSERT_MSG(gotIt, "Logic error.  renameAttributeContainer expected to find attribute but didn't.");
     // Erase the table at the iterator.  This leaves the memory alone, so pAT still valid.
     // BUG TODO This call actually leaks the struct entry memory.  Submitted a ticket.
     // Until it's fixed, we also leak.
+    // IMPORTANT: make sure this doesn't delete the actual table!
+    // We want it to remove it but hand the memory to me, or else we need to copy it!
     _pCurrentTable->del_attr_table(it);
 
     // Shove it back in with the new name
@@ -437,13 +450,15 @@ NCMLParser::tokenizeValues(const string& values, const string& dapTypeName)
   AttrType dapType = String_to_AttrType(dapTypeName);
   if (dapType == Attr_unknown)
     {
-      string msg = "Unknown DAP type found for: " + dapTypeName;
-      BESDEBUG("ncml", msg << endl);
-      throw BESInternalError(msg, __FILE__, __LINE__);
+      THROW_NCML_PARSE_ERROR("Attempting to tokenize attribute value failed since we found an unknown internal DAP type=" + dapTypeName +
+           " for the current fully qualified attribute=" + _scope.getScopeString());
     }
 
   // If we're valid type, tokenize us according to type.
   int numTokens = tokenizeValuesForDAPType(values, dapType);
+
+  // TODO Do we want to validate the data we are pulling out of the NcML?  I.e. check that it is
+  // Of the type specified and split properly?  For example, we'd check each entry could be atof for floats, etc.
 
 #if DEBUG_NCML_PARSER_INTERNALS
 
@@ -464,6 +479,7 @@ NCMLParser::tokenizeValues(const string& values, const string& dapTypeName)
       msg += "\"";
     }
   BESDEBUG("ncml", "Tokenize got " << numTokens << " tokens:\n" << msg << endl);
+
 #endif // DEBUG_NCML_PARSER_INTERNALS
 
   return numTokens;
@@ -559,8 +575,10 @@ static const bool ALLOW_DAP_ATTRIBUTE_TYPES = true;
 
 /* static */
 string
-NCMLParser::convertNcmlTypeToDapType(const string& ncmlType)
+NCMLParser::convertNcmlTypeToCanonicalType(const string& ncmlType)
 {
+  NCML_ASSERT_MSG(!ncmlType.empty(), "Logic error: convertNcmlTypeToCanonicalType disallows empty() input.");
+
   // if we allow DAP types to be specified as an attribute type
   // then just pass it through
   if (ALLOW_DAP_ATTRIBUTE_TYPES && isDAPType(ncmlType))
@@ -586,19 +604,19 @@ NCMLParser::changeMetadataDirective(SourceMetadataDirective newVal)
   // Only go back to default if we're not processing a <netcdf> node.
   if (!_parsingLocation && newVal != PERFORM_DEFAULT)
     {
-      throw BESInternalError("<readMetadata/> or <explicit/> element found outside <netcdf> tree.", __FILE__, __LINE__);
+      THROW_NCML_PARSE_ERROR("<readMetadata/> or <explicit/> element found outside <netcdf> tree.");
     }
 
   // If it's already been set by the file (ie not default) can't change it (unless to PROCESSED).
   if (_parsingLocation && _metadataDirective != PERFORM_DEFAULT && newVal != PROCESSED)
     {
-      throw BESInternalError("NcML file must contain one of <readMetadata/> or <explicit/>", __FILE__, __LINE__);
+      THROW_NCML_PARSE_ERROR("NcML file must contain one of <readMetadata/> or <explicit/>");
     }
 
   // Also an error to unprocess during a location parse if we already explicitly set it.
   if (_parsingLocation && _metadataDirective != PERFORM_DEFAULT && newVal != PROCESSED)
     {
-      throw BESInternalError("Logic error.", __FILE__, __LINE__);
+      THROW_NCML_INTERNAL_ERROR("Logic error: can't unprocess a metadata directive if we already processed it.");
     }
 
   // Otherwise, we can set it.
@@ -629,7 +647,6 @@ void
 NCMLParser::clearAllAttrTables()
 {
   DDS* dds = getDDS();
-  assert(dds);
   if (!dds)
   {
       return;
@@ -649,6 +666,7 @@ NCMLParser::clearAllAttrTables()
 void
 NCMLParser::clearVariableMetadataRecursively(BaseType* var)
 {
+  VALID_PTR(var);
   // clear the table
   var->get_attr_table().erase();
 
@@ -657,7 +675,7 @@ NCMLParser::clearVariableMetadataRecursively(BaseType* var)
         Constructor *compositeVar = dynamic_cast<Constructor*>(var);
         if (!compositeVar)
           {
-            throw BESInternalError("Cast error", __FILE__, __LINE__);
+           THROW_NCML_INTERNAL_ERROR("clearVariableMetadataRecursively: Unexpected cast error on dynamic_cast<Constructor*>");
           }
         for (Constructor::Vars_iter it = compositeVar->var_begin(); it != compositeVar->var_end(); ++it)
           {
@@ -678,11 +696,11 @@ NCMLParser::enterScope(const string& name, ScopeStack::ScopeType type)
 void
 NCMLParser::exitScope()
 {
+  NCML_ASSERT_MSG(!_scope.empty(), "Logic Error: Scope Stack Underflow!");
   BESDEBUG("ncml", "Exiting scope " << _scope.top().getTypedName() << endl);
   _scope.pop();
   BESDEBUG("ncml", "New scope=\"" << _scope.getScopeString() << "\"" << endl);
 }
-
 
 void
 NCMLParser::printScope() const
@@ -733,9 +751,7 @@ NCMLParser::parse(const string& filename)
 {
   if (parsing())
     {
-      string msg = "Error: NCMLParser::parse called while already parsing!";
-      BESDEBUG("ncml", msg << endl);
-      throw BESInternalError(msg, __FILE__, __LINE__);
+      THROW_NCML_INTERNAL_ERROR("Illegal Operation: NCMLParser::parse called while already parsing!");
     }
 
   BESDEBUG("ncml", "Beginning NcML parse of file=" << filename << endl);
@@ -745,12 +761,15 @@ NCMLParser::parse(const string& filename)
 
   // Make a SAX parser wrapper to set up the C callbacks.
   // It will call us back through SaxParser interface.
+  // The parse call can throw exceptions, but
+  // we use RAII pattern to clean up if needed.
   SaxParserWrapper parser(*this);
   parser.parse(filename);
 
-  // Relinquish ownership to the caller.
+  // RAII pattern: We are about to relinquish ownership to the caller.
+  // TODO consider using smart_ptr?
   BESDDSResponse* ret = _ddsResponse;
-  _ddsResponse = 0;
+  _ddsResponse = 0; // we no longer own it
 
   // Prepare for a new parse, making sure it's all cleaned up.
   resetParseState();
@@ -764,9 +783,7 @@ NCMLParser::handleBeginLocation(const string& location)
   BESDEBUG("ncml", "handleBeginLocation on:" << location << endl);
   if (_parsingLocation)
     {
-      string msg = "Parse Error: Got a new <netcdf> location while already parsing one!";
-       BESDEBUG("ncml", msg << endl);
-       throw BESInternalError(msg, __FILE__, __LINE__);
+      THROW_NCML_PARSE_ERROR("Got a new <netcdf> location while already parsing one!");
     }
   _parsingLocation = true;
 
@@ -774,20 +791,20 @@ NCMLParser::handleBeginLocation(const string& location)
   // We can only process on location right now.
   if (_ddsResponse)
     {
-      cleanup(); // get rid of the storage, then exception
-      string msg = "Parse Error: Got another <netcdf> node while already processing one!";
-      BESDEBUG("ncml", msg << endl);
-      throw BESInternalError(msg, __FILE__, __LINE__);
+      // Dtor will clean it up
+     THROW_NCML_PARSE_ERROR("Got another <netcdf> node while already processing one!  We only support one <netcdf> per file in this version.");
     }
 
   // Use the loader to load the location specified in the <netcdf> element.
-  // If not found, we'll throw an exception and just unwind out.
+  // If not found, this call will throw an exception and we'll just unwind out.
+  // TODO We probably want to see what the error was and throw the correct reponse upward or something.
   _ddsResponse = _loader.load(location);
 
   // Force the attribute table to be the global one for the DDS.
   if (getDDS())
     {
       _pCurrentTable = getGlobalAttrTable();
+      VALID_PTR(_pCurrentTable); // it really has to be there.
     }
 }
 
@@ -796,30 +813,52 @@ NCMLParser::handleEndLocation()
 {
   BESDEBUG("ncml", "handleEndLocation called!" << endl);
 
+  if (!withinLocation())
+    {
+      THROW_NCML_PARSE_ERROR("Got close of <netcdf> node while not within one!");
+    }
+
   // For now, this will be the end of our parse, until aggregation.
   _parsingLocation = false;
-  // We leave the rest of the state alone for the main parse to clean up and return correctly.
+  // We leave the rest of the state alone for the main parse to clean up and return the DDX response correctly.
 }
 
 void
 NCMLParser::handleReadMetadata()
 {
-   changeMetadataDirective(READ_METADATA);
+  if (!withinLocation())
+    {
+      THROW_NCML_PARSE_ERROR("Got <readMetadata/> while not within <netcdf>");
+    }
+  changeMetadataDirective(READ_METADATA);
 }
 
 void
 NCMLParser::handleExplicit()
 {
+  if (!withinLocation())
+    {
+      THROW_NCML_PARSE_ERROR("Got <explicit/> while not within <netcdf>");
+    }
   changeMetadataDirective(EXPLICIT);;
 }
 
-// TODO this will have to take the other attributes, such as type.  We want to double check
-// that type is "Structure" for nested variable calls, probably.
-// TODO Probably want to typecheck type if it is not null.
 void
-NCMLParser::handleBeginVariable(const string& varName, const string& type /* = "" */)
+NCMLParser::handleBeginVariable(const string& varName, const string& type)
 {
   BESDEBUG("ncml", "handleBeginVariable called with varName=" << varName << endl);
+
+  if (!withinLocation())
+    {
+      THROW_NCML_PARSE_ERROR("Got <variable> element while not in <netcdf> node!");
+    }
+
+  // Can only specify variable globally or within a composite variable now.
+  if (!(isScopeGlobal() || isScopeCompositeVariable()))
+    {
+      THROW_NCML_PARSE_ERROR("Got <variable> element while not within a <netcdf> or within variable container.  scope=" +
+          _scope.getScopeString());
+    }
 
   // Handle the metadata directive if this is the first call.
   processMetadataDirectiveIfNeeded();
@@ -830,13 +869,23 @@ NCMLParser::handleBeginVariable(const string& varName, const string& type /* = "
   BaseType* pVar = getVariableInContainer(varName, _pVar);
   if (!pVar)
     {
-      const string msg = "PARSE ERROR: handleBeginVariable could not find variable=" + varName + " in scope=" + _scope.getScopeString() +
-        " and new variables cannot be added in this version.";
-      BESDEBUG("ncml", msg << endl);
-      throw BESInternalError(msg, __FILE__, __LINE__);
+      THROW_NCML_PARSE_ERROR( "Could not find variable=" + varName + " in scope=" + _scope.getScopeString() +
+                              " and new variables cannot be added in this version.");
     }
 
-  // TODO Check the type matches if they specified it...
+  // Make sure the type matches.  NOTE:
+  // We use "Structure" to mean Grid, Structure, Sequence!
+  // Also type="" will match ANY type.
+  // TODO This fails on Array as well due to NcML referring making arrays be a basic type with a non-zero dimension.
+  // We're gonna ignore that until we allow addition of variables, but let's leave this check here for now
+  if (!type.empty() && !typeCheckDAPVariable(*pVar, convertNcmlTypeToCanonicalType(type)))
+    {
+      THROW_NCML_PARSE_ERROR("Type Mismatch in variable element with name=" + varName +
+          " at scope=" + _scope.getScopeString() +
+          " Expected type=" + type +
+          " but found variable with type=" + pVar->type_name() +
+          "  To match a variable of any type, please do not specify variable@type.");
+    }
 
   // this sets the _pCurrentTable to the variable's table.
   setCurrentVariable(pVar);
@@ -858,11 +907,12 @@ NCMLParser::handleEndVariable()
   // pop the attr table back upwards to the previous one
   // I think we can just use the parent of the current...
   BESDEBUG("ncml", "handleEndVariable called at scope:" << _scope.getScopeString() << endl);
-  if (!withinVariable())
+  if (!isScopeVariable())
     {
-      throw BESInternalError("handleEndVariable called when not parsing a variable element", __FILE__, __LINE__);
+      THROW_NCML_PARSE_ERROR("handleEndVariable called when not parsing a variable element!");
     }
 
+  NCML_ASSERT_MSG(_pVar, "Error: Unexpected NULL _pVar in handleEndVariable!");
   // New context is the parent, which could be NULL for top level DDS vars.
   // We might want to use an explicit local stack to help debugging, TODO
   setCurrentVariable(_pVar->get_parent());
@@ -882,8 +932,14 @@ NCMLParser::handleBeginAttribute(const string& name, const string& type, const s
   // which could be anywhere including glboal attributes, nested attributes, or some level down a variable tree.
   if (!withinLocation())
     {
-      BESDEBUG("ncml", "Parse error: Got handleBeginAttribute when not within a <netcdf> node!");
-      throw BESInternalError("Parse error.", __FILE__, __LINE__);
+      THROW_NCML_PARSE_ERROR("Got <attribute> element while not within a <netcdf> node!");
+    }
+
+  // Can't be within a leaf attribute for this call either!
+  if (isScopeAtomicAttribute())
+    {
+      THROW_NCML_PARSE_ERROR("Got new <attribute> while in a leaf <attribute> at scope=" + _scope.getScopeString() +
+          " Hierarchies of attributes are only allowed for attribute containers with type=Structure");
     }
 
   // Handle metadata directive if this is the first entry.
@@ -900,14 +956,6 @@ NCMLParser::handleBeginAttribute(const string& name, const string& type, const s
 #endif // #if DEBUG_NCML_PARSER_INTERNALS
     }
 
-  // If we are processing a simple attribute, we should not get a new element before closing the old!  Parse error!
-  if (isScopeSimpleAttribute())
-    {
-      const string msg = "Parse error: handleBeginAttribute called before a an atomic attribute was closed!";
-      BESDEBUG("ncml", msg << " Scope=" << _scope.getTypedScopeString() << endl);
-      throw BESInternalError(msg, __FILE__, __LINE__);
-    }
-
   processAttributeAtCurrentScope(name, type, value, orgName);
 }
 
@@ -917,7 +965,7 @@ NCMLParser::handleEndAttribute()
   BESDEBUG("ncml", "handleEndAttribute called at scope:" << _scope.getScopeString() << endl);
 
   // if it wasn't a container, just clear out this state
-  if (isScopeSimpleAttribute())
+  if (isScopeAtomicAttribute())
     {
       // Nothing to do but pop it off scope stack, we're still within the containing AttrTable.
       exitScope();
@@ -928,19 +976,12 @@ NCMLParser::handleEndAttribute()
 
       // Walk up the to the container's parent as we leave this scope.
       _pCurrentTable = _pCurrentTable->get_parent();
-      assert(_pCurrentTable); // This better be valid or something is really broken!
-      if (!_pCurrentTable)
-        {
-          const string msg = "ERROR: Null _pCurrentTable unexpected.";
-          BESDEBUG("ncml", msg << endl);
-          throw BESInternalError(msg, __FILE__, __LINE__);
-        }
+      // This better be valid or something is really broken!
+      NCML_ASSERT_MSG(_pCurrentTable, "ERROR: Null _pCurrentTable unexpected while leaving scope of attribute container!");
     }
-  else
+  else // Can't close an attribute if we're not in one!
     {
-      const string msg = "PARSE ERROR: got handleEndAttribute when not in attribute scope.  Scope=" + _scope.getTypedScopeString();
-      BESDEBUG("ncml",  msg << endl);
-      throw BESInternalError(msg, __FILE__, __LINE__);
+      THROW_NCML_PARSE_ERROR("Got end of attribute element while not parsing an attribute!");
     }
 }
 
@@ -960,6 +1001,11 @@ NCMLParser::onEndDocument()
 void
 NCMLParser::onStartElement(const std::string& name, const AttrMap& attrs)
 {
+  // TODO Lots of magic string constants in here...  They're not likely to change,
+  // But it might be better to pull them into classes for each node
+  // which has the named attributes it supports.  Easier to check for
+  // misspelled attribute that way, etc.
+
   // Dispatch to the right place, else ignore
  if (name == "netcdf")
    {
@@ -969,7 +1015,7 @@ NCMLParser::onStartElement(const std::string& name, const AttrMap& attrs)
    {
      handleExplicit();
    }
- else if (name == "readMetaData")
+ else if (name == "readMetadata")
    {
      handleReadMetadata();
    }
@@ -991,9 +1037,16 @@ NCMLParser::onStartElement(const std::string& name, const AttrMap& attrs)
      const string& type = SaxParser::findAttrValue(attrs,"type");
      handleBeginVariable(varName, type);
    }
- else
+ else // Unknown element...  Ugh, we might want to parse error here to let the caller know we don't support the element?  I'll defer it for now.
    {
-     BESDEBUG("ncml", "Start of <" << name << "> element.  Element unsupported, ignoring." << endl);
+     if (sThrowExceptionOnUnknownElements)
+       {
+         THROW_NCML_PARSE_ERROR("Unknown element type=" + name + " found in NcML parse with scope=" + _scope.getScopeString());
+       }
+     else
+       {
+         BESDEBUG("ncml", "Start of <" << name << "> element.  Element unsupported, ignoring." << endl);
+       }
    }
 }
 
@@ -1009,7 +1062,7 @@ NCMLParser::onEndElement(const std::string& name)
   else if (name == "attribute")
     {
       handleEndAttribute();
-      // go back to our default as we leave an attribute.
+      // go back to our default as we leave an attribute that may have changed this!
       _separators = NcmlUtil::WHITESPACE;
     }
   else if (name == "variable")
@@ -1030,22 +1083,21 @@ static bool isAllWhitespace(const string& str)
 void
 NCMLParser::onCharacters(const std::string& content)
 {
-  if (isScopeSimpleAttribute())
+  // Getting non-whitespace characters is valid in an leaf element to specify the value.
+  if (isScopeAtomicAttribute())
     {
       const string& name = _scope.topName();
-      BESDEBUG("ncml", "Adding attribute calues as characters content for atomic attribute=" << name << " value=\"" << content << "\"" << endl);
+      BESDEBUG("ncml", "Adding attribute values as characters content for atomic attribute=" << name << " value=\"" << content << "\"" << endl);
       mutateAttributeAtCurrentScope(name, "", content); // empty type means leave the same.
     }
-  else // other elements don't have mixed values now!
+  else // other elements don't have mixed values now, so this better be filler space!
     {
       // If this isn't just random whitespace then bad ncml.
       if (!isAllWhitespace(content))
         {
-            const string msg = "PARSE ERROR: Got non-whitespace characters in unexpected element at scope=\"" +
+          THROW_NCML_PARSE_ERROR("Got unexpected non-whitespace characters at scope=" +
               _scope.getTypedScopeString() +
-              "\" with characters=\"" + content + "\"";
-            BESDEBUG("ncml", msg << endl);
-            throw BESInternalError(msg, __FILE__, __LINE__);
+              " with characters=\"" + content + "\"");
         }
     }
 }
@@ -1053,6 +1105,7 @@ NCMLParser::onCharacters(const std::string& content)
 void
 NCMLParser::onParseWarning(std::string msg)
 {
+  // TODO  We may want to make a flag for considering warnings errors as well.
   BESDEBUG("ncml", "PARSE WARNING: LibXML msg={" << msg << "}.  Attempting to continue parse." << endl);
 }
 
@@ -1060,10 +1113,10 @@ NCMLParser::onParseWarning(std::string msg)
 void
 NCMLParser::onParseError(std::string msg)
 {
-  string bigMsg = "PARSE ERROR: LibXML msg={" + msg + "} Terminating parse!";
-  BESDEBUG("ncml", bigMsg << endl);
-  throw BESInternalError(bigMsg, __FILE__, __LINE__);
+  THROW_NCML_PARSE_ERROR("libxml SAX2 parser error! msg={" + msg + "} Terminating parse!");
 }
+
+} // namespace ncml_module
 
 
 

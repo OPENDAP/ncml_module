@@ -27,8 +27,8 @@
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
 
-#ifndef NCMLPARSERSAXWRAPPER_H_
-#define NCMLPARSERSAXWRAPPER_H_
+#ifndef __NCML_MODULE__SAX_PARSER_WRAPPER_H__
+#define __NCML_MODULE__SAX_PARSER_WRAPPER_H__
 
 #include <string>
 #include <libxml/parser.h>
@@ -53,13 +53,10 @@ namespace ncml_module
  * which will be used by other parts of the BES, we have to be careful with exceptions.
  * Any BESError thrown in a SaxParser callback is caught and deferred (stored in this).
  * We enter an error state and ignore all further callbacks until the libxml parser exits cleanly.
- * Then we rethrow the deferred exception.
+ * Then we recreate and rethrow the deferred exception.
  *
  * Any other exception types (...) are also caught and a local BESInternalError is thrown at parse end,
  * so be careful with which exceptions are thrown in SaxParser callbacks.
- *
- * TODO BUG The onParseWarning and onParseError do not get the proper error message back.
- * We need to use glib to generate a std::string I think...
  *
  * @author mjohnson <m.johnson@opendap.org>
  */
@@ -131,7 +128,8 @@ public:
    * defer it by entering the EXCEPTION state and copying the exception.
    * In EXCEPTION state, we don't pass on any callbacks to SaxParser.
    * When the underlying C parser completes and cleans up its storage,
-   * then we rethrow the exception.
+   * then we recreate and throw the exception.
+   * NOTE: We can't store theErr itself since it will be destroyed by the exception system.
    * @see rethrowException
    */
   void deferException(BESError& theErr);
@@ -144,7 +142,6 @@ public:
   /**
    * If there's a deferred exception, this will throw the right subclass type
    * from the preserved state at deferral time.
-   * Make sure the dtor cleans any volatile state.
    */
   void rethrowException();
 
@@ -152,4 +149,4 @@ public:
 
 } // namespace ncml_module
 
-#endif /* NCMLPARSERSAXWRAPPER_H_ */
+#endif /*__NCML_MODULE__SAX_PARSER_WRAPPER_H__ */

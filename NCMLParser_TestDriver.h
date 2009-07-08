@@ -27,8 +27,8 @@
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
 
-#ifndef NCMLPARSER_TESTDRIVER_H_
-#define NCMLPARSER_TESTDRIVER_H_
+#ifndef __NCML_MODULE_NCMLPARSER_TESTDRIVER_H__
+#define __NCML_MODULE_NCMLPARSER_TESTDRIVER_H__
 
 #include <string>
 
@@ -52,4 +52,4 @@ namespace ncml_module
 
 } // namespace ncml_module
 
-#endif /* NCMLPARSER_TESTDRIVER_H_ */
+#endif /* __NCML_MODULE_NCMLPARSER_TESTDRIVER_H__ */

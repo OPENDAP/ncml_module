@@ -54,9 +54,9 @@ using namespace ncml_module;
 // convert to a string... Might want a way around this.
 static string makeString(const xmlChar* chars)
 {
-  // TODO HACK!  This cast might be dangerous, but since DAP specifies Strings and URL's are US-ASCII, this
+  // HACK This cast might be dangerous, but since DAP specifies Strings and URL's are US-ASCII, this
   // cast _should_ do the right thing.  xmlChar is an unsigned char now.
-  return string( (const char*)chars );
+  return string( reinterpret_cast<const char*>(chars) );
 }
 
 // Empty then fill the map with <attribName.attribValue> pairs from attrs.
