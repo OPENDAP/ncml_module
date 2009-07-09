@@ -1,0 +1,13 @@
+# Test the ncml handler with the bes.
+# Passthrough test with a constraint to be sure we apply them properly
+# to the DDX.
+
+
+global comp_output		# contains output from besstandalone_start
+global verbose			# this and srcdir are set by runtest.exp
+global srcdir
+
+# The `1' in compare_stdout means call xfail if the test fails.
+
+besstandalone_start "ncml/nested_passthrough_constraint.ncml.ddx.bescmd"
+compare_stdout "ncml/nested_passthrough_constraint.ncml.ddx.bescmd.baseline" "DDX /data/nested_passthrough.ncml" 0

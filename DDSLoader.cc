@@ -52,7 +52,6 @@ DDSLoader::DDSLoader(BESDataHandlerInterface& dhi)
 : _dhi(dhi)
 , _hijacked(false)
 , _filename("")
-, _ddxResponse(0)
 , _store(0)
 , _containerSymbol("")
 , _origAction("")
@@ -67,9 +66,7 @@ DDSLoader::~DDSLoader()
   ensureClean();
 }
 
-// TODO make sure that on exceptions being thrown we clean up the dhi on the way out
-// or create the proper response
-BESDDSResponse*
+auto_ptr<BESDDSResponse>
 DDSLoader::load(const string& location)
 {
   // Just be sure we're cleaned up before doing anything, in case the caller calls load again after exception
@@ -83,7 +80,7 @@ DDSLoader::load(const string& location)
 
   // We need to make the proper response object as well, since the dhi is coming in with the
   // response object for the original ncml request.
-  _ddxResponse = new BESDDSResponse( new DDS( NULL, "virtual" )  ) ;
+  auto_ptr<BESDDSResponse> ddxResponse = auto_ptr<BESDDSResponse>(new BESDDSResponse( new DDS( NULL, "virtual" )  )) ;
 
   // Add a new symbol to the storage list and return container for it.
   // We will remove this new container on the way out.
@@ -91,17 +88,17 @@ DDSLoader::load(const string& location)
 
   // Take over the dhi
   _dhi.container = container;
-  _dhi.response_handler->set_response_object(_ddxResponse);
+  _dhi.response_handler->set_response_object(ddxResponse.get());
   _dhi.action = DDS_RESPONSE;
   _dhi.action_name = DDX_RESPONSE_STR;
 
   // TODO mpj do we need to do these calls?
   BESDEBUG( "ncml", "about to set dap version to: "
-      << _ddxResponse->get_dap_client_protocol() << endl);
+      << ddxResponse->get_dap_client_protocol() << endl);
   BESDEBUG( "ncml", "about to set xml:base to: "
-                         << _ddxResponse->get_request_xml_base() << endl);
-  _ddxResponse->get_dds()->set_client_dap_version( _ddxResponse->get_dap_client_protocol() ) ;
-  _ddxResponse->get_dds()->set_request_xml_base( _ddxResponse->get_request_xml_base() );
+                         << ddxResponse->get_request_xml_base() << endl);
+  ddxResponse->get_dds()->set_client_dap_version( ddxResponse->get_dap_client_protocol() ) ;
+  ddxResponse->get_dds()->set_request_xml_base( ddxResponse->get_request_xml_base() );
 
   // DO IT!
   BESRequestHandlerList::TheList()->execute_current( _dhi ) ;
@@ -114,18 +111,14 @@ DDSLoader::load(const string& location)
 
   _filename = "";
 
-  // Get ready to return the dynamically created DDX response, passing ownership to caller by nulling ours.
-  BESDDSResponse* ret = _ddxResponse;
-  _ddxResponse = 0;
-
   // We should be clean here too.
   ensureClean();
 
-  return ret;
+  return ddxResponse; // relinquish
 }
 
 void
-DDSLoader::cleanup()
+DDSLoader::cleanup() throw()
 {
   ensureClean();
 }
@@ -167,7 +160,7 @@ DDSLoader::addNewContainerToStorage()
 }
 
 void
-DDSLoader::removeContainerFromStorage()
+DDSLoader::removeContainerFromStorage() throw()
 {
   // If we have non-null _store, we added the container symbol,
   // so get rid of it
@@ -226,7 +219,7 @@ DDSLoader::restoreDHI()
 }
 
 void
-DDSLoader::ensureClean()
+DDSLoader::ensureClean() throw()
 {
   // If we're still hijacked here, there was an exception in load, so clean
   // up if needed.
@@ -234,14 +227,6 @@ DDSLoader::ensureClean()
     {
       restoreDHI();
     }
-
-  // If we still have _ddxResponse, we also failed to load() properly and
-  // relinquish ownership.  Clean it up as we stack unwind!
-  if (_ddxResponse)
-     {
-       delete _ddxResponse;
-       _ddxResponse = 0;
-     }
 
    // Make sure we've removed the new symbol from the container list as well.
    removeContainerFromStorage();

@@ -29,27 +29,31 @@
 #include "config.h"
 #include "NCMLRequestHandler.h"
 
+#include <BESConstraintFuncs.h>
+#include <BESContainerStorage.h>
+#include <BESContainerStorageList.h>
+#include "BESDataDDSResponse.h"
+#include <BESDataNames.h>
+#include <BESDASResponse.h>
+#include <BESDDSResponse.h>
+#include <BESDebug.h>
+#include <BESInternalError.h>
+#include <BESRequestHandlerList.h>
 #include <BESResponseHandler.h>
 #include <BESResponseNames.h>
-#include <BESVersionInfo.h>
-#include <BESTextInfo.h>
-#include "BESDataDDSResponse.h"
-#include "BESDDSResponse.h"
-#include "BESDASResponse.h"
-#include <BESConstraintFuncs.h>
 #include <BESServiceRegistry.h>
+#include <BESTextInfo.h>
 #include <BESUtil.h>
-#include <BESInternalError.h>
-#include <BESContainerStorageList.h>
-#include <BESContainerStorage.h>
-#include <BESRequestHandlerList.h>
-#include <BESDebug.h>
+#include <BESVersionInfo.h>
 #include "cgi_util.h"
 #include "DDSLoader.h"
+#include <memory>
+#include "NcmlDebug.h"
+#include "NcmlUtil.h"
 #include "NCMLParser.h"
 #include "NCMLResponseNames.h"
 #include "SimpleLocationParser.h"
-#include "NcmlUtil.h"
+
 
 using namespace ncml_module;
 
@@ -117,7 +121,9 @@ NCMLRequestHandler::ncml_build_redirect( BESDataHandlerInterface &dhi, const str
     return true;
 }
 
-
+// Here we load the DDX response with by hijacking the current dhi via DDSLoader
+// and hand it to our parser to load the ncml, load the DDX for the location,
+// apply ncml transformations to it, then return the modified DDS.
 bool
 NCMLRequestHandler::ncml_build_das( BESDataHandlerInterface &dhi )
 {
@@ -127,34 +133,27 @@ NCMLRequestHandler::ncml_build_das( BESDataHandlerInterface &dhi )
     // to clean up dhi state, etc.
     DDSLoader loader(dhi);
     NCMLParser parser(loader);
-    BESDDSResponse* loaded_bdds = parser.parse(filename);
+    auto_ptr<BESDDSResponse> loaded_bdds = parser.parse(filename);
 
-    // TODO if we really got a DDX, need to now conjure up a DAS response from it.
-    if (!loaded_bdds)
+    if (!(loaded_bdds.get()))
       {
         throw BESInternalError("Null BESDDSResonse in ncml DAS handler.", __FILE__, __LINE__);
       }
 
-    // Grab the loaded DDS to mutate.
+    // Now fill in the desired DAS response object from the DDS
     DDS* dds = loaded_bdds->get_dds();
-    // Create an NCMLHelper based on the given filename we got loaded with in the dhi
-    assert(dds);
-
-    // Now fill in the desired DAS response object from the DDX
-
+    VALID_PTR(dds);
     BESResponseObject *response =
      dhi.response_handler->get_response_object();
     BESDASResponse *bdas = dynamic_cast < BESDASResponse * >(response);
-    assert(bdas);
-
-    DAS *das = bdas->get_das();
+    VALID_PTR(bdas);
 
     // Copy the modified DDS attributes into the DAS response object!
+    DAS *das = bdas->get_das();
     BESDEBUG("ncml", "Creating DAS response from the location DDX..." << endl);
     NcmlUtil::populateDASFromDDS(das, *dds);
 
-    // clean up!
-    delete loaded_bdds;
+    // loaded_bdds destroys itself.
     return false ;
 }
 
@@ -165,31 +164,33 @@ NCMLRequestHandler::ncml_build_dds( BESDataHandlerInterface &dhi )
 
     // Any exceptions winding through here will cause the loader and parser dtors
     // to clean up dhi state, etc.
-    DDSLoader loader(dhi);
-    NCMLParser parser(loader);
-    BESDDSResponse* loaded_bdds = parser.parse(filename);
-
-    // TODO if we really got a DDX, need to now conjure up a DAS response from it.
-    if (!loaded_bdds)
+    auto_ptr<BESDDSResponse> loaded_bdds(0);
+    {
+      DDSLoader loader(dhi);
+      NCMLParser parser(loader);
+      loaded_bdds = parser.parse(filename);
+    }
+    if (!loaded_bdds.get())
       {
         throw BESInternalError("Null BESDDSResonse in ncml DDS handler.", __FILE__, __LINE__);
       }
 
-    // Grab the loaded DDS to mutate.
+    // Poke the handed down original response object with the loaded and modified one.
     DDS* dds = loaded_bdds->get_dds();
-    // Create an NCMLHelper based on the given filename we got loaded with in the dhi
-    assert(dds);
-
-
-    // Poke the response object with the loaded and modified one.
+    VALID_PTR(dds);
     BESResponseObject *response =
-    dhi.response_handler->get_response_object();
+      dhi.response_handler->get_response_object();
     BESDDSResponse *bdds_out = dynamic_cast < BESDDSResponse * >(response);
+    VALID_PTR(bdds_out);
     DDS *dds_out = bdds_out->get_dds();
+    VALID_PTR(dds_out);
 
     // If we just use DDS::operator=, we get into trouble with copied
     // pointers, bashing of the dataset name, etc etc so I specialize the copy for now.
     NcmlUtil::copyVariablesAndAttributesInto(dds_out, *dds);
+
+    // Apply constraints to the result
+    dhi.data[POST_CONSTRAINT] = dhi.container->get_constraint();
 
     // Also copy in the name of the original ncml request
     // TODO @HACK Not sure I want just the basename for the filename,
@@ -199,13 +200,9 @@ NCMLRequestHandler::ncml_build_dds( BESDataHandlerInterface &dhi )
     dds_out->set_dataset_name(name_path(filename));
     // Is there anything else I need to shove in the DDS?
 
-    // Clean up the dynamic object I loaded
-    delete loaded_bdds;
     return true;
 }
 
-// TODO For this special case we need to add a special call to the NCMLParser that just processes the <netcdf> element
-// to load the dataset, then immediately returns it.
 bool
 NCMLRequestHandler::ncml_build_data( BESDataHandlerInterface &dhi )
 {
@@ -215,8 +212,12 @@ NCMLRequestHandler::ncml_build_data( BESDataHandlerInterface &dhi )
 
   // First, parse the ncml to get the netcdf@location for the underlying dataset.
   string ncmlFilename = dhi.container->access();
-  SimpleLocationParser parser;
-  string location = parser.parseAndGetLocation(ncmlFilename);
+  string location("");
+
+  { // Force dtors
+    SimpleLocationParser parser;
+    location = parser.parseAndGetLocation(ncmlFilename);
+  }
 
   BESDEBUG("ncml", "DataDDS request from NcML filename:" << ncmlFilename << " Redirecting to underlying location=" << location << endl);
 
@@ -239,11 +240,15 @@ NCMLRequestHandler::ncml_build_data( BESDataHandlerInterface &dhi )
   else
     {
       DDS* dds = bdds->get_dds();
+      VALID_PTR(dds);
       string datasetName = dhi.container->get_real_name();
       // Use the basename... Is that what we want to do?  That's what nc handler does
       // and this will make our make check work by not having local paths in the output...
       dds->set_dataset_name(name_path(ncmlFilename));
       dds->filename(name_path(ncmlFilename));
+
+      // Apply constraints to the result
+      dhi.data[POST_CONSTRAINT] = dhi.container->get_constraint();
     }
 
   return ret;

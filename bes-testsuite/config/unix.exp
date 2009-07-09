@@ -39,10 +39,12 @@ proc besstandalone_start { {script ""} {is_data "no"} } {
         exp_internal 1
     }
 
+# mjohnson: I added the redirect of stderr to a log because I was getting some stderr output from the HDF handler
+# that wasn't using the BESDEBUG channel system and it was causing problems with the stdout comparisons.
     if {[string compare $is_data "no"] == 0} {
-        catch "exec besstandalone -c bes.conf -i $script" comp_output
+        catch "exec besstandalone -c bes.conf 2> besstandalone.stderr.log -i $script" comp_output
     } else {
-        catch "exec besstandalone -c bes.conf -i $script | getdap -M -" comp_output
+        catch "exec besstandalone -c bes.conf 2> besstandalone.stderr.log -i $script | getdap -M -" comp_output
     }
 }
 

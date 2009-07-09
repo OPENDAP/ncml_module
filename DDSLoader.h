@@ -29,6 +29,7 @@
 #ifndef __NCML_MODULE_DDSLOADER_H__
 #define __NCML_MODULE_DDSLOADER_H__
 
+#include <memory>
 #include <string>
 
 class BESDataHandlerInterface;
@@ -72,10 +73,6 @@ private:
   // The file we are laoding if we're hijacked
   std::string _filename;
 
-  // While we're loading, this is non-null.  We pass it to caller on successful load.
-  // Otherwise, it's null.
-  BESDDSResponse* _ddxResponse;
-
   // Remember the store so we can pull the location out in restoreDHI on exception as well.
   BESContainerStorage* _store;
 
@@ -107,24 +104,24 @@ public:
   /**
    * @brief Load and return a new DDX structure for the local dataset referred to by location.
    *
-   * Ownership of the response object passes to the caller.
+   * Ownership of the response object passes to the caller via auto_ptr.
    *
    * On exception, the dhi will be restored when this is destructed, or the user
    * call directly call cleanup() to ensure this if they catch the exception and need the
    * dhi restored immediately.
    *
-   * @return a newly allocated DDS (DDX) for the location, ownership passed to caller.
+   * @return a newly allocated DDS (DDX) for the location
    *
    * @exception if the underlying location cannot be loaded.
    */
-  BESDDSResponse* load(const std::string& location);
+  auto_ptr<BESDDSResponse> load(const std::string& location);
 
   /**
    * Ensures that the resources and dhi are all in the state they were at construction time.
    * Probably not needed by users, but in case they want to catch an exception
    * and then retry or something
    */
-  void cleanup();
+  void cleanup() throw();
 
 private:
 
@@ -145,13 +142,14 @@ private:
     */
    BESContainer* addNewContainerToStorage();
 
-   /** Remove the symbol we added in addNewContainerToStorage if it's there. */
-   void removeContainerFromStorage();
+   /** Remove the symbol we added in addNewContainerToStorage if it's there.
+    * Used in dtor, can't throw */
+   void removeContainerFromStorage() throw();
 
    /** Make sure we clean up anything we've touched.
     * On exit, everything should be in the same state as construction.
     */
-   void ensureClean();
+   void ensureClean() throw();
 
   }; // class DDSLoader
 } // namespace ncml_module

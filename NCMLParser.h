@@ -32,6 +32,7 @@
 
 #include "config.h"
 
+#include <memory>
 #include <stack>
 #include <string>
 #include <vector>
@@ -85,8 +86,6 @@ namespace ncml_module
  *  We maintain a pointer to the currently active AttrTable as we get SAX parser calls.  As we enter/exit attribute containers or
  *  Constructor variables we keep track of this on a scope stack which allows us to know the fully qualifed name of the current scope.
  *
- *  TODO @BUG Fails to handle Constraints at all now.  This needs to be thought through more.
- *
  *  TODO REFACTOR We really need to get rid of all the long const string& paramater lists and make them into a struct to avoid misordering errors.
  *
  *  @author mjohnson <m.johnson@opendap.org>
@@ -116,14 +115,14 @@ private: // data rep
   // name of the ncml file we are parsing
   string _filename;
 
-  // true if we have entered a location element and not closed it yet. (todo consider making this a string with loc name)
+  // true if we have entered a location element and not closed it yet.
   bool _parsingLocation;
 
   // Handed in at creation, this is a helper to load a given DDS.  It is assumed valid for the life of this.
   DDSLoader& _loader;
 
   // The response object containing the DDS for the <netcdf> node we are processing, or null if not processing.
-  BESDDSResponse* _ddsResponse;
+  auto_ptr<BESDDSResponse> _ddsResponse;
 
   // what to do with existing metadata after it's read in from parent.
   SourceMetadataDirective _metadataDirective;
@@ -164,10 +163,10 @@ private: //methods
   /** Is the innermost scope a hierarchical (Constructor) variable? */
   bool isScopeCompositeVariable() const;
 
-  /** Is the scope a variable of some sort? */
+  /** Is the innermost scope a variable of some sort? */
   bool isScopeVariable() const { return (isScopeSimpleVariable() || isScopeCompositeVariable()); }
 
-  /** Is the scope the global attribute table of the DDS? */
+  /** Is the innermost scope the global attribute table of the DDS? */
   bool isScopeGlobal() const;
 
   /**  Are we inside the scope of a location element <netcdf> at this point of the parse?
@@ -347,7 +346,7 @@ private: //methods
   /**  Cleanup state to as if we're a new object */
   void cleanup();
 
-public: // Class Helpers  TODO These should get refactored somewhere else.
+public: // Class Helpers
 
   /** The string describing the type "Structure" */
   static const string STRUCTURE_TYPE;
@@ -373,10 +372,6 @@ public:
    */
   NCMLParser(DDSLoader& loader);
 
-  /**
-   * Destroys our allocated BESDDSResponse if we have not returned it in a successful parse.
-   * This will work if an exception leads to the destruction of the parser in a call to parse().
-   */
   virtual ~NCMLParser();
 
 private:
@@ -391,11 +386,15 @@ public:
   /** @brief Parse the NcML filename, returning a newly allocated DDS response containing the underlying dataset
    *  transformed by the NcML.  The caller owns the returned memory.
    *
-   *  On a parse error, an BESInternalError will be thrown.  TODO perhaps make my own exception for catching separately upstairs.
+   *  @throw BESSyntaxUserError for parse errors such as bad XML or NcML referring to variables that do not exist.
+   *  @throw BESInternalError for assertion failures, null ptr exceptions, or logic errors.
+   *
+   *  TODO perhaps throw a BESNotFoundError for failures to load the ncmlFilename or for anything netcdf@location failures.
+   *  These need to be made clear to the response somehow for a 404 or 500 error as per the use case.
    *
    *  @return a new response object with the transformed DDS in it.  The caller assumes ownership of the returned object.
   */
-  BESDDSResponse* parse(const string& ncmlFilename);
+  auto_ptr<BESDDSResponse> parse(const string& ncmlFilename);
 
   bool parsing() const { return !_filename.empty(); }
 
@@ -404,7 +403,7 @@ public:
 
   /**
    *  Called on parsing <netcdf location="foo"> element.
-   *  Loads the given (local!) location into a new DDX for subsequent transformations.
+   *  Loads the given (local) location into a new DDX for subsequent transformations.
    *  The current parse scope becomes the loaded dataset's scope.
    *
    *  @throw If the underlying location fails to load, throw an exception.
@@ -426,7 +425,7 @@ public:
   /**
    * Called on <explicit/>
    * Informs the parser to remove all read in metadata from the dataset before adding the new attributes.
-   * Mututally exclusive with handleReadMetadata within in <netcdf>
+   * Mututally exclusive with handleReadMetadata within <netcdf> tree
    * @exception if handleReadMetadata() was already called before handleEndLocation().
    */
   void handleExplicit();
@@ -436,8 +435,7 @@ public:
    * Pushes the scope of the variable onto the context, whether simple or structure.
    *
    * NOTE: We default to empty type, assuming the caller doesn't want to type check, but
-   * just walk the hierarchy down since we cannot add new variables yet.  TODO Technically,
-   * NcML 2.2 has the type mandatory, so we might want to switch this.
+   * just walk the hierarchy down since we cannot add new variables yet.
    */
   void handleBeginVariable(const string& varName, const string& type="");
 

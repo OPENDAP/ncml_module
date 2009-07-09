@@ -87,7 +87,7 @@ NCMLParser::isScopeGlobal() const
 DDS*
 NCMLParser::getDDS() const
 {
-  NCML_ASSERT_MSG(_ddsResponse, "getDDS() called when we're not processing a <netcdf> location and _ddsResponse is null!");
+  NCML_ASSERT_MSG(_ddsResponse.get(), "getDDS() called when we're not processing a <netcdf> location and _ddsResponse is null!");
   return _ddsResponse->get_dds();
 }
 
@@ -102,9 +102,7 @@ NCMLParser::resetParseState()
 
   _scope.clear();
 
-  // if non-null, we still own it.
-  delete _ddsResponse;
-  _ddsResponse = 0;
+  // _ddsResponse takes care of itself.
 
   // just in case
   _loader.cleanup();
@@ -116,8 +114,6 @@ NCMLParser::getVariableInContainer(const string& varName, BaseType* pContainer)
   BaseType::btp_stack varContext;
   if (pContainer)
   {
-    // TODO consider checking the context.  I think this actually recurses, so we want to make sure
-    // we get the var at current level, not recursed.  Probably want to do the iteration ourselves at this level.
     return pContainer->var(varName, varContext);
   }
   else
@@ -126,7 +122,7 @@ NCMLParser::getVariableInContainer(const string& varName, BaseType* pContainer)
     }
 }
 
-// Not that this should take a fully qualified one too, but without a scoping oeprator (.) it will
+// Not that this should take a fully qualified one too, but without a scoping operator (.) it will
 // just search the top level variables.
 BaseType*
 NCMLParser::getVariableInDDS(const string& varName)
@@ -711,11 +707,10 @@ NCMLParser::printScope() const
 void
 NCMLParser::cleanup()
 {
-  // we don't own any of the memory, unless _ddsResponse is non-null at the point
-  // this object is destructed (ie we have not finished a successful parse)
-  // On successfull parse, we hand this to caller and relinquish ownership (null it).
-  delete _ddsResponse;
-  _ddsResponse = 0;
+  // The only memory we own is the _ddsResponse, which is in an auto_ptr so will
+  // either be returned to caller in parse() and cleared, or else
+  // delete'd by our dtor via auto_ptr
+
   // All other objects point into _ddsResponse temporarily, so nothing to destroy there.
 
   // Just for completeness.
@@ -744,9 +739,10 @@ NCMLParser::NCMLParser(DDSLoader& loader)
 NCMLParser::~NCMLParser()
 {
   cleanup();
+  // if _ddsResponse isn't relinquished, auto_ptr will nuke it here.
 }
 
-BESDDSResponse*
+auto_ptr<BESDDSResponse>
 NCMLParser::parse(const string& filename)
 {
   if (parsing())
@@ -766,15 +762,12 @@ NCMLParser::parse(const string& filename)
   SaxParserWrapper parser(*this);
   parser.parse(filename);
 
-  // RAII pattern: We are about to relinquish ownership to the caller.
-  // TODO consider using smart_ptr?
-  BESDDSResponse* ret = _ddsResponse;
-  _ddsResponse = 0; // we no longer own it
-
-  // Prepare for a new parse, making sure it's all cleaned up.
+  // Prepare for a new parse, making sure it's all cleaned up (with the exception of the _ddsResponse
+  // which where's about to send off)
   resetParseState();
 
-  return ret;
+  // Relinquish ownership to the caller.
+  return _ddsResponse;
 }
 
 void
@@ -789,7 +782,7 @@ NCMLParser::handleBeginLocation(const string& location)
 
   // If we get another one of these while we still have one, it's currently an error.
   // We can only process on location right now.
-  if (_ddsResponse)
+  if (_ddsResponse.get())
     {
       // Dtor will clean it up
      THROW_NCML_PARSE_ERROR("Got another <netcdf> node while already processing one!  We only support one <netcdf> per file in this version.");
@@ -798,7 +791,7 @@ NCMLParser::handleBeginLocation(const string& location)
   // Use the loader to load the location specified in the <netcdf> element.
   // If not found, this call will throw an exception and we'll just unwind out.
   // TODO We probably want to see what the error was and throw the correct reponse upward or something.
-  _ddsResponse = _loader.load(location);
+  _ddsResponse = _loader.load(location); // gain control of response object
 
   // Force the attribute table to be the global one for the DDS.
   if (getDDS())
@@ -817,6 +810,9 @@ NCMLParser::handleEndLocation()
     {
       THROW_NCML_PARSE_ERROR("Got close of <netcdf> node while not within one!");
     }
+
+  // If the only entry was the metadata directive, we'd better make sure it gets done!
+  processMetadataDirectiveIfNeeded();
 
   // For now, this will be the end of our parse, until aggregation.
   _parsingLocation = false;
@@ -865,7 +861,6 @@ NCMLParser::handleBeginVariable(const string& varName, const string& type)
 
   // Lookup the variable at this level.  If !_pVar, we assume we look on the DDS.
   // Otherwise, assume pVar is a container and look within it.
-  // TODO Note that if pVar, pVar had better be a container variable!
   BaseType* pVar = getVariableInContainer(varName, _pVar);
   if (!pVar)
     {
@@ -913,8 +908,8 @@ NCMLParser::handleEndVariable()
     }
 
   NCML_ASSERT_MSG(_pVar, "Error: Unexpected NULL _pVar in handleEndVariable!");
+
   // New context is the parent, which could be NULL for top level DDS vars.
-  // We might want to use an explicit local stack to help debugging, TODO
   setCurrentVariable(_pVar->get_parent());
   exitScope(); // pop the stack
   printScope();
@@ -925,7 +920,6 @@ NCMLParser::handleEndVariable()
 void
 NCMLParser::handleBeginAttribute(const string& name, const string& type, const string& value, const string& separators, const string& orgName)
 {
-  // TODO might want to print our current container, be it global or a variable...
   BESDEBUG("ncml", "handleBeginAttribute called for attribute name=" << name << endl);
 
   // Make sure we're in a netcdf and then process the attribute at the current table scope,
