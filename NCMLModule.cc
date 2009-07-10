@@ -30,15 +30,23 @@
 
 using std::endl ;
 
-#include "NCMLModule.h"
-#include "BESRequestHandlerList.h"
-#include "NCMLRequestHandler.h"
+#include <BESCatalogDirectory.h>
+#include <BESCatalogList.h>
+#include <BESContainerStorageList.h>
+#include <BESContainerStorageCatalog.h>
+#include "BESDapService.h"
 #include "BESDebug.h"
+#include "BESRequestHandlerList.h"
 #include "BESResponseHandlerList.h"
 #include "BESResponseNames.h"
+#include "NCMLRequestHandler.h"
 #include "NCMLResponseNames.h"
 
+#include "NCMLModule.h"
+
 using namespace ncml_module;
+
+static const char* const NCML_CATALOG = "catalog";
 
 void
 NCMLModule::initialize( const string &modname )
@@ -51,6 +59,34 @@ NCMLModule::initialize( const string &modname )
     // If new commands are needed, then let's declare this once here. If
     // not, then you can remove this line.
     string cmd_name ;
+
+    // Dap services
+    BESDEBUG( modname, modname << " handles dap services" << endl )
+    BESDapService::handle_dap_service( modname ) ;
+
+    BESDEBUG( modname, "    adding " << NCML_CATALOG << " catalog" << endl )
+    if( !BESCatalogList::TheCatalogList()->ref_catalog( NCML_CATALOG ) )
+      {
+        BESCatalogList::TheCatalogList()->add_catalog( new BESCatalogDirectory( NCML_CATALOG ) ) ;
+     }
+     else
+     {
+         BESDEBUG( modname, "    catalog already exists, skipping" << endl )
+     }
+
+     BESDEBUG( modname, "    adding catalog container storage " << NCML_CATALOG
+                     << endl )
+     if( !BESContainerStorageList::TheList()->ref_persistence( NCML_CATALOG ) )
+     {
+         BESContainerStorageCatalog *csc =
+             new BESContainerStorageCatalog( NCML_CATALOG ) ;
+         BESContainerStorageList::TheList()->add_persistence( csc ) ;
+     }
+     else
+     {
+         BESDEBUG( modname, "    storage already exists, skipping" << endl )
+     }
+
 
     // INIT_END
     BESDEBUG( modname, "    adding NCML debug context" << endl );
@@ -71,6 +107,13 @@ NCMLModule::terminate( const string &modname )
     // If new commands are needed, then let's declare this once here. If
     // not, then you can remove this line.
     string cmd_name ;
+
+    BESDEBUG( modname, "    removing catalog container storage"
+                     << NCML_CATALOG << endl )
+    BESContainerStorageList::TheList()->deref_persistence( NCML_CATALOG ) ;
+
+    BESDEBUG( modname, "    removing " << NCML_CATALOG << " catalog" << endl )
+    BESCatalogList::TheCatalogList()->deref_catalog( NCML_CATALOG ) ;
 
     // TERM_END
     BESDEBUG( modname, "Done Cleaning NCML module " << modname << endl );

@@ -10,4 +10,4 @@ global srcdir
 # The `1' in compare_stdout means call xfail if the test fails.
 
 besstandalone_start "ncml/nested_passthrough_constraint.ncml.dods.bescmd"
-compare_stdout "ncml/nested_passthrough_constraint.ncml.dods.bescmd.baseline" "DataDDS /data/nested_passthrough.ncml" 0
+compare_stdout "ncml/nested_passthrough_constraint.ncml.dods.bescmd.baseline" "DataDDS /data/ncml/nested_passthrough.ncml" 0

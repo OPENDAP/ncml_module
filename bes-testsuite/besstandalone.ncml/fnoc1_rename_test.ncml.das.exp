@@ -9,6 +9,6 @@ global srcdir
 # The `1' in compare_stdout means call xfail if the test fails.
 
 besstandalone_start "ncml/fnoc1_rename_test.ncml.das.bescmd"
-compare_stdout "ncml/fnoc1_rename_test.ncml.das.bescmd.baseline" "DAS /data/fnoc1_rename_test.ncml" 0
+compare_stdout "ncml/fnoc1_rename_test.ncml.das.bescmd.baseline" "DAS /data/ncml/fnoc1_rename_test.ncml" 0
 
 

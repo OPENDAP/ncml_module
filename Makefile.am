@@ -56,8 +56,8 @@ EXTRA_DIST = COPYRIGHT COPYING bes-ncml-data.sh.in ncml_module.spec data
 
 CLEANFILES = *~ bes-ncml-data.sh
 
-#sample_datadir = $(datadir)/hyrax/data/ncml
-#sample_data_DATA = data/fnoc1_improved.ncml
+sample_datadir = $(datadir)/hyrax/data/ncml
+sample_data_DATA = data/ncml/fnoc1_improved.ncml data/ncml/fnoc1.nc
 
 do_subst = sed -e 's,[@]sysconfdir[@],$(sysconfdir),g' \
 		   	   -e 's,[@]libdir[@],$(libdir),g' \
