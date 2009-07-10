@@ -9,7 +9,7 @@
     
      @author mjohnson
   -->
-<netcdf location="data/fnoc1.nc">
+<netcdf location="data/ncml/fnoc1.nc">
 
   <!-- 1) Nuke all existing metadata -->
   <explicit/>

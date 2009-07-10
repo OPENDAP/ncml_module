@@ -9,7 +9,7 @@
      
      @author mjohnson
   -->
-<netcdf location="data/3B42.001003.5.HDF">
+<netcdf location="data/ncml/3B42.001003.5.HDF">
   
   <!-- 1) Change an existing nested attribute structure 
        by changing the OrbitNumber as mandatory  
