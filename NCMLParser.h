@@ -59,10 +59,10 @@ namespace ncml_module
 }
 
 /**
- *  @brief INCOMPLETE NcML Parser for adding AIS to existing local datasets.
+ *  @brief NcML Parser for adding/modifyinbg/removing AIS to existing local datasets
  *
- *  Core engine for parsing an NcML structure and modifying the DDS of a single dataset by adding new metadata to it.
- *  (http://docs.opendap.org/index.php/AIS_Using_NcML).
+ *  Core engine for parsing an NcML structure and modifying the DDS (which includes attribute data)
+ *  of a single dataset by adding new metadata to it. (http://docs.opendap.org/index.php/AIS_Using_NcML).
  *
  *  Limitations Expected for the initial version:
  *
@@ -77,16 +77,36 @@ namespace ncml_module
  *
  *  This parser can load a given DDX for a single netcdf@location and then modify it by:
  *
- *  0) Clearing all attributes if <explicit/> tag is given.
- *  1) Adding or modifying existing atomic attributes at any scope (global, variable, nested variable, nested attribute container)
- *  2) Adding (or traversing the scope of existing) attribute containers using <attribute type="Structure"> to refer to the container.
- *  3) Traversing a hierarchy of variable scopes to set the scope for 1) or 2)
- *  4) We handle orgName renaming for attribute@orgName only.
+ *  1) Clearing all attributes if <explicit/> tag is given.
+ *  2) Adding or modifying existing atomic attributes at any scope (global, variable, nested variable, nested attribute container)
+ *  3) Adding (or traversing the scope of existing) attribute containers using <attribute type="Structure"> to refer to the container.
+ *  4) Traversing a hierarchy of variable scopes to set the scope for 1) or 2)
+ *  5) We handle orgName renaming for attribute@orgName only.
+ *  6) We can remove an attribute (including container recursively) at any scope with <remove/>
  *
- *  We maintain a pointer to the currently active AttrTable as we get SAX parser calls.  As we enter/exit attribute containers or
- *  Constructor variables we keep track of this on a scope stack which allows us to know the fully qualifed name of the current scope.
+ *  Design and Control Flow:
  *
- *  TODO REFACTOR We really need to get rid of all the long const string& paramater lists and make them into a struct to avoid misordering errors.
+ *  1) We use the SaxParser interface callbacks to handle calls from a SAX parser (or potentially DOM treewalk) which we create on parse() call.
+ *
+ *  2) We assume a single <netcdf> node with a local data in netcdf@location.  When we parse this node, we use a DDSLoader to
+ *  create a new DDS with DDX information (full AttrTable's) in it.
+ *
+ *  3) We maintain a pointer to the currently active AttrTable as we get other SAX parser calls.  As we enter/exit the lexical scope of
+ *  attribute containers or Constructor variables we keep track of this on a scope stack which allows us to know the fully qualified name
+ *  of the current scope as well as the type of the innermost scope for error checking.
+ *
+ *  4) As we process NcML elements we modify the DDS as needed.
+ *
+ *  5) When complete, we return the loaded and transformed DDS to the caller.
+ *
+ *  We throw BESInternalError for logic errors in the code.
+ *
+ *  We throw BESSyntaxUserError for parse errors in the NcML or for user requests to modify nonexisting entities or for non-existent scopes, etc.
+ *
+ *  TODO REFACTOR We really need to get rid of all the long const string& parameter lists and make them into a struct to avoid misordering errors.
+
+ *  TODO REFACTOR Related to above, Change dispatcher from switch to factory and polymorphic processing with NCMLElement abstract class, etc.
+ *      This solves th long parameter list issue and will make things more robust moving forward with new elements and functionality.
  *
  *  @author mjohnson <m.johnson@opendap.org>
  */
@@ -491,6 +511,21 @@ public:
    * Pops the attribute scope from the stack
    */
   void handleEndAttribute();
+
+  /** @brief Remove the object at local scope with \c name.
+   *
+   * We can only remove attributes now (this includes containers, recursively).
+   *
+   * There is no need for a handleEndRemove since we process it right when we see it.
+   *
+   *  @throw BESSyntaxUserError if type != "attribute" or type != ""
+   *  @throw BESSyntaxUserError if name is not found at the current scope.
+   *
+   *  @param name local scope name of the object to remove
+   *  @param type  the type of the object to remove: we only handle "attribute" now!  (this includes containers).
+   */
+  void handleBeginRemove(const string& name, const string& type);
+
 
   //////////////////////////////
   // Interface SaxParser:  Wrapped calls from the libxml C SAX parser

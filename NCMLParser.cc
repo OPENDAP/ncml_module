@@ -979,6 +979,28 @@ NCMLParser::handleEndAttribute()
     }
 }
 
+void
+NCMLParser::handleBeginRemove(const string& name, const string& type)
+{
+  if ( !(type.empty() || type == "attribute") )
+    {
+      THROW_NCML_PARSE_ERROR("Illegal type in remove element: type=" + type +
+                             "  This version of the parser can only remove type=attribute");
+    }
+
+  AttrTable::Attr_iter it;
+  bool gotIt = findAttribute(name, it);
+  if (!gotIt)
+    {
+       THROW_NCML_PARSE_ERROR("In remove element, could not find attribute to remove name=" + name +
+           " at the current scope=" + _scope.getScopeString());
+    }
+
+  // Nuke it.  This call works with containers too, and will recursively delete the children.
+  BESDEBUG("ncml", "Removing attribute name=" << name << " at scope=" << _scope.getScopeString() << endl);
+  VALID_PTR(_pCurrentTable);
+  _pCurrentTable->del_attr(name);
+}
 
 void
 NCMLParser::onStartDocument()
@@ -1031,6 +1053,12 @@ NCMLParser::onStartElement(const std::string& name, const AttrMap& attrs)
      const string& type = SaxParser::findAttrValue(attrs,"type");
      handleBeginVariable(varName, type);
    }
+ else if (name == "remove")
+   {
+     const string& name = SaxParser::findAttrValue(attrs, "name");
+     const string& type = SaxParser::findAttrValue(attrs,"type");
+     handleBeginRemove(name, type);
+   }
  else // Unknown element...  Ugh, we might want to parse error here to let the caller know we don't support the element?  I'll defer it for now.
    {
      if (sThrowExceptionOnUnknownElements)
@@ -1062,6 +1090,10 @@ NCMLParser::onEndElement(const std::string& name)
   else if (name == "variable")
     {
       handleEndVariable();
+    }
+  else if (name == "remove")
+    {
+      BESDEBUG("ncml", "</remove> call received." << endl);
     }
   else
     {
