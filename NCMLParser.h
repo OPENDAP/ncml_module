@@ -384,6 +384,12 @@ public: // Class Helpers
     */
   static string convertNcmlTypeToCanonicalType(const string& ncmlType);
 
+  /**
+   * @brief Make sure the given tokens are valid for the listed type.
+   * For example, makes sure floats are well formed, UInt are unsigned, etc.
+   */
+  static bool checkDataIsValidForCanonicalType(const string& type, const vector<string>& tokens);
+
 public:
   /**
    * @brief Create a structure that can parse an NCML filename and returned a transformed DDX response.

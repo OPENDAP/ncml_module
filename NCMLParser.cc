@@ -41,12 +41,17 @@
 #include "DDSLoader.h"
 #include "NcmlDebug.h"
 #include "NcmlUtil.h"
+#include "parser.h" // for the type checking...
 #include "SaxParserWrapper.h"
 
 // Turn on for more debug spew.
 #define DEBUG_NCML_PARSER_INTERNALS 1
 
+
 namespace ncml_module {
+
+  // From the DAP 2 guide....
+  static const unsigned int MAX_DAP_STRING_SIZE = 32767;
 
 // Consider filling this with a compilation flag.
 /* static */ bool NCMLParser::sThrowExceptionOnUnknownElements = true;
@@ -453,8 +458,8 @@ NCMLParser::tokenizeValues(const string& values, const string& dapTypeName)
   // If we're valid type, tokenize us according to type.
   int numTokens = tokenizeValuesForDAPType(values, dapType);
 
-  // TODO Do we want to validate the data we are pulling out of the NcML?  I.e. check that it is
-  // Of the type specified and split properly?  For example, we'd check each entry could be atof for floats, etc.
+  // Now type check the tokens are valid strings for the type.
+  checkDataIsValidForCanonicalType(dapTypeName, _tokens);
 
 #if DEBUG_NCML_PARSER_INTERNALS
 
@@ -592,6 +597,78 @@ NCMLParser::convertNcmlTypeToCanonicalType(const string& ncmlType)
     {
       return it->second;
     }
+}
+
+bool
+NCMLParser::checkDataIsValidForCanonicalType(const string& type, const vector<string>& tokens)
+{
+/*  Byte
+  Int16
+  UInt16
+  Int32
+  UInt32
+  Float32
+  Float64
+ String
+ URL
+*/
+  bool valid = true;
+  vector<string>::const_iterator it;
+  vector<string>::const_iterator endIt = tokens.end();
+  for (it = tokens.begin(); it != endIt; ++it)
+    {
+      if (type == "Byte")
+        {
+          valid &= check_byte(it->c_str());
+        }
+      else if (type == "Int16")
+        {
+          valid &= check_int16(it->c_str());
+        }
+      else if (type == "UInt16")
+        {
+          valid &= check_uint16(it->c_str());
+        }
+      else if (type == "Int32")
+        {
+          valid &= check_int32(it->c_str());
+        }
+      else if (type == "UInt32")
+        {
+          valid &= check_uint32(it->c_str());
+        }
+      else if (type == "Float32")
+        {
+          valid &= check_float32(it->c_str());
+        }
+      else if (type == "Float64")
+        {
+          valid &= check_float64(it->c_str());
+        }
+      else if (type == "URL")
+        {
+          // Only checking length here.  TODO check for valid URL?
+          // the DAP call check_url is currently a noop.
+          // This isn't an NcML type now, so users might enter URL as String anyway
+          // and we wouldn't know.
+          valid &= (it->size() <= MAX_DAP_STRING_SIZE);
+        }
+      else if (type == "String")
+        {
+          valid &= (it->size() <= MAX_DAP_STRING_SIZE);
+        }
+      else
+        {
+          // I think we should throw this earlier, but...
+          THROW_NCML_INTERNAL_ERROR("checkDataIsValidForCanonicalType() got unknown data type=" + type);
+        }
+
+      if (!valid)
+        {
+          THROW_NCML_PARSE_ERROR("Value given for type=" + type + " with value=" + (*it) + " was invalidly formed or out of range.");
+        }
+    }
+  return valid;
 }
 
 void
@@ -732,7 +809,7 @@ NCMLParser::NCMLParser(DDSLoader& loader)
 , _tokens()
 , _separators(NcmlUtil::WHITESPACE)
 {
-  BESDEBUG("ncml", "Created NCMLHelper." << endl);
+  BESDEBUG("ncml", "Created NCMLParser." << endl);
  _tokens.reserve(256); // not sure what a good number is, but better than resizing all the time.
 }
 
