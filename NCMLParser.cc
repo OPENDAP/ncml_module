@@ -413,7 +413,6 @@ NCMLParser::renameAttributeContainer(const string& newName, const string& orgNam
           " at scope=" + _scope.getScopeString());
     }
 
-    // Check that the new name doesn't exist either.
     if (attributeExistsAtCurrentScope(newName))
       {
         THROW_NCML_PARSE_ERROR("Renaming attribute container with orgName=" + orgName +
@@ -421,22 +420,18 @@ NCMLParser::renameAttributeContainer(const string& newName, const string& orgNam
             " failed since an attribute already exists with that name at scope=" + _scope.getScopeString());
       }
 
-    // Otherwise, we're good, let the curious know.
     BESDEBUG("ncml", "Renaming attribute container orgName=" << orgName << " to name=" << newName << " at scope="
           << _scope.getTypedScopeString() << endl);
 
-    // Just changing the name doesn't work because of how AttrTable stores names, so we need to remove and readdit under new na,e.
+    // Just changing the name doesn't work because of how AttrTable stores names, so we need to remove and readd it under new name.
     AttrTable::Attr_iter it;
     bool gotIt = findAttribute(orgName, it);
     NCML_ASSERT_MSG(gotIt, "Logic error.  renameAttributeContainer expected to find attribute but didn't.");
-    // Erase the table at the iterator.  This leaves the memory alone, so pAT still valid.
-    // BUG TODO This call actually leaks the struct entry memory.  Submitted a ticket.
-    // Until it's fixed, we also leak.
-    // IMPORTANT: make sure this doesn't delete the actual table!
-    // We want it to remove it but hand the memory to me, or else we need to copy it!
+
+    // We now own pAT.
     _pCurrentTable->del_attr_table(it);
 
-    // Shove it back in with the new name
+    // Shove it back in with the new name.
     pAT->set_name(newName);
     _pCurrentTable->append_container(pAT, newName);
 
