@@ -43,6 +43,7 @@
 #include "NcmlUtil.h"
 #include "parser.h" // for the type checking...
 #include "SaxParserWrapper.h"
+#include <sstream>
 
 // Turn on for more debug spew.
 #define DEBUG_NCML_PARSER_INTERNALS 1
@@ -454,7 +455,7 @@ NCMLParser::tokenizeValues(const string& values, const string& dapTypeName)
   int numTokens = tokenizeValuesForDAPType(values, dapType);
 
   // Now type check the tokens are valid strings for the type.
-  checkDataIsValidForCanonicalType(dapTypeName, _tokens);
+  checkDataIsValidForCanonicalTypeOrThrow(dapTypeName, _tokens);
 
 #if DEBUG_NCML_PARSER_INTERNALS
 
@@ -594,8 +595,8 @@ NCMLParser::convertNcmlTypeToCanonicalType(const string& ncmlType)
     }
 }
 
-bool
-NCMLParser::checkDataIsValidForCanonicalType(const string& type, const vector<string>& tokens)
+void
+NCMLParser::checkDataIsValidForCanonicalTypeOrThrow(const string& type, const vector<string>& tokens) const
 {
 /*  Byte
   Int16
@@ -604,8 +605,8 @@ NCMLParser::checkDataIsValidForCanonicalType(const string& type, const vector<st
   UInt32
   Float32
   Float64
- String
- URL
+  String
+  URL
 */
   bool valid = true;
   vector<string>::const_iterator it;
@@ -640,30 +641,40 @@ NCMLParser::checkDataIsValidForCanonicalType(const string& type, const vector<st
         {
           valid &= check_float64(it->c_str());
         }
-      else if (type == "URL")
+      else if (type == "URL" || type == "String")
         {
-          // Only checking length here.  TODO check for valid URL?
-          // the DAP call check_url is currently a noop.
-          // This isn't an NcML type now, so users might enter URL as String anyway
-          // and we wouldn't know.
+          // TODO the DAP call check_url is currently a noop.  do we want to check for well-formed URL?
+          // This isn't an NcML type now, so straight up NcML users might enter URL as String anyway.
           valid &= (it->size() <= MAX_DAP_STRING_SIZE);
+          if (!valid)
+            {
+              std::stringstream msg;
+              msg << "Invalid Value: The "<< type << " attribute value (not shown) exceeded max string length of " << MAX_DAP_STRING_SIZE <<
+              " at scope=" << _scope.getScopeString() << endl;
+              THROW_NCML_PARSE_ERROR(msg.str());
+            }
+
+          valid &= NcmlUtil::isAscii(*it);
+          if (!valid)
+            {
+              THROW_NCML_PARSE_ERROR("Invalid Value: The " + type + " attribute value (not shown) has an invalid non-ascii character.");
+            }
         }
-      else if (type == "String")
-        {
-          valid &= (it->size() <= MAX_DAP_STRING_SIZE);
-        }
+
       else
         {
-          // I think we should throw this earlier, but...
+          // We probably shouldn't get here, but...
           THROW_NCML_INTERNAL_ERROR("checkDataIsValidForCanonicalType() got unknown data type=" + type);
         }
 
+      // Early throw so we know which token it was.
       if (!valid)
         {
-          THROW_NCML_PARSE_ERROR("Value given for type=" + type + " with value=" + (*it) + " was invalidly formed or out of range.");
+          THROW_NCML_PARSE_ERROR("Invalid Value given for type=" + type + " with value=" + (*it) + " was invalidly formed or out of range" +
+               _scope.getScopeString());
         }
     }
-  return valid;
+  // All is good if we get here.
 }
 
 void

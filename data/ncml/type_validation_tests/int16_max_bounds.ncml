@@ -1,0 +1,4 @@
+<netcdf location="/data/ncml/fnoc1.nc">
+  <attribute name="Int16_Max_Bounds" type="Int16" value="32768"/>
+</netcdf>
+

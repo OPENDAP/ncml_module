@@ -36,6 +36,12 @@ namespace ncml_module
 {
   class NCMLParser;
 
+  /**
+   * @brief Test Drivers for testing NCMLParser calls without
+   * an actual file.
+   *
+   * @deprecated this was only used for early step-through tests.
+   */
   class NCMLParserTestDriver
   {
   public:

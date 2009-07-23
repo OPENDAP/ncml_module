@@ -1,0 +1,4 @@
+<netcdf location="/data/ncml/fnoc1.nc">
+  <attribute name="Float32_Max_Bounds" type="Float32" value="3.402823466E+39F"/>
+</netcdf>
+

@@ -1,0 +1,4 @@
+<netcdf location="/data/ncml/fnoc1.nc">
+  <attribute name="Int32_Min_Bounds" type="Int32" value="-2147483649"/>  
+</netcdf>
+

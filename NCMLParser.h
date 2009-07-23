@@ -386,9 +386,12 @@ public: // Class Helpers
 
   /**
    * @brief Make sure the given tokens are valid for the listed type.
-   * For example, makes sure floats are well formed, UInt are unsigned, etc.
+   * For example, makes sure floats are well formed, UInt16 are unsigned, etc.
+   * A successful call will return normally, else we throw an exception.
+   *
+   * @throw BESUserSyntaxError on invalid values.
    */
-  static bool checkDataIsValidForCanonicalType(const string& type, const vector<string>& tokens);
+   void checkDataIsValidForCanonicalTypeOrThrow(const string& type, const vector<string>& tokens) const;
 
 public:
   /**

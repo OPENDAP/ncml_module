@@ -1,0 +1,4 @@
+<netcdf location="/data/ncml/fnoc1.nc">
+  <attribute name="Byte_Bounds" type="Byte" value="260"/>
+</netcdf>
+

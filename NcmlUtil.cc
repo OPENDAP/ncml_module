@@ -29,6 +29,7 @@
 #include "NcmlUtil.h"
 #include "BESDebug.h"
 #include "BESInternalError.h"
+#include <ctype.h>
 #include "DAS.h"
 #include "DDS.h"
 #include "NcmlDebug.h"
@@ -63,6 +64,21 @@ namespace ncml_module
           pos = str.find_first_of(delimiters, lastPos);
       }
       return count;
+  }
+
+  bool
+  NcmlUtil::isAscii(const string& str)
+  {
+    string::const_iterator endIt = str.end();
+    for (string::const_iterator it = str.begin(); it != endIt; ++it)
+      {
+        int c = *it;
+        if (!isascii(*it))
+          {
+            return false;
+          }
+      }
+    return true;
   }
 
   /** Recursion helper:

@@ -1,0 +1,4 @@
+<netcdf location="/data/ncml/fnoc1.nc">
+  <attribute name="Byte_Invalid" type="Byte" value="Byte"/>
+</netcdf>
+

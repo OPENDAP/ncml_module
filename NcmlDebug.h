@@ -47,7 +47,8 @@
 
 // Spew the std::string msg to debug channel then throw BESInternalError.  for those errors that are internal problems, not user/parse errors.
 #define THROW_NCML_INTERNAL_ERROR(msg) { BESDEBUG(NCML_MODULE_DBG_CHANNEL, std::string("NCMLModule InternalError: ") << (msg) << endl); \
-                                   throw BESInternalError("NCMLModule InternalError: " + std::string(msg), __FILE__, __LINE__); }
+                                   throw BESInternalError("NCMLModule InternalError: " + std::string(msg) , \
+                                                          __FILE__, __LINE__); }
 
 // Spew the std::string msg to debug channel then throw a BESSyntaxUserError.  For parse and syntax errors in the NCML.
 #define THROW_NCML_PARSE_ERROR(msg) { BESDEBUG(NCML_MODULE_DBG_CHANNEL, "NCMLModule ParseError: " << (msg) << endl); \

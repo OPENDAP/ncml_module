@@ -41,10 +41,13 @@ namespace libdap
 
 namespace ncml_module
 {
+  /**
+   *  Static class of utility functions
+   */
   class NcmlUtil
   {
-  public:
     NcmlUtil() {}
+  public:
     ~NcmlUtil() {}
 
     /** Delimiter set for tokenizing whitespace separated data.  Currently " \t" */
@@ -57,6 +60,11 @@ namespace ncml_module
     static int tokenize(const std::string& str,
         std::vector<std::string>& tokens,
         const std::string& delimiters = " \t");
+
+    /** Does the string contain only ASCII 7-bit characters
+     * according to isascii()?
+     */
+    static bool isAscii(const std::string& str);
 
 
      /** Given we have a valid attribute tree inside of the DDS, recreate it in the DAS.

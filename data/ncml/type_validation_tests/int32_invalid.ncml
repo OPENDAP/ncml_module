@@ -1,0 +1,4 @@
+<netcdf location="/data/ncml/fnoc1.nc">
+    <attribute name="Int32_Invalid" type="Int32" value="Int32"/> 
+</netcdf>
+
