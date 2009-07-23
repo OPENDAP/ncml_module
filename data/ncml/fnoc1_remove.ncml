@@ -2,8 +2,7 @@
 
 <!-- Test case for the <remove/> element.
      Currently we can remove leaf and container attributes only -->
-<netcdf location="/data/ncml/fnoc1.nc"
-     xmlns="http://www.unidata.ucar.edu/namespaces/netcdf/ncml-2.2">
+<netcdf location="/data/ncml/fnoc1.nc">
   
 <!-- 1) enter scope of container and remove a leaf -->
   <attribute name="NC_GLOBAL" type="Structure">

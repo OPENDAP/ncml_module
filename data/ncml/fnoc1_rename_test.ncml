@@ -1,4 +1,5 @@
-<netcdf location="/data/ncml/fnoc1.nc" xmlns="http://www.unidata.ucar.edu/namespaces/netcdf/ncml-2.2">
+<?xml version="1.0" encoding="UTF-8"?>
+<netcdf location="/data/ncml/fnoc1.nc">
   
   <!-- Test renaming an attribute container -->
   <attribute name="NC_GLOBAL_INFO" type="Structure" orgName="NC_GLOBAL"/>
