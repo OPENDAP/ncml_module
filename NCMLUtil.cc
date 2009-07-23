@@ -40,10 +40,10 @@ using namespace std;
 namespace ncml_module
 {
 
-  const std::string NcmlUtil::WHITESPACE = " \t";
+  const std::string NCMLUtil::WHITESPACE = " \t";
 
   int
-  NcmlUtil::tokenize(const string& str,
+  NCMLUtil::tokenize(const string& str,
                  vector<string>& tokens,
                  const string& delimiters)
   {
@@ -67,12 +67,11 @@ namespace ncml_module
   }
 
   bool
-  NcmlUtil::isAscii(const string& str)
+  NCMLUtil::isAscii(const string& str)
   {
     string::const_iterator endIt = str.end();
     for (string::const_iterator it = str.begin(); it != endIt; ++it)
       {
-        int c = *it;
         if (!isascii(*it))
           {
             return false;
@@ -120,7 +119,7 @@ namespace ncml_module
 
   // This is basically the opposite of transfer_attributes.
   void
-  NcmlUtil::populateDASFromDDS(DAS* das, const DDS& dds_const)
+  NCMLUtil::populateDASFromDDS(DAS* das, const DDS& dds_const)
   {
     BESDEBUG("ncml", "Populating a DAS from a DDS...." << endl);
 
@@ -176,7 +175,7 @@ namespace ncml_module
   // This function was added since DDS::operator= had some bugs we need to fix.
   // At that point, we can just use that function, probably.
   void
-  NcmlUtil::copyVariablesAndAttributesInto(DDS* dds_out, const DDS& dds_in)
+  NCMLUtil::copyVariablesAndAttributesInto(DDS* dds_out, const DDS& dds_in)
   {
     VALID_PTR(dds_out);
 

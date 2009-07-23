@@ -44,11 +44,11 @@ namespace ncml_module
   /**
    *  Static class of utility functions
    */
-  class NcmlUtil
+  class NCMLUtil
   {
-    NcmlUtil() {}
+    NCMLUtil() {}
   public:
-    ~NcmlUtil() {}
+    ~NCMLUtil() {}
 
     /** Delimiter set for tokenizing whitespace separated data.  Currently " \t" */
     static const std::string WHITESPACE;

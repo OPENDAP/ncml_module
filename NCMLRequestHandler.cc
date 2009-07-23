@@ -151,7 +151,7 @@ NCMLRequestHandler::ncml_build_das( BESDataHandlerInterface &dhi )
     // Copy the modified DDS attributes into the DAS response object!
     DAS *das = bdas->get_das();
     BESDEBUG("ncml", "Creating DAS response from the location DDX..." << endl);
-    NcmlUtil::populateDASFromDDS(das, *dds);
+    NCMLUtil::populateDASFromDDS(das, *dds);
 
     // loaded_bdds destroys itself.
     return false ;
@@ -187,7 +187,7 @@ NCMLRequestHandler::ncml_build_dds( BESDataHandlerInterface &dhi )
 
     // If we just use DDS::operator=, we get into trouble with copied
     // pointers, bashing of the dataset name, etc etc so I specialize the copy for now.
-    NcmlUtil::copyVariablesAndAttributesInto(dds_out, *dds);
+    NCMLUtil::copyVariablesAndAttributesInto(dds_out, *dds);
 
     // Apply constraints to the result
     dhi.data[POST_CONSTRAINT] = dhi.container->get_constraint();

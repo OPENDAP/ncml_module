@@ -39,8 +39,8 @@
 #include "DAS.h"
 #include "DDS.h"
 #include "DDSLoader.h"
-#include "NcmlDebug.h"
-#include "NcmlUtil.h"
+#include "NCMLDebug.h"
+#include "NCMLUtil.h"
 #include "parser.h" // for the type checking...
 #include "SaxParserWrapper.h"
 #include <sstream>
@@ -459,7 +459,7 @@ NCMLParser::tokenizeValues(const string& values, const string& dapTypeName)
 
 #if DEBUG_NCML_PARSER_INTERNALS
 
-  if (_separators != NcmlUtil::WHITESPACE)
+  if (_separators != NCMLUtil::WHITESPACE)
     {
        BESDEBUG("ncml", "Got non-default separators for tokenize.  _separators=\"" << _separators << "\"" << endl);
     }
@@ -509,7 +509,7 @@ NCMLParser::tokenizeValuesForDAPType(const string& values, AttrType dapType)
     }
   else // For all other atomic types, do a split.
     {
-      return NcmlUtil::tokenize(values, _tokens, _separators);
+      return NCMLUtil::tokenize(values, _tokens, _separators);
     }
 }
 
@@ -654,7 +654,7 @@ NCMLParser::checkDataIsValidForCanonicalTypeOrThrow(const string& type, const ve
               THROW_NCML_PARSE_ERROR(msg.str());
             }
 
-          valid &= NcmlUtil::isAscii(*it);
+          valid &= NCMLUtil::isAscii(*it);
           if (!valid)
             {
               THROW_NCML_PARSE_ERROR("Invalid Value: The " + type + " attribute value (not shown) has an invalid non-ascii character.");
@@ -813,7 +813,7 @@ NCMLParser::NCMLParser(DDSLoader& loader)
 , _pCurrentTable(0)
 , _scope()
 , _tokens()
-, _separators(NcmlUtil::WHITESPACE)
+, _separators(NCMLUtil::WHITESPACE)
 {
   BESDEBUG("ncml", "Created NCMLParser." << endl);
  _tokens.reserve(256); // not sure what a good number is, but better than resizing all the time.
@@ -1168,7 +1168,7 @@ NCMLParser::onEndElement(const std::string& name)
     {
       handleEndAttribute();
       // go back to our default as we leave an attribute that may have changed this!
-      _separators = NcmlUtil::WHITESPACE;
+      _separators = NCMLUtil::WHITESPACE;
     }
   else if (name == "variable")
     {
