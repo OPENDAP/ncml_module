@@ -28,7 +28,6 @@
 /////////////////////////////////////////////////////////////////////////////
 #include "config.h"
 #include "NCMLParser.h"
-#include <map>
 
 #include "AttrTable.h"
 #include "BaseType.h"
@@ -39,6 +38,7 @@
 #include "DAS.h"
 #include "DDS.h"
 #include "DDSLoader.h"
+#include <map>
 #include "NCMLDebug.h"
 #include "NCMLUtil.h"
 #include "parser.h" // for the type checking...
@@ -516,7 +516,6 @@ NCMLParser::tokenizeValuesForDAPType(const string& values, AttrType dapType)
 ////////////////////////////////////// Class Methods (Statics)
 
 // Used below to convert NcML data type to a DAP data type.
-// TODO consider making this case-insensitive...
 typedef std::map<string, string> TypeConverter;
 
 /* Ncml DataType:
@@ -838,10 +837,7 @@ NCMLParser::parse(const string& filename)
   // In case we care.
   _filename = filename;
 
-  // Make a SAX parser wrapper to set up the C callbacks.
-  // It will call us back through SaxParser interface.
-  // The parse call can throw exceptions, but
-  // we use RAII pattern to clean up if needed.
+  // Invoke the libxml sax parser
   SaxParserWrapper parser(*this);
   parser.parse(filename);
 
@@ -873,8 +869,7 @@ NCMLParser::handleBeginLocation(const string& location)
 
   // Use the loader to load the location specified in the <netcdf> element.
   // If not found, this call will throw an exception and we'll just unwind out.
-  // TODO We probably want to see what the error was and throw the correct reponse upward or something.
-  _ddsResponse = _loader.load(location); // gain control of response object
+   _ddsResponse = _loader.load(location); // gain control of response object
 
   // Force the attribute table to be the global one for the DDS.
   if (getDDS())
@@ -939,7 +934,6 @@ NCMLParser::handleBeginVariable(const string& varName, const string& type)
           _scope.getScopeString());
     }
 
-  // Handle the metadata directive if this is the first call.
   processMetadataDirectiveIfNeeded();
 
   // Lookup the variable at this level.  If !_pVar, we assume we look on the DDS.
@@ -954,7 +948,7 @@ NCMLParser::handleBeginVariable(const string& varName, const string& type)
   // Make sure the type matches.  NOTE:
   // We use "Structure" to mean Grid, Structure, Sequence!
   // Also type="" will match ANY type.
-  // TODO This fails on Array as well due to NcML referring making arrays be a basic type with a non-zero dimension.
+  // TODO This fails on Array as well due to NcML making arrays be a basic type with a non-zero dimension.
   // We're gonna ignore that until we allow addition of variables, but let's leave this check here for now
   if (!type.empty() && !typeCheckDAPVariable(*pVar, convertNcmlTypeToCanonicalType(type)))
     {
@@ -982,8 +976,6 @@ NCMLParser::handleBeginVariable(const string& varName, const string& type)
 void
 NCMLParser::handleEndVariable()
 {
-  // pop the attr table back upwards to the previous one
-  // I think we can just use the parent of the current...
   BESDEBUG("ncml", "handleEndVariable called at scope:" << _scope.getScopeString() << endl);
   if (!isScopeVariable())
     {
@@ -994,7 +986,7 @@ NCMLParser::handleEndVariable()
 
   // New context is the parent, which could be NULL for top level DDS vars.
   setCurrentVariable(_pVar->get_parent());
-  exitScope(); // pop the stack
+  exitScope();
   printScope();
 
   BESDEBUG("ncml", "Variable scope now with name: " << ((_pVar)?(_pVar->name()):("<NULL>")) << endl);
@@ -1012,14 +1004,12 @@ NCMLParser::handleBeginAttribute(const string& name, const string& type, const s
       THROW_NCML_PARSE_ERROR("Got <attribute> element while not within a <netcdf> node!");
     }
 
-  // Can't be within a leaf attribute for this call either!
   if (isScopeAtomicAttribute())
     {
       THROW_NCML_PARSE_ERROR("Got new <attribute> while in a leaf <attribute> at scope=" + _scope.getScopeString() +
           " Hierarchies of attributes are only allowed for attribute containers with type=Structure");
     }
 
-  // Handle metadata directive if this is the first entry.
   processMetadataDirectiveIfNeeded();
 
   // If this was specified, then we want to store it for the parsing of this attribute only.
@@ -1041,22 +1031,19 @@ NCMLParser::handleEndAttribute()
 {
   BESDEBUG("ncml", "handleEndAttribute called at scope:" << _scope.getScopeString() << endl);
 
-  // if it wasn't a container, just clear out this state
   if (isScopeAtomicAttribute())
     {
       // Nothing to do but pop it off scope stack, we're still within the containing AttrTable.
       exitScope();
     }
-  else if (isScopeAttributeContainer()) // we are parsing a container
+  else if (isScopeAttributeContainer())
     {
       exitScope();
-
-      // Walk up the to the container's parent as we leave this scope.
       _pCurrentTable = _pCurrentTable->get_parent();
       // This better be valid or something is really broken!
       NCML_ASSERT_MSG(_pCurrentTable, "ERROR: Null _pCurrentTable unexpected while leaving scope of attribute container!");
     }
-  else // Can't close an attribute if we're not in one!
+   else // Can't close an attribute if we're not in one!
     {
       THROW_NCML_PARSE_ERROR("Got end of attribute element while not parsing an attribute!");
     }
@@ -1100,10 +1087,9 @@ NCMLParser::onEndDocument()
 void
 NCMLParser::onStartElement(const std::string& name, const AttrMap& attrs)
 {
-  // TODO Lots of magic string constants in here...  They're not likely to change,
-  // But it might be better to pull them into classes for each node
-  // which has the named attributes it supports.  Easier to check for
-  // misspelled attribute that way, etc.
+  // TODO Ick, lots of magic string constants in here...  Need to refactor
+  // this into a factory call and dispatch on a superclass for each element type
+  // before moving on.
 
   // Dispatch to the right place, else ignore
  if (name == "netcdf")
@@ -1125,9 +1111,6 @@ NCMLParser::onStartElement(const std::string& name, const AttrMap& attrs)
      const string& value = SaxParser::findAttrValue(attrs, "value");
      const string& separators = SaxParser::findAttrValue(attrs, "separator");
      const string& orgName = SaxParser::findAttrValue(attrs, "orgName");
-
-     //Process the attribute depending on what it is.
-     // If orgName is !empty(), we'll rename it.
      handleBeginAttribute(attrName, type, value, separators, orgName);
    }
  else if (name == "variable")
@@ -1142,7 +1125,7 @@ NCMLParser::onStartElement(const std::string& name, const AttrMap& attrs)
      const string& type = SaxParser::findAttrValue(attrs,"type");
      handleBeginRemove(name, type);
    }
- else // Unknown element...  Ugh, we might want to parse error here to let the caller know we don't support the element?  I'll defer it for now.
+ else // Unknown element...
    {
      if (sThrowExceptionOnUnknownElements)
        {
@@ -1158,8 +1141,6 @@ NCMLParser::onStartElement(const std::string& name, const AttrMap& attrs)
 void
 NCMLParser::onEndElement(const std::string& name)
 {
-  // BESDEBUG("ncml", "onEndElement got: " << name << endl);
-  // Dispatch to the right place, else ignore
   if (name == "netcdf")
     {
       handleEndLocation();
@@ -1199,10 +1180,9 @@ NCMLParser::onCharacters(const std::string& content)
       BESDEBUG("ncml", "Adding attribute values as characters content for atomic attribute=" << name << " value=\"" << content << "\"" << endl);
       mutateAttributeAtCurrentScope(name, "", content); // empty type means leave the same.
     }
-  else // other elements don't have mixed values now, so this better be filler space!
+  else // other elements don't have mixed content now, so this better be filler space!
     {
-      // If this isn't just random whitespace then bad ncml.
-      if (!isAllWhitespace(content))
+        if (!isAllWhitespace(content))
         {
           THROW_NCML_PARSE_ERROR("Got unexpected non-whitespace characters at scope=" +
               _scope.getTypedScopeString() +
@@ -1218,10 +1198,10 @@ NCMLParser::onParseWarning(std::string msg)
   BESDEBUG("ncml", "PARSE WARNING: LibXML msg={" << msg << "}.  Attempting to continue parse." << endl);
 }
 
-// Pretty much have to give up on malformed XML.
 void
 NCMLParser::onParseError(std::string msg)
 {
+  // Pretty much have to give up on malformed XML.
   THROW_NCML_PARSE_ERROR("libxml SAX2 parser error! msg={" + msg + "} Terminating parse!");
 }
 

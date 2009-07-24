@@ -26,13 +26,13 @@
 //
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
-#include "NcmlUtil.h"
+#include "NCMLUtil.h"
 #include "BESDebug.h"
 #include "BESInternalError.h"
 #include <ctype.h>
 #include "DAS.h"
 #include "DDS.h"
-#include "NcmlDebug.h"
+#include "NCMLDebug.h"
 
 using namespace libdap;
 using namespace std;

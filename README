@@ -1,7 +1,155 @@
 
 $Id: README $
 
-6/23/09 mjohnson <m.johnson@opendap.org> The NcML module is a work in progress and is not fully implemented for deployment.
-Please don't install or attempt to use it at this time!
+Welcome to the OPeNDAP NcML Data Handler Module for OPeNDAP DAP
+Server3 and Hyrax!
+
+This module can be added to a Hyrax installation to extend its data
+serving capability to NcML 2.2 files (see
+http://www.unidata.ucar.edu/software/ne	tcdf/ncml/) which provide a way
+to add metadata to existing datasets.
+   
+For information on how to build and install the NcML Data Module,
+please see the INSTALL file.
+       
+More detailed documentation for this module can be found at:
+<#TODO-NcML_Module_WikiPage#>
+     
+The initial version implements only a subset of NcML 2.2
+functionality, and also adds functionality -- please see the sections
+"Functionality" and "NcML Additions" below.
+
+----------------------------------------------------------------------
+* Contents
+
+  * Installation Overview
+  * Functionality
+  * NcML Additions
+  * Example NcML
+  * HDF4 Compatibility Issue
+  * Copyright
+
+----------------------------------------------------------------------
+* Installation Overview
+
+The NcML Module requires a working Hyrax installation.  It is a module
+that is dynamically loaded into the Hyrax BES (Back End Server) to
+allow it to handle NcML files.  
+
+Once installed, the BES configuration file (bes.conf) needs to be
+modified to tell it to load the module and where it was installed.  A
+configuration helper script (bes-ncml-data.sh) is installed with the
+module to automate this process.  The script is used on the command
+line (> prompt) as follows:
+
+   > bes-ncml-data.sh [<bes.conf file to modify> [<bes modules dir>]]
+
+If you are doing a source installation, the `bes-conf' make target
+runs the script while trying to select paths cleverly, and should be
+called using:
+
+   > make bes-conf
+
+After installation, you MUST restart Hyrax by restarting the BES and
+OLFS so the NcML Module is loaded.
+
+Test data is provided to see if the installation was successful
+(fnoc1_improved.ncml), but it requires the netCDF data handler to be
+installed since it adds metadata to a netCDF dataset (fnoc1.nc).
+
+----------------------------------------------------------------------
+* Functionality
+
+This version of the NcML Module implements a subset of NcML
+functionality.  It can:
+
+     1) Add metadata only to files being served locally (not remotely)
+     2) Add metadata to only one dataset (one <netcdf> node).
+     3) Add, modify, and remove metadata (attributes) and not data (variables).
+
+In particular, this version of the NcML module can only handle a
+subset of the NcML schema.  First, it is restricted to a subset of the
+elements: <netcdf>, <explicit>, <readMetadata>, <attribute>,
+<variable>, and <remove>.
+
+The <variable> element can not be used to add data, but only be used
+to provide the lexical scope for an <attribute> element.  For example:
+
+<variable name="u">
+  <attribute name="Metadata" type="string">This is metadata!</attribute>
+</variable>
+
+assumes that a variable named "u" exists (of any type) and the
+attribute "Metadata" will refer to the metadata for that variable.
+These can be nested.
+
+Also, the <remove/> element can only remove attributes and not
+variables.
+
+We plan to add more features and NcML functionality, such as the
+ability to add and remove variables and to aggregate data in future
+versions.
+
+----------------------------------------------------------------------
+* NcML Additions
+
+This module also adds functionality beyond the current NcML 2.2 schema
+--- it can handle nested <attribute> elements in order to make
+attribute structures.  This is done by using the <attribute
+type="Structure> form:
+
+<attribute name="MySamples" type="Structure">
+  <attribute name="Location" type="string" value="Station 1"/>
+  <attribute name="Samples" type="int">1 4 6</attribute>
+</attribute>
+
+"MyContainer" is now an attribute structure with two attribute fields,
+a string and an array of int's.  Note that an attribute structure can
+only contain other <attribute> elements and NOT a value.
+
+Additionally, DAP2 atomic types (such as UInt32, URL) can also be used
+in addition to the NcML types.  The NcML types are mapped onto the
+closest DAP2 type internally.  
+
+----------------------------------------------------------------------
+* HDF4 Compatibility Issue
+
+There is a bug in the Hyrax HDF4 Module such that the DAS produced in
+incorrect.  If an NcML file is used to "wrap" an HDF4 dataset, the
+correct DAP2 DAS response will be generated.  
+
+This is important for those writing NcML for HDF4 data since the
+lexical scope for attributes relies on the correct DAS form --- to
+handle this, the user should start with a "passthrough" NcML file and
+use the DAS from that as the starting point for knowing the structure
+the NcML handler expects to see in the NcML file.
+
+----------------------------------------------------------------------
+* Example NcML
+
+Example NcML files used by the test-suite can be found in the data
+directory of a src distribution.
+
+----------------------------------------------------------------------
+* Copyright
+
+This software is copyrighted under the GNU Lesser GPL.  Please see the
+files COPYING and COPYRIGHT that came with this distribution.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

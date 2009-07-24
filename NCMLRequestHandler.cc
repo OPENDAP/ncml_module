@@ -48,8 +48,8 @@
 #include "cgi_util.h"
 #include "DDSLoader.h"
 #include <memory>
-#include "NcmlDebug.h"
-#include "NcmlUtil.h"
+#include "NCMLDebug.h"
+#include "NCMLUtil.h"
 #include "NCMLParser.h"
 #include "NCMLResponseNames.h"
 #include "SimpleLocationParser.h"

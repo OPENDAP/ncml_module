@@ -3,7 +3,7 @@
 # Configure script for OPeNDAP NCML data handler
 
 AC_PREREQ(2.59)
-AC_INIT([ncml_module], [0.0.2], [opendap-tech@opendap.org])
+AC_INIT([ncml_module], [0.9.0], [opendap-tech@opendap.org])
 AC_CONFIG_AUX_DIR([conf])
 
 AM_INIT_AUTOMAKE
@@ -30,7 +30,7 @@ AC_CHECK_TYPES([ptrdiff_t])
 AC_CHECK_FUNCS([strchr])
 
 dnl Checks for specific libraries
-AC_CHECK_LIBDAP([3.7.10],
+AC_CHECK_LIBDAP([3.9.2],
  [
   LIBS="$LIBS $DAP_LIBS"
   CPPFLAGS="$CPPFLAGS $DAP_CFLAGS"
@@ -38,7 +38,7 @@ AC_CHECK_LIBDAP([3.7.10],
  [ AC_MSG_ERROR([Cannot find libdap])
 ])
   
-AC_CHECK_BES([3.5.3],
+AC_CHECK_BES([3.7.2],
 [
 ],
 [ AC_MSG_ERROR([Could not find bes library and headers])

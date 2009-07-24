@@ -15,11 +15,11 @@ dist_bin_SCRIPTS = bes-ncml-data.sh
 
 SUBDIRS = bes-testsuite
 
-NCML_SRCS:=
+BES_SRCS:=
 
-NCML_HDRS:=
+BES_HDRS:=
 
-BES_SRCS = \
+NCML_SRCS = \
 		NCMLModule.cc \
 		NCMLRequestHandler.cc \
 		NCMLParser.cc \
@@ -28,10 +28,10 @@ BES_SRCS = \
 		SaxParser.cc \
 		SimpleLocationParser.cc \
 		ScopeStack.cc \
-		NCMLUtil.cc \
-		NCMLParser_TestDriver.cc
+		NCMLUtil.cc 
+		
 
-BES_HDRS = \
+NCML_HDRS = \
 		NCMLModule.h \
 		NCMLRequestHandler.h \
 		NCMLResponseNames.h \
@@ -42,8 +42,7 @@ BES_HDRS = \
 		SimpleLocationParser.h \
 		ScopeStack.h \
 		NCMLUtil.h \
-		NCMLDebug.h \
-		NCMLParser_TestDriver.h
+		NCMLDebug.h 
 		
 
 libncml_module_la_SOURCES = $(NCML_SRCS) $(BES_SRCS) $(NCML_HDRS) $(BES_HDRS)

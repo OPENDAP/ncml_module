@@ -26,9 +26,7 @@
 //
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
-#include <iostream>
-
-using std::endl ;
+#include "config.h"
 
 #include <BESCatalogDirectory.h>
 #include <BESCatalogList.h>
@@ -39,11 +37,12 @@ using std::endl ;
 #include "BESRequestHandlerList.h"
 #include "BESResponseHandlerList.h"
 #include "BESResponseNames.h"
+#include <iostream>
+#include "NCMLModule.h"
 #include "NCMLRequestHandler.h"
 #include "NCMLResponseNames.h"
 
-#include "NCMLModule.h"
-
+using std::endl;
 using namespace ncml_module;
 
 static const char* const NCML_CATALOG = "catalog";

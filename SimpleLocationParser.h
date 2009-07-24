@@ -40,8 +40,7 @@ namespace ncml_module
    *
    * @see parseAndGetLocation()
    *
-   * Currently will still process the entire file, but the callbacks are inlines so should
-   * be fast enough.  Not sure if we can stop the libxml parser midstream yet.
+   * Currently will still process the entire file.  TODO maybe find a way to early exit?
    *
    * @author Michael Johnson <m.johnson@opendap.org>
    */

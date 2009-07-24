@@ -39,7 +39,7 @@
 /*
  * Some basic macros to reduce code clutter, cut & pasting, and to greatly improve readability.
  * I would have made them functions somewhere, but the __FILE__ and __LINE__ are useful.
- * We can also easily change these based on compilation type or new error types later as well.
+ * We can also specialize these based on debug vs release builds etc. or new error types later as well.
  * */
 
 // Where my BESDEBUG output goes

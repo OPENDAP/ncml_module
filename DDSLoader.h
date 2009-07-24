@@ -89,13 +89,14 @@ private:
 
 public:
   /**
-   * Create a loader that will hijack dhi on a load call, then restore it's state.
+   * @brief Create a loader that will hijack dhi on a load call, then restore it's state.
    *
    * @param dhi DHI to hijack during load, needs to be a valid object for the scope of this object's life.
    */
   DDSLoader(BESDataHandlerInterface &dhi);
 
   /**
+   * @brief Dtor restores the state of dhi
    * Restores the state of the dhi to what it was when object if it is still hijacked (i.e. exception on load())
    * Destroys the BESDDSResponse if non-null, which is also the case on failed load() call.
    */
@@ -110,6 +111,7 @@ public:
    * call directly call cleanup() to ensure this if they catch the exception and need the
    * dhi restored immediately.
    *
+   * @param location the filename of the local file
    * @return a newly allocated DDS (DDX) for the location
    *
    * @exception if the underlying location cannot be loaded.
@@ -117,6 +119,8 @@ public:
   auto_ptr<BESDDSResponse> load(const std::string& location);
 
   /**
+   * @brief restore dhi to clean state
+   *
    * Ensures that the resources and dhi are all in the state they were at construction time.
    * Probably not needed by users, but in case they want to catch an exception
    * and then retry or something

@@ -59,17 +59,10 @@ namespace ncml_module
 }
 
 /**
- *  @brief NcML Parser for adding/modifyinbg/removing AIS to existing local datasets
+ *  @brief NcML Parser for adding/modifying/removing metadata (attributes) to existing local datasets using NcML.
  *
  *  Core engine for parsing an NcML structure and modifying the DDS (which includes attribute data)
  *  of a single dataset by adding new metadata to it. (http://docs.opendap.org/index.php/AIS_Using_NcML).
- *
- *  Limitations Expected for the initial version:
- *
- *  o We only handle local (same BES) datasets with this version (hopefully we can relax this to allow remote dataset augmentation
- *      as a bes.conf option or something.
- *
- *  o We can only handle a single <netcdf> node, i.e. we can only augment one location with metadata.  Future versions will allow aggregation, etc.
  *
  *  For the purposes of this class "scope" will mean the attribute table at some place in the DDX (populated DDS object), be it at
  *  the global attribute table, inside a nested attribute container, inside a variable, or inside a nested variable (Structure, e.g.).
@@ -79,14 +72,14 @@ namespace ncml_module
  *
  *  1) Clearing all attributes if <explicit/> tag is given.
  *  2) Adding or modifying existing atomic attributes at any scope (global, variable, nested variable, nested attribute container)
- *  3) Adding (or traversing the scope of existing) attribute containers using <attribute type="Structure"> to refer to the container.
+ *  3) Adding (or traversing the scope of existing) attribute containers using <attribute name="foo" type="Structure"> to refer to the container.
  *  4) Traversing a hierarchy of variable scopes to set the scope for 1) or 2)
- *  5) We handle orgName renaming for attribute@orgName only.
+ *  5) We handle orgName renaming for attribute@orgName only.  This renames an attribute.
  *  6) We can remove an attribute (including container recursively) at any scope with <remove/>
  *
  *  Design and Control Flow:
  *
- *  1) We use the SaxParser interface callbacks to handle calls from a SAX parser (or potentially DOM treewalk) which we create on parse() call.
+ *  1) We use the SaxParser interface callbacks to handle calls from a SAX parser which we create on parse() call.
  *
  *  2) We assume a single <netcdf> node with a local data in netcdf@location.  When we parse this node, we use a DDSLoader to
  *  create a new DDS with DDX information (full AttrTable's) in it.
@@ -99,14 +92,22 @@ namespace ncml_module
  *
  *  5) When complete, we return the loaded and transformed DDS to the caller.
  *
- *  We throw BESInternalError for logic errors in the code.
+ *  We throw BESInternalError for logic errors in the code such as failed asserts or null pointers.
  *
- *  We throw BESSyntaxUserError for parse errors in the NcML or for user requests to modify nonexisting entities or for non-existent scopes, etc.
+ *  We throw BESSyntaxUserError for parse errors in the NcML (non-existent variables or attributes, malformed NcML, etc).
+ *
+ *  Limitations:
+ *
+ *  o We only handle local (same BES) datasets with this version (hopefully we can relax this to allow remote dataset augmentation
+ *      as a bes.conf option or something.
+ *
+ *  o We can only handle a single <netcdf> node, i.e. we can only augment one location with metadata.  Future versions will allow aggregation, etc.
+ *
  *
  *  TODO REFACTOR We really need to get rid of all the long const string& parameter lists and make them into a struct to avoid misordering errors.
 
  *  TODO REFACTOR Related to above, Change dispatcher from switch to factory and polymorphic processing with NCMLElement abstract class, etc.
- *      This solves th long parameter list issue and will make things more robust moving forward with new elements and functionality.
+ *      This solves the long parameter list issue and will make things more robust moving forward with new elements and functionality.
  *
  *  @author mjohnson <m.johnson@opendap.org>
  */
@@ -417,9 +418,6 @@ public:
    *
    *  @throw BESSyntaxUserError for parse errors such as bad XML or NcML referring to variables that do not exist.
    *  @throw BESInternalError for assertion failures, null ptr exceptions, or logic errors.
-   *
-   *  TODO perhaps throw a BESNotFoundError for failures to load the ncmlFilename or for anything netcdf@location failures.
-   *  These need to be made clear to the response somehow for a 404 or 500 error as per the use case.
    *
    *  @return a new response object with the transformed DDS in it.  The caller assumes ownership of the returned object.
   */
