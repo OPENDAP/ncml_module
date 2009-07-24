@@ -39,7 +39,7 @@
 
 #include "SaxParser.h" // interface superclass
 #include "AttrTable.h" // needed due to parameter with AttrTable::Attr_iter
-#include "ScopeStack.h";
+#include "ScopeStack.h"
 
 //FDecls
 namespace libdap

@@ -200,7 +200,7 @@ namespace ncml_module
       }
 
     // for safety, make sure the factory is 0.  If it isn't we might have a double delete.
-    assert(!dds_out->get_factory());
+    NCML_ASSERT(!dds_out->get_factory());
   }
 
 }

@@ -30,6 +30,7 @@
 #ifndef __NCML_MODULE__NCML_DEBUG__
 #define __NCML_MODULE__NCML_DEBUG__
 
+#include <assert.h>
 #include <string>
 #include "BESDebug.h"
 #include "BESInternalError.h"
