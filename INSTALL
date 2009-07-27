@@ -142,20 +142,28 @@ BUILD REQUIREMENTS
        o DejaGNU (http://www.gnu.org/software/dejagnu/)
 
        o The current version of the netCDF Data Handling Module for
-       	 Hyrax and its dependency: libnetcdf 3.x (or greater). (Note:
-       	 Mac users can get netcdf in DarwinPorts) The handler itself is found
-       	 at http://www.opendap.org/download/hyrax.html.
+       	 Hyrax and its dependency: libnetcdf 3.x (or greater).  The
+       	 handler itself is found at
+       	 http://www.opendap.org/download/hyrax.html.
+
+	 o Mac Users: Mac users can get netcdf in DarwinPorts
+
+	 o Note, if you install from an RPM, you need to run
+	 "bes-nc-data.sh" to tell the BES to load the netCDF module.
 
        o The current version of the HDF4 Data Handling Module for
        	 Hyrax and its dependencies: libjpeg, zlib and slib usually.
        	 The handler is found at
        	 http://www.opendap.org/download/hyrax.html.
 
+	 o Note: if you install from an RPM, you need to run
+	 "bes-hdf4-data.sh" to tell the BES to load the HDF4 module.
+
     o In order to view the test NcML file fnoc1_improved.ncml, you will
       need:
 	
-       o The current version of the netCDF Data Handling Module for 
-       	 Hyrax and its dependency: libnetcdf 3.x (or greater)
+       o The current version of the netCDF Data Handling Module (see
+       above for more info).
 
 
 ---------------------------------------------------------------------------
