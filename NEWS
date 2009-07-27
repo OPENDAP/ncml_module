@@ -1,6 +1,12 @@
 
 $Id: NEWS $
 
+
+Version 0.9.0 (27 Jul 2009)
+
+Initial internal alpha release.  Functionality for adding, changing, removing metadata (attributes).
+
+
 Version 0.0.1 (01 Jan 2009)
 
-Initial directory creation.
+Initial example module creation.

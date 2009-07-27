@@ -1,8 +1,9 @@
 
 $Id: README $
 
-Welcome to the OPeNDAP NcML Data Handler Module for OPeNDAP DAP
-Server3 and Hyrax!
+Updated for version 0.9.0 (27 July 2009)
+
+Welcome to the OPeNDAP NcML Data Handler Module for Hyrax!
 
 This module can be added to a Hyrax installation to extend its data
 serving capability to NcML 2.2 files (see
@@ -12,8 +13,9 @@ to add metadata to existing datasets.
 For information on how to build and install the NcML Data Module,
 please see the INSTALL file.
        
-More detailed documentation for this module can be found at:
-<#TODO-NcML_Module_WikiPage#>
+More detailed and/or up-to-date documentation for this module can be
+found at: http://docs.opendap.org/index.php/BES_-_Modules_-_NcML_Module
+
      
 The initial version implements only a subset of NcML 2.2
 functionality, and also adds functionality -- please see the sections
@@ -99,7 +101,7 @@ versions.
 This module also adds functionality beyond the current NcML 2.2 schema
 --- it can handle nested <attribute> elements in order to make
 attribute structures.  This is done by using the <attribute
-type="Structure> form:
+type="Structure"> form:
 
 <attribute name="MySamples" type="Structure">
   <attribute name="Location" type="string" value="Station 1"/>

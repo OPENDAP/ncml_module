@@ -8,8 +8,8 @@ Source0:         http://www.opendap.org/pub/source/%{name}-%{version}.tar.gz
 URL:             http://www.opendap.org/
 
 BuildRoot:       %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires:   libdap-devel >= 3.9.0
-BuildRequires:   bes-devel >= 3.7.0
+BuildRequires:   libdap-devel >= 3.9.3
+BuildRequires:   bes-devel >= 3.7.2
 
 %description
 This is the NcML module for our data server.  It parses NcML files to
