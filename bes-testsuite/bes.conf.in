@@ -63,13 +63,13 @@ BES.LogVerbose=no
 # BES.module.nc=@libdir@/bes/libnc_module.so
 # BES.module.h4=@libdir@/bes/libhdf4_module.so
 # BES.module.ff=@libdir@/bes/libff_module.so
+# BES.module.csv=@libdir@/bes/libcsv_module.so
 
-BES.modules=dap,cmd,csv,nc,h4,ncml
+BES.modules=dap,cmd,nc,h4,ncml
 BES.module.dap=@libdir@/bes/libdap_module.so
 BES.module.cmd=@libdir@/bes/libdap_cmd_module.so
 BES.module.nc=@libdir@/bes/libnc_module.so
 BES.module.h4=@libdir@/bes/libhdf4_module.so
-BES.module.csv=@libdir@/bes/libcsv_module.so
 BES.module.ncml=@abs_top_builddir@/.libs/libncml_module.so
 
 

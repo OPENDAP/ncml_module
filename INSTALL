@@ -25,23 +25,28 @@ BUILDING THE SOFTWARE
    REPOSITORY before continuing.
 
 1) Type `./configure' at the system prompt. On some systems you may
-   have to type `sh configure.' If you want this part of the server to
-   install someplace other than /usr/local/bin (the default), use
-   --prefix to change the prefix from the default "/usr/local/".  (For
-   this document $prefix will refer to this directory).
+   have to type `sh configure.' 
+
+   The default location for the install is "/usr/local".  If your BES
+   is installed in a different location, please use --prefix to change
+   the prefix to the BES install location.  (For this document $prefix
+   will refer to this directory).  NOTE: the CentOS RPM's install the
+   BES to "/usr" and not "/usr/local".  If you are not sure, the BES
+   will tell you its install dir when you run it with "besctl start".
 
 2) Type `make' to build the handler.
 
-3*) (*Optional): You can perform a 'make check' to test the module, but
-    note that this REQUIRES that you have BOTH the netcdf and hdf4
+3*) (*Optional): You can perform a 'make check' to test the module,
+    but note that this REQUIRES that you have BOTH the netcdf and hdf4
     handlers installed.  The testsuite uses netcdf and hdf4 datasets
-    for testing.  Please see the BUILD REQUIREMENTS section under
-    TESTSUITE if you wish to run the tests and do not have these
-    handlers installed.
+    for testing.  It also uses DejaGNU, so you'll need that as
+    well.  Please see the BUILD REQUIREMENTS section under TESTSUITE if
+    you wish to run the tests and do not have these handlers
+    installed.  Otherwise, you may skip this step,
 
-4) Install the server components in $prefix by running `make install'.
+4) Install the handler into the BES by running `make install'. 
 
-5) Type 'make bes-conf' to run the bes-nc-data.sh script which inserts
+5) Type 'make bes-conf' to run the bes-ncml-data.sh script which inserts
    the handler in the bes.conf file and adds test data to
    $prefix/share/hyrax/data.  It also associates .ncml files with the
    handler.  Please see the CONFIGURATION NOTES section below for
@@ -53,12 +58,13 @@ BUILDING THE SOFTWARE
    editing /etc/ld.so.conf. Different operating systems handle this in
    different ways.
 
-7) Restart BOTH the BES and OLFS to load the module.  
+7) Restart Hyrax (BOTH the BES and OLFS) to load the module.  
 
-8*) (*Optional): Test the module by looking at the ncml test data that
-was installed, for example fnoc1_improved.ncml.  To view this file,
-you MUST have the netcdf module installed since it wraps the fnoc1.nc
-dataset.  See REQUIREMENTS->TESTSUITE below for more information.
+8*) (*Optional): Test the module by looking at the DDX response of the
+ncml test data that was installed, for example fnoc1_improved.ncml.ddx.
+To view this file, you MUST have the netcdf module installed since it
+wraps the fnoc1.nc dataset.  See REQUIREMENTS->TESTSUITE below for
+more information.
 
 ---------------------------------------------------------------------------
 BUILDING FROM THE SVN REPOSITORY
@@ -77,8 +83,13 @@ BUILD REQUIREMENTS
 
   o MAKE AND INSTALL (no tests)
   
-    o To build from a fresh SVN checkout, you'll need automake 1.10,
-      autoconf 2.61 and libtool 1.5.6. Earlier versions may work, but
+    o To build from a fresh SVN checkout, you'll need:
+
+      	 o automake 1.10,
+      	 o autoconf 2.61
+	 o libtool 1.5.6. 
+
+      Earlier versions may work, but
       may cause problems, particularly with the 'distcheck' target for
       make. Given those requirements, use 'autoreconf --force
       --verbose' and then build as described above.
@@ -103,25 +114,36 @@ BUILD REQUIREMENTS
       and install this software. If you're using Linux, this means
       either building from source or using the libdap and libdap-devel
       RPM packages.  These are available at
-      http://www.opendap.org/download/hyrax.html.  [NOTE: If 3.9.4 is
-      not released when you build the software, you may build with
-      3.9.2, but several tests will fail and there will be a minor
-      memory leak in the BES.].  NOTE: that libdap requires libxml2
-      2.6.16 and libcurl 7.10.6 as well.
+      http://www.opendap.org/download/hyrax.html.  NOTE: libdap
+      requires libxml2 2.6.16 and libcurl 7.10.6 as well.  [NOTE: If
+      3.9.4 is not released when you build the software, you may build
+      with 3.9.3, but several tests will fail and there will be a
+      minor memory leak in the BES.]
       	  
     o You'll need version 3.7.2 or greater of the BES software
-      installed before building the handler.  Build and install it
-      before you build this handler. For Linux, get the bes and
-      bes-devel RPM packages from
+      installed before building the handler.  This is part of Hyrax
+      1.5.2.  Build, install, and test it BEFORE you build this
+      handler. 
+      
+      For Linux, you can get the bes and bes-devel RPM packages from
       http://www.opendap.org/download/hyrax.html.
+
+    o You'll also need the OLFS for Hyrax 1.5.2 though it is not
+    needed to build and install the software, only for the final test.
+
+    o The NcML Module itself uses libxml2 2.6.16 which should be
+      satisfied since libdap requires it as well.
 
 
   o TESTSUITE: (for 'make check')
 
     o In order for the 'make check' tests to succeed, you will need:
+      
+       o DejaGNU (http://www.gnu.org/software/dejagnu/)
 
        o The current version of the netCDF Data Handling Module for
-       	 Hyrax and its dependency libnetcdf 3.x.  The handler is found
+       	 Hyrax and its dependency: libnetcdf 3.x (or greater). (Note:
+       	 Mac users can get netcdf in DarwinPorts) The handler itself is found
        	 at http://www.opendap.org/download/hyrax.html.
 
        o The current version of the HDF4 Data Handling Module for
@@ -133,7 +155,7 @@ BUILD REQUIREMENTS
       need:
 	
        o The current version of the netCDF Data Handling Module for 
-       	 Hyrax and its dependency: libnetcdf 3.x
+       	 Hyrax and its dependency: libnetcdf 3.x (or greater)
 
 
 ---------------------------------------------------------------------------
@@ -141,8 +163,9 @@ CONFIGURATION NOTES
 
   o The NcML Data Handler is a module dynamically loaded into the BES.
   This is specified in the bes.conf file, which lives in
-  $prefix/etc/bes/bes.conf.  First, it adds the 'ncml' module to the
-  BES.modules list and specifies the location of the shared library:
+  $prefix/etc/bes/bes.conf (or perhaps /etc/bes/bes.conf if you used
+  an RPM).  First, it adds the 'ncml' module to the BES.modules list
+  and specifies the location of the shared library:
 
   	BES.modules=dap,dapcmd,ncml
     	BES.module.ncml=/usr/local/lib/bes/libncml_module.so
@@ -176,6 +199,13 @@ DEBUGGING AIDS
 NOTES
 
   o The NcML Module was built to work with Hyrax 1.5.2 server.
+
+  o The int32 and uint32 tests (min and max bounds, 4 total tests) are
+  known to fail for libdap 3.9.3.  3.9.4 or greater should solve this
+  problem.
+
+  o There is also a known (small) memory leak for libdap 3.9.3.
+  Again, 3.9.4 will solve this.
 
 
 

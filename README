@@ -26,7 +26,7 @@ functionality, and also adds functionality -- please see the sections
   * Functionality
   * NcML Additions
   * Example NcML
-  * HDF4 Compatibility Issue
+  * HDF4 DAS Compatibility Issue
   * Copyright
 
 ----------------------------------------------------------------------
@@ -35,6 +35,9 @@ functionality, and also adds functionality -- please see the sections
 The NcML Module requires a working Hyrax installation.  It is a module
 that is dynamically loaded into the Hyrax BES (Back End Server) to
 allow it to handle NcML files.  
+
+Please see the file INSTALL for full build and install instructions as
+well as requirements.
 
 Once installed, the BES configuration file (bes.conf) needs to be
 modified to tell it to load the module and where it was installed.  A
@@ -112,7 +115,13 @@ in addition to the NcML types.  The NcML types are mapped onto the
 closest DAP2 type internally.  
 
 ----------------------------------------------------------------------
-* HDF4 Compatibility Issue
+* Example NcML
+
+Example NcML files used by the test-suite can be found in the data
+directory of a src distribution.
+
+----------------------------------------------------------------------
+* HDF4 DAS Compatibility Issue
 
 There is a bug in the Hyrax HDF4 Module such that the DAS produced in
 incorrect.  If an NcML file is used to "wrap" an HDF4 dataset, the
@@ -123,12 +132,6 @@ lexical scope for attributes relies on the correct DAS form --- to
 handle this, the user should start with a "passthrough" NcML file and
 use the DAS from that as the starting point for knowing the structure
 the NcML handler expects to see in the NcML file.
-
-----------------------------------------------------------------------
-* Example NcML
-
-Example NcML files used by the test-suite can be found in the data
-directory of a src distribution.
 
 ----------------------------------------------------------------------
 * Copyright
