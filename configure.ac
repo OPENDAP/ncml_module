@@ -2,8 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 # Configure script for OPeNDAP NCML data handler
 
-AC_PREREQ(2.59)
-AC_INIT([ncml_module], [0.9.0], [opendap-tech@opendap.org])
+AC_PREREQ(2.61)
+AC_INIT(ncml_module, 0.9.0, opendap-tech@opendap.org)
 AC_CONFIG_AUX_DIR([conf])
 
 AM_INIT_AUTOMAKE

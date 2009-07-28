@@ -52,7 +52,7 @@ libncml_module_la_LIBADD = $(BES_DAP_LIBS)
 
 EXTRA_PROGRAMS = 
 
-EXTRA_DIST = COPYRIGHT COPYING bes-ncml-data.sh.in ncml_module.spec data
+EXTRA_DIST = COPYRIGHT COPYING bes-ncml-data.sh.in ncml_module.spec data OSX_Resources
 
 CLEANFILES = *~ bes-ncml-data.sh
 
