@@ -283,6 +283,7 @@ NCMLRequestHandler::ncml_build_help( BESDataHandlerInterface &dhi )
     }
     info->begin_tag( "module", &attrs ) ;
     //info->add_data_from_file( "NCML.Help", "NCML Help" ) ;
+    info->add_data("Please consult the online documentation at http://docs.opendap.org/index.php/BES_-_Modules_-_NcML_Module");
     info->end_tag( "module" ) ;
 
     return ret ;

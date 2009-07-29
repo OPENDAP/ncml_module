@@ -3,6 +3,11 @@ $Id: README $
 
 Updated for version 0.9.0 (27 July 2009)
 
+-------------------------------------------------------------------------
+NOTE: THIS HANDLER IS NOT YET RELEASED!  Please do not use in a live
+server until (Version 1.0.0 or higher).  Thank you.
+-------------------------------------------------------------------------
+
 Welcome to the OPeNDAP NcML Data Handler Module for Hyrax!
 
 This module can be added to a Hyrax installation to extend its data
@@ -60,7 +65,11 @@ OLFS so the NcML Module is loaded.
 
 Test data is provided to see if the installation was successful
 (fnoc1_improved.ncml), but it requires the netCDF data handler to be
-installed since it adds metadata to a netCDF dataset (fnoc1.nc).
+installed since it adds metadata to a netCDF dataset (fnoc1.nc).  When
+testing this, if you see a "Unable to add container, type of data must
+be specified" error, the BES probably has not been configured to use
+netCDF data.  Make sure you have installed the handler properly and
+that the BES can load netcdf data.
 
 ----------------------------------------------------------------------
 * Functionality
@@ -125,7 +134,7 @@ directory of a src distribution.
 ----------------------------------------------------------------------
 * HDF4 DAS Compatibility Issue
 
-There is a bug in the Hyrax HDF4 Module such that the DAS produced in
+There is a bug in the Hyrax HDF4 Module such that the DAS produced is
 incorrect.  If an NcML file is used to "wrap" an HDF4 dataset, the
 correct DAP2 DAS response will be generated.  
 

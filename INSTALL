@@ -44,7 +44,7 @@ BUILDING THE SOFTWARE
     for testing.  It also uses DejaGNU, so you'll need that as
     well.  Please see the BUILD REQUIREMENTS section under TESTSUITE if
     you wish to run the tests and do not have these handlers
-    installed.  Otherwise, you may skip this step,
+    installed.  Otherwise, you may skip this step.
 
 4) Install the handler into the BES by running `make install'. 
 
@@ -63,10 +63,15 @@ BUILDING THE SOFTWARE
 7) Restart Hyrax (BOTH the BES and OLFS) to load the module.  
 
 8*) (*Optional): Test the module by looking at the DDX response of the
-ncml test data that was installed, for example fnoc1_improved.ncml.ddx.
-To view this file, you MUST have the netcdf module installed since it
-wraps the fnoc1.nc dataset.  See REQUIREMENTS->TESTSUITE below for
-more information.
+   ncml test data that was installed, for example
+   fnoc1_improved.ncml.ddx.  To view this file, you MUST have the
+   netcdf module installed since it wraps the fnoc1.nc dataset.  See
+   REQUIREMENTS->TESTSUITE below for more information.
+
+   If you see an error like "Unable to add container, type of data
+   must be specified", then your BES probably is not configured to
+   server netcdf data properly.  Set it up to serve netcdf data, test
+   it, clear the cache, and try again.
 
 ---------------------------------------------------------------------------
 BUILDING FROM THE SVN REPOSITORY
@@ -87,9 +92,9 @@ BUILD REQUIREMENTS
   
     o To build from a fresh SVN checkout, you'll need:
 
-      	 o automake 1.10,
+      	 o automake 1.10
       	 o autoconf 2.61
-	 o libtool 1.5.6. 
+	 o libtool 1.5.6 
 
       Earlier versions may work, but
       may cause problems, particularly with the 'distcheck' target for
@@ -186,6 +191,11 @@ CONFIGURATION NOTES
 
         BES.Catalog.catalog.TypeMatch=ncml:.*.ncml(.bz2|.gz|.Z)?$;
 
+  o If you are trying to do the 'make check' or see the test data
+  (fnoc1_improved.ncml), you should also see an entry for the "nc"
+  module and/or the "hdf4" module.  If not, make sure you run the
+  scripts (see REQUIREMENTS->TESTSUITE below).
+
 ---------------------------------------------------------------------------
 DEBUGGING AIDS
 
@@ -210,12 +220,13 @@ NOTES
 
   o The NcML Module was built to work with Hyrax 1.5.2 server.
 
-  o The int32 and uint32 tests (min and max bounds, 4 total tests) are
+  o The Int32 and UInt32 tests (min and max bounds, 4 total tests) are
   known to fail for libdap 3.9.3.  3.9.4 or greater should solve this
   problem.
 
   o There is also a known (small) memory leak for libdap 3.9.3.
   Again, 3.9.4 will solve this.
+
 
 
 
