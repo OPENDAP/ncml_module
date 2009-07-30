@@ -26,12 +26,17 @@
 //
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
+#ifndef __NCML_MODULE__NCML_COMMON_TYPES_H__
+#define __NCML_MODULE__NCML_COMMON_TYPES_H__
 
-#include "SaxParser.h"
+#include <map>
+#include <string>
 
-using namespace ncml_module;
-
-SaxParser::SaxParser()
+// A location for common typedefs we use throughout the module.
+namespace ncml_module
 {
-}
+  /** A map of attribute anme to attribute values. */
+  typedef std::map<std::string, std::string> AttributeMap;
+} // namespace ncml_module
 
+#endif /* __NCML_MODULE__NCML_COMMON_TYPES_H__ */

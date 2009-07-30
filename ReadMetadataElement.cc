@@ -26,53 +26,74 @@
 //
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
-
-#ifndef __NCML_MODULE__SIMPLE_LOCATION_PARSER_H__
-#define __NCML_MODULE__SIMPLE_LOCATION_PARSER_H__
-
-#include "SaxParser.h"
+#include "ReadMetadataElement.h"
+#include "NCMLDebug.h"
+#include "NCMLParser.h"
+#include "NCMLUtil.h"
 
 namespace ncml_module
 {
-  /**
-   * @brief SaxParser implementation that just grabs the netcdf@location attribute and returns it.
-   *
-   * @see parseAndGetLocation()
-   *
-   * Currently will still process the entire file.  TODO maybe find a way to early exit?
-   *
-   * @author Michael Johnson <m.johnson@opendap.org>
-   */
-  class SimpleLocationParser : public SaxParser
+
+  const string ReadMetadataElement::_sTypeName = "readMetadata";
+
+  ReadMetadataElement::ReadMetadataElement()
   {
-  private:
-    std::string _location;
+  }
 
-  public:
-    SimpleLocationParser();
-    virtual ~SimpleLocationParser();
+  ReadMetadataElement::ReadMetadataElement(const ReadMetadataElement& /* proto */)
+  : NCMLElement()
+  {
+  }
 
-    /**
-     *  Parse the NcML filename and return the netcdf@location attribute,
-     *  assuming there's only one netCDF node.  If more than one,
-     *  we'll get the last node's location.
-     */
-    std::string parseAndGetLocation(const std::string& filename);
+  ReadMetadataElement::~ReadMetadataElement()
+  {
+  }
 
-    /////////////// Interface SaxParser
-    virtual void onStartDocument() {  }
-    virtual void onEndDocument() {  }
+  const string&
+  ReadMetadataElement::getTypeName() const
+  {
+    return _sTypeName;
+  }
 
-    /** We only use this get the the nedcdf@location attribute out */
-    virtual void onStartElement(const std::string& name, const AttributeMap& attrs);
+  ReadMetadataElement*
+  ReadMetadataElement::clone() const
+  {
+    return new ReadMetadataElement(*this);
+  }
 
-    virtual void onEndElement(const std::string& /* name */) {  }
-    virtual void onCharacters(const std::string& /* content */) {  };
+  void
+  ReadMetadataElement::setAttributes(const AttributeMap& /* attrs */)
+  {
+  }
 
-    virtual void onParseWarning(std::string msg);
-    virtual void onParseError(std::string msg);
-  };
+  void
+  ReadMetadataElement::handleBegin(NCMLParser& p)
+  {
+    if (!p.withinLocation())
+        {
+          THROW_NCML_PARSE_ERROR("Got <readMetadata/> while not within <netcdf>");
+        }
+      p.changeMetadataDirective(NCMLParser::READ_METADATA);
+  }
 
+  void
+  ReadMetadataElement::handleContent(NCMLParser& /* p */, const string& content)
+  {
+    if (!NCMLUtil::isAllWhitespace(content))
+      {
+        THROW_NCML_PARSE_ERROR("Got non-whitespace for element content and didn't expect it.  Element=" + toString() + " content=\"" +
+            content + "\"");
+      }
+  }
+
+  void
+  ReadMetadataElement::handleEnd(NCMLParser& /* p */)
+  {
+  }
+
+  string
+  ReadMetadataElement::toString() const
+  {
+    return "<" + _sTypeName + ">";
+  }
 }
-
-#endif /* __NCML_MODULE__SIMPLE_LOCATION_PARSER_H__ */

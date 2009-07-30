@@ -36,6 +36,7 @@ namespace libdap
    class DAS;
 }
 
+#include "NCMLCommonTypes.h"
 #include <string>
 #include <vector>
 
@@ -65,6 +66,18 @@ namespace ncml_module
      * according to isascii()?
      */
     static bool isAscii(const std::string& str);
+
+    /** Is all the string whitespace as defined by chars in WHITESPACE ?  */
+    static bool isAllWhitespace(const std::string& str);
+
+
+    /** @brief Return the value of the given attribute from the map, else the given default.
+     * @param map  map to search
+     * @param name name of the attribute to find
+     * @param default  what to return if name not found
+     * @return the attribute value or default as a const reference.
+     */
+    static const std::string& findAttrValue(const AttributeMap& map, const std::string& name, const std::string& def="");
 
 
      /** Given we have a valid attribute tree inside of the DDS, recreate it in the DAS.

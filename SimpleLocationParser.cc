@@ -30,6 +30,7 @@
 #include "SimpleLocationParser.h"
 
 #include "BESDebug.h"
+#include "NCMLUtil.h"
 #include "SaxParserWrapper.h"
 
 using namespace std;
@@ -57,11 +58,11 @@ SimpleLocationParser::parseAndGetLocation(const string& filename)
 }
 
 void
-SimpleLocationParser::onStartElement(const string& name, const AttrMap& attrs)
+SimpleLocationParser::onStartElement(const string& name, const AttributeMap& attrs)
 {
   if (name == "netcdf")
     {
-      _location = SaxParser::findAttrValue(attrs, "location");
+      _location = NCMLUtil::findAttrValue(attrs, "location");
     }
 }
 

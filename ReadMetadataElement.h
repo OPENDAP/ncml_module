@@ -26,12 +26,39 @@
 //
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
+#ifndef __NCML_MODULE__READ_METADATA_ELEMENT_H__
+#define __NCML_MODULE__READ_METADATA_ELEMENT_H__
 
-#include "SaxParser.h"
+#include "NCMLElement.h"
 
-using namespace ncml_module;
-
-SaxParser::SaxParser()
+using namespace std;
+namespace ncml_module
 {
+
+  /**
+   * @brief Concrete class for NcML <readMetadata> element
+   *
+   * This element is the default, so is basically a noop.  It
+   * directs the parser to use the underlying metadata in the source
+   * dataset.
+   */
+  class ReadMetadataElement : public NCMLElement
+  {
+  public:
+    ReadMetadataElement();
+    ReadMetadataElement(const ReadMetadataElement& proto);
+    virtual ~ReadMetadataElement();
+    virtual const string& getTypeName() const;
+    virtual ReadMetadataElement* clone() const; // override clone with more specific subclass
+    virtual void setAttributes(const AttributeMap& attrs);
+    virtual void handleBegin(NCMLParser& p);
+    virtual void handleContent(NCMLParser& p, const string& content);
+    virtual void handleEnd(NCMLParser& p);
+    virtual string toString() const;
+
+    static const string _sTypeName;
+  };
+
 }
 
+#endif /* __NCML_MODULE__READ_METADATA_ELEMENT_H__ */

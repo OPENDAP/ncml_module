@@ -26,12 +26,74 @@
 //
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
+#include "ExplicitElement.h"
+#include "NCMLDebug.h"
+#include "NCMLParser.h"
+#include "NCMLUtil.h"
 
-#include "SaxParser.h"
-
-using namespace ncml_module;
-
-SaxParser::SaxParser()
+namespace ncml_module
 {
-}
 
+  const string ExplicitElement::_sTypeName = "explicit";
+
+  ExplicitElement::ExplicitElement()
+  {
+  }
+
+  ExplicitElement::ExplicitElement(const ExplicitElement& /* proto */)
+  : NCMLElement()
+  {
+  }
+
+  ExplicitElement::~ExplicitElement()
+  {
+  }
+
+  const string&
+  ExplicitElement::getTypeName() const
+  {
+    return _sTypeName;
+  }
+
+  ExplicitElement*
+  ExplicitElement::clone() const
+  {
+    return new ExplicitElement(*this);
+  }
+
+  void
+  ExplicitElement::setAttributes(const AttributeMap& /* attrs */)
+  {
+  }
+
+  void
+  ExplicitElement::handleBegin(NCMLParser& p)
+  {
+    if (!p.withinLocation())
+        {
+          THROW_NCML_PARSE_ERROR("Got <explicit/> while not within <netcdf>");
+        }
+      p.changeMetadataDirective(NCMLParser::EXPLICIT);
+  }
+
+  void
+  ExplicitElement::handleContent(NCMLParser& /* p */, const string& content)
+  {
+    if (!NCMLUtil::isAllWhitespace(content))
+      {
+        THROW_NCML_PARSE_ERROR("Got non-whitespace for element content and didn't expect it.  Element=" + toString() + " content=\"" +
+            content + "\"");
+      }
+  }
+
+  void
+  ExplicitElement::handleEnd(NCMLParser& /* p */)
+  {
+  }
+
+  string
+  ExplicitElement::toString() const
+  {
+    return "<" + _sTypeName + ">";
+  }
+}

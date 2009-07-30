@@ -43,6 +43,7 @@
 #include "BESSyntaxUserError.h"
 #include "BESForbiddenError.h"
 #include "BESNotFoundError.h"
+#include "NCMLCommonTypes.h"
 #include "SaxParser.h"
 
 using namespace std;
@@ -60,7 +61,7 @@ static string makeString(const xmlChar* chars)
 }
 
 // Empty then fill the map with <attribName.attribValue> pairs from attrs.
-static int toAttrMap(SaxParser::AttrMap& map, const xmlChar** attrs)
+static int toAttrMap(AttributeMap& map, const xmlChar** attrs)
 {
   map.clear();
   int count=0;
@@ -154,7 +155,7 @@ static void ncmlStartElement(void *  userData,
   BEGIN_SAFE_PARSER_BLOCK(userData);
 
   string nameS = makeString(name);
-  SaxParser::AttrMap map;
+  AttributeMap map;
   toAttrMap(map, attrs);
 
   // These args will be valid for the scope of the call.

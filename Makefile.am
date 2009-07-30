@@ -20,30 +20,46 @@ BES_SRCS:=
 BES_HDRS:=
 
 NCML_SRCS = \
-		NCMLModule.cc \
-		NCMLRequestHandler.cc \
-		NCMLParser.cc \
+		AttributeElement.cc \
 		DDSLoader.cc \
+		ExplicitElement.cc \
+		NCMLCommonTypes.cc \
+		NCMLElement.cc \
+		NCMLModule.cc \
+		NCMLParser.cc \
+		NCMLRequestHandler.cc \
+		NCMLUtil.cc \
+		NetcdfElement.cc \
+		ReadMetadataElement.cc \
+		RemoveElement.cc \
 		SaxParserWrapper.cc \
 		SaxParser.cc \
-		SimpleLocationParser.cc \
 		ScopeStack.cc \
-		NCMLUtil.cc 
+		SimpleLocationParser.cc \
+		VariableElement.cc
 		
-
 NCML_HDRS = \
+		AttributeElement.h \
+		DDSLoader.h \
+		ExplicitElement.h \
+		NCMLCommonTypes.h \ 
+		NCMLDebug.h \
+		NCMLElement.h \ 
 		NCMLModule.h \
+		NCMLParser.h \
 		NCMLRequestHandler.h \
 		NCMLResponseNames.h \
-		NCMLParser.h \
-		DDSLoader.h \
+		NCMLUtil.h \
+		NetcdfElement.h \
+		ReadMetadataElement.h \
+		RemoveElement.h \
 		SaxParserWrapper.h \
 		SaxParser.h \
-		SimpleLocationParser.h \
 		ScopeStack.h \
-		NCMLUtil.h \
-		NCMLDebug.h 
+		SimpleLocationParser.h \
+		VariableElement.h 
 		
+				
 
 libncml_module_la_SOURCES = $(NCML_SRCS) $(BES_SRCS) $(NCML_HDRS) $(BES_HDRS)
 libncml_module_la_CPPFLAGS = $(BES_CPPFLAGS)

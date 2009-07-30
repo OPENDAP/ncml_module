@@ -29,8 +29,7 @@
 #ifndef __NCML_MODULE__SAX_PARSER_H__
 #define __NCML_MODULE__SAX_PARSER_H__
 
-#include <string>
-#include <map>
+#include "NCMLCommonTypes.h"
 
 namespace ncml_module
 {
@@ -49,16 +48,7 @@ protected:
   SaxParser(); // Interface class
 
 public:
-  /** Attributes will be shoved into a map for calls below. */
-  typedef std::map<std::string, std::string> AttrMap;
 
-  /** @brief Return the value of the given attribute from the map, else the given default.
-   * @param map  map to search
-   * @param name name of the attribute to find
-   * @param default  what to return if name not found
-   * @return the attribute value or default as a const reference.
-   */
-  static const std::string& findAttrValue(const SaxParser::AttrMap& map, const std::string& name, const std::string& def="");
 
   virtual ~SaxParser() {};
 
@@ -70,7 +60,7 @@ public:
     * @param name name of the element
     * @param attrs a map of any attributes -> values.  Volatile for this call.
     * */
-  virtual void onStartElement(const std::string& name, const AttrMap& attrs) = 0;
+  virtual void onStartElement(const std::string& name, const AttributeMap& attrs) = 0;
 
   /** Called at the end of the element with the given name.
     *  The args are only valid for the duration of the call, so copy if necessary to keep.

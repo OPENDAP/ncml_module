@@ -26,12 +26,37 @@
 //
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
+#ifndef __NCML_MODULE__EXPLICIT_ELEMENT_H__
+#define __NCML_MODULE__EXPLICIT_ELEMENT_H__
 
-#include "SaxParser.h"
+#include "NCMLElement.h"
 
-using namespace ncml_module;
-
-SaxParser::SaxParser()
+using namespace std;
+namespace ncml_module
 {
+
+  /**
+   * @brief Concrete class for NcML <explicit> element
+   *
+   * This element simply removes all the metadata from the currently loaded DDX.
+   */
+  class ExplicitElement : public NCMLElement
+  {
+  public:
+    ExplicitElement();
+    ExplicitElement(const ExplicitElement& proto);
+    virtual ~ExplicitElement();
+    virtual const string& getTypeName() const;
+    virtual ExplicitElement* clone() const; // override clone with more specific subclass
+    virtual void setAttributes(const AttributeMap& attrs);
+    virtual void handleBegin(NCMLParser& p);
+    virtual void handleContent(NCMLParser& p, const string& content);
+    virtual void handleEnd(NCMLParser& p);
+    virtual string toString() const;
+
+    static const string _sTypeName;
+  };
+
 }
 
+#endif /* __NCML_MODULE__EXPLICIT_ELEMENT_H__ */
