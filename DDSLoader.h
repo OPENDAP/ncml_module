@@ -33,8 +33,10 @@
 #include <string>
 
 class BESDataHandlerInterface;
+class BESContainer;
 class BESContainerStorage;
-class BESDDSResponse;
+class BESDapResponse;
+class BESResponseObject;
 
 
 /**
@@ -88,6 +90,12 @@ private:
   DDSLoader& operator=(const DDSLoader&); // disallow
 
 public:
+
+  /** For telling the loader what type of BESDapResponse to load and return.
+   * It can handle a DDX load or a DataDDS load.  The returned BesDapResponse will
+   * be of the proper subclass. */
+  enum ResponseType { eRT_RequestDDX = 0, eRT_RequestDataDDS, eRT_Num };
+
   /**
    * @brief Create a loader that will hijack dhi on a load call, then restore it's state.
    *
@@ -103,7 +111,7 @@ public:
   virtual ~DDSLoader();
 
   /**
-   * @brief Load and return a new DDX structure for the local dataset referred to by location.
+   * @brief Load and return a new DDX or DataDDS structure for the local dataset referred to by location.
    *
    * Ownership of the response object passes to the caller via auto_ptr.
    *
@@ -112,11 +120,33 @@ public:
    * dhi restored immediately.
    *
    * @param location the filename of the local file
-   * @return a newly allocated DDS (DDX) for the location
+   * @param type whether to load DDX or DataDDS.
+   *
+   * @return a response object containing the new loaded response object.
+   *         It will be either a BESDDSResponse or BESDataDDSResponse depending on \c type.
    *
    * @exception if the underlying location cannot be loaded.
    */
-  auto_ptr<BESDDSResponse> load(const std::string& location);
+  std::auto_ptr<BESDapResponse> load(const std::string& location, ResponseType type);
+
+  /** @brief Load a DDX or DataDDS response into the given pResponse object, which must be non-null.
+   *
+   *  Similar to load(), but the caller passes in the resposne object to fill rather than wanting a new one.
+   *
+   *  If type == eRT_RequestDDX, pResponse MUST have type BESDDSReponse.
+   *  If type == eRT_RequestDataDDS, pResponse MUST have type BESDataDDSResponse.
+   *
+   *  The location is loaded in pResponse based on the type of response requested.
+   *
+   *  @param location the file to load
+   *  @param type the response type requested, must match type of pResponse
+   *  @param pResponse the response object to fill in, which must match the request type.
+   *
+   *  @see load()
+   *
+   * @exception If there is a problem loading the location.
+   */
+  void loadInto(const std::string& location, ResponseType type, BESDapResponse* pResponse);
 
   /**
    * @brief restore dhi to clean state
@@ -126,6 +156,30 @@ public:
    * and then retry or something
    */
   void cleanup() throw();
+
+  //////////////////////// Public Class Methods ////////////////////////////////////////////////////////////////
+
+  /** Make a new response object for the requested type. */
+  static std::auto_ptr<BESDapResponse> makeResponseForType(ResponseType type);
+
+  /** Convert the type into the action in BESResponseNames.h for the type.
+   *  @param type the response type
+   *  @return either DDX_RESPONSE or DATA_RESPONSE
+   */
+  static std::string getActionForType(ResponseType type);
+
+  /** Convert the type in the action name in BESResponseNames.h
+   * @param type the response type
+   * @return either DDX_RESPONSE_STR or DATA_RESPONSE_STR
+   */
+  static std::string getActionNameForType(ResponseType type);
+
+  /** Return whether the given response's type matches the given ResposneType.
+   *  If type==eRT_RequestDDX, pResponse must be BESDDSResponse
+   *  If type==eRT_RequeastDataDDS, pResponse must be BESDataDDSResponse
+   */
+  static bool checkResponseIsValidType(ResponseType type, BESDapResponse* pResponse);
+
 
 private:
 

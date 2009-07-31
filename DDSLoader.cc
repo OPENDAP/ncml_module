@@ -27,23 +27,26 @@
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
 #include "config.h"
+#include "DDSLoader.h"
 
 #include "cgi_util.h"
+#include <BESConstraintFuncs.h>
+#include <BESContainerStorage.h>
+#include <BESContainerStorageList.h>
+#include <BESDapResponse.h>
+#include <BESDataDDSResponse.h>
+#include <BESDDSResponse.h>
+#include <BESDebug.h>
+#include <BESInternalError.h>
 #include <BESResponseHandler.h>
 #include <BESResponseNames.h>
-#include <BESVersionInfo.h>
-#include <BESTextInfo.h>
-#include "BESDDSResponse.h"
-#include <BESConstraintFuncs.h>
-#include <BESServiceRegistry.h>
-#include <BESUtil.h>
-#include <BESInternalError.h>
-#include <BESContainerStorageList.h>
-#include <BESContainerStorage.h>
 #include <BESRequestHandlerList.h>
-#include <BESDebug.h>
-
-#include "DDSLoader.h"
+#include <BESServiceRegistry.h>
+#include <BESTextInfo.h>
+#include <BESUtil.h>
+#include <BESVersionInfo.h>
+#include "NCMLDebug.h"
+#include "NCMLUtil.h"
 
 using namespace std;
 using namespace ncml_module;
@@ -66,9 +69,21 @@ DDSLoader::~DDSLoader()
   ensureClean();
 }
 
-auto_ptr<BESDDSResponse>
-DDSLoader::load(const string& location)
+auto_ptr<BESDapResponse>
+DDSLoader::load(const string& location, ResponseType type)
 {
+  // We need to make the proper response object as well, since in this call the dhi is coming in with the
+  // response object for the original ncml request.
+  std::auto_ptr<BESDapResponse> response = makeResponseForType(type);
+  loadInto(location, type, response.get());
+  return response; // relinquish
+}
+
+void
+DDSLoader::loadInto(const std::string& location, ResponseType type, BESDapResponse* pResponse)
+{
+  VALID_PTR(pResponse);
+
   // Just be sure we're cleaned up before doing anything, in case the caller calls load again after exception
   // and before dtor.
   ensureClean();
@@ -78,27 +93,33 @@ DDSLoader::load(const string& location)
   // Remember current state of dhi before we touch it -- _hijacked is now true!!
   snapshotDHI();
 
-  // We need to make the proper response object as well, since the dhi is coming in with the
-  // response object for the original ncml request.
-  auto_ptr<BESDDSResponse> ddxResponse = auto_ptr<BESDDSResponse>(new BESDDSResponse( new DDS( NULL, "virtual" )  )) ;
-
   // Add a new symbol to the storage list and return container for it.
   // We will remove this new container on the way out.
   BESContainer* container = addNewContainerToStorage();
 
   // Take over the dhi
   _dhi.container = container;
-  _dhi.response_handler->set_response_object(ddxResponse.get());
-  _dhi.action = DDS_RESPONSE;
-  _dhi.action_name = DDX_RESPONSE_STR;
+  _dhi.response_handler->set_response_object(pResponse);
+
+  // Choose the proper request type...
+  _dhi.action = getActionForType(type);
+  _dhi.action_name = getActionNameForType(type);
 
   // TODO mpj do we need to do these calls?
   BESDEBUG( "ncml", "about to set dap version to: "
-      << ddxResponse->get_dap_client_protocol() << endl);
+        << pResponse->get_dap_client_protocol() << endl);
   BESDEBUG( "ncml", "about to set xml:base to: "
-                         << ddxResponse->get_request_xml_base() << endl);
-  ddxResponse->get_dds()->set_client_dap_version( ddxResponse->get_dap_client_protocol() ) ;
-  ddxResponse->get_dds()->set_request_xml_base( ddxResponse->get_request_xml_base() );
+                           << pResponse->get_request_xml_base() << endl);
+
+  // Ugh, figure out which underlying type of response it is to get the DDS (or DataDDS via DDS super).
+  DDS* pDDS = NCMLUtil::getDDSFromEitherResponse(pResponse);
+  if (!pDDS)
+    {
+      THROW_NCML_INTERNAL_ERROR("DDSLoader::load expected BESDDSResponse or BESDataDDSResponse but got neither!");
+    }
+
+  pDDS->set_client_dap_version( pResponse->get_dap_client_protocol() ) ;
+  pDDS->set_request_xml_base( pResponse->get_request_xml_base() );
 
   // DO IT!
   BESRequestHandlerList::TheList()->execute_current( _dhi ) ;
@@ -113,9 +134,8 @@ DDSLoader::load(const string& location)
 
   // We should be clean here too.
   ensureClean();
-
-  return ddxResponse; // relinquish
 }
+
 
 void
 DDSLoader::cleanup() throw()
@@ -231,3 +251,71 @@ DDSLoader::ensureClean() throw()
    // Make sure we've removed the new symbol from the container list as well.
    removeContainerFromStorage();
 }
+
+std::auto_ptr<BESDapResponse>
+DDSLoader::makeResponseForType(ResponseType type)
+{
+  if (type == eRT_RequestDDX)
+    {
+      return auto_ptr<BESDapResponse>(new BESDDSResponse( new DDS( new BaseTypeFactory(), "virtual" )  )) ;
+    }
+  else if (type == eRT_RequestDataDDS)
+    {
+      return auto_ptr<BESDapResponse>(new BESDataDDSResponse( new DataDDS( new BaseTypeFactory(), "virtual" )  )) ;
+    }
+  else
+    {
+      THROW_NCML_INTERNAL_ERROR("DDSLoader::makeResponseForType() got unknown type!");
+    }
+  return auto_ptr<BESDapResponse>(0);
+}
+
+std::string
+DDSLoader::getActionForType(ResponseType type)
+{
+  if (type == eRT_RequestDDX)
+      {
+        return DDS_RESPONSE;
+      }
+    else if (type == eRT_RequestDataDDS)
+      {
+        return DATA_RESPONSE;
+      }
+
+    THROW_NCML_INTERNAL_ERROR("DDSLoader::getActionForType(): unknown type!");
+}
+
+std::string
+DDSLoader::getActionNameForType(ResponseType type)
+{
+  if (type == eRT_RequestDDX)
+    {
+      return DDX_RESPONSE_STR;
+    }
+  else if (type == eRT_RequestDataDDS)
+    {
+      return DATA_RESPONSE_STR;
+    }
+
+  THROW_NCML_INTERNAL_ERROR("DDSLoader::getActionNameForType(): unknown type!");
+}
+
+bool
+DDSLoader::checkResponseIsValidType(ResponseType type, BESDapResponse* pResponse)
+{
+  if (type == eRT_RequestDDX)
+    {
+      return dynamic_cast<BESDDSResponse*>(pResponse);
+    }
+  else if (type == eRT_RequestDataDDS)
+    {
+      return dynamic_cast<BESDataDDSResponse*>(pResponse);
+    }
+  else
+    {
+      return false;
+    }
+}
+
+
+

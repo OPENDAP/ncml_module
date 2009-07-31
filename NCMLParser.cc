@@ -70,7 +70,8 @@ NCMLParser::NCMLParser(DDSLoader& loader)
 : _filename("")
 , _parsingLocation(false)
 , _loader(loader)
-, _ddsResponse(0)
+, _responseType(DDSLoader::eRT_RequestDDX)
+, _response(0)
 , _metadataDirective(PERFORM_DEFAULT)
 , _pVar(0)
 , _pCurrentTable(0)
@@ -82,33 +83,54 @@ NCMLParser::NCMLParser(DDSLoader& loader)
 
 NCMLParser::~NCMLParser()
 {
+  // clean other stuff up
   cleanup();
-  // if _ddsResponse isn't relinquished, auto_ptr will nuke it here.
 }
 
-auto_ptr<BESDDSResponse>
-NCMLParser::parse(const string& filename)
+auto_ptr<BESDapResponse>
+NCMLParser::parse(const string& ncmlFilename,  DDSLoader::ResponseType responseType)
 {
+  // Parse into a newly created object.
+  auto_ptr<BESDapResponse> response = DDSLoader::makeResponseForType(responseType);
+
+  // Parse into the response.  We still got it in the auto_ptr in this scope, so we're safe
+  // on exception since the auto_ptr in this func will cleanup the memory.
+  parseInto(ncmlFilename, responseType, response.get());
+
+  // Relinquish it to the caller
+  return response;
+}
+
+void
+NCMLParser::parseInto(const string& ncmlFilename, DDSLoader::ResponseType responseType, BESDapResponse* response)
+{
+  VALID_PTR(response);
+  NCML_ASSERT_MSG(DDSLoader::checkResponseIsValidType(responseType, response),
+        "NCMLParser::parseInto: got wrong response object for given type.");
+
+  _responseType = responseType;
+  _response = response;
+
   if (parsing())
     {
       THROW_NCML_INTERNAL_ERROR("Illegal Operation: NCMLParser::parse called while already parsing!");
     }
 
-  BESDEBUG("ncml", "Beginning NcML parse of file=" << filename << endl);
+  BESDEBUG("ncml", "Beginning NcML parse of file=" << ncmlFilename << endl);
 
   // In case we care.
-  _filename = filename;
+  _filename = ncmlFilename;
 
   // Invoke the libxml sax parser
   SaxParserWrapper parser(*this);
-  parser.parse(filename);
+  parser.parse(ncmlFilename);
 
   // Prepare for a new parse, making sure it's all cleaned up (with the exception of the _ddsResponse
   // which where's about to send off)
   resetParseState();
 
-  // Relinquish ownership to the caller.
-  return _ddsResponse;
+  // we're done with it.
+  _response = 0;
 }
 
 void
@@ -121,17 +143,12 @@ NCMLParser::handleBeginLocation(const string& location)
     }
   _parsingLocation = true;
 
-  // If we get another one of these while we still have one, it's currently an error.
-  // We can only process on location right now.
-  if (_ddsResponse.get())
-    {
-      // Dtor will clean it up
-     THROW_NCML_PARSE_ERROR("Got another <netcdf> node while already processing one!  We only support one <netcdf> per file in this version.");
-    }
+  // We better have one!!
+  VALID_PTR(_response);
 
   // Use the loader to load the location specified in the <netcdf> element.
   // If not found, this call will throw an exception and we'll just unwind out.
-   _ddsResponse = _loader.load(location); // gain control of response object
+  _loader.loadInto(location, _responseType, _response);
 
   // Force the attribute table to be the global one for the DDS.
   if (getDDS())
@@ -279,8 +296,8 @@ NCMLParser::isScopeGlobal() const
 DDS*
 NCMLParser::getDDS() const
 {
-  NCML_ASSERT_MSG(_ddsResponse.get(), "getDDS() called when we're not processing a <netcdf> location and _ddsResponse is null!");
-  return _ddsResponse->get_dds();
+  NCML_ASSERT_MSG(_response, "getDDS() called when we're not processing a <netcdf> location and _response is null!");
+  return NCMLUtil::getDDSFromEitherResponse(_response);
 }
 
 void
@@ -297,7 +314,11 @@ NCMLParser::resetParseState()
   // Cleanup any memory in the _elementStack
   deleteElementStack();
 
-  // _ddsResponse takes care of itself.
+  // Not that this matters...
+  _responseType = DDSLoader::eRT_RequestDDX;
+
+  // We never own the memory in this, so just clear it.
+  _response = 0;
 
   // just in case
   _loader.cleanup();

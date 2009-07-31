@@ -27,6 +27,9 @@
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
 #include "NCMLUtil.h"
+#include "BESDapResponse.h"
+#include "BESDataDDSResponse.h"
+#include "BESDDSResponse.h"
 #include "BESDebug.h"
 #include "BESInternalError.h"
 #include <ctype.h>
@@ -223,6 +226,28 @@ namespace ncml_module
 
     // for safety, make sure the factory is 0.  If it isn't we might have a double delete.
     NCML_ASSERT(!dds_out->get_factory());
+  }
+
+  libdap::DDS*
+  NCMLUtil::getDDSFromEitherResponse(BESDapResponse* response)
+  {
+    DDS* pDDS = 0;
+    BESDDSResponse* pDDXResponse = dynamic_cast<BESDDSResponse*>(response);
+    BESDataDDSResponse* pDataDDSResponse = dynamic_cast<BESDataDDSResponse*>(response);
+
+    if (pDDXResponse)
+      {
+        pDDS = pDDXResponse->get_dds();
+      }
+    else if (pDataDDSResponse)
+      {
+        pDDS = pDataDDSResponse->get_dds(); // return as superclass ptr
+      }
+    else
+      {
+        pDDS = 0; // return null on error
+      }
+    return pDDS;
   }
 
 }

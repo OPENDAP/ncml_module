@@ -37,8 +37,9 @@
 #include <string>
 #include <vector>
 
-#include "SaxParser.h" // interface superclass
 #include "AttrTable.h" // needed due to parameter with AttrTable::Attr_iter
+#include "DDSLoader.h"
+#include "SaxParser.h" // interface superclass
 #include "ScopeStack.h"
 
 //FDecls
@@ -48,16 +49,20 @@ namespace libdap
   class DAS;
   class DDS;
 };
-class BESDDSResponse;
+class BESDapResponse;
 
-using namespace libdap;
-using namespace std;
+class BESDataDDSResponse;
+class BESDDSResponse;
 
 namespace ncml_module
 {
   class DDSLoader;
   class NCMLElement;
 }
+
+using namespace libdap;
+using namespace std;
+
 
 /**
  *  @brief NcML Parser for adding/modifying/removing metadata (attributes) to existing local datasets using NcML.
@@ -125,9 +130,10 @@ public: // Friends
 
 public:
   /**
-   * @brief Create a structure that can parse an NCML filename and returned a transformed DDX response.
+   * @brief Create a structure that can parse an NCML filename and returned a transformed response of requested type.
    *
-   * @param loader helper for loading a DDX for locations referred to in the ncml.
+   * @param loader helper for loading a location referred to in the ncml.
+      *
    */
   NCMLParser(DDSLoader& loader);
 
@@ -149,8 +155,18 @@ public:
    *  @throw BESInternalError for assertion failures, null ptr exceptions, or logic errors.
    *
    *  @return a new response object with the transformed DDS in it.  The caller assumes ownership of the returned object.
+   *  It will be of type BESDDSResponse or BESDataDDSResponse depending on the request being processed.
   */
-  auto_ptr<BESDDSResponse> parse(const string& ncmlFilename);
+  auto_ptr<BESDapResponse> parse(const string& ncmlFilename, DDSLoader::ResponseType type);
+
+  /** @brief Same as parse, but the response object to parse into is passed down by the caller
+   * rather than created.
+   *
+   * @param ncmlFilename the ncml file to parse
+   * @param responseType the type of response.  Must match response.
+   * @param response the premade response object.  The caller owns this memory.
+   */
+  void parseInto(const string& ncmlFilename, DDSLoader::ResponseType responseType, BESDapResponse* response);
 
   bool parsing() const { return !_filename.empty(); }
 
@@ -408,8 +424,12 @@ private: // data rep
   // Handed in at creation, this is a helper to load a given DDS.  It is assumed valid for the life of this.
   DDSLoader& _loader;
 
-  // The response object containing the DDS for the <netcdf> node we are processing, or null if not processing.
-  auto_ptr<BESDDSResponse> _ddsResponse;
+  // The type of response in _response
+  DDSLoader::ResponseType _responseType;
+
+  // The response object containing the DDS (or DataDDS) for the <netcdf> node we are processing, or null if not processing.
+  // Type is based on _responseType.   We do not own this memory!  It is a temp while we parse and is handed in.
+  BESDapResponse* _response;
 
   // what to do with existing metadata after it's read in from parent.
   SourceMetadataDirective _metadataDirective;

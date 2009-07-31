@@ -36,6 +36,8 @@ namespace libdap
    class DAS;
 }
 
+class BESDapResponse;
+
 #include "NCMLCommonTypes.h"
 #include <string>
 #include <vector>
@@ -93,6 +95,14 @@ namespace ncml_module
      * @param dds_in source DDS
      */
     static void copyVariablesAndAttributesInto(libdap::DDS* dds_out, const libdap::DDS& dds_in);
+
+    /**
+     * Return the DDS* for the given response object. It is assumed to be either a
+     * BESDDSResponse or BESDataDDSResponse.
+     * @param reponse either a  BESDDSResponse or BESDataDDSResponse to extract DDS from.
+     * @return the DDS* contained in the response object, or NULL if incorrect response type.
+     */
+    static libdap::DDS* getDDSFromEitherResponse(BESDapResponse* response);
   };
 }
 
