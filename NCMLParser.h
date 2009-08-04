@@ -244,10 +244,15 @@ private: //methods
   */
   bool withinVariable() const { return _parsingLocation && _pVar; }
 
-  /** Helper to get the dds from _ddsResponse
-   *  Error to call _ddsResponse is null.
+  /** Helper to get the dds from _response
+   *  Error to call _response is null.
    */
   DDS* getDDS() const;
+
+  /** @return whether we are handling a DataDDS request (in which case getDDS() is a DataDDS)
+   * or not.
+   */
+  bool parsingDataRequest() const;
 
   /** Clear any volatile parse state (basically after each netcdf node).
    * Also used by the dtor.

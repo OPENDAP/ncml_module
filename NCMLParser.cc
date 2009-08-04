@@ -32,6 +32,7 @@
 #include "AttrTable.h"
 #include "BaseType.h"
 #include "BESConstraintFuncs.h"
+#include "BESDataDDSResponse.h"
 #include "BESDDSResponse.h"
 #include "BESDebug.h"
 #include "cgi_util.h"
@@ -143,7 +144,7 @@ NCMLParser::handleBeginLocation(const string& location)
     }
   _parsingLocation = true;
 
-  // We better have one!!
+  // We better have one!  This gets created up front now.  It will be empty if we have no location.
   VALID_PTR(_response);
 
   // Use the loader to load the location specified in the <netcdf> element.
@@ -298,6 +299,13 @@ NCMLParser::getDDS() const
 {
   NCML_ASSERT_MSG(_response, "getDDS() called when we're not processing a <netcdf> location and _response is null!");
   return NCMLUtil::getDDSFromEitherResponse(_response);
+}
+
+bool
+NCMLParser::parsingDataRequest() const
+{
+  const BESDataDDSResponse* const pDataDDSResponse = dynamic_cast<const BESDataDDSResponse* const>(_response);
+  return (pDataDDSResponse);
 }
 
 void

@@ -215,6 +215,12 @@ DEBUGGING AIDS
      report if there's an internal error reported.  If you see an
      internal error, please report it!
 
+   o You can create a debuggable version of the handler with:
+     
+     ./configure --enable-developer CXXFLAGS="-g3 -O0 -W -Wall -Wcast-align -fno-defer-pop"
+
+     at configure time.
+
 ---------------------------------------------------------------------------
 NOTES
 
@@ -226,8 +232,5 @@ NOTES
 
   o There is also a known (small) memory leak for libdap 3.9.3.
   Again, 3.9.4 will solve this.
-
-
-
 
 

@@ -223,9 +223,6 @@ namespace ncml_module
       {
          dds_out->add_var(*i); // add_var() dups the BaseType.
       }
-
-    // for safety, make sure the factory is 0.  If it isn't we might have a double delete.
-    NCML_ASSERT(!dds_out->get_factory());
   }
 
   libdap::DDS*
@@ -248,6 +245,19 @@ namespace ncml_module
         pDDS = 0; // return null on error
       }
     return pDDS;
+  }
+
+  void
+  NCMLUtil::setVariableNameProperly(libdap::BaseType* pVar, const std::string& name)
+  {
+    VALID_PTR(pVar);
+    pVar->set_name(name);
+    // if template, set it too since it's used to print dds...
+    BaseType* pTemplate = pVar->var();
+    if (pTemplate)
+      {
+        pTemplate->set_name(name);
+      }
   }
 
 }

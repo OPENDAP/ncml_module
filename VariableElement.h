@@ -31,6 +31,11 @@
 
 #include "NCMLElement.h"
 
+namespace libdap
+{
+  class BaseType;
+}
+
 using namespace std;
 namespace ncml_module
 {
@@ -77,9 +82,57 @@ namespace ncml_module
      */
     void processEnd(NCMLParser& p);
 
+    /** process this variable as one that already exists at the current parser scope
+     * within the current dataset.  Essentially this means making the variable be
+     * the new current scope of the parser for subsequent other variable or attribute calls.
+     * @param p the parser to effect
+     * @param pVar the existing variable in current scope, already looked up.  If null, we look it up from _name.
+     */
+    void processExistingVariable(NCMLParser& p, libdap::BaseType* pVar);
+
+    /**
+     * If _orgName is specified, this function is called from processBegin().
+     * If a variable named _orgName exists at current parser scope,
+     * the variable is renamed to _name.
+     *
+     * @param p the parser to effect
+     *
+     * @exception BESSyntaxUserError if _orgName does not exist at current scope
+     * @exception BESSyntaxUserError if _name already DOES exist at current scope
+     *
+     * Assumes: !_orgName.empty()
+     * On exit, the scope of p will be the renamed variable.
+     */
+    void processRenameVariable(NCMLParser& p);
+
+    /**
+     * Called from processBegin() if a variable with _name does NOT exist at
+     * current parser scope of p.
+     *
+     * A new variable of type _type is created at the current parse scope.
+     * This new variable will be the new scope of p on exit.
+     *
+     * If !_shape.empty(), then the created variable is a DAP Array of
+     * type _type.  _shape will be tokenized with whitespace separators
+     * in order to resolve the dimensions of the Array.  _shape can contain
+     * either integers or mnemonic references to previously declared <dimension>'s
+     * which must exist at the current parse scope of p.
+     */
+    void processNewVariable(NCMLParser& p);
+
+    /** @brief Tell the parser to use pVar as the current scope.
+     * This also set's the current table to the pVar table.
+     * pVar must not be null.*/
+    void enterScope(NCMLParser& p, libdap::BaseType* pVar);
+
+    /** Pop off this variable from the scope. */
+    void exitScope(NCMLParser& p);
+
   private:
     string _name;
     string _type;
+    string _shape; // empty() => existing var (shape implicit) or if new var, then scalar (rank 0).
+    string _orgName; // if !empty(), the name of existing variable we want to rename to _name
   };
 
 }

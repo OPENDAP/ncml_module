@@ -10,6 +10,7 @@ AM_INIT_AUTOMAKE
 
 AC_CONFIG_SRCDIR([NCMLModule.h])
 AC_CONFIG_HEADER([config.h])
+AC_CONFIG_TESTDIR(tests, [.])
 
 # Checks for programs.
 AC_PROG_CXX
@@ -46,5 +47,6 @@ AC_CHECK_BES([3.7.2],
 
 OPENDAP_DEBUG_OPTION
 
-AC_CONFIG_FILES([Makefile bes-testsuite/Makefile])
+AC_CONFIG_FILES([Makefile bes-testsuite/Makefile tests/Makefile tests/atlocal])
+
 AC_OUTPUT

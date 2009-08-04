@@ -13,7 +13,8 @@ lib_besdir=$(libdir)/bes
 lib_bes_LTLIBRARIES = libncml_module.la
 dist_bin_SCRIPTS = bes-ncml-data.sh
 
-SUBDIRS = bes-testsuite
+SUBDIRS = bes-testsuite tests
+#TESTS = tests/testsuite
 
 BES_SRCS:=
 
@@ -37,14 +38,14 @@ NCML_SRCS = \
 		ScopeStack.cc \
 		SimpleLocationParser.cc \
 		VariableElement.cc
-		
+
 NCML_HDRS = \
 		AttributeElement.h \
 		DDSLoader.h \
 		ExplicitElement.h \
-		NCMLCommonTypes.h \ 
+		NCMLCommonTypes.h \
 		NCMLDebug.h \
-		NCMLElement.h \ 
+		NCMLElement.h \
 		NCMLModule.h \
 		NCMLParser.h \
 		NCMLRequestHandler.h \
@@ -58,8 +59,6 @@ NCML_HDRS = \
 		ScopeStack.h \
 		SimpleLocationParser.h \
 		VariableElement.h 
-		
-				
 
 libncml_module_la_SOURCES = $(NCML_SRCS) $(BES_SRCS) $(NCML_HDRS) $(BES_HDRS)
 libncml_module_la_CPPFLAGS = $(BES_CPPFLAGS)

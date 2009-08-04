@@ -32,8 +32,9 @@
 namespace libdap
 {
   // FDecls
-   class DDS;
-   class DAS;
+  class BaseType;
+  class DDS;
+  class DAS;
 }
 
 class BESDapResponse;
@@ -103,6 +104,13 @@ namespace ncml_module
      * @return the DDS* contained in the response object, or NULL if incorrect response type.
      */
     static libdap::DDS* getDDSFromEitherResponse(BESDapResponse* response);
+
+    /** Currently BaseType::set_name only sets in BaseType.  Unfortunately, the DDS transmission
+     * for Vector subclasses uses the name of the template BaseType* describing the variable,
+     * which is not set by set_name.  This is a workaround until Vector overrides BaseType::set_name
+     * to also set the name of the template _var if there is one.
+     */
+    static void setVariableNameProperly(libdap::BaseType* pVar, const std::string& name);
   };
 }
 

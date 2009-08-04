@@ -43,6 +43,8 @@ namespace ncml_module
   VariableElement::VariableElement()
   : _name("")
   , _type("")
+  , _shape("")
+  , _orgName("")
   {
   }
 
@@ -51,6 +53,8 @@ namespace ncml_module
   {
     _name = proto._name;
     _type = proto._type;
+    _shape = proto._shape;
+    _orgName = proto._orgName;
   }
 
   VariableElement::~VariableElement()
@@ -73,7 +77,9 @@ namespace ncml_module
   VariableElement::setAttributes(const AttributeMap& attrs)
   {
     _name = NCMLUtil::findAttrValue(attrs, "name");
-    _type = NCMLUtil::findAttrValue(attrs,"type");
+    _type = NCMLUtil::findAttrValue(attrs,"type", "");
+    _shape = NCMLUtil::findAttrValue(attrs, "shape", "");
+    _orgName = NCMLUtil::findAttrValue(attrs, "orgName", "");
   }
 
   void
@@ -85,6 +91,7 @@ namespace ncml_module
   void
   VariableElement::handleContent(NCMLParser& /* p */, const string& content)
   {
+    // Variables cannot have content like attribute.  It must be within a <values> element.
     if (!NCMLUtil::isAllWhitespace(content))
       {
         THROW_NCML_PARSE_ERROR("Got non-whitespace for element content and didn't expect it.  Element=" + toString() + " content=\"" +
@@ -101,7 +108,12 @@ namespace ncml_module
   string
   VariableElement::toString() const
   {
-    return "<" + _sTypeName + " name=\"" + _name + "\" type=\"" + _type + "\" >";
+    return      "<" + _sTypeName +
+                " name=\"" + _name + "\"" +
+                " type=\"" + _type + "\"" +
+                ((!_shape.empty())?(" shape=\"" + _shape + "\""):("")) +
+                ((!_orgName.empty())?(" orgName=\"" + _orgName + "\""):("")) +
+                ">";
   }
 
 
@@ -124,42 +136,27 @@ namespace ncml_module
             p.getScopeString());
       }
 
+    // Make sure we've done this at least once before we continue.
     p.processMetadataDirectiveIfNeeded();
 
-    // Lookup the variable in whatever the parser's current variable container is
-    // this could be the DDS top level or a constructor variable.
-    BaseType* pVar = p.getVariableInCurrentVariableContainer(_name);
-    if (!pVar)
+    // If a request to rename the variable
+    if (!_orgName.empty())
       {
-        THROW_NCML_PARSE_ERROR( "Could not find variable=" + _name + " in scope=" + p.getScopeString() +
-            " and new variables cannot be added in this version.");
+        processRenameVariable(p);
       }
-
-    // Make sure the type matches.  NOTE:
-    // We use "Structure" to mean Grid, Structure, Sequence!
-    // Also type="" will match ANY type.
-    // TODO This fails on Array as well due to NcML making arrays be a basic type with a non-zero dimension.
-    // We're gonna ignore that until we allow addition of variables, but let's leave this check here for now
-    if (!_type.empty() && !p.typeCheckDAPVariable(*pVar, p.convertNcmlTypeToCanonicalType(_type)))
+    else // Otherwise see if it's an existing or new variable _name at scope of p
       {
-        THROW_NCML_PARSE_ERROR("Type Mismatch in variable element with name=" + _name +
-            " at scope=" + p.getScopeString() +
-            " Expected type=" + _type +
-            " but found variable with type=" + pVar->type_name() +
-            "  To match a variable of any type, please do not specify variable@type.");
-      }
-
-    // this sets the _pCurrentTable to the variable's table.
-    p.setCurrentVariable(pVar);
-
-    // Add the proper variable scope to the stack
-    if (pVar->is_constructor_type())
-      {
-        p.enterScope(_name, ScopeStack::VARIABLE_CONSTRUCTOR);
-      }
-    else
-      {
-        p.enterScope(_name, ScopeStack::VARIABLE_ATOMIC);
+        // Lookup the variable in whatever the parser's current variable container is
+        // this could be the DDS top level or a container (constructor) variable.
+        BaseType* pVar = p.getVariableInCurrentVariableContainer(_name);
+        if (!pVar)
+          {
+            processNewVariable(p);
+          }
+        else
+          {
+            processExistingVariable(p, pVar);
+          }
       }
   }
 
@@ -174,14 +171,135 @@ namespace ncml_module
 
     NCML_ASSERT_MSG(p.getCurrentVariable(), "Error: VariableElement::handleEnd(): Expected non-null parser.getCurrentVariable()!");
 
-    // Set the new variable container to the parent of the current.
-    // This could be NULL if we're a top level variable, making the DDS the variable container.
-    p.setCurrentVariable(p.getCurrentVariable()->get_parent());
-    p.exitScope();
-    p.printScope();
+    // Pop up the stack from this variable
+    exitScope(p);
 
     BaseType* pVar = p.getCurrentVariable();
     BESDEBUG("ncml", "Variable scope now with name: " << ((pVar)?(pVar->name()):("<NULL>")) << endl);
   }
 
+  void
+  VariableElement::processExistingVariable(NCMLParser& p, BaseType* pVar)
+  {
+    BESDEBUG("ncml", "VariableElement::processExistingVariable() called with name=" << _name << " at scope=" << p.getTypedScopeString() << endl);
+
+    // If undefined, look it up
+    if (!pVar)
+      {
+        pVar = p.getVariableInCurrentVariableContainer(_name);
+      }
+
+    // It better exist by now
+    VALID_PTR(pVar);
+
+    // Make sure the type matches.  NOTE:
+    // We use "Structure" to mean Grid, Structure, Sequence!
+    // Also type="" will match ANY type.
+    // TODO This fails on Array as well due to NcML making arrays be a basic type with a non-zero dimension.
+    // We're gonna ignore that until we allow addition of variables, but let's leave this check here for now
+    if (!_type.empty() && !p.typeCheckDAPVariable(*pVar, p.convertNcmlTypeToCanonicalType(_type)))
+      {
+        THROW_NCML_PARSE_ERROR("Type Mismatch in variable element with name=" + _name +
+            " at scope=" + p.getScopeString() +
+            " Expected type=" + _type +
+            " but found variable with type=" + pVar->type_name() +
+                "  To match a variable of any type, please do not specify variable@type.");
+      }
+
+    // Use this variable as the new scope until we get a handleEnd()
+    enterScope(p, pVar);
+  }
+
+  void
+  VariableElement::processRenameVariable(NCMLParser& p)
+  {
+    BESDEBUG("ncml", "VariableElement::processRenameVariable() called on " + toString() << " at scope=" << p.getTypedScopeString() << endl);
+
+    // First, make sure the data is valid
+    NCML_ASSERT_MSG(!_name.empty(), "Can't have an empty variable@name if variable@orgName is specified!");
+    NCML_ASSERT(!_orgName.empty()); // we shouldn't even call this if this is the case, but...
+
+    // 1) Lookup _orgName, which must exist or throw
+    BESDEBUG("ncml", "Looking up the existence of a variable with name=" << _orgName << "..." <<endl);
+    BaseType* pOrgVar = p.getVariableInCurrentVariableContainer(_orgName);
+    if (!pOrgVar)
+      {
+        THROW_NCML_PARSE_ERROR("Renaming variable failed for element=" + toString() + " since no variable with orgName=" + _orgName +
+            " exists at current parser scope=" + p.getScopeString());
+      }
+    BESDEBUG("ncml", "Found variable with name=" << _orgName << endl);
+
+    // 2) Lookup _name, which must NOT exist or throw
+    BESDEBUG("ncml", "Making sure new name=" << _name << " does not exist at this scope already..." << endl);
+    BaseType* pExisting = p.getVariableInCurrentVariableContainer(_name);
+    if (pExisting)
+      {
+        THROW_NCML_PARSE_ERROR("Renaming variable failed for element=" + toString() +
+            " since a variable with name=" + _name +
+            " already exists at current parser scope=" + p.getScopeString());
+      }
+    BESDEBUG("ncml", "Success, new variable name is open at this scope."  << endl);
+
+    // 3) Call set_name on the orgName variable.
+    BESDEBUG("ncml", "Renaming variable " << _orgName << " to " << _name << endl);
+
+    // Ugh, if we are parsing a DataDDS then we need to force the underlying data
+    // to be read in before we rename it since otherwise the read() won't find the
+    // renamed variables (unless we kept around the orgName, but that means changing
+    // lots of libdap...)  HACK this is inefficient since we must load the entire dataset
+    // even if we only want a small projection...
+    if (p.parsingDataRequest() && !pOrgVar->read_p())
+      {
+        pOrgVar->read();
+      }
+
+    // BaseType::set_name fails for Vector (Array etc) subtypes since it doesn't
+    // set the template's BaseType var's name as well.  This function does that until
+    // a fix in libdap lets us call pOrgName->set_name(_name) directly.
+    // pOrgVar->set_name(_name); // TODO  switch to this call when bug is fixed.
+    NCMLUtil::setVariableNameProperly(pOrgVar, _name);
+
+    // 4) Make sure we find the one we added.
+    BaseType* pRenamedVar = p.getVariableInCurrentVariableContainer(_name);
+    NCML_ASSERT_MSG(pRenamedVar == pOrgVar, "Renamed variable not found!  Logic error!");
+
+    // 5) Change the scope for any nested calls
+    enterScope(p, pRenamedVar);
+    BESDEBUG("ncml", "Entering scope of the renamed variable.  Scope is now: " << p.getTypedScopeString() << endl);
+  }
+
+  void
+  VariableElement::processNewVariable(NCMLParser& p)
+  {
+    THROW_NCML_INTERNAL_ERROR("VariableElement::processNewVariable() unimplemented!!!");
+  }
+
+  void
+  VariableElement::enterScope(NCMLParser& p, BaseType* pVar)
+  {
+    VALID_PTR(pVar);
+
+    // Add the proper variable scope to the stack
+    if (pVar->is_constructor_type())
+      {
+        p.enterScope(_name, ScopeStack::VARIABLE_CONSTRUCTOR);
+      }
+    else
+      {
+        p.enterScope(_name, ScopeStack::VARIABLE_ATOMIC);
+      }
+
+    // this sets the _pCurrentTable to the variable's table.
+    p.setCurrentVariable(pVar);
+  }
+
+  void
+  VariableElement::exitScope(NCMLParser& p)
+  {
+    // Set the new variable container to the parent of the current.
+    // This could be NULL if we're a top level variable, making the DDS the variable container.
+    p.setCurrentVariable(p.getCurrentVariable()->get_parent());
+    p.exitScope();
+    p.printScope();
+  }
 }
