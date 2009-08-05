@@ -3,7 +3,7 @@
     <setContext name="dap_format">dap2</setContext>
     <setContainer name="c" space="catalog">%ncml_filename%</setContainer>
     <define name="d">
-	<container name="c" />
+	<container name="c">%constraint_expr%</container>
     </define>
     <get type="%response_type%" definition="d" />
 </request>

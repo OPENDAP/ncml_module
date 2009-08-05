@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Usage: from the tests subdirectory:
-#    ./generate_bescmd.sh filename.ncml responseType outputFilename
+#    ./generate_bescmd.sh filename.ncml responseType outputFilename [constraint_expr]
 # 
 # Generates an XML bes command file that can be loaded with -i 
 # Useful for creating test files for debugging.
@@ -17,8 +17,16 @@ DATADIR="/data/ncml"
 DATA_FILENAME=$1
 RESPONSE=$2
 OUTPUT_FILENAME=$3
+CONSTRAINT_EXPR=$4
 
-echo "Generating $OUTPUT_FILENAME for $DATADIR/$DATA_FILENAME response $RESPONSE..."
-sed -e "s:%ncml_filename%:$DATADIR/$DATA_FILENAME:" -e "s:%response_type%:$RESPONSE:" < $TEMPLATE_FILENAME > $OUTPUT_FILENAME;
+echo "$0: Generating $OUTPUT_FILENAME for $DATADIR/$DATA_FILENAME response=$RESPONSE constraint=\"$CONSTRAINT_EXPR\""
+if test ! -z $CONSTRAINT_EXPR
+then 
+echo "$0: Using constraint=\"$CONSTRAINT_EXPR\""
+sed -e "s:%ncml_filename%:$DATADIR/$1:" -e "s:%response_type%:$RESPONSE:" -e "s:%constraint_expr%:<constraint>$CONSTRAINT_EXPR</constraint>:" < $TEMPLATE_FILENAME > $OUTPUT_FILENAME;
+else 
+echo "$0: No constraint."
+sed -e "s:%ncml_filename%:$DATADIR/$1:" -e "s:%response_type%:$RESPONSE:" -e "s:%constraint_expr%::" < $TEMPLATE_FILENAME > $OUTPUT_FILENAME; 
+fi
 
 
