@@ -121,12 +121,13 @@ class NCMLParser : public SaxParser
 public: // Friends
   // We allow the various NCMLElement concrete classes to be friends so we can separate out the functionality
   // into several files, one for each NcML element type.
-  friend class ExplicitElement;
-  friend class RemoveElement;
-  friend class ReadMetadataElement;
-  friend class VariableElement;
-  friend class NetcdfElement;
   friend class AttributeElement;
+  friend class ExplicitElement;
+  friend class NetcdfElement;
+  friend class ReadMetadataElement;
+  friend class RemoveElement;
+  friend class ValuesElement;
+  friend class VariableElement;
 
 public:
   /**
@@ -278,6 +279,22 @@ private: //methods
   */
  BaseType* getVariableInDDS(const string& varName);
 
+ /** Add a COPY of the given new variable at the current scope of the parser.
+  *  If the current scope is not a valid location for a variable,
+  *  throw a parse error.
+  *
+  *  The caller should be sure to delete pNewVar if they no longer need it.
+  *
+  *  Does NOT change the scope!  The caller must do that if they want it done.
+  *
+  *  @param pNewVar  the template for a new variable to add at current scope with pNewVar->name().
+  *                  pNewVar->ptr_duplicate() will actually be stored, so pNewVar is still owned by caller.
+  *
+  *  @exception if pNewVar->name() is already taken at current scope.
+  *  @exception if the current scope is not valid for adding a variable (e.g. attribute container)
+  */
+ void addCopyOfVariableAtCurrentScope(BaseType& varTemplate);
+
  /** Get the current variable container we are in.  If NULL, we are
   * within the top level DDS scope and not a cosntructor variable.
   */
@@ -322,12 +339,12 @@ private: //methods
   bool findAttribute(const string& name, AttrTable::Attr_iter& attr) const;
 
 
-  /** Do the proper tokenization of values for the given dapTypeName into _tokens
+  /** Do the proper tokenization of values for the given dapAttrTypeName into _tokens
    * using current _separators.
    * Strings and URL types produce a single "token"
    * @return the number of tokens added.
    */
-  int tokenizeValues(vector<string>& tokens, const string& values, const string& dapTypeName, const string& separator);
+  int tokenizeAttrValues(vector<string>& tokens, const string& values, const string& dapAttrTypeName, const string& separator);
 
   /**
    *  Tokenize the given string values for the DAP type using the given delimiters currently in _separators and
@@ -379,6 +396,12 @@ private: //methods
 
   /** The top of the element stack, the thing we are currently processing */
   NCMLElement* getCurrentElement() const;
+
+  /** Return an immutable view of the element stack.
+   * Iterator returns them in order of innermost (top of stack) to outermost */
+  typedef std::vector<NCMLElement*>::const_reverse_iterator ElementStackConstIterator;
+  ElementStackConstIterator getElementStackBegin() const { return _elementStack.rbegin(); }
+  ElementStackConstIterator getElementStackEnd() const { return _elementStack.rend(); }
 
   /** Delete all the NCMLElement* in _elementStack and clear it. */
   void deleteElementStack();

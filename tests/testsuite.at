@@ -57,6 +57,24 @@ m4_define([AT_RUN_BES_AND_COMPARE_BASELINE],
 AT_RUN_BES_AND_COMPARE([$1], [$2], [$1])
 ])
 
+dnl Run the besstandlone on the filename for the response type
+dnl rhen run getdap on stdout and compare the result to the baseline for the response.
+dnl ncml_filename is expected to be the basename as the datadir is added
+dnl The baseline will have ".dods.getdap" appended to it for ascii comparison!  .dods is binary compare.
+dnl $1 == ncml_filename
+dnl $2 == baseline_filename (with path prefix but not response suffix!)
+dnl $3 == (optional) constraint_expression
+m4_define([AT_RUN_BES_AND_COMPARE_DODS_GETDAP],
+[
+AT_SETUP([Comparing dods response for $1 to getdap (ascii) baseline $srcdir/baselines/$2])
+AT_KEYWORDS([dods])
+AT_MAKE_BESCMD_FILE([$1], [dods], [$3])
+AT_CHECK([besstandalone -c $top_srcdir/bes-testsuite/bes.conf -i ./test.bescmd], [], [stdout], [ignore])
+AT_CHECK([getdap stdout > stdout.getdap], [], [ignore], [ignore])
+AT_CHECK([diff -w -b -B $srcdir/baselines/$2.dods.getdap stdout.getdap], [], [ignore], [], [])
+AT_CLEANUP
+])
+
 dnl Run the besstandalone for the response type and log to stdout,
 dnl then do a string match on stdout to $3 to find a pattern.
 dnl Useful for checking for Parse Errors, etc.
@@ -96,6 +114,17 @@ m4_define([AT_CHECK_DATADDS],
 [AT_RUN_BES_AND_COMPARE_BASELINE([$1], [dods])
 ])
 
+dnl Run AT_RUN_BES_AND_COMPARE_DODS_GETDAP on the input and compare
+dnl to baselines/$1.dods.getdap ascii version of the $1.dods baseline
+dnl piped through getdap.  Good for checking by hand as well as the
+dnl standard binary .dods test.
+dnl $1 == ncml_input_basename
+m4_define([AT_CHECK_DATADDS_GETDAP],
+[
+AT_RUN_BES_AND_COMPARE_DODS_GETDAP([$1], [$1], [])
+])
+
+
 dnl $1 == ncml_input_basename
 m4_define([AT_CHECK_ALL_DAP_RESPONSES],
 [AT_BANNER([Testing DAP responses for: $1])
@@ -132,3 +161,5 @@ dnl An example of testing for a parse error.
 dnl AT_RUN_BES_AND_MATCH([fnoc1_explicit.ncml], [das], ["ParseError"])
 
 m4_include([variable_rename.at])
+m4_include([variable_new_scalars.at])
+

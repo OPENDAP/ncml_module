@@ -49,6 +49,9 @@ namespace ncml_module
   class VariableElement : public NCMLElement
   {
   public:
+    static const string _sTypeName;
+
+
     VariableElement();
     VariableElement(const VariableElement& proto);
     virtual ~VariableElement();
@@ -60,7 +63,25 @@ namespace ncml_module
     virtual void handleEnd(NCMLParser& p);
     virtual string toString() const;
 
-    static const string _sTypeName;
+    const std::string name() const
+    {
+      return _name;
+    }
+
+    const std::string type() const
+    {
+      return _type;
+    }
+
+    const std::string shape() const
+    {
+      return _shape;
+    }
+
+    const std::string orgName() const
+    {
+      return _orgName;
+    }
 
   private:
 
@@ -119,6 +140,19 @@ namespace ncml_module
      * which must exist at the current parse scope of p.
      */
     void processNewVariable(NCMLParser& p);
+
+    /** @brief Create a new Structure variable at current scope.
+     * ASSERT: this._type == "Structure"
+     * On exit, the new variable will be the new current scope.
+     */
+    void processNewStructure(NCMLParser& p);
+
+    /** @brief Create a new scalar variable of simple type at current scope.
+     * ASSERT: On exit, the new variable will be the current scope.
+     * @param p the parser to effect
+     * @param dapType the internal simple DAP type (canonical type of _type) to create.
+     */
+    void processNewScalar(NCMLParser& p, const std::string& dapType);
 
     /** @brief Tell the parser to use pVar as the current scope.
      * This also set's the current table to the pVar table.

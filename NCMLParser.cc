@@ -362,6 +362,41 @@ NCMLParser::getVariableInDDS(const string& varName)
 }
 
 void
+NCMLParser::addCopyOfVariableAtCurrentScope(BaseType& varTemplate)
+{
+  // make sure we can do it...
+  BaseType* pExisting = getVariableInCurrentVariableContainer(varTemplate.name());
+  if (pExisting)
+    {
+      // at this point, it's an internal error.  the caller should have checked.
+      THROW_NCML_INTERNAL_ERROR("NCMLParser::addNewVariableAtCurrentScope:"
+          " Cannot add variable since one with the same name exists at current scope."
+          " Name= " + varTemplate.name());
+    }
+
+  // Also an internal error if the caller tries it.
+  if (!(isScopeCompositeVariable() || isScopeGlobal()))
+    {
+      THROW_NCML_INTERNAL_ERROR("NCMLParser::addNewVariableAtCurrentScope: current scope not valid for adding variable.  Scope=" +
+          getTypedScopeString());
+    }
+
+  // OK, we know we can add it now.  But to what?
+  if (_pVar) // Constructor variable
+    {
+      NCML_ASSERT_MSG(_pVar->is_constructor_type(), "Expected _pVar is a container type!");
+      _pVar->add_var(&varTemplate);
+    }
+  else // Top level DDS
+    {
+      BESDEBUG("ncml", "Adding new variable to DDS top level.  Variable name=" << varTemplate.name() <<
+          " and typename=" << varTemplate.type_name() << endl);
+      DDS* pDDS = getDDS();
+      pDDS->add_var(&varTemplate);
+    }
+}
+
+void
 NCMLParser::setCurrentVariable(BaseType* pVar)
 {
    _pVar = pVar;
@@ -442,13 +477,13 @@ NCMLParser::findAttribute(const string& name, AttrTable::Attr_iter& attr) const
  }
 
 int
-NCMLParser::tokenizeValues(vector<string>& tokens, const string& values, const string& dapTypeName, const string& separator)
+NCMLParser::tokenizeAttrValues(vector<string>& tokens, const string& values, const string& dapAttrTypeName, const string& separator)
 {
   // Convert the type string into a DAP AttrType to be sure
-  AttrType dapType = String_to_AttrType(dapTypeName);
+  AttrType dapType = String_to_AttrType(dapAttrTypeName);
   if (dapType == Attr_unknown)
     {
-      THROW_NCML_PARSE_ERROR("Attempting to tokenize attribute value failed since we found an unknown internal DAP type=" + dapTypeName +
+      THROW_NCML_PARSE_ERROR("Attempting to tokenize attribute value failed since we found an unknown internal DAP type=" + dapAttrTypeName +
            " for the current fully qualified attribute=" + _scope.getScopeString());
     }
 
@@ -456,7 +491,7 @@ NCMLParser::tokenizeValues(vector<string>& tokens, const string& values, const s
   int numTokens = tokenizeValuesForDAPType(tokens, values, dapType, separator);
 
   // Now type check the tokens are valid strings for the type.
-  NCMLParser::checkDataIsValidForCanonicalTypeOrThrow(dapTypeName, tokens);
+  NCMLParser::checkDataIsValidForCanonicalTypeOrThrow(dapAttrTypeName, tokens);
 
 #if DEBUG_NCML_PARSER_INTERNALS
 
@@ -520,6 +555,10 @@ NCMLParser::tokenizeValuesForDAPType(vector<string>& tokens, const string& value
 // Used below to convert NcML data type to a DAP data type.
 typedef std::map<string, string> TypeConverter;
 
+// If true, we allow the specification of a DAP scalar type
+// in a location expecting an NcML type.
+static const bool ALLOW_DAP_TYPES_AS_NCML_TYPES = true;
+
 /* Ncml DataType:
   <xsd:enumeration value="char"/>
   <xsd:enumeration value="byte"/>
@@ -537,8 +576,8 @@ static TypeConverter* makeTypeConverter()
   TypeConverter* ptc = new TypeConverter();
   TypeConverter& tc = *ptc;
   // NcML to DAP conversions
-  tc["char"] = "Byte";
-  tc["byte"] = "Byte";
+  tc["char"] = "Byte"; // char is a C char, which we can store in a byte, but we will need to parse them differently than NcML "byte".
+  tc["byte"] = "Int16"; // Since NcML byte's can be signed, we must promote them to not lose the sign bit.
   tc["short"] = "Int16";
   tc["int"] = "Int32";
   tc["long"] = "Int32"; // not sure of this one
@@ -548,6 +587,23 @@ static TypeConverter* makeTypeConverter()
   tc["String"] = "String";
   tc["Structure"] = "Structure";
   tc["structure"] = "Structure"; // allow lower case for this as well
+
+  // If we allow DAP types to be specified directly,
+  // then make them be passthroughs in the converter...
+  if (ALLOW_DAP_TYPES_AS_NCML_TYPES)
+    {
+      tc["Byte"] = "Byte"; // DAP Byte can fit in Byte tho, unlike NcML "byte"!
+      tc["Int16"] = "Int16";
+      tc["UInt16"] = "UInt16";
+      tc["Int32"] = "Int32";
+      tc["UInt32"] = "UInt32";
+      tc["Float32"] = "Float32";
+      tc["Float64"] = "Float64";
+      // allow both url cases due to old bug where "Url" is returned in dds rather then DAP2 spec "URL"
+      tc["Url"] = "URL";
+      tc["URL"] = "URL";
+    }
+
   return ptc;
 }
 
@@ -568,8 +624,6 @@ static bool isDAPType(const string& type)
   return (String_to_AttrType(type) != Attr_unknown);
 }
 
-// Whether we want to pass through DAP attribute types as well as NcML.
-static const bool ALLOW_DAP_ATTRIBUTE_TYPES = true;
 
 /* static */
 string
@@ -577,15 +631,9 @@ NCMLParser::convertNcmlTypeToCanonicalType(const string& ncmlType)
 {
   NCML_ASSERT_MSG(!ncmlType.empty(), "Logic error: convertNcmlTypeToCanonicalType disallows empty() input.");
 
-  // if we allow DAP types to be specified as an attribute type
-  // then just pass it through
-  if (ALLOW_DAP_ATTRIBUTE_TYPES && isDAPType(ncmlType))
-    {
-       return ncmlType;
-    }
-
   const TypeConverter& tc = getTypeConverter();
   TypeConverter::const_iterator it = tc.find(ncmlType);
+
   if (it == tc.end())
     {
       return ""; // error condition
@@ -642,7 +690,8 @@ NCMLParser::checkDataIsValidForCanonicalTypeOrThrow(const string& type, const ve
         {
           valid &= check_float64(it->c_str());
         }
-      else if (type == "URL" || type == "String")
+      // Doh!  The DAP2 specifies case as "URL" but internally libdap uses "Url"  Allow both...
+      else if (type == "URL" || type == "Url" || type == "String")
         {
           // TODO the DAP call check_url is currently a noop.  do we want to check for well-formed URL?
           // This isn't an NcML type now, so straight up NcML users might enter URL as String anyway.

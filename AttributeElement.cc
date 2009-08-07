@@ -277,7 +277,7 @@ namespace ncml_module
     VALID_PTR(p.getCurrentAttrTable());
 
     // Split the value string properly if the type is one that can be a vector.
-    p.tokenizeValues(_tokens, _value, getInternalType(), _separator);
+    p.tokenizeAttrValues(_tokens, _value, getInternalType(), _separator);
 
     p.getCurrentAttrTable()->append_attr(_name, getInternalType(), &(_tokens));
   }
@@ -301,7 +301,7 @@ namespace ncml_module
     actualType = p.convertNcmlTypeToCanonicalType(actualType);
 
     // Split the values if needed
-    p.tokenizeValues(_tokens, value, actualType, _separator);
+    p.tokenizeAttrValues(_tokens, value, actualType, _separator);
 
     // Can't mutate, so just delete and reenter it.  This move change the ordering... Do we care?
     pTable->del_attr(name);

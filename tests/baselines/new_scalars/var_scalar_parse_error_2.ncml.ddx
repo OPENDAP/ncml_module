@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<response xmlns="http://xml.opendap.org/ns/bes/1.0#" reqID="some_unique_value"><getDDX><BESError><Type>3</Type><Message>NCMLModule ParseError: While setting scalar variable name=BadValues we expected exactly 1 value in content but found 0 tokens.</Message><Administrator>admin.email.address@your.domain.name</Administrator><Location><File>ValuesElement.cc</File><Line>289</Line></Location></BESError></getDDX></response>

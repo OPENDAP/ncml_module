@@ -29,11 +29,15 @@
 #include "VariableElement.h"
 
 #include "BaseType.h"
+#include <memory>
+#include "MyBaseTypeFactory.h"
 #include "NCMLDebug.h"
 #include "NCMLParser.h"
 #include "NCMLUtil.h"
 
 using namespace libdap;
+using std::vector;
+using std::auto_ptr;
 
 namespace ncml_module
 {
@@ -271,7 +275,69 @@ namespace ncml_module
   void
   VariableElement::processNewVariable(NCMLParser& p)
   {
-    THROW_NCML_INTERNAL_ERROR("VariableElement::processNewVariable() unimplemented!!!");
+    BESDEBUG("ncml", "Entered VariableElement::processNewVariable..." << endl);
+
+    // ASSERT: We know the variable with name doesn't exist, or we wouldn't call this function.
+
+    // Type cannot be empty for a new variable!!
+    if (_type.empty())
+      {
+        THROW_NCML_PARSE_ERROR("Must have non-empty variable@type when creating new variable=" + toString());
+      }
+
+    // Convert the type to the canonical type...
+    string type = p.convertNcmlTypeToCanonicalType(_type);
+    if (_type.empty())
+      {
+        THROW_NCML_PARSE_ERROR("Unknown type for new variable=" + toString());
+      }
+
+    // If it's a structure, go off and do that...
+    if (_type == p.STRUCTURE_TYPE)
+      {
+        processNewStructure(p);
+      }
+    else if (_shape.empty()) // a scalar
+      {
+        processNewScalar(p, type);
+      }
+    else
+      {
+        THROW_NCML_INTERNAL_ERROR("UNIMPLEMENTED METHOD: Cannot create non-scalar Array types yet.");
+      }
+  }
+
+  void
+  VariableElement::processNewStructure(NCMLParser& /* p */)
+  {
+    THROW_NCML_INTERNAL_ERROR("UNIMPLEMENTED METHOD: VariableElement::processNewStructure.  Impl me!");
+  }
+
+  void
+  VariableElement::processNewScalar(NCMLParser&p, const string& dapType)
+  {
+    // First, make sure we are at a parse scope that ALLOWS variables to be added!
+    if (!(p.isScopeCompositeVariable() || p.isScopeGlobal()))
+      {
+        THROW_NCML_PARSE_ERROR("Cannot add a new scalar variable at current scope!  TypedScope=" + p.getTypedScopeString());
+      }
+
+    // Destroy it no matter what sicne add_var copies it
+    auto_ptr<BaseType> pNewVar = MyBaseTypeFactory::makeVariable(dapType, _name);
+    NCML_ASSERT_MSG(pNewVar.get(), "VariableElement::processNewScalar: failed to make a new variable of type: " + dapType + " for element: " + toString());
+
+    // Now that we have it, we need to add it to the parser at current scope
+    // Internally, the add will copy the arg, not store it.
+    p.addCopyOfVariableAtCurrentScope(*pNewVar);
+
+    // Lookup the variable we just added since it is added as a copy!
+    BaseType* pActualVar = p.getVariableInCurrentVariableContainer(_name);
+    VALID_PTR(pActualVar);
+    // Make sure the copy mechanism did the right thing so we don't delete the var we just added.
+    NCML_ASSERT(pActualVar != pNewVar.get());
+
+    // Make it be the scope for any incoming new attributes.
+    enterScope(p, pActualVar);
   }
 
   void

@@ -24,6 +24,7 @@ NCML_SRCS = \
 		AttributeElement.cc \
 		DDSLoader.cc \
 		ExplicitElement.cc \
+		MyBaseTypeFactory.cc \
 		NCMLCommonTypes.cc \
 		NCMLElement.cc \
 		NCMLModule.cc \
@@ -37,12 +38,14 @@ NCML_SRCS = \
 		SaxParser.cc \
 		ScopeStack.cc \
 		SimpleLocationParser.cc \
+		ValuesElement.cc \
 		VariableElement.cc
 
 NCML_HDRS = \
 		AttributeElement.h \
 		DDSLoader.h \
 		ExplicitElement.h \
+		MyBaseTypeFactory.h \
 		NCMLCommonTypes.h \
 		NCMLDebug.h \
 		NCMLElement.h \
@@ -58,6 +61,7 @@ NCML_HDRS = \
 		SaxParser.h \
 		ScopeStack.h \
 		SimpleLocationParser.h \
+		ValuesElement.h \
 		VariableElement.h 
 
 libncml_module_la_SOURCES = $(NCML_SRCS) $(BES_SRCS) $(NCML_HDRS) $(BES_HDRS)

@@ -37,6 +37,7 @@
 #include "NetcdfElement.h"
 #include "ReadMetadataElement.h"
 #include "RemoveElement.h"
+#include "ValuesElement.h"
 #include "VariableElement.h"
 
 using std::string;
@@ -115,6 +116,7 @@ namespace ncml_module
     _sInstance->addPrototype(new NetcdfElement());
     _sInstance->addPrototype(new AttributeElement());
     _sInstance->addPrototype(new VariableElement());
+    _sInstance->addPrototype(new ValuesElement());
   }
 
 
