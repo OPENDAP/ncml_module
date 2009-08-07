@@ -69,7 +69,7 @@ namespace ncml_module
   void
   ExplicitElement::handleBegin(NCMLParser& p)
   {
-    if (!p.withinLocation())
+    if (!p.withinNetcdf())
         {
           THROW_NCML_PARSE_ERROR("Got <explicit/> while not within <netcdf>");
         }

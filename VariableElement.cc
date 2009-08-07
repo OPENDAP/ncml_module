@@ -128,7 +128,7 @@ namespace ncml_module
   {
     BESDEBUG("ncml", "VariableElement::handleBegin called for " << toString() << endl);
 
-    if (!p.withinLocation())
+    if (!p.withinNetcdf())
       {
         THROW_NCML_PARSE_ERROR("Got element " + toString() + " while not in <netcdf> node!");
       }
@@ -308,9 +308,28 @@ namespace ncml_module
   }
 
   void
-  VariableElement::processNewStructure(NCMLParser& /* p */)
+  VariableElement::processNewStructure(NCMLParser& p)
   {
-    THROW_NCML_INTERNAL_ERROR("UNIMPLEMENTED METHOD: VariableElement::processNewStructure.  Impl me!");
+    // First, make sure we are at a parse scope that ALLOWS variables to be added!
+    if (!(p.isScopeCompositeVariable() || p.isScopeGlobal()))
+      {
+        THROW_NCML_PARSE_ERROR("Cannot add a new Structure variable at current scope!  TypedScope=" + p.getTypedScopeString());
+      }
+
+    auto_ptr<BaseType> pNewVar = MyBaseTypeFactory::makeVariable("Structure", _name);
+    NCML_ASSERT_MSG(pNewVar.get(), "VariableElement::processNewStructure: factory failed to make a new Structure variable for name=" + _name);
+
+    // Add the copy, let auto_ptr clean up
+    p.addCopyOfVariableAtCurrentScope(*pNewVar);
+
+    // Lookup the variable we just added since it is added as a copy!
+    BaseType* pActualVar = p.getVariableInCurrentVariableContainer(_name);
+    VALID_PTR(pActualVar);
+    // Make sure the copy mechanism did the right thing so we don't delete the var we just added.
+    NCML_ASSERT(pActualVar != pNewVar.get());
+
+    // Make it be the scope for any incoming new attributes.
+    enterScope(p, pActualVar);
   }
 
   void
@@ -324,7 +343,7 @@ namespace ncml_module
 
     // Destroy it no matter what sicne add_var copies it
     auto_ptr<BaseType> pNewVar = MyBaseTypeFactory::makeVariable(dapType, _name);
-    NCML_ASSERT_MSG(pNewVar.get(), "VariableElement::processNewScalar: failed to make a new variable of type: " + dapType + " for element: " + toString());
+    NCML_ASSERT_MSG(pNewVar.get(), "VariableElement::processNewScalar: factory failed to make a new variable of type: " + dapType + " for element: " + toString());
 
     // Now that we have it, we need to add it to the parser at current scope
     // Internally, the add will copy the arg, not store it.

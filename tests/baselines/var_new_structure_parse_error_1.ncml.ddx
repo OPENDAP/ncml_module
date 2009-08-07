@@ -1,0 +1,2 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<response xmlns="http://xml.opendap.org/ns/bes/1.0#" reqID="some_unique_value"><getDDX><BESError><Type>3</Type><Message>NCMLModule ParseError: Illegal to specify &lt;values&gt; element for a Structure type variable name=MyStructure at scope=MyStructure</Message><Administrator>admin.email.address@your.domain.name</Administrator><Location><File>ValuesElement.cc</File><Line>291</Line></Location></BESError></getDDX></response>

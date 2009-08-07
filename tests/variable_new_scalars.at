@@ -41,3 +41,9 @@ AT_ASSERT_PARSE_ERROR([new_scalars/var_scalar_parse_error_3.ncml])
 
 dnl Test for the case of a <values> element not within a <variable>...</variable>
 AT_ASSERT_PARSE_ERROR([new_scalars/var_scalar_parse_error_4.ncml])
+
+dnl Test for the error adding a variable within an attribute container 
+AT_ASSERT_PARSE_ERROR([new_scalars/var_scalar_parse_error_5.ncml])
+
+dnl Test for error adding variable within a simple variable
+AT_ASSERT_PARSE_ERROR([new_scalars/var_scalar_parse_error_6.ncml])

@@ -155,7 +155,7 @@ namespace ncml_module
 
     // Make sure we're in a netcdf and then process the attribute at the current table scope,
     // which could be anywhere including glboal attributes, nested attributes, or some level down a variable tree.
-    if (!p.withinLocation())
+    if (!p.withinNetcdf())
       {
         THROW_NCML_PARSE_ERROR("Got <attribute> element while not within a <netcdf> node!");
       }

@@ -69,7 +69,7 @@ const string NCMLParser::STRUCTURE_TYPE("Structure");
 
 NCMLParser::NCMLParser(DDSLoader& loader)
 : _filename("")
-, _parsingLocation(false)
+, _parsingNetcdf(false)
 , _loader(loader)
 , _responseType(DDSLoader::eRT_RequestDDX)
 , _response(0)
@@ -132,49 +132,6 @@ NCMLParser::parseInto(const string& ncmlFilename, DDSLoader::ResponseType respon
 
   // we're done with it.
   _response = 0;
-}
-
-void
-NCMLParser::handleBeginLocation(const string& location)
-{
-  BESDEBUG("ncml", "handleBeginLocation on:" << location << endl);
-  if (_parsingLocation)
-    {
-      THROW_NCML_PARSE_ERROR("Got a new <netcdf> location while already parsing one!");
-    }
-  _parsingLocation = true;
-
-  // We better have one!  This gets created up front now.  It will be empty if we have no location.
-  VALID_PTR(_response);
-
-  // Use the loader to load the location specified in the <netcdf> element.
-  // If not found, this call will throw an exception and we'll just unwind out.
-  _loader.loadInto(location, _responseType, _response);
-
-  // Force the attribute table to be the global one for the DDS.
-  if (getDDS())
-    {
-      _pCurrentTable = getGlobalAttrTable();
-      VALID_PTR(_pCurrentTable); // it really has to be there.
-    }
-}
-
-void
-NCMLParser::handleEndLocation()
-{
-  BESDEBUG("ncml", "handleEndLocation called!" << endl);
-
-  if (!withinLocation())
-    {
-      THROW_NCML_PARSE_ERROR("Got close of <netcdf> node while not within one!");
-    }
-
-  // If the only entry was the metadata directive, we'd better make sure it gets done!
-  processMetadataDirectiveIfNeeded();
-
-  // For now, this will be the end of our parse, until aggregation.
-  _parsingLocation = false;
-  // We leave the rest of the state alone for the main parse to clean up and return the DDX response correctly.
 }
 
 void
@@ -291,7 +248,7 @@ NCMLParser::isScopeCompositeVariable() const
 bool
 NCMLParser::isScopeGlobal() const
 {
-  return withinLocation() && _scope.empty();
+  return withinNetcdf() && _scope.empty();
 }
 
 DDS*
@@ -312,7 +269,7 @@ void
 NCMLParser::resetParseState()
 {
   _filename = "";
-  _parsingLocation = false;
+  _parsingNetcdf = false;
   _metadataDirective = PERFORM_DEFAULT;
   _pVar = 0;
   _pCurrentTable = 0;
@@ -330,6 +287,17 @@ NCMLParser::resetParseState()
 
   // just in case
   _loader.cleanup();
+}
+
+void
+NCMLParser::loadLocation(const std::string& location)
+{
+  // We better have one!  This gets created up front now.  It will be an empty DDS
+  VALID_PTR(_response);
+
+  // Use the loader to load the location
+  // If not found, this call will throw an exception and we'll just unwind out.
+   _loader.loadInto(location, _responseType, _response);
 }
 
 BaseType*
@@ -731,19 +699,19 @@ void
 NCMLParser::changeMetadataDirective(SourceMetadataDirective newVal)
 {
   // Only go back to default if we're not processing a <netcdf> node.
-  if (!_parsingLocation && newVal != PERFORM_DEFAULT)
+  if (!_parsingNetcdf && newVal != PERFORM_DEFAULT)
     {
       THROW_NCML_PARSE_ERROR("<readMetadata/> or <explicit/> element found outside <netcdf> tree.");
     }
 
   // If it's already been set by the file (ie not default) can't change it (unless to PROCESSED).
-  if (_parsingLocation && _metadataDirective != PERFORM_DEFAULT && newVal != PROCESSED)
+  if (_parsingNetcdf && _metadataDirective != PERFORM_DEFAULT && newVal != PROCESSED)
     {
       THROW_NCML_PARSE_ERROR("NcML file must contain one of <readMetadata/> or <explicit/>");
     }
 
   // Also an error to unprocess during a location parse if we already explicitly set it.
-  if (_parsingLocation && _metadataDirective != PERFORM_DEFAULT && newVal != PROCESSED)
+  if (_parsingNetcdf && _metadataDirective != PERFORM_DEFAULT && newVal != PROCESSED)
     {
       THROW_NCML_INTERNAL_ERROR("Logic error: can't unprocess a metadata directive if we already processed it.");
     }

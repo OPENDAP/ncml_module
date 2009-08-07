@@ -73,7 +73,26 @@ namespace ncml_module
   void
   NetcdfElement::handleBegin(NCMLParser& p)
   {
-    p.handleBeginLocation(_location);
+    BESDEBUG("ncml", "NetcdfElement::handleBegin on " << toString() << endl);
+    if (p.withinNetcdf())
+       {
+         THROW_NCML_PARSE_ERROR("Got a new <netcdf> location while already parsing one!");
+       }
+     p._parsingNetcdf = true;
+
+     // Use the loader to load the location specified in the <netcdf> element.
+     // If not found, this call will throw an exception and we'll just unwind out.
+     if (!_location.empty())
+       {
+         p.loadLocation(_location);
+       }
+
+     // Force the attribute table to be the global one for the DDS.
+     if (p.getDDS())
+       {
+         p.setCurrentAttrTable(p.getGlobalAttrTable());
+         VALID_PTR(p.getGlobalAttrTable()); // it really has to be there.
+       }
   }
 
   void
@@ -89,7 +108,18 @@ namespace ncml_module
   void
   NetcdfElement::handleEnd(NCMLParser& p)
   {
-    p.handleEndLocation();
+    BESDEBUG("ncml", "handleEndLocation called!" << endl);
+
+    if (!p.withinNetcdf())
+      {
+        THROW_NCML_PARSE_ERROR("Got close of <netcdf> node while not within one!");
+      }
+
+    // If the only entry was the metadata directive, we'd better make sure it gets done!
+    p.processMetadataDirectiveIfNeeded();
+
+    // For now, this will be the end of our parse, until aggregation.
+    p._parsingNetcdf = false;
   }
 
   string

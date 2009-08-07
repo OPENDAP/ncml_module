@@ -171,24 +171,6 @@ public:
 
   bool parsing() const { return !_filename.empty(); }
 
-  //////////////////////////////
-  /// Core Parser Calls
-
-  /**
-   *  Called on parsing <netcdf location="foo"> element.
-   *  Loads the given (local) location into a new DDX for subsequent transformations.
-   *  The current parse scope becomes the loaded dataset's scope.
-   *
-   *  @throw If the underlying location fails to load, throw an exception.
-   */
-  void handleBeginLocation(const string& location);
-
-  /**
-   * Called on </netcdf>.  Scope becomes empty as we are not in a dataset any longer.
-   * Should be the last call before a document end.
-   */
-  void handleEndLocation();
-
   ////////////////////////////////////////////////////////////////////////////////
   // Interface SaxParser:  Wrapped calls from the libxml C SAX parser
 
@@ -237,13 +219,13 @@ private: //methods
   /**  Are we inside the scope of a location element <netcdf> at this point of the parse?
    * Note that this means anywhere in the the scope stack, not the innermost (local) scope
   */
-  bool withinLocation() const { return _parsingLocation; }
+  bool withinNetcdf() const { return _parsingNetcdf; }
 
   /** Returns whether there is a variable element on the scope stack SOMEWHERE.
    *  Note we could be nested down within multiple variables or attribute containers,
    *  but this will be true if anywhere in current scope we're nested within a variable.
   */
-  bool withinVariable() const { return _parsingLocation && _pVar; }
+  bool withinVariable() const { return withinNetcdf() && _pVar; }
 
   /** Helper to get the dds from _response
    *  Error to call _response is null.
@@ -259,6 +241,10 @@ private: //methods
    * Also used by the dtor.
    */
   void resetParseState();
+
+  /** @brief Load the given location into the current _response
+   */
+  void loadLocation(const std::string& location);
 
   /** Return the variable with name in the current _pVar container.
    * If null, that means look at the top level DDS.
@@ -446,8 +432,8 @@ private: // data rep
   // name of the ncml file we are parsing
   string _filename;
 
-  // true if we have entered a location element and not closed it yet.
-  bool _parsingLocation;
+  // true if we have entered a netcdf element and not closed it yet.
+  bool _parsingNetcdf;
 
   // Handed in at creation, this is a helper to load a given DDS.  It is assumed valid for the life of this.
   DDSLoader& _loader;

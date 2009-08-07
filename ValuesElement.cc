@@ -284,6 +284,12 @@ namespace ncml_module
   void
   ValuesElement::setVariableValuesFromTokens(NCMLParser& p, libdap::BaseType& var)
   {
+    // It's an error to have <values> for a Structure variable!
+    if (var.type() == dods_structure_c)
+      {
+        THROW_NCML_PARSE_ERROR("Illegal to specify <values> element for a Structure type variable name=" + var.name() +
+            " at scope=" + p.getScopeString());
+      }
     // First, make sure the dimensionality matches or we're doomed from the get-go
     if (!var.is_simple_type()) // we only handle scalars now!!
       {

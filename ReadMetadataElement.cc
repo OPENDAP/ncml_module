@@ -69,7 +69,7 @@ namespace ncml_module
   void
   ReadMetadataElement::handleBegin(NCMLParser& p)
   {
-    if (!p.withinLocation())
+    if (!p.withinNetcdf())
         {
           THROW_NCML_PARSE_ERROR("Got <readMetadata/> while not within <netcdf>");
         }
