@@ -281,6 +281,12 @@ private: //methods
   */
  void addCopyOfVariableAtCurrentScope(BaseType& varTemplate);
 
+ /** @brief Delete the variable at the current scope, whether the top-level DDS
+  * or a variable container.  If the variable to remove is a container (constructor)
+  * then also recursively delete all children.
+  */
+ void deleteVariableAtCurrentScope(const string& name);
+
  /** Get the current variable container we are in.  If NULL, we are
   * within the top level DDS scope and not a cosntructor variable.
   */

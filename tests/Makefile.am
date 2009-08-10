@@ -42,7 +42,7 @@ clean-local:
 #distclean-local:
 #	-rm atconfig
 
-TEST_FILES = variable_rename.at variable_new_scalars.at variable_new_structures.at
+TEST_FILES = variable_rename.at variable_new_scalars.at variable_new_structures.at variable_remove.at
 
 # Use the missing script for better error checking on autom4te run.
 AUTOM4TE = $(SHELL) $(top_srcdir)/conf/missing --run autom4te

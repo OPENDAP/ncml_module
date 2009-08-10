@@ -9,10 +9,8 @@
     <remove name="base_time" type="attribute"/>
   </attribute>
 
-  <!-- 2) Remove entire container.  
-       Also check type="" does the right thing by removing 
-    "whatever it is" (but only if it's attribute right now -->
-  <remove name="DODS_EXTRA"/>
+  <!-- 2) Remove entire container. -->
+  <remove name="DODS_EXTRA" type="attribute"/>
 
   <!-- 3) Remove leaf attribute within a variable -->
   <variable name="u">

@@ -163,4 +163,5 @@ dnl AT_RUN_BES_AND_MATCH([fnoc1_explicit.ncml], [das], ["ParseError"])
 m4_include([variable_rename.at])
 m4_include([variable_new_scalars.at])
 m4_include([variable_new_structures.at])
+m4_include([variable_remove.at])
 

@@ -48,6 +48,7 @@
 #include "parser.h" // for the type checking...
 #include "SaxParserWrapper.h"
 #include <sstream>
+#include "Structure.h"
 
 // For extra debug spew for now.
 #define DEBUG_NCML_PARSER_INTERNALS 1
@@ -361,6 +362,44 @@ NCMLParser::addCopyOfVariableAtCurrentScope(BaseType& varTemplate)
           " and typename=" << varTemplate.type_name() << endl);
       DDS* pDDS = getDDS();
       pDDS->add_var(&varTemplate);
+    }
+}
+
+void
+NCMLParser::deleteVariableAtCurrentScope(const string& name)
+{
+  if (! (isScopeCompositeVariable() || isScopeGlobal()) )
+    {
+      THROW_NCML_INTERNAL_ERROR("NCMLParser::deleteVariableAtCurrentScope called when we do not have a variable container at current scope!");
+    }
+
+  if (_pVar) // In container?
+    {
+      // Given interfaces, unfortunately it needs to be a Structure or we can't do this operation.
+      Structure* pVarContainer = dynamic_cast<Structure*>(_pVar);
+      if (!pVarContainer)
+        {
+          THROW_NCML_PARSE_ERROR( "NCMLParser::deleteVariableAtCurrentScope called with _pVar not a "
+                                  "Structure class variable!  "
+                                  "We can only delete variables from top DDS or within a Structure now.  scope=" +
+                                  getTypedScopeString());
+        }
+      // First, make sure it exists so we can warn if not.  The call fails silently.
+      BaseType* pToBeNuked = pVarContainer->var(name);
+      if (!pToBeNuked)
+        {
+          THROW_NCML_PARSE_ERROR( "Tried to remove variable from a Structure, but couldn't find the variable with name=" + name +
+                                  "at scope=" + getScopeString());
+        }
+      // Silently fails, so assume it worked.
+      pVarContainer->del_var(name);
+    }
+  else // Global
+    {
+      // we better have a DDS if we get here!
+      DDS* pDDS = getDDS();
+      VALID_PTR(pDDS);
+      pDDS->del_var(name);
     }
 }
 

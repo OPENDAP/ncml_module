@@ -69,6 +69,16 @@ namespace ncml_module
      */
     void processRemove(NCMLParser& p);
 
+    /** @brief Helper for processRemove() called when _type == "attribute"
+     * to remove the named attribute at the current parser scope of p.
+     * */
+    void processRemoveAttribute(NCMLParser& p);
+
+    /** @brief Helper for processRemove() called when _type == "variable"
+     * to remove the named variables at the current parser scope of p.
+     * */
+    void processRemoveVariable(NCMLParser& p);
+
   private: // data rep
     std::string _name;
     std::string _type;

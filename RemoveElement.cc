@@ -107,12 +107,29 @@ namespace ncml_module
   void
   RemoveElement::processRemove(NCMLParser& p)
   {
-    if ( !(_type.empty() || _type == "attribute") )
+    if ( !(_type.empty() || _type == "attribute" || _type == "variable") )
       {
         THROW_NCML_PARSE_ERROR("Illegal type in remove element: type=" + _type +
-            "  This version of the parser can only remove type=attribute");
+            "  This version of the parser can only remove type=\"attribute\" or type=\"variable\".");
       }
 
+    if (_type == "attribute")
+      {
+        processRemoveAttribute(p);
+      }
+    else if (_type ==  "variable")
+      {
+        processRemoveVariable(p);
+      }
+    else
+      {
+        THROW_NCML_INTERNAL_ERROR(toString() + " had type that wasn't attribute or variable.  We shouldn't be calling this if so.");
+      }
+  }
+
+  void
+  RemoveElement::processRemoveAttribute(NCMLParser& p)
+  {
     AttrTable::Attr_iter it;
     bool gotIt = p.findAttribute(_name, it);
     if (!gotIt)
@@ -126,6 +143,15 @@ namespace ncml_module
     AttrTable* pTab = p.getCurrentAttrTable();
     VALID_PTR(pTab);
     pTab->del_attr(_name);
+  }
+
+  void
+  RemoveElement::processRemoveVariable(NCMLParser& p)
+  {
+    BESDEBUG("ncml", "Removing variable name=" + _name + " at scope=" + p.getScopeString());
+
+    // Remove the variable from the current container scope, either the dataset variable list or the current variable container.
+    p.deleteVariableAtCurrentScope(_name);
   }
 
 } // ncml_module
