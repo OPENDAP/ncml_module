@@ -160,8 +160,17 @@ dnl AT_CHECK_ALL_DAP_RESPONSES([fnoc1_explicit.ncml])
 dnl An example of testing for a parse error.
 dnl AT_RUN_BES_AND_MATCH([fnoc1_explicit.ncml], [das], ["ParseError"])
 
+AT_BANNER([---------------------------------------------------------------])
 m4_include([variable_rename.at])
+AT_BANNER([---------------------------------------------------------------])
 m4_include([variable_new_scalars.at])
+AT_BANNER([---------------------------------------------------------------])
 m4_include([variable_new_structures.at])
+AT_BANNER([---------------------------------------------------------------])
 m4_include([variable_remove.at])
+AT_BANNER([---------------------------------------------------------------])
+m4_include([variable_new_arrays.at])
+AT_BANNER([---------------------------------------------------------------])
+
+
 

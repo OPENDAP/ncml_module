@@ -39,6 +39,7 @@ using std::string;
 
 namespace libdap
 {
+  class Array;
   class BaseType;
 }
 
@@ -88,7 +89,43 @@ namespace ncml_module
      * @exception BESSyntaxUserError if the number of values specified does not match
      *                  the dimensionality of the pVar
      */
-    void setVariableValuesFromTokens(NCMLParser& p, libdap::BaseType& pVar);
+    void setVariableValuesFromTokens(NCMLParser& p, libdap::BaseType& var);
+
+    /** @brief Helper for setVariableValuesFromTokens() that is called if var is a
+     * simple type.
+     *
+     * Assumes: _tokens contains the tokenized value to put into var.
+     * Assumes: _tokens.size() == 1 (or exception is throw)
+     * Assumes: var.is_simple_type()
+     */
+    void setScalarVariableValuesFromTokens(NCMLParser& p, libdap::BaseType& var);
+
+    /** @brief Helper for setVariableValuesFromTokens() that is called if var is a
+     * vector type.
+     *
+     * Set the values in the array from the _tokens for the given underlying type
+     * of the Vector variable var.
+     *
+     * @param p the parser to effect
+     * @param var the variable to set values into, must be castable to class Vector
+     *
+     * Assumes: _tokens contains the tokenized values to put into var.
+     * Assumes: _tokens.size() == the dimension of the Array (ie var) (or exception is throw)
+     * Assumes: var.is_vector_type() so we can cast it to class Vector.
+     */
+    void setVectorVariableValuesFromTokens(NCMLParser& p, libdap::BaseType& var);
+
+
+    /** @brief Template to parse the start and increment attributes and generate values for them.
+     *  Generate the correct number of points using _start and _increment for the given DAPType.
+     *  Use these to set the value on pArray
+     *
+     *  @param p the parser start to use
+     *  @param pArray the Array variable to generate values for.
+     *
+     *  @exception if the start or increment cannot be parsed correctly.
+     */
+    template <typename DAPType> void generateAndSetVectorValues(NCMLParser& p, libdap::Array* pArray);
 
     /** @brief Autogenerate uniform interval numeric values from _start and _increment into variable
      *
@@ -108,11 +145,30 @@ namespace ncml_module
      */
     template <class DAPType, typename ValueType> void setScalarValue(libdap::BaseType& var, const string& valueAsToken);
 
+    /** Parameterized set function to parse an array of value tokens for a given DAP type and then set the values into
+     * an Array variable.
+     *
+     * @typename DAPType  the underlying data type of the Array
+     * @param pArray the Array to set the values for
+     * @param valueTokens the tokenized vector of value tokens from which to parse the actual values of DAPType
+     *
+     * ASSUMES: the number of tokens matches the length of the Vector super.
+     * ASSUMES: pArray->dimensions() == 1!  This ONLY works for 1D arrays now!
+     */
+    template <typename DAPType> void setVectorValues(libdap::Array* pArray, const std::vector<string>& valueTokens);
+
     /** Special case for parsing char's instead of bytes. */
     void parseAndSetCharValue(libdap::BaseType& var, const string& valueAsToken);
 
+    /** Parse the first token in tokens as if it were an array of char's
+     * and store it into the pVecVar, which is assumed to be an Array<Byte>
+     * @exception if these assumptions are not true
+     */
+    void parseAndSetCharValueArray(NCMLParser& p, libdap::Array* pVecVar, const std::vector<string>& tokens);
+
     /**
      * Figure out the NcML type of <variable> element we are within by walking up the parse stack of p
+     * This should work for Arrays as well as simple types!
      */
     std::string getNCMLTypeForVariable(NCMLParser& p) const;
 

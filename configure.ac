@@ -27,8 +27,11 @@ AC_C_CONST
 AC_TYPE_SIZE_T
 AC_CHECK_TYPES([ptrdiff_t])
 
+# Make sure we have the cctype library
+AC_SEARCH_LIBS([isdigit], [cctype])
+
 # Checks for library functions.
-AC_CHECK_FUNCS([strchr])
+AC_CHECK_FUNCS([strchr isdigit])
 
 dnl Checks for specific libraries
 AC_CHECK_LIBDAP([3.9.2],

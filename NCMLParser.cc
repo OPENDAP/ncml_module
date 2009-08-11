@@ -39,12 +39,14 @@
 #include "DAS.h"
 #include "DDS.h"
 #include "DDSLoader.h"
+#include "DimensionElement.h"
 #include <map>
 #include <memory>
 #include "NCMLCommonTypes.h"
 #include "NCMLDebug.h"
 #include "NCMLElement.h"
 #include "NCMLUtil.h"
+#include "NetcdfElement.h"
 #include "parser.h" // for the type checking...
 #include "SaxParserWrapper.h"
 #include <sstream>
@@ -79,6 +81,7 @@ NCMLParser::NCMLParser(DDSLoader& loader)
 , _pCurrentTable(0)
 , _elementStack()
 , _scope()
+, _dimensions()
 {
   BESDEBUG("ncml", "Created NCMLParser." << endl);
 }
@@ -252,6 +255,13 @@ NCMLParser::isScopeGlobal() const
   return withinNetcdf() && _scope.empty();
 }
 
+bool
+NCMLParser::isScopeNetcdf() const
+{
+  // see if the last thing parsed was <netcdf>
+  return (!_elementStack.empty() && dynamic_cast<NetcdfElement*>(_elementStack.back()));
+}
+
 DDS*
 NCMLParser::getDDS() const
 {
@@ -288,6 +298,8 @@ NCMLParser::resetParseState()
 
   // just in case
   _loader.cleanup();
+
+  deleteDimensions();
 }
 
 void
@@ -583,7 +595,7 @@ static TypeConverter* makeTypeConverter()
   TypeConverter* ptc = new TypeConverter();
   TypeConverter& tc = *ptc;
   // NcML to DAP conversions
-  tc["char"] = "Byte"; // char is a C char, which we can store in a byte, but we will need to parse them differently than NcML "byte".
+  tc["char"] = "Byte"; // char is a C char, let's use a Byte and special parse it as a char not numeric
   tc["byte"] = "Int16"; // Since NcML byte's can be signed, we must promote them to not lose the sign bit.
   tc["short"] = "Int16";
   tc["int"] = "Int32";
@@ -893,6 +905,64 @@ NCMLParser::deleteElementStack()
       delete elt;
     }
 }
+
+const DimensionElement*
+NCMLParser::getDimension(const std::string& name) const
+{
+  const DimensionElement* ret = 0;
+  vector<DimensionElement*>::const_iterator endIt = _dimensions.end();
+  for (vector<DimensionElement*>::const_iterator it = _dimensions.begin(); it != endIt; ++it)
+    {
+      const DimensionElement* pElt = *it;
+      VALID_PTR(pElt);
+      if (pElt->name() == name)
+        {
+          ret = pElt;
+          break;
+        }
+    }
+  return ret;
+}
+
+void
+NCMLParser::addDimension(DimensionElement* pCopyToAdd)
+{
+  VALID_PTR(pCopyToAdd);
+  if (getDimension(pCopyToAdd->name()))
+    {
+      THROW_NCML_INTERNAL_ERROR("NCMLParser::addDimension(): already found dimension with name while adding " + pCopyToAdd->toString());
+    }
+
+  _dimensions.push_back(pCopyToAdd);
+
+  BESDEBUG("ncml", "Added dimension to table.  Dimension Table is now: " << printDimensions() << endl);
+}
+
+string
+NCMLParser::printDimensions() const
+{
+  string ret ="Dimensions = {\n";
+  vector<DimensionElement*>::const_iterator endIt = _dimensions.end();
+  vector<DimensionElement*>::const_iterator it;
+  for (it = _dimensions.begin(); it != endIt; ++it)
+    {
+      ret += (*it)->toString() + "\n";
+    }
+  ret += "}";
+  return ret;
+}
+
+void
+NCMLParser::deleteDimensions()
+{
+  while(!_dimensions.empty())
+    {
+      DimensionElement* pElt = _dimensions.back();
+      _dimensions.pop_back();
+      delete pElt;
+    }
+}
+
 
 void
 NCMLParser::cleanup()

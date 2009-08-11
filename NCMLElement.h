@@ -151,6 +151,12 @@ namespace ncml_module
 
     /** Return a string describing the element */
     virtual std::string toString() const = 0;
+
+    /** Helper for subclasses implementing toString().
+     * @return a string with attrName="attrValue" if !attrValue.empty(),
+     *         otherwise return the empty string.
+     */
+    static std::string printAttributeIfNotEmpty(const std::string& attrName, const std::string& attrValue);
   };
 
 }

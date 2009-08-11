@@ -1,2 +1,0 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<response xmlns="http://xml.opendap.org/ns/bes/1.0#" reqID="some_unique_value"><getDDX><BESError><Type>3</Type><Message>NCMLModule ParseError: Got &lt;variable&gt; element while not within a &lt;netcdf&gt; or within variable container.  scope=NewAtomic</Message><Administrator>admin.email.address@your.domain.name</Administrator><Location><File>VariableElement.cc</File><Line>140</Line></Location></BESError></getDDX></response>

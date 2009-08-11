@@ -28,12 +28,16 @@
 /////////////////////////////////////////////////////////////////////////////
 #include "VariableElement.h"
 
+#include "Array.h"
 #include "BaseType.h"
+#include <ctype.h>
+#include "DimensionElement.h"
 #include <memory>
 #include "MyBaseTypeFactory.h"
 #include "NCMLDebug.h"
 #include "NCMLParser.h"
 #include "NCMLUtil.h"
+#include <sstream>
 
 using namespace libdap;
 using std::vector;
@@ -49,6 +53,7 @@ namespace ncml_module
   , _type("")
   , _shape("")
   , _orgName("")
+  , _shapeTokens()
   {
   }
 
@@ -59,10 +64,14 @@ namespace ncml_module
     _type = proto._type;
     _shape = proto._shape;
     _orgName = proto._orgName;
+    _shapeTokens = proto._shapeTokens;
   }
 
   VariableElement::~VariableElement()
   {
+    // help clear up memory
+    _shapeTokens.resize(0);
+    _shapeTokens.clear();
   }
 
   const string&
@@ -292,6 +301,9 @@ namespace ncml_module
         THROW_NCML_PARSE_ERROR("Unknown type for new variable=" + toString());
       }
 
+    // Tokenize the _shape string
+    NCMLUtil::tokenize(_shape, _shapeTokens, NCMLUtil::WHITESPACE);
+
     // If it's a structure, go off and do that...
     if (_type == p.STRUCTURE_TYPE)
       {
@@ -300,6 +312,10 @@ namespace ncml_module
     else if (_shape.empty()) // a scalar
       {
         processNewScalar(p, type);
+      }
+    else if (!_shape.empty())
+      {
+        processNewArray(p, type);
       }
     else
       {
@@ -335,6 +351,44 @@ namespace ncml_module
   void
   VariableElement::processNewScalar(NCMLParser&p, const string& dapType)
   {
+    addNewVariableAndEnterScope(p, dapType);
+  }
+
+  void
+  VariableElement::processNewArray(NCMLParser& p, const std::string& dapType)
+  {
+    // For now, we can reuse the processNewScalar to make the variable and enter scope and all that.
+    addNewVariableAndEnterScope(p, "Array");
+
+    // Now look up the added variable so we can set it's template and dimensionality.
+    // it should be the current variable since we entered its scope above!
+    Array* pNewVar = dynamic_cast<Array*>(p.getCurrentVariable());
+    NCML_ASSERT_MSG(pNewVar, "VariableElement::processNewArray: Expected non-null getCurrentVariable() in parser but got NULL!");
+
+    // Now make the template variable of the array entry type with the same name and add it
+    auto_ptr<BaseType> pTemplateVar = MyBaseTypeFactory::makeVariable(dapType, _name);
+    pNewVar->add_var(pTemplateVar.get());
+
+    // Finally, set up the dimensions from the _shape.
+    // For now, we assume 1D array and fail on other cases!
+    if (_shapeTokens.size() != 1)
+      {
+        stringstream msg;
+        msg << "In creating a new array from element " << toString() <<
+        " we found more than one token in the shape attribute. " <<
+        "This version of the handler can only create 1D Array's of simple types!";
+        THROW_NCML_PARSE_ERROR(msg.str());
+      }
+
+    // Figure out the size for the dimension and name it if it's not an integer constant.
+    unsigned int dim = getSizeForDimension(p, _shapeTokens.at(0));
+    string dimName = ((isDimensionNumericConstant(_shapeTokens.at(0)))?(""):(_shapeTokens.at(0)));
+    pNewVar->append_dim(dim, dimName);
+  }
+
+  void
+  VariableElement::addNewVariableAndEnterScope(NCMLParser& p, const std::string& dapType)
+  {
     // First, make sure we are at a parse scope that ALLOWS variables to be added!
     if (!(p.isScopeCompositeVariable() || p.isScopeGlobal()))
       {
@@ -343,7 +397,8 @@ namespace ncml_module
 
     // Destroy it no matter what sicne add_var copies it
     auto_ptr<BaseType> pNewVar = MyBaseTypeFactory::makeVariable(dapType, _name);
-    NCML_ASSERT_MSG(pNewVar.get(), "VariableElement::processNewScalar: factory failed to make a new variable of type: " + dapType + " for element: " + toString());
+    NCML_ASSERT_MSG(pNewVar.get(),  "VariableElement::addNewVariable: factory failed to make a new variable of type: " + dapType +
+                                    " for element: " + toString());
 
     // Now that we have it, we need to add it to the parser at current scope
     // Internally, the add will copy the arg, not store it.
@@ -387,4 +442,44 @@ namespace ncml_module
     p.exitScope();
     p.printScope();
   }
+
+  bool
+  VariableElement::isDimensionNumericConstant(const std::string& dimToken) const
+  {
+    // for now just test the first character is a number and assume it's a number
+    return isdigit(dimToken.at(0));
+  }
+
+ unsigned int
+ VariableElement::getSizeForDimension(NCMLParser& p, const std::string& dimToken) const
+ {
+   unsigned int dim = 0;
+   // First, if the first char is a number, then assume it's an explicit non-negative integer
+   if (isDimensionNumericConstant(dimToken))
+     {
+       stringstream token;
+       token.str(dimToken);
+       token >> dim;
+       if (token.fail())
+         {
+           THROW_NCML_PARSE_ERROR( "Trying to get the dimension size in shape=" + _shape + " for token " + dimToken +
+                                   " failed to parse the unsigned int!");
+         }
+     }
+   else
+     {
+       const DimensionElement* pDim = p.getDimension(dimToken);
+       if (pDim)
+         {
+           return pDim->getLengthNumeric();
+         }
+       else
+         {
+           THROW_NCML_PARSE_ERROR("Failed to find a dimension with name=" + dimToken +
+               " for variable=" + toString() + " with dimension table= " + p.printDimensions() +
+               " at scope=" + p.getScopeString());
+         }
+     }
+   return dim;
+ }
 }

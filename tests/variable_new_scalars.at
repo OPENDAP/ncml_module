@@ -1,5 +1,4 @@
-dnl Test suite for variable@orgName renaming.
-
+dnl Test suite for creating new variables of scalar type
 AT_BANNER([Adding new scalar simple types])
 
 dnl Straight up acceptance tests

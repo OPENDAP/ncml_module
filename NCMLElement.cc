@@ -33,6 +33,7 @@
 
 // Factory Includes for Concrete Subtypes
 #include "AttributeElement.h"
+#include "DimensionElement.h"
 #include "ExplicitElement.h"
 #include "NetcdfElement.h"
 #include "ReadMetadataElement.h"
@@ -117,6 +118,7 @@ namespace ncml_module
     _sInstance->addPrototype(new AttributeElement());
     _sInstance->addPrototype(new VariableElement());
     _sInstance->addPrototype(new ValuesElement());
+    _sInstance->addPrototype(new DimensionElement());
   }
 
 
@@ -134,6 +136,13 @@ namespace ncml_module
     VALID_PTR(newElt.get());
     newElt->setAttributes(attrs);
     return newElt; //relinquish
+  }
+
+
+  std::string
+  NCMLElement::printAttributeIfNotEmpty(const std::string& attrName, const std::string& attrValue)
+  {
+    return ( (attrValue.empty())?(""):(attrName + "=\"" + attrValue + "\" "));
   }
 
 } // namespace ncml_module

@@ -23,6 +23,7 @@ BES_HDRS:=
 NCML_SRCS = \
 		AttributeElement.cc \
 		DDSLoader.cc \
+		DimensionElement.cc \
 		ExplicitElement.cc \
 		MyBaseTypeFactory.cc \
 		NCMLCommonTypes.cc \
@@ -44,6 +45,7 @@ NCML_SRCS = \
 NCML_HDRS = \
 		AttributeElement.h \
 		DDSLoader.h \
+		DimensionElement.h \
 		ExplicitElement.h \
 		MyBaseTypeFactory.h \
 		NCMLCommonTypes.h \

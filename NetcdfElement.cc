@@ -118,6 +118,9 @@ namespace ncml_module
     // If the only entry was the metadata directive, we'd better make sure it gets done!
     p.processMetadataDirectiveIfNeeded();
 
+    // The dimension table is only valid within the scope of this netcdf element
+    p.deleteDimensions();
+
     // For now, this will be the end of our parse, until aggregation.
     p._parsingNetcdf = false;
   }

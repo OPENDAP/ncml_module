@@ -65,6 +65,9 @@ namespace ncml_module
         std::vector<std::string>& tokens,
         const std::string& delimiters = " \t");
 
+    /** Split str into a vector with one char in str per token slot. */
+    static int tokenizeChars(const std::string& str, std::vector<std::string>& tokens);
+
     /** Does the string contain only ASCII 7-bit characters
      * according to isascii()?
      */

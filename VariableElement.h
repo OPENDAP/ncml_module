@@ -30,6 +30,8 @@
 #define __NCML_MODULE__VARIABLE_ELEMENT_H__
 
 #include "NCMLElement.h"
+#include <string>
+#include <vector>
 
 namespace libdap
 {
@@ -154,6 +156,31 @@ namespace ncml_module
      */
     void processNewScalar(NCMLParser& p, const std::string& dapType);
 
+    /** @brief Create a new Array of type dapType using the value from a nonempty _shape
+     * @param p the parser to effect
+     * @param dapType the internal DAP type for the array values
+     *
+     * The array size is gleaned from the _shape.  _shape can contain
+     * white-space separated non-negative integers to specify the
+     * dimensions of the array.
+     *
+     * We also allow the shape array to consist of white-space separated
+     * tokens that will be assumed to be dimension references, which we can
+     * look up and map to a size in the current dimension table.
+     */
+    void processNewArray(NCMLParser& p, const std::string& dapType);
+
+    /** @brief Create a new variable of the given dapType and add it to the
+     * current scope.  Then enter its scope.
+     *
+     * On exit, the scope of p will be within the new variable.
+     * The variable is named _name.
+     *
+     * @param p the parser to effect
+     * @param dapType the internal dap type to create, such as Array or Float32.
+     */
+    void addNewVariableAndEnterScope(NCMLParser& p, const std::string& dapType);
+
     /** @brief Tell the parser to use pVar as the current scope.
      * This also set's the current table to the pVar table.
      * pVar must not be null.*/
@@ -162,11 +189,25 @@ namespace ncml_module
     /** Pop off this variable from the scope. */
     void exitScope(NCMLParser& p);
 
+    /** @return if the dimToken is a numeric constant.
+     * Otherwise, it's assumed to be a named dimensions.
+     */
+    bool isDimensionNumericConstant(const std::string& dimToken) const;
+    /**
+     * @return the size of the given dimension, either by parsing an int constant
+     * or by looking up the dimToken as a named dimension in the parser.
+     */
+    unsigned int getSizeForDimension(NCMLParser& p, const std::string& dimToken) const;
+
   private:
     string _name;
     string _type;
     string _shape; // empty() => existing var (shape implicit) or if new var, then scalar (rank 0).
     string _orgName; // if !empty(), the name of existing variable we want to rename to _name
+
+    // Ephemeral state below
+
+    vector<string> _shapeTokens; // tokenized version of _shape for dimensions
   };
 
 }

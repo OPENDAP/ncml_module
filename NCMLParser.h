@@ -57,6 +57,7 @@ class BESDDSResponse;
 namespace ncml_module
 {
   class DDSLoader;
+  class DimensionElement;
   class NCMLElement;
 }
 
@@ -122,6 +123,7 @@ public: // Friends
   // We allow the various NCMLElement concrete classes to be friends so we can separate out the functionality
   // into several files, one for each NcML element type.
   friend class AttributeElement;
+  friend class DimensionElement;
   friend class ExplicitElement;
   friend class NetcdfElement;
   friend class ReadMetadataElement;
@@ -215,6 +217,9 @@ private: //methods
 
   /** Is the innermost scope the global attribute table of the DDS? */
   bool isScopeGlobal() const;
+
+  /** Is the innermost scope a <netcdf> node? */
+  bool isScopeNetcdf() const;
 
   /**  Are we inside the scope of a location element <netcdf> at this point of the parse?
    * Note that this means anywhere in the the scope stack, not the innermost (local) scope
@@ -398,6 +403,25 @@ private: //methods
   /** Delete all the NCMLElement* in _elementStack and clear it. */
   void deleteElementStack();
 
+  /** @return the dimension with the given name, or NULL if none. */
+  const DimensionElement* getDimension(const std::string& name) const;
+
+  /** Add the dimension to the dimension map.
+   * @exception if the element already exists in the map.
+   *
+   * The storage is a copy, and this will
+   * gain ownership of the memory after this call.
+   *
+   * @param copyToAdd : the dimension to add to the map, ownership passes to this.
+   */
+  void addDimension(DimensionElement* pCopyToAdd);
+
+  /** @return a string containing all the current dimensions toString(). */
+  string printDimensions() const;
+
+  /** Delete any dimensions in the dimension map and clear it out. */
+  void deleteDimensions();
+
   /**  Cleanup state to as if we're a new object */
   void cleanup();
 
@@ -472,6 +496,12 @@ private: // data rep
   // scope we're in.  In other words, this stack will refer to the container where _pCurrTable is in the DDS.
   // if empty() then we're in global dataset scope (or no scope if not parsing location yet).
   ScopeStack _scope;
+
+  // A table of dimensions valid for the current netcdf node's lexical scope.
+  // It is cleared when a netcdf element is closed.
+  // We won't have that many, so a vector is better than a map for this.
+  std::vector<DimensionElement*> _dimensions;
+
 }; // class NCMLParser
 
 } //namespace ncml_module
