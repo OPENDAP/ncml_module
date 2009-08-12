@@ -23,10 +23,10 @@ echo "$0: Generating $OUTPUT_FILENAME for $DATADIR/$DATA_FILENAME response=$RESP
 if test ! -z $CONSTRAINT_EXPR
 then 
 echo "$0: Using constraint=\"$CONSTRAINT_EXPR\""
-sed -e "s:%ncml_filename%:$DATADIR/$1:" -e "s:%response_type%:$RESPONSE:" -e "s:%constraint_expr%:<constraint>$CONSTRAINT_EXPR</constraint>:" < $TEMPLATE_FILENAME > $OUTPUT_FILENAME;
+sed -e "s|%ncml_filename%|$DATADIR/$1|" -e "s:%response_type%:$RESPONSE:" -e "s|%constraint_expr%|<constraint>$CONSTRAINT_EXPR</constraint>|" < $TEMPLATE_FILENAME > $OUTPUT_FILENAME;
 else 
 echo "$0: No constraint."
-sed -e "s:%ncml_filename%:$DATADIR/$1:" -e "s:%response_type%:$RESPONSE:" -e "s:%constraint_expr%::" < $TEMPLATE_FILENAME > $OUTPUT_FILENAME; 
+sed -e "s|%ncml_filename%|$DATADIR/$1|" -e "s|%response_type%|$RESPONSE|" -e "s|%constraint_expr%||" < $TEMPLATE_FILENAME > $OUTPUT_FILENAME; 
 fi
 
 
