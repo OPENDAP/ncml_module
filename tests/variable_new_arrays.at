@@ -89,4 +89,10 @@ AT_ASSERT_PARSE_ERROR([new_arrays/var_array_error_13.ncml])
 dnl Test that specifying autogeneration for a url is an error
 AT_ASSERT_PARSE_ERROR([new_arrays/var_array_error_14.ncml])
 
+dnl Test that specifying too large of a size for an array is an error
+AT_ASSERT_PARSE_ERROR([new_arrays/var_array_error_15.ncml])
+
+
+dnl TODO CONSTRAINT CHECKS!!
+dnl AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([new_arrays/var_array_int_1.ncml], [[ MyArray[5:1:9] ]], [new_arrays/var_array_int_1_con_1.ncml] )
 

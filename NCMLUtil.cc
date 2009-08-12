@@ -43,7 +43,7 @@ using namespace std;
 namespace ncml_module
 {
 
-  const std::string NCMLUtil::WHITESPACE = " \t";
+  const std::string NCMLUtil::WHITESPACE = " \t\n";
 
   int
   NCMLUtil::tokenize(const string& str,

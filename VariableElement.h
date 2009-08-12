@@ -199,6 +199,23 @@ namespace ncml_module
      */
     unsigned int getSizeForDimension(NCMLParser& p, const std::string& dimToken) const;
 
+    /** @return the product of the size of each dimension, which equates
+     * to the total number of values for a multi-dimensional array.
+     *
+     * Note that this will be 0 for a scalar!!  In other words, a scalar is
+     * considered 0 dimension, whereas an array with a single element is dimension 1
+     * since they are represented differently though both contain technically a single value.
+     *
+     * DAP2 restricts the maximum of this value to be 2^32-1, which
+     * happens to be the maximum for the unsigned int we return.
+     *
+     * @param p the parser whose dimension table we should use for named shape lookups.
+     *
+     * @exception BESInternalError: If this product is larger than 2^32-1, such that we
+     * cannot return the correct value without overflow.
+     */
+    unsigned int getProductOfDimensionSizes(NCMLParser& p) const;
+
   private:
     string _name;
     string _type;

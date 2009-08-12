@@ -10,7 +10,7 @@ dnl $1 == ncml_filename
 dnl $2 == {das | dds | dods | ddx }
 m4_define([AT_MAKE_BESCMD_FILE_NO_CONSTRAINT],
 [
-sed -e "s:%ncml_filename%:datadir/$1:" -e "s:%response_type%:$2:" -e "s:%constraint_expr%::" < bescmd_template > test.bescmd
+sed -e "s:%ncml_filename%:datadir/$1:" -e "s:%response_type%:$2:" -e "s|%constraint_expr%||" < bescmd_template > test.bescmd
 ])
 
 dnl $1 == ncml_filename
@@ -18,7 +18,7 @@ dnl $2 == {das | dds | dods | ddx }
 dnl $3 == "constraint_expr"
 m4_define([AT_MAKE_BESCMD_FILE_WITH_CONSTRAINT],
 [
-sed -e "s:%ncml_filename%:datadir/$1:" -e "s:%response_type%:$2:" -e "s:%constraint_expr%:<constraint>$3</constraint>:" < bescmd_template > test.bescmd
+sed -e "s:%ncml_filename%:datadir/$1:" -e "s:%response_type%:$2:" -e "s|%constraint_expr%|<constraint>$3</constraint>|" < bescmd_template > test.bescmd
 ])
 
 dnl $1 == ncml_filename
@@ -26,7 +26,7 @@ dnl $2 == {das | dds | dods | ddx }
 dnl $3 == "constraint_expr" (can be [] if none)
 m4_define([AT_MAKE_BESCMD_FILE],
 [
-m4_if($3, [], [AT_MAKE_BESCMD_FILE_NO_CONSTRAINT($1, $2)], [AT_MAKE_BESCMD_FILE_WITH_CONSTRAINT($1, $2, $3)]) 
+m4_if([$3], [], [AT_MAKE_BESCMD_FILE_NO_CONSTRAINT([$1], [$2])], [AT_MAKE_BESCMD_FILE_WITH_CONSTRAINT([$1], [$2], [$3])]) 
 ])
 
 
@@ -135,6 +135,9 @@ AT_CHECK_DATADDS($1)
 ])
 
 dnl Syntactic sugar for constraints
+dnl $1 == datafile
+dnl $2 == constraint_expr
+dnl $3 == baseline_prefix
 m4_define([AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT],
 [AT_BANNER([Testing DAP responses for: $1 with constraint="$2" against baseline prefix=$3])
 AT_RUN_BES_AND_COMPARE([$1], [das], [$3], [$2])
@@ -171,6 +174,7 @@ m4_include([variable_remove.at])
 AT_BANNER([---------------------------------------------------------------])
 m4_include([variable_new_arrays.at])
 AT_BANNER([---------------------------------------------------------------])
-
+m4_include([variable_new_multi_arrays.at])
+AT_BANNER([---------------------------------------------------------------])
 
 

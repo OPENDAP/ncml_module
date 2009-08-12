@@ -32,6 +32,7 @@
 #include "BaseType.h"
 #include <ctype.h>
 #include "DimensionElement.h"
+#include "dods-limits.h"
 #include <memory>
 #include "MyBaseTypeFactory.h"
 #include "NCMLDebug.h"
@@ -369,21 +370,20 @@ namespace ncml_module
     auto_ptr<BaseType> pTemplateVar = MyBaseTypeFactory::makeVariable(dapType, _name);
     pNewVar->add_var(pTemplateVar.get());
 
-    // Finally, set up the dimensions from the _shape.
-    // For now, we assume 1D array and fail on other cases!
-    if (_shapeTokens.size() != 1)
+    // For each dimension in the shape, append it to make an N-D array...
+    for (unsigned int i=0; i<_shapeTokens.size(); ++i)
       {
-        stringstream msg;
-        msg << "In creating a new array from element " << toString() <<
-        " we found more than one token in the shape attribute. " <<
-        "This version of the handler can only create 1D Array's of simple types!";
-        THROW_NCML_PARSE_ERROR(msg.str());
+        unsigned int dim = getSizeForDimension(p, _shapeTokens.at(i));
+        string dimName = ((isDimensionNumericConstant(_shapeTokens.at(i)))?(""):(_shapeTokens.at(i)));
+        BESDEBUG("ncml", "Appending dimension name=\"" << dimName << "\" of size=" << dim << " to the Array name=" << pNewVar->name() << endl);
+        pNewVar->append_dim(dim, dimName);
       }
 
-    // Figure out the size for the dimension and name it if it's not an integer constant.
-    unsigned int dim = getSizeForDimension(p, _shapeTokens.at(0));
-    string dimName = ((isDimensionNumericConstant(_shapeTokens.at(0)))?(""):(_shapeTokens.at(0)));
-    pNewVar->append_dim(dim, dimName);
+    // Make sure the size of the flattened Array in memory (product of dimensions) is within the DAP2 limit...
+    if (getProductOfDimensionSizes(p) > DODS_INT_MAX) // actually the call itself will throw...
+      {
+        THROW_NCML_PARSE_ERROR("Product of dimension sizes for Array must be < (2^31-1).");
+      }
   }
 
   void
@@ -481,5 +481,33 @@ namespace ncml_module
          }
      }
    return dim;
+ }
+
+ unsigned int
+ VariableElement::getProductOfDimensionSizes(NCMLParser& p) const
+ {
+   // If no shape, then it's size 0 (scalar)
+   if (_shape.empty())
+     {
+       return 0;
+     }
+
+   // Otherwise compute it
+   unsigned int product = 1;
+   vector<string>::const_iterator endIt = _shapeTokens.end();
+   vector<string>::const_iterator it;
+   for (it = _shapeTokens.begin(); it != endIt; ++it)
+     {
+       const string& dimName = *it;
+       unsigned int dimSize = getSizeForDimension(p, dimName); // might throw if not found...
+       // if multiplying this in will cause over DODS_INT_MAX, then error
+       if (dimSize > (DODS_INT_MAX/product))
+         {
+           THROW_NCML_PARSE_ERROR("Product of dimension sizes exceeds the maximum DAP2 size of 2147483647 (2^31-1)!");
+         }
+       // otherwise, multiply it in
+       product *= dimSize;
+     }
+   return product;
  }
 }

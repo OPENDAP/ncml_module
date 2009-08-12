@@ -468,22 +468,14 @@ namespace ncml_module
     NCML_ASSERT_MSG(pVecVar,  "ValuesElement::setVectorVariableValuesFromTokens expect var"
                               " to be castable to class Array but it wasn't!!");
 
-    // First make sure we got a 1D Array since we can't deal otherwise
-    if (pVecVar->dimensions() != 1)
-      {
-        stringstream msg;
-        msg << "Dimension error!  We can only create 1D Array values at this time, but variable name=" << pVecVar->name() <<
-               " has " << pVecVar->dimensions() << " dimensions!";
-        THROW_NCML_PARSE_ERROR(msg.str());
-      }
-
-    // Make sure the dimension size matches the number of value tokens.  This assumes a 1D vector!!
+    // Make sure the Array length matches the number of tokens.
+    // Note that length() should be the product of dimension sizes since N-D arrays are flattened in row major order
     if (pVecVar->length() > 0 &&
         static_cast<unsigned int>(pVecVar->length()) != _tokens.size())
       {
         stringstream msg;
         msg <<  "Dimension mismatch!  Variable name=" << pVecVar->name() <<
-                " has dimension " << pVecVar->length() <<
+                " has dimension product=" << pVecVar->length() <<
                 " but we got " << _tokens.size() <<
                 " values in the values element " << toString();
         THROW_NCML_PARSE_ERROR(msg.str());
