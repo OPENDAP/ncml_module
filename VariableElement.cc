@@ -359,7 +359,8 @@ namespace ncml_module
   VariableElement::processNewArray(NCMLParser& p, const std::string& dapType)
   {
     // For now, we can reuse the processNewScalar to make the variable and enter scope and all that.
-    addNewVariableAndEnterScope(p, "Array");
+    // Use the new template form for the Array so we get the NCMLArray<T> subclass that handles constraints.
+    addNewVariableAndEnterScope(p, "Array<" + dapType + ">");
 
     // Now look up the added variable so we can set it's template and dimensionality.
     // it should be the current variable since we entered its scope above!
@@ -380,7 +381,7 @@ namespace ncml_module
       }
 
     // Make sure the size of the flattened Array in memory (product of dimensions) is within the DAP2 limit...
-    if (getProductOfDimensionSizes(p) > DODS_INT_MAX) // actually the call itself will throw...
+    if (getProductOfDimensionSizes(p) > static_cast<unsigned int>(DODS_MAX_ARRAY)) // actually the call itself will throw...
       {
         THROW_NCML_PARSE_ERROR("Product of dimension sizes for Array must be < (2^31-1).");
       }
@@ -500,8 +501,8 @@ namespace ncml_module
      {
        const string& dimName = *it;
        unsigned int dimSize = getSizeForDimension(p, dimName); // might throw if not found...
-       // if multiplying this in will cause over DODS_INT_MAX, then error
-       if (dimSize > (DODS_INT_MAX/product))
+       // if multiplying this in will cause over DODS_MAX_ARRAY, then error
+       if (dimSize > (DODS_MAX_ARRAY/product))
          {
            THROW_NCML_PARSE_ERROR("Product of dimension sizes exceeds the maximum DAP2 size of 2147483647 (2^31-1)!");
          }

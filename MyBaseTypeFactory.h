@@ -46,6 +46,11 @@ namespace ncml_module
    * The regular BaseTypeFactory doesn't have a factory method by type name,
    * so this wrapper will add the desired functionality.  It is a static class
    * rather than a subclass.
+   *
+   * Note that we can create normal libdap::Array by name, but this is deprecated
+   * since it fails with constraints.  We have added
+   * special functionality for Array<T> to define an NCMLArray<T> as the return type.
+   * This allows hyperslab constraints to work.
    */
   class MyBaseTypeFactory
   {
@@ -64,17 +69,29 @@ namespace ncml_module
     /** @return whether the typeName refers to a simple (non-container) type. */
     static bool isSimpleType(const string& typeName);
 
+    /** @return whether the desired type is of the form Array<T>
+     * for some basic type T.  This is a special case for creating Arrays of
+     * subclass NCMLArray<T> so we can handle constraints.
+     */
+    static bool isArrayTemplate(const string& typeName);
+
     /** Return a new variable of the given type
      * @param type the DAP type
      * @param name the name to give the new variable
      * */
-    static std::auto_ptr<libdap::BaseType> makeVariable(const libdap::Type& type, const std::string& name);
+    static std::auto_ptr<libdap::BaseType> makeVariable(const libdap::Type& type, const string& name);
 
     /** Return a new variable of the given type name.  Return null if type is not valid.
      * @param type  the DAP type to create.
      * @param name the name to give the new variable
      * */
-    static std::auto_ptr<libdap::BaseType> makeVariable(const string& type, const std::string& name);
+    static std::auto_ptr<libdap::BaseType> makeVariable(const string& type, const string& name);
+
+    /** Make an Array<T> where T is the DAP simpel type for the values in the Array.
+     * This creates the proper template class of NCMLArray<T> now rather than Array so we can handle
+     * constraints.
+     */
+    static std::auto_ptr<libdap::BaseType> makeArrayTemplateVariable(const string& type, const string& name);
 
 
   private: //data rep

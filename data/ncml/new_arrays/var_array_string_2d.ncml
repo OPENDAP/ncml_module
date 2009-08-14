@@ -5,8 +5,8 @@
   <!-- Create a new 2D array -->
   <variable name="MyArray2D" type="string" shape="x y">
     <values>
-      0,0 0,1
-      1,0 1,1
+      0,0  0,1
+      1,0  1,1
   </values> <!-- these must be in row slowest varying first order (left to right in shape) -->
   </variable>
 </netcdf>

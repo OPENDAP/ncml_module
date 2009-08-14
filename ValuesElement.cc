@@ -543,6 +543,7 @@ namespace ncml_module
         THROW_NCML_INTERNAL_ERROR("Expected Vector template type was a simple type but didn't find it!");
         break;
       } // switch
+
   }
 
   template <typename DAPType>

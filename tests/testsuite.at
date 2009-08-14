@@ -140,17 +140,18 @@ dnl $2 == constraint_expr
 dnl $3 == baseline_prefix
 m4_define([AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT],
 [AT_BANNER([Testing DAP responses for: $1 with constraint="$2" against baseline prefix=$3])
-AT_RUN_BES_AND_COMPARE([$1], [das], [$3], [$2])
-AT_RUN_BES_AND_COMPARE([$1], [dds], [$3], [$2])
-AT_RUN_BES_AND_COMPARE([$1], [ddx], [$3], [$2])
-AT_RUN_BES_AND_COMPARE([$1], [dods], [$3], [$2])
+AT_RUN_BES_AND_COMPARE([$1],[das],[$3],[$2])
+AT_RUN_BES_AND_COMPARE([$1],[dds],[$3],[$2])
+AT_RUN_BES_AND_COMPARE([$1],[ddx],[$3],[$2])
+AT_RUN_BES_AND_COMPARE([$1],[dods],[$3],[$2])
 ])
 
 dnl tests that the response is a parse error when asking for DDX.
 dnl $1 is ncml_filename
+dnl $2 == [optional] constraint
 m4_define([AT_ASSERT_PARSE_ERROR],
 [AT_BANNER([Testing that $1 contains a ParseError...])
-AT_RUN_BES_AND_MATCH([$1], ["ddx"], ["ParseError"])
+AT_RUN_BES_AND_MATCH([$1],["ddx"],["ParseError"],[$2])
 ])
 
 dnl -----------------------------------------------------------------

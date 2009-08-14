@@ -38,6 +38,7 @@ NCML_SRCS = \
 		SaxParserWrapper.cc \
 		SaxParser.cc \
 		ScopeStack.cc \
+		Shape.cc \
 		SimpleLocationParser.cc \
 		ValuesElement.cc \
 		VariableElement.cc
@@ -48,6 +49,7 @@ NCML_HDRS = \
 		DimensionElement.h \
 		ExplicitElement.h \
 		MyBaseTypeFactory.h \
+		NCMLArray.h \
 		NCMLCommonTypes.h \
 		NCMLDebug.h \
 		NCMLElement.h \
@@ -61,6 +63,7 @@ NCML_HDRS = \
 		RemoveElement.h \
 		SaxParserWrapper.h \
 		SaxParser.h \
+		Shape.h \
 		ScopeStack.h \
 		SimpleLocationParser.h \
 		ValuesElement.h \
