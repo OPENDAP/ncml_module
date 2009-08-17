@@ -18,3 +18,7 @@ dnl Variable Rename with Constraints
 
 dnl Check a Structure rename with constraint on renamed variables
 AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([var_orgName_Structure.ncml], ["DataGranule.PlanetaryGrid.precipitate"], [var_orgName_Structure_constraint_1.ncml])
+
+dnl Check a hyperslab constraint on renamed variable
+AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([var_orgName.ncml],[[ wind_u[10][10][10] ]],[var_orgName_cons_1.ncml])
+

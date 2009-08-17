@@ -31,7 +31,11 @@
 
 #include <libdap/dods-datatypes.h>
 #include <libdap/Array.h>
+#include <libdap/BaseType.h>
 #include <libdap/Vector.h>
+#include <memory>
+#include "MyBaseTypeFactory.h"
+#include "NCMLBaseArray.h"
 #include "NCMLDebug.h"
 #include "Shape.h"
 #include <sstream>
@@ -75,30 +79,26 @@ namespace ncml_module
    * need to be aware of this in processing data.
    */
 template <typename T>
-class NCMLArray : public libdap::Array
+class NCMLArray : public NCMLBaseArray
 {
-public:
-  NCMLArray()
-    : Array("",0)
-    , _allValues(0)
-    , _noConstraints(0)
-    , _currentConstraints(0)
-    {
-    }
+public: // Class methods
 
-  NCMLArray(const string& name)
-  : Array(name,0)
+public: // Instance methods
+  NCMLArray()
+  : NCMLBaseArray("")
   , _allValues(0)
-  , _noConstraints(0)
-  , _currentConstraints(0)
   {
   }
 
-  NCMLArray(const NCMLArray<T>& proto)
-  : Array(proto)
+  explicit NCMLArray(const string& name)
+  : NCMLBaseArray(name)
   , _allValues(0)
-  , _noConstraints(0)
-  , _currentConstraints(0)
+  {
+  }
+
+  explicit NCMLArray(const NCMLArray<T>& proto)
+  : NCMLBaseArray(proto)
+  , _allValues(0)
   {
     copyLocalRepFrom(proto);
   }
@@ -109,7 +109,7 @@ public:
     destroy(); // helper
   }
 
-  NCMLArray&
+  NCMLArray<T>&
   operator=(const NCMLArray<T>& rhs)
   {
     if (&rhs == this)
@@ -118,7 +118,7 @@ public:
       }
 
     // Call the super assignment
-    Array::operator=(rhs);
+    NCMLBaseArray::operator=(rhs);
 
     // Copy local private rep
     copyLocalRepFrom(rhs);
@@ -132,71 +132,47 @@ public:
     return new NCMLArray(*this);
   }
 
-  /** Override to return false if we have uncomputed constraints
-   * and only true if the current constraints match the Vector value buffer.
+  /** Copy the rep from the given Array.
+   * This includes:
+   *  - Shape
+   *  - Attribute table
+   *  - Template BaseType var
+   *  - Data values
    */
-  virtual bool read_p()
+  virtual void copyDataFrom(libdap::Array& from)
   {
-    // If we haven't computed constrained buffer yet, or they changed,
-    // we must call return false to force read() to be called again.
-    return !haveConstraintsChangedSinceLastRead();
-  }
+    // We both better have a valid template class.
+    VALID_PTR(from.var());
 
-  /** Override to disable setting of this flag.  We will leave it false
-   * unless the constraints match the Vector value buffer.
-   */
-  virtual void set_read_p(bool /* state */)
-  {
-    // Just drop it on the floor we compute it
-    // Array::set_read_p(state);
-  }
+    // clear out any current local values
+    destroy();
 
-  /**
-   * If there are no constraints and this is the first call to read(),
-   * we will do nothing, assuming the sueprclasses have everything under control.
-   *
-   * If there are constraints, this function will create the correct
-   * buffer in Vector with the constrained data, generated from cached
-   * local values gathered to be from the unconstrained state.
-   *
-   * The first call to read() will assume the CURRENT Vector buffer
-   * has ALL values (unconstrained) and store a local copy before
-   * generating a Vector buffer for the current constraints.
-   *
-   * After this call, the caller can be assured that the Vector's data buffer
-   * has properly constrained data matching the current super Array's constraints.
-   * Subsequent calls to read() will see if the constraints used to create the
-   * Vector data buffer have changed and if so recompute a new Vector buffer from
-   * the locally cached values.
-   */
-  virtual bool read()
-  {
-    BESDEBUG("ncml", "NCMLArray::read() called!" << endl);
+    // OK, not that we have it, we need to copy the attribute table and the prototype variable
+    set_attr_table(from.get_attr_table());
+    add_var(from.var()->ptr_duplicate());
 
-    // If we haven't cached yet, but there's no constraints on the super,
-    // then the super has the right data and we have nothing to do.
-    // No reason to make copy or do work if there's no constraints!
-    if (!_allValues && !isConstrained())
+    // add all the dimensions
+    Array::Dim_iter endIt = from.dim_end();
+    Array::Dim_iter it;
+    for (it = from.dim_begin(); it != endIt; ++it)
       {
-        BESDEBUG("ncml", "NCMLArray<T>::read() called, but no constraints.  Assuming data buffer is correct.");
-        return true;
+        Array::dimension& dim = *it;
+        append_dim(dim.size, dim.name);
       }
 
-    // If first call, cache the full dataset.  Throw if there's an error with this.
-    cacheSuperclassStateIfNeeded();
+    // Finally, copy the data.
+    // Initialize with length() values so the storage and size of _allValues is correct.
+    _allValues = new std::vector<T>(from.length());
+    NCML_ASSERT(_allValues->size() == static_cast<unsigned int>(from.length()));
 
-    // If _currentConstraints is null or different than current Array dimensions,
-    // compute the constrained data buffer from the local data cache and the current Array dimensions.
-    if (haveConstraintsChangedSinceLastRead())
-      {
-        // Enumerate and set the constrained values into Vector super..
-        createAndSetConstrainedValueBuffer();
+    // Copy the values in from._buf into our cache!
+    T* pFirst = &((*_allValues)[0]);
+    from.buf2val(reinterpret_cast<void**>(&pFirst));
+  }
 
-        // Copy the constraints we used to generate these values
-        // so we know if we need to redo this in another call to read() or not.
-        cacheCurrentConstraints();
-      }
-    return true;
+  virtual bool isDataCached() const
+  {
+    return _allValues;
   }
 
   /////////////////////////////////////////////////////////////
@@ -309,51 +285,6 @@ public:
 
 protected:
 
-  /** Get the current dimensions of our superclass Array as a Shape object. */
-  Shape getSuperShape() const
-  {
-    // make the Shape for our superclass Array
-    return Shape(*this);
-  }
-
-  /**
-   * Return whether the superclass Array has been constrained along
-   * any dimensions.
-   */
-  bool isConstrained() const
-  {
-    Shape superShape = getSuperShape();
-    return superShape.isConstrained();
-  }
-
-  /** Return whether the constraints used to create Vector._buf for the last read()
-   * have changed, meaning we need to recompute Vector._buf using the new values.
-   */
-  bool haveConstraintsChangedSinceLastRead() const
-  {
-    // If there's none, then they've changed by definition.
-    if (!_currentConstraints)
-      {
-        return true;
-      }
-    else // compare the current values to those currently in our Array slice
-      {
-        return ((*_currentConstraints) == getSuperShape());
-      }
-  }
-
-  /** Store the current super Array shape as the current constraints so we remember */
-  void cacheCurrentConstraints()
-  {
-    // If got some already, blow them away...
-    if (_currentConstraints)
-      {
-        delete _currentConstraints; _currentConstraints = 0;
-      }
-    _currentConstraints = new Shape(*this);
-    BESDEBUG("ncml", "NCMLArray: Cached current constraints:" << (*_currentConstraints) << endl);
-  }
-
   /**
    * The first time we get a read(), we want to grab the current state of the superclass Array and Vector
    * and cache them locally before we apply any needed constraints.
@@ -363,17 +294,8 @@ protected:
    * as the full set of current dimensions, constrained or not.  The latter tells of if constraints have
    * been applied and if we need to compute a new _buf in read().
    */
-  void cacheSuperclassStateIfNeeded()
+  virtual void cacheValuesIfNeeded()
   {
-    // We had better have a template or else the width() calls will be wrong.
-    NCML_ASSERT(var());
-
-    // First call, make sure we grab unconstrained state.
-    if (!_noConstraints)
-      {
-        cacheUnconstrainedDimensions();
-      }
-
     // If we haven't gotten this yet, go get it,
     // assuming the super Vector contains all values
     if (!_allValues)
@@ -398,21 +320,6 @@ protected:
     // We ignore the current constraints since we don't worry about them until later in read().
   }
 
-  void cacheUnconstrainedDimensions()
-  {
-    // We already got it...
-    if (_noConstraints)
-      {
-        return;
-      }
-
-    // Copy from the super Array's current dimensions and force values to define an unconstrained space.
-    _noConstraints = new Shape(*this);
-    _noConstraints->setToUnconstrained();
-
-    BESDEBUG("ncml", "NCMLArray: cached unconstrained shape=" << (*_noConstraints) << endl);
-  }
-
   /**
    * If we have constraints that are not the same as the constraints
    * on the last read() call (or if this is first read() call), use
@@ -421,7 +328,7 @@ protected:
    * ASSUMES: cacheSuperclassStateIfNeeded() has already been called once so
    * that this instance's state contains all the unconstrained data values and shape.
    */
-  void createAndSetConstrainedValueBuffer()
+  virtual void createAndSetConstrainedValueBuffer()
   {
     BESDEBUG("ncml", "NCMLArray<T>::createAndSetConstrainedValueBuffer() called!" << endl);
 
@@ -496,38 +403,19 @@ private: // This class ONLY methods
       {
         _allValues = new vector<T>(*(proto._allValues));
       }
-
-    if (proto._noConstraints)
-      {
-        _noConstraints = new Shape(*(proto._noConstraints));
-      }
-
-    if (proto._currentConstraints)
-      {
-        _currentConstraints = new Shape(*(proto._currentConstraints));
-      }
   }
 
   /** Helper to destroy all the local data to pristine state. */
-  void destroy() throw ()
-  {
-    delete _allValues; _allValues=0;
-    delete _noConstraints; _noConstraints=0;
-    delete _currentConstraints; _currentConstraints=0;
-  }
+   void destroy() throw ()
+   {
+     delete _allValues; _allValues=0;
+   }
 
 private:
 
   // The unconstrained data set, cached from super in first call to cacheSuperclassStateIfNeeded()
   // if it is null.
   std::vector<T>* _allValues;
-
-  // The Shape for the case of NO constraints on the data, or null if not set yet.
-  Shape* _noConstraints;
-
-  // The Shape for the CURRENT dimensions in super Array, used to calculate the transmission buffer
-  // for read() and also to check if haveConstraintsChangedSinceLastRead().  Null if not set yet.
-  Shape* _currentConstraints;
 
 }; // class NCMLArray<T>
 

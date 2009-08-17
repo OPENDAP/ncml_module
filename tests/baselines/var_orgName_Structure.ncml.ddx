@@ -1340,7 +1340,7 @@ xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/d
     </value>
         </Attribute>
         <Structure name="PlanetaryGrid">
-            <Array name="precipitate">
+            <Array name="relError">
                 <Attribute name="dim_0" type="Container">
                     <Attribute name="name" type="String">
                         <value>scan</value>
@@ -1361,7 +1361,7 @@ xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/d
                 <dimension name="longitude" size="360"/>
                 <dimension name="latitude" size="80"/>
             </Array>
-            <Array name="relError">
+            <Array name="precipitate">
                 <Attribute name="dim_0" type="Container">
                     <Attribute name="name" type="String">
                         <value>scan</value>

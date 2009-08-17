@@ -18,6 +18,27 @@ xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/d
         </Attribute>
     </Attribute>
 
+    <Array name="lat">
+        <Attribute name="units" type="String">
+            <value>degree North</value>
+        </Attribute>
+        <Float32/>
+        <dimension name="lat" size="17"/>
+    </Array>
+    <Array name="lon">
+        <Attribute name="units" type="String">
+            <value>degree East</value>
+        </Attribute>
+        <Float32/>
+        <dimension name="lon" size="21"/>
+    </Array>
+    <Array name="time">
+        <Attribute name="units" type="String">
+            <value>hours from base_time</value>
+        </Attribute>
+        <Float32/>
+        <dimension name="time" size="16"/>
+    </Array>
     <Array name="wind_u">
         <Attribute name="units" type="String">
             <value>meter per second</value>
@@ -53,27 +74,6 @@ xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/d
         <dimension name="time_a" size="16"/>
         <dimension name="lat" size="17"/>
         <dimension name="lon" size="21"/>
-    </Array>
-    <Array name="lat">
-        <Attribute name="units" type="String">
-            <value>degree North</value>
-        </Attribute>
-        <Float32/>
-        <dimension name="lat" size="17"/>
-    </Array>
-    <Array name="lon">
-        <Attribute name="units" type="String">
-            <value>degree East</value>
-        </Attribute>
-        <Float32/>
-        <dimension name="lon" size="21"/>
-    </Array>
-    <Array name="time">
-        <Attribute name="units" type="String">
-            <value>hours from base_time</value>
-        </Attribute>
-        <Float32/>
-        <dimension name="time" size="16"/>
     </Array>
 
     <dataBLOB href=""/>

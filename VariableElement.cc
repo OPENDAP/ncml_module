@@ -35,6 +35,7 @@
 #include "dods-limits.h"
 #include <memory>
 #include "MyBaseTypeFactory.h"
+#include "NCMLBaseArray.h"
 #include "NCMLDebug.h"
 #include "NCMLParser.h"
 #include "NCMLUtil.h"
@@ -233,7 +234,7 @@ namespace ncml_module
     NCML_ASSERT_MSG(!_name.empty(), "Can't have an empty variable@name if variable@orgName is specified!");
     NCML_ASSERT(!_orgName.empty()); // we shouldn't even call this if this is the case, but...
 
-    // 1) Lookup _orgName, which must exist or throw
+    // Lookup _orgName, which must exist or throw
     BESDEBUG("ncml", "Looking up the existence of a variable with name=" << _orgName << "..." <<endl);
     BaseType* pOrgVar = p.getVariableInCurrentVariableContainer(_orgName);
     if (!pOrgVar)
@@ -243,7 +244,7 @@ namespace ncml_module
       }
     BESDEBUG("ncml", "Found variable with name=" << _orgName << endl);
 
-    // 2) Lookup _name, which must NOT exist or throw
+    // Lookup _name, which must NOT exist or throw
     BESDEBUG("ncml", "Making sure new name=" << _name << " does not exist at this scope already..." << endl);
     BaseType* pExisting = p.getVariableInCurrentVariableContainer(_name);
     if (pExisting)
@@ -254,30 +255,53 @@ namespace ncml_module
       }
     BESDEBUG("ncml", "Success, new variable name is open at this scope."  << endl);
 
-    // 3) Call set_name on the orgName variable.
+    // Call set_name on the orgName variable.
     BESDEBUG("ncml", "Renaming variable " << _orgName << " to " << _name << endl);
 
     // Ugh, if we are parsing a DataDDS then we need to force the underlying data
     // to be read in before we rename it since otherwise the read() won't find the
-    // renamed variables (unless we kept around the orgName, but that means changing
-    // lots of libdap...)  HACK this is inefficient since we must load the entire dataset
-    // even if we only want a small projection...
+    // renamed variables in at least the NetCDF handler case.
+    // HACK this is inefficient since we must load the entire dataset
+    // even if we only want a small hyperslab...
     if (p.parsingDataRequest() && !pOrgVar->read_p())
       {
         pOrgVar->read();
+
+        // If the variable is an Array, we need to convert it to our NCMLArray<T> subclass
+        // in order for constraints to work after we call read()...
+        // This will remove the old one and replace it under the new _name if it's an Array.
+        pOrgVar = replaceArrayIfNeeded(p, pOrgVar, _name);
+
+        // This is safe whether we converted it or not.  Rename!
+        NCMLUtil::setVariableNameProperly(pOrgVar, _name);
+      }
+    else
+      {
+        // The above branch will reorder the output for the DataDDS case,
+        // so we need to remove and readd even if we dont convert to preserve order!
+
+        // BaseType::set_name fails for Vector (Array etc) subtypes since it doesn't
+        // set the template's BaseType var's name as well.  This function does that until
+        // a fix in libdap lets us call pOrgName->set_name(_name) directly.
+        // pOrgVar->set_name(_name); // TODO  switch to this call when bug is fixed.
+        //NCMLUtil::setVariableNameProperly(pOrgVar, _name);
+
+        // Need to copy unfortunately, since delete will kill storage...
+        auto_ptr<BaseType> pCopy = auto_ptr<BaseType>(pOrgVar->ptr_duplicate());
+        NCMLUtil::setVariableNameProperly(pCopy.get(), _name);
+
+        // Nuke the old
+        p.deleteVariableAtCurrentScope(pOrgVar->name());
+
+        // Add the new, which copies under the hood.  auto_ptr will clean pCopy.
+        p.addCopyOfVariableAtCurrentScope(*pCopy);
       }
 
-    // BaseType::set_name fails for Vector (Array etc) subtypes since it doesn't
-    // set the template's BaseType var's name as well.  This function does that until
-    // a fix in libdap lets us call pOrgName->set_name(_name) directly.
-    // pOrgVar->set_name(_name); // TODO  switch to this call when bug is fixed.
-    NCMLUtil::setVariableNameProperly(pOrgVar, _name);
-
-    // 4) Make sure we find the one we added.
+    // Make sure we find it under the new name
     BaseType* pRenamedVar = p.getVariableInCurrentVariableContainer(_name);
-    NCML_ASSERT_MSG(pRenamedVar == pOrgVar, "Renamed variable not found!  Logic error!");
+    NCML_ASSERT_MSG(pRenamedVar, "Renamed variable not found!  Logic error!");
 
-    // 5) Change the scope for any nested calls
+    // Finally change the scope to the variable.
     enterScope(p, pRenamedVar);
     BESDEBUG("ncml", "Entering scope of the renamed variable.  Scope is now: " << p.getTypedScopeString() << endl);
   }
@@ -385,6 +409,35 @@ namespace ncml_module
       {
         THROW_NCML_PARSE_ERROR("Product of dimension sizes for Array must be < (2^31-1).");
       }
+  }
+
+  libdap::BaseType*
+  VariableElement::replaceArrayIfNeeded(NCMLParser& p, libdap::BaseType* pOrgVar, const string& name)
+  {
+    VALID_PTR(pOrgVar);
+    Array* pOrgArray = dynamic_cast<libdap::Array*>(pOrgVar);
+    if (!pOrgArray)
+      {
+        return pOrgVar;
+      }
+
+    BESDEBUG("ncml", "VariableElement::replaceArray if needed.  Renaming an Array means we need to convert it to NCMLArray." << endl);
+
+    // Make a copy of it
+    auto_ptr<NCMLBaseArray> pNewArray = NCMLBaseArray::createFromArray(*pOrgArray);
+    VALID_PTR(pNewArray.get());
+
+    // Remove the old one.
+    p.deleteVariableAtCurrentScope(pOrgArray->name());
+
+    // Make sure the new name is set.
+    NCMLUtil::setVariableNameProperly(pNewArray.get(), name);
+
+    // Add the new one.  Unfortunately this copies it under the libdap hood. ARGH!
+    // So just use the get() and let the auto_ptr kill our copy.
+    p.addCopyOfVariableAtCurrentScope(*(pNewArray.get()));
+
+    return p.getVariableInCurrentVariableContainer(name);
   }
 
   void

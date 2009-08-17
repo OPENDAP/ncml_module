@@ -26,6 +26,7 @@ NCML_SRCS = \
 		DimensionElement.cc \
 		ExplicitElement.cc \
 		MyBaseTypeFactory.cc \
+		NCMLBaseArray.cc \
 		NCMLCommonTypes.cc \
 		NCMLElement.cc \
 		NCMLModule.cc \
@@ -50,6 +51,7 @@ NCML_HDRS = \
 		ExplicitElement.h \
 		MyBaseTypeFactory.h \
 		NCMLArray.h \
+		NCMLBaseArray.h \
 		NCMLCommonTypes.h \
 		NCMLDebug.h \
 		NCMLElement.h \

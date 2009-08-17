@@ -170,6 +170,15 @@ namespace ncml_module
      */
     void processNewArray(NCMLParser& p, const std::string& dapType);
 
+    /** If pOrgVar is of type Array, then convert its data into an NCMLArray<T>
+     * and replace pOrgVar in the current scope with the new NCMLArray under the
+     * new name.  This will destroy pOrgVar.
+     *
+     * @return the new variable if it was replaced (since pOrgVar has been deleted)
+     * else pOrgVar if untouched.
+     */
+    libdap::BaseType* replaceArrayIfNeeded(NCMLParser& p, libdap::BaseType* pOrgVar, const string& name);
+
     /** @brief Create a new variable of the given dapType and add it to the
      * current scope.  Then enter its scope.
      *

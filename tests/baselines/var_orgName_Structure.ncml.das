@@ -610,7 +610,7 @@ Attributes {
       Make sure we can add to renamed variable!
     ";
         PlanetaryGrid {
-            precipitate {
+            relError {
                 dim_0 {
                     String name "scan";
                 }
@@ -621,7 +621,7 @@ Attributes {
                     String name "latitude";
                 }
             }
-            relError {
+            precipitate {
                 dim_0 {
                     String name "scan";
                 }
