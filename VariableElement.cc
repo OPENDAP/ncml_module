@@ -56,6 +56,7 @@ namespace ncml_module
   , _shape("")
   , _orgName("")
   , _shapeTokens()
+  , _isNewNCMLVariable(false)
   {
   }
 
@@ -67,6 +68,7 @@ namespace ncml_module
     _shape = proto._shape;
     _orgName = proto._orgName;
     _shapeTokens = proto._shapeTokens;
+    _isNewNCMLVariable = proto._isNewNCMLVariable;
   }
 
   VariableElement::~VariableElement()
@@ -346,6 +348,9 @@ namespace ncml_module
       {
         THROW_NCML_INTERNAL_ERROR("UNIMPLEMENTED METHOD: Cannot create non-scalar Array types yet.");
       }
+
+    // Keep track that it's new so we can error if we get values for non-new.
+    _isNewNCMLVariable = true;
   }
 
   void

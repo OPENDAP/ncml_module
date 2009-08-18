@@ -153,6 +153,16 @@ namespace ncml_module
     BaseType* pVar = p.getCurrentVariable();
     NCML_ASSERT_MSG(pVar, "ValuesElement::handleContent: got unexpected null getCurrentVariable() from parser!!");
 
+    // Also, make sure the variable we plan to add values to is a new variable and not an existing one.
+    // We do not support changing existing dataset values currently.
+    const VariableElement* pVarElt = getContainingVariableElement(p);
+    VALID_PTR(pVarElt);
+    if (!pVarElt->isNewVariable())
+      {
+        THROW_NCML_PARSE_ERROR("This version of the NCML Module cannot change the values of an existing variable! "
+            "However, we got " + toString() + " element for variable=" + pVarElt->toString() + " at scope=" + p.getScopeString());
+      }
+
     // Tokenize the values for all cases EXCEPT if it's a scalar string.
     // We'll make a special exception an assume the entire content is the token
     // to avoid accidental tokenization with whitespace, which is clearly not intended

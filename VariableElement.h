@@ -85,6 +85,9 @@ namespace ncml_module
       return _orgName;
     }
 
+    /** @return whether this variable was created and added as a new variable in this parse */
+    bool isNewVariable() const { return _isNewNCMLVariable; }
+
   private:
 
    /**
@@ -234,6 +237,7 @@ namespace ncml_module
     // Ephemeral state below
 
     vector<string> _shapeTokens; // tokenized version of _shape for dimensions
+    bool _isNewNCMLVariable; // true if this variable was created new in the NcML file and isn't existing
   };
 
 }

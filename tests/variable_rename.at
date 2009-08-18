@@ -22,3 +22,6 @@ AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([var_orgName_Structure.ncml], ["DataG
 dnl Check a hyperslab constraint on renamed variable
 AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([var_orgName.ncml],[[ wind_u[10][10][10] ]],[var_orgName_cons_1.ncml])
 
+dnl Technically not a rename, but here we try to change the values of an existing variable, which is disallowed in this version
+AT_ASSERT_PARSE_ERROR([var_change_existing_error.ncml])
+
