@@ -18,6 +18,8 @@ Version 0.9.1 (18 Aug 2009)
    dimensions in a variable@shape.  These are not shared, but simply
    refer to the dimension@length for the specified dimension.
 
+ * New $srcdir/tests Autotest framework testbed. 
+
 -----------------------------------------------------------------------
 Version 0.9.0 (27 Jul 2009)
 
