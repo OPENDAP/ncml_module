@@ -1,12 +1,29 @@
 
 $Id: NEWS $
 
+-----------------------------------------------------------------------
+Version 0.9.1 (18 Aug 2009)
 
+ * Added functionality to remove and rename variables in an existing
+   (wrapped) dataset using <remove> and variable@orgName in the proper
+   context.
+
+ * Added functionality to add new variables to an existing dataset or
+   to create a purely virtual dataset (no netcdf@location specified to
+   load).  New variables can be scalars of basic types, a Structure
+   consisting of other variables, or an array (N-dimensional) of basic
+   types.
+
+ * Added ability to use <dimension> element to specify named
+   dimensions in a variable@shape.  These are not shared, but simply
+   refer to the dimension@length for the specified dimension.
+
+-----------------------------------------------------------------------
 Version 0.9.0 (27 Jul 2009)
 
 Initial internal alpha release.  Functionality for adding, changing, removing metadata (attributes).
 
-
+-----------------------------------------------------------------------
 Version 0.0.1 (01 Jan 2009)
 
 Initial example module creation.

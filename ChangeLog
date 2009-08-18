@@ -1,3 +1,114 @@
+2009-08-18  Michael Johnson <m.johnson@opendap.org>
+
+	Added exception for trying to specify <values> for a pre-existing variable.  Ticket #1373.
+
+2009-08-17  Michael Johnson <m.johnson@opendap.org>
+
+	Fixed bug with rename Array's not handling hyperslab constraints.  (Ticket #1372)
+	Refactored non-parameterized code for NCMLArray<T> into a superclass NCMLBaseArray.
+
+2009-08-14  Michael Johnson <m.johnson@opendap.org>
+
+	For  Ticket #1367:
+	* Added NCMLArray<T>, subclass of libdap::Array, to compute hyperslab constraints for NcML dynamically created data since Array does not do it itself.
+	* Added Shape class to handle enumeration of constrained spaces for calculating hyperslabs.
+
+2009-08-12  Michael Johnson <m.johnson@opendap.org>
+
+	Fixed sed bug for constraints with : symbol.
+
+2009-08-12  Michael Johnson <m.johnson@opendap.org>
+
+	Added ability to specify multi-dimensional arrays in NcML for Ticket #1364.  Constraints are broken.
+
+2009-08-11  Michael Johnson <m.johnson@opendap.org>
+
+	Added ability to create new 1D arrays of all types, including use of dimension element and autogeneration of values.  See also ticket #1353.
+
+	Removed baselines for error tests since they are no longer used.
+
+2009-08-10  Michael Johnson <m.johnson@opendap.org>
+
+	Added ability to call remove on a variable at global DDS level or within a Structure.  Ticket #1352.
+
+2009-08-07  Michael Johnson <m.johnson@opendap.org>
+
+	Ticket #1354: Added ability to add a new Structure variable and tests for simple case, nested case and for parse error of setting values in a structure.
+
+	Changes to allow purely synthesized datasets for the case of no specified netcdf@location attribute.
+
+2009-08-07  Michael Johnson <m.johnson@opendap.org>
+
+	Ticket #1351: new rejection tests.
+
+2009-08-07  Michael Johnson <m.johnson@opendap.org>
+
+	Ticket #1351: new rejection tests.
+
+2009-08-07  Michael Johnson <m.johnson@opendap.org>
+
+	Ticket #1351:  Added ability to create new scalar variables of simple atomic types.
+
+	testsuite.at: Added support for testing against a getdap ascii version of a dods response for easier human verification of baseline data for new variables.
+
+2009-08-05  Michael Johnson <m.johnson@opendap.org>
+
+	testsuite.at: added ability to specify constraint expressions in autotest check macros
+
+	variable_rename.at: repository for variable@orgName tests, included in testsuite.at
+
+	Added new tests on variable rename for Structure and with constraints applied to renamed variable.
+
+2009-08-04  Michael Johnson <m.johnson@opendap.org>
+
+	VariableElement.cc, NCMLParser.cc, NCMLUtil.cc:  added support for renaming variables with variable@orgName (#1349).
+
+	Added new Autotest testsuite in tests/ directory (#1348).
+
+2009-07-31  Michael Johnson <m.johnson@opendap.org>
+
+	* Added ability for NCMLParser to handle handle DataDDS request as well as DDX to support addition of new variables.
+
+2009-07-30  Michael Johnson <m.johnson@opendap.org>
+
+	Refactored NCMLParser to have separate classes for each NcML element type and to use polymorphic dispatch.  Ticket #1325
+
+2009-07-29  Michael Johnson <m.johnson@opendap.org>
+
+	NCMLRequestHandler.cc:  added reference to Wiki for help request.
+
+	README, INSTALL: minor changes for odd error.
+
+2009-07-28  Michael Johnson <m.johnson@opendap.org>
+
+	InstallationCheck minor change.
+
+2009-07-28  Michael Johnson <m.johnson@opendap.org>
+
+	InstallationCheck: fixed bug with new {dap,bes}-config --version output.
+
+2009-07-28  Michael Johnson <m.johnson@opendap.org>
+
+	Added OSX_Resources for 'make pkg' support.
+
+2009-07-28  Michael Johnson <m.johnson@opendap.org>
+
+	Made test filenames smaller so 'make dist' doesn't leave them out.
+
+	ncml_module.spec: Fixed 'make rpm' failure.
+
+2009-07-27  Michael Johnson <m.johnson@opendap.org>
+
+	o release updates
+
+2009-07-27  Michael Johnson <m.johnson@opendap.org>
+
+	o Installation fixes.
+
+2009-07-27  Michael Johnson <m.johnson@opendap.org>
+
+	o Installation fixes.
+
 2009-07-27  Michael Johnson  <m.johnson@opendap.org>
 
 	* Initial internal release.  

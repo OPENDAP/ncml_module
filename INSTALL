@@ -1,7 +1,7 @@
 
 $Id: INSTALL $
 
-Updated for version 0.9.0 (27 July 2009)
+Updated for version 0.9.1 (18 Aug 2009)
 
 Installation instructions for the OPeNDAP Hyrax server NcML Data Handling Module.
 
@@ -41,10 +41,10 @@ BUILDING THE SOFTWARE
 3*) (*Optional): You can perform a 'make check' to test the module,
     but note that this REQUIRES that you have BOTH the netcdf and hdf4
     handlers installed.  The testsuite uses netcdf and hdf4 datasets
-    for testing.  It also uses DejaGNU, so you'll need that as
-    well.  Please see the BUILD REQUIREMENTS section under TESTSUITE if
-    you wish to run the tests and do not have these handlers
-    installed.  Otherwise, you may skip this step.
+    for testing.  A portion of the suite uses DejaGNU, so you'll
+    need that as well.  Please see the BUILD REQUIREMENTS section
+    under TESTSUITE if you wish to run the tests and do not have these
+    handlers installed.  Otherwise, you may skip this step.
 
 4) Install the handler into the BES by running `make install'. 
 
@@ -62,16 +62,23 @@ BUILDING THE SOFTWARE
 
 7) Restart Hyrax (BOTH the BES and OLFS) to load the module.  
 
-8*) (*Optional): Test the module by looking at the DDX response of the
-   ncml test data that was installed, for example
-   fnoc1_improved.ncml.ddx.  To view this file, you MUST have the
-   netcdf module installed since it wraps the fnoc1.nc dataset.  See
-   REQUIREMENTS->TESTSUITE below for more information.
+8*) (*Optional): Look at test data!
+     
+    First, check the installed sample_virtual_dataset.ncml which does
+    not require any other handlers installed to test.  By default it's
+    at: http://localhost:8080/opendap/ncml/sample_virtual_dataset.ncml
 
-   If you see an error like "Unable to add container, type of data
-   must be specified", then your BES probably is not configured to
-   server netcdf data properly.  Set it up to serve netcdf data, test
-   it, clear the cache, and try again.
+    Second, test the dataset wrapping by looking at the DDX response
+    of the ncml test data that was installed, for example
+    fnoc1_improved.ncml.ddx.  To view this file, you MUST have the
+    netcdf module installed since it wraps the fnoc1.nc dataset.  See
+    REQUIREMENTS->TESTSUITE below for more information.
+
+    If you see an error like "Unable to add container, type of data
+    must be specified", then your BES probably is not configured to
+    server netcdf data properly.  Set it up to serve netcdf data, test
+    it, clear the cache, and try again.
+
 
 ---------------------------------------------------------------------------
 BUILDING FROM THE SVN REPOSITORY
@@ -165,6 +172,10 @@ BUILD REQUIREMENTS
 
 	 o Note: if you install from an RPM, you need to run
 	 "bes-hdf4-data.sh" to tell the BES to load the HDF4 module.
+
+       o The new testsuite now also uses Autotest, which is part of
+       Autoconf.  This should work fine if you have autoconf installed
+       (a prereq) but please let us know if it does not!
 
     o In order to view the test NcML file fnoc1_improved.ncml, you will
       need:

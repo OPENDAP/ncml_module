@@ -1,11 +1,18 @@
 
 $Id: README $
 
-Updated for version 0.9.0 (27 July 2009)
+Updated for version 0.9.1 (18 August 2009)
 
 -------------------------------------------------------------------------
-NOTE: THIS HANDLER IS NOT YET RELEASED!  Please do not use in a live
-server until (Version 1.0.0 or higher).  Thank you.
+NOTE: THIS HANDLER IS NOT YET FULLY PUBLICLY RELEASED!  
+
+Please do not use in a live server until (Version 1.0.0 or higher).
+Thank you.  
+
+[Update 18 Aug 2009: Version 0.9.0 has been through a security audit
+and code review and can be used live for adding just attribute
+metadata. v0.9.1 is still in alpha, however, and has not been audited
+at this time.]
 -------------------------------------------------------------------------
 
 Welcome to the OPeNDAP NcML Data Handler Module for Hyrax!
@@ -21,10 +28,9 @@ please see the INSTALL file.
 More detailed and/or up-to-date documentation for this module can be
 found at: http://docs.opendap.org/index.php/BES_-_Modules_-_NcML_Module
 
-     
-The initial version implements only a subset of NcML 2.2
-functionality, and also adds functionality -- please see the sections
-"Functionality" and "NcML Additions" below.
+The current version implements only a subset of NcML 2.2
+functionality, and also adds some functionality -- please see the
+sections "Functionality" and "NcML Additions" below.
 
 ----------------------------------------------------------------------
 * Contents
@@ -75,19 +81,61 @@ that the BES can load netcdf data.
 * Functionality
 
 This version of the NcML Module implements a subset of NcML
-functionality.  It can:
+functionality.  This section gives a broad overview.  For more
+detaiuled information, please see the online documentation at:
+http://docs.opendap.org/index.php/BES_-_Modules_-_NcML_Module 
 
-     1) Add metadata only to files being served locally (not remotely)
-     2) Add metadata to only one dataset (one <netcdf> node).
-     3) Add, modify, and remove metadata (attributes) and not data (variables).
+This module can:
+
+     * Add metadata only to files being served locally (not remotely)
+     
+     * Add metadata to only one dataset (one <netcdf> node).  
+
+     * Add, modify, and remove metadata (attributes) 
+
+     * Remove and rename existing variables in a wrapped dataset 
+
+     * Create a purely virtual dataset (no wrapped dataset) 
+
+     * Add new variables: scalars of basic type, Structures, and
+       arrays (N-dimensional) of basic types
+
+     * Specify <dimension> elements for named lookup of variable@shape
 
 In particular, this version of the NcML module can only handle a
 subset of the NcML schema.  First, it is restricted to a subset of the
 elements: <netcdf>, <explicit>, <readMetadata>, <attribute>,
-<variable>, and <remove>.
+<variable>, <remove>, <dimension> and <values>.
 
-The <variable> element can not be used to add data, but only be used
-to provide the lexical scope for an <attribute> element.  For example:
+We give an outline of how each element is handled below.
+
+** The <attribute> Element
+
+The <attribute> element can be used to add new metadata, rename old
+metadata, or to change the values of old metadata.  Its basic usage
+follows the NcML 2.2 schema closely with the addition that attribute
+containers may also be specified by using type="Structure" for an
+attribute type.  Please see the online docs for more info.
+
+** The <dimension> Element
+
+The <dimension> element must come at the top of a new <netcdf> block
+(before its use by any variable elements below).  Its scope is the
+netcdf element it is contained within.  Currently, we only allow the
+dimension@name and dimension@length attributes to be specified.  An
+element such as:
+
+	<dimension name="lat" length="360"/>
+
+specifies a mnemonic for the length 360 which can be used later in a
+variable@shape to refer to the integer size 360 by name.  Shared
+dimensions and other attributes of dimension are not currently
+supported and will produce a parse error if used.
+
+** The <variable> Element
+
+The <variable> element can be used to provide the lexical scope for an
+<attribute> element.  For example:
 
 <variable name="u">
   <attribute name="Metadata" type="string">This is metadata!</attribute>
@@ -97,12 +145,43 @@ assumes that a variable named "u" exists (of any type) and the
 attribute "Metadata" will refer to the metadata for that variable.
 These can be nested.
 
-Also, the <remove/> element can only remove attributes and not
-variables.
+<variable> can also be used to add new variables.  These can be
+scalars (shape=""), multidimensional arrays (shape specifies
+dimensions), or Structure's (which can contain other new variables).
+The values for a variable are specified using the <values> element.
+The author can specify uniform data using the values@start and
+values@increment attributes, or can specify the full list of values.
 
-We plan to add more features and NcML functionality, such as the
-ability to add and remove variables and to aggregate data in future
-versions.
+** The <remove> Element
+
+The <remove/> element can be used to remove both attributes and
+variables.  remove@type specifies which item is to be removed.  It is
+used at the scope of the item to remove.
+
+** The <values> Element
+
+Values may be specified for a NEW variable only (i.e. local to the
+NcML file and not existing in a wrapped dataset).  It is a parse error
+to attempt to change the values of a wrapped variable.
+
+The values may be specified as a separated list in the characters
+content of the values element.  values@separator may be used to
+specify the token separator (this is very useful for arrays of
+strings!).  
+
+For numeric types, INSTEAD of characters content, the author may use
+values@start and values@increment to specify autogenerated, uniformly
+distributed values.
+
+** Future Plans
+
+We plan to add more features and NcML functionality:
+
+   *** The next major release will add support for NcML aggregation.
+
+   *** We also plan to allow the netcdf@location to refer to remote
+       data as well as local.  This would be an install and/or compile
+       time option so that it may be turned off for security reasons.
 
 ----------------------------------------------------------------------
 * NcML Additions
