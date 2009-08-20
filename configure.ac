@@ -81,6 +81,6 @@ AC_SUBST([READLINK_F])
 
 OPENDAP_DEBUG_OPTION
 
-AC_CONFIG_FILES([Makefile bes-testsuite/Makefile tests/Makefile tests/atlocal])
+AC_CONFIG_FILES([Makefile tests/Makefile tests/atlocal])
 
 AC_OUTPUT
