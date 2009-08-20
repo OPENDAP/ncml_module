@@ -83,10 +83,10 @@ BUILDING THE SOFTWARE
 ---------------------------------------------------------------------------
 BUILDING FROM THE SVN REPOSITORY
 
-  If you are building from a SVN checkout, run 'autoreconf --verbose'
+  If you are building from a SVN checkout, run 'autoreconf --install --verbose'
   before './configure; make'. If you try to run autoconf, etc., by
   hand and wind up with build files that don't work, use 'autoreconf
-  --force --verbose'. Once autoreconf has made the configure and
+  --force --install --verbose'. Once autoreconf has made the configure and
   Makefile.in files, do ./configure; make; make install as outlined
   above.  Make sure you have all the GNU tools necessary --- see BUILD
   REQUIREMENTS below.
@@ -105,7 +105,7 @@ BUILD REQUIREMENTS
 
       Earlier versions may work, but
       may cause problems, particularly with the 'distcheck' target for
-      make. Given those requirements, use 'autoreconf --force
+      make. Given those requirements, use 'autoreconf --force --install
       --verbose' and then build as described above.
 
       If you have an Intel Mac and you are experiencing configuration
