@@ -238,9 +238,9 @@ NOTES
 
   o The NcML Module was built to work with Hyrax 1.5.2 server.
 
-  o The Int32 and UInt32 tests (min and max bounds, 4 total tests) are
-  known to fail for libdap 3.9.3.  3.9.4 or greater should solve this
-  problem.
+  o The Int32 and UInt32 min and max bounds tests -- 42, 42, 47, 48 --
+  are known to fail for libdap 3.9.3.  3.9.4 or greater should solve
+  this problem.
 
   o There is also a known (small) memory leak for libdap 3.9.3.
   Again, 3.9.4 will solve this.
