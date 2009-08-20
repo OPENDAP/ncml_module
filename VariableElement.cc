@@ -28,17 +28,19 @@
 /////////////////////////////////////////////////////////////////////////////
 #include "VariableElement.h"
 
-#include "Array.h"
-#include "BaseType.h"
+#include <libdap/Array.h>
+#include <libdap/BaseType.h>
+#include <libdap/Structure.h>
+#include <libdap/dods-limits.h>
 #include <ctype.h>
 #include "DimensionElement.h"
-#include "dods-limits.h"
 #include <memory>
 #include "MyBaseTypeFactory.h"
 #include "NCMLBaseArray.h"
 #include "NCMLDebug.h"
 #include "NCMLParser.h"
 #include "NCMLUtil.h"
+#include "RenamedArrayWrapper.h"
 #include <sstream>
 
 using namespace libdap;
@@ -260,18 +262,18 @@ namespace ncml_module
     // Call set_name on the orgName variable.
     BESDEBUG("ncml", "Renaming variable " << _orgName << " to " << _name << endl);
 
-    // Ugh, if we are parsing a DataDDS then we need to force the underlying data
-    // to be read in before we rename it since otherwise the read() won't find the
-    // renamed variables in at least the NetCDF handler case.
-    // HACK this is inefficient since we must load the entire dataset
-    // even if we only want a small hyperslab...
-    if (p.parsingDataRequest() && !pOrgVar->read_p())
+    // If we are doing data, we need to handle some variables (Array)
+    // specially since they might refer to underlying data by the new name
+    if (p.parsingDataRequest())
       {
-        pOrgVar->read();
-
-        // If the variable is an Array, we need to convert it to our NCMLArray<T> subclass
-        // in order for constraints to work after we call read()...
-        // This will remove the old one and replace it under the new _name if it's an Array.
+        // If not an Array, force it to read or we won't find the new name in the file for HDF at least...
+        if (!dynamic_cast<Array*>(pOrgVar))
+          {
+            pOrgVar->read();
+          }
+        // If the variable is an Array, we need to wrap it in a RenamedArrayWrapper
+        // so that it finds it data correctly.
+        // This will remove the old one and replace our wrapper under the new _name if it's an Array subclass!
         pOrgVar = replaceArrayIfNeeded(p, pOrgVar, _name);
 
         // This is safe whether we converted it or not.  Rename!
@@ -416,6 +418,7 @@ namespace ncml_module
       }
   }
 
+#if 0 // old school copy method
   libdap::BaseType*
   VariableElement::replaceArrayIfNeeded(NCMLParser& p, libdap::BaseType* pOrgVar, const string& name)
   {
@@ -439,6 +442,34 @@ namespace ncml_module
     NCMLUtil::setVariableNameProperly(pNewArray.get(), name);
 
     // Add the new one.  Unfortunately this copies it under the libdap hood. ARGH!
+    // So just use the get() and let the auto_ptr kill our copy.
+    p.addCopyOfVariableAtCurrentScope(*(pNewArray.get()));
+
+    return p.getVariableInCurrentVariableContainer(name);
+  }
+#endif
+
+  libdap::BaseType*
+  VariableElement::replaceArrayIfNeeded(NCMLParser& p, libdap::BaseType* pOrgVar, const string& name)
+  {
+    VALID_PTR(pOrgVar);
+    Array* pOrgArray = dynamic_cast<libdap::Array*>(pOrgVar);
+    if (!pOrgArray)
+      {
+        return pOrgVar;
+      }
+
+    BESDEBUG("ncml", "VariableElement::replaceArray if needed.  Renaming an Array means we need to wrap it with RenamedArrayWrapper!" << endl);
+
+    // Must make a clone() since deleteVariableAtCurrentScope from container below will destroy pOrgArray!
+    auto_ptr<RenamedArrayWrapper> pNewArray =
+      auto_ptr<RenamedArrayWrapper>(new RenamedArrayWrapper(dynamic_cast<Array*>(pOrgArray->ptr_duplicate())));
+    p.deleteVariableAtCurrentScope(pOrgArray->name());
+
+    // Make sure the new name is set.
+    NCMLUtil::setVariableNameProperly(pNewArray.get(), name);
+
+    // Add the new one.  Unfortunately this copies it under    the libdap hood. ARGH!
     // So just use the get() and let the auto_ptr kill our copy.
     p.addCopyOfVariableAtCurrentScope(*(pNewArray.get()));
 

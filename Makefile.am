@@ -36,6 +36,7 @@ NCML_SRCS = \
 		NetcdfElement.cc \
 		ReadMetadataElement.cc \
 		RemoveElement.cc \
+		RenamedArrayWrapper.cc \
 		SaxParserWrapper.cc \
 		SaxParser.cc \
 		ScopeStack.cc \
@@ -63,6 +64,7 @@ NCML_HDRS = \
 		NetcdfElement.h \
 		ReadMetadataElement.h \
 		RemoveElement.h \
+		RenamedArrayWrapper.h \
 		SaxParserWrapper.h \
 		SaxParser.h \
 		Shape.h \

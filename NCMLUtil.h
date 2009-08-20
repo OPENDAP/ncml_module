@@ -43,6 +43,12 @@ class BESDapResponse;
 #include <string>
 #include <vector>
 
+// If there isn't one defined yet, define a safe delete
+// to clear ptr after delete to avoid problems.
+#ifndef SAFE_DELETE
+#define SAFE_DELETE(a) { delete (a); (a) = 0; }
+#endif // SAFE_DELETE
+
 namespace ncml_module
 {
   /**

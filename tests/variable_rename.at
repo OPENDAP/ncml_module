@@ -17,9 +17,19 @@ AT_CHECK_ALL_DAP_RESPONSES([var_orgName_Structure.ncml])
 dnl Variable Rename with Constraints
 
 dnl Check a Structure rename with constraint on renamed variables
-AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([var_orgName_Structure.ncml], ["DataGranule.PlanetaryGrid.precipitate"], [var_orgName_Structure_constraint_1.ncml])
+AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([var_orgName_Structure.ncml], [ DataGranule.PlanetaryGrid.precipitate ], [var_orgName_Structure_constraint_1.ncml])
+dnl Selection and projection, a slice through the 180 degree line
+AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([var_orgName_Structure.ncml], [[ DataGranule.PlanetaryGrid.precipitate[0][179][0:79] ]], [var_orgName_Structure_cons_2.ncml])
 
-dnl Check a hyperslab constraint on renamed variable
+dnl Check hyperslab constraints on renamed variables
+dnl Boundary min
+AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([var_orgName.ncml],[[ wind_u[0][0][0] ]],[var_orgName_cons_2.ncml])
+dnl some element in the middle
 AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([var_orgName.ncml],[[ wind_u[10][10][10] ]],[var_orgName_cons_1.ncml])
+dnl end boundary
+AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([var_orgName.ncml],[[ wind_u[15][16][20] ]],[var_orgName_cons_3.ncml])
+dnl "random" 2D slice
+AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([var_orgName.ncml],[[ wind_u[9][0:2:16][0:20] ]],[var_orgName_cons_4.ncml])
+
 
 

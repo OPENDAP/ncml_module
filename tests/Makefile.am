@@ -42,8 +42,7 @@ clean-local:
 #distclean-local:
 #	-rm atconfig
 
-TEST_FILES = 	
-		variable_misc.at \
+TEST_FILES = 	variable_misc.at \
 		variable_new_arrays.at \
 		variable_new_multi_arrays.at \
 		variable_new_scalars.at \
