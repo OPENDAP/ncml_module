@@ -56,8 +56,8 @@ AUTOM4TE = $(SHELL) $(top_srcdir)/conf/missing --run autom4te
 #AUTOM4TE = autom4te
 AUTOTEST = $(AUTOM4TE) --language=autotest
 $(TESTSUITE): $(srcdir)/testsuite.at $(srcdir)/package.m4 bes.conf $(TEST_FILES)
-	$(AUTOTEST) -I '$(srcdir)' -o ${abs_top_builddir}/$@.tmp $@.at
-	mv ${abs_top_builddir}/$@.tmp ${abs_top_builddir}/$@
+	$(AUTOTEST) -I '$(srcdir)' -o ${abs_builddir}/$@.tmp $@.at
+	mv ${abs_builddir}/$@.tmp ${abs_builddir}/$@
 
 # We need to find out where the preinstalled modules are
 BES_MODULES_DIR = `bes-config --modulesdir`

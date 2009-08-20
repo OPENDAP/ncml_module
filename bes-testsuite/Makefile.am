@@ -27,7 +27,7 @@ DISTCLEANFILES = bes.conf
 BES_MODULES_DIR = `bes-config --modulesdir`
 
 # Resolve the ../ in the path so the BES doesn't complain about them
-canonical_abs_top_srcdir = `readlink -f ${abs_top_srcdir}`
+canonical_abs_top_srcdir = `${READLINK_F} ${abs_top_srcdir}`
 
 # this fails on distcheck...
 #		-e "s%[@]libdir[@]%${libdir}%" 

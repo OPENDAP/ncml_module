@@ -33,9 +33,6 @@ AC_SEARCH_LIBS([isdigit], [cctype])
 # Checks for library functions.
 AC_CHECK_FUNCS([strchr isdigit])
 
-# We use perl to replace 'readlink -f' if it doesn't exist...
-AC_CHECK_PROG(PERL, perl, perl)
-
 dnl Checks for specific libraries
 AC_CHECK_LIBDAP([3.9.2],
  [
@@ -53,6 +50,8 @@ AC_CHECK_BES([3.7.2],
 
 # Test for a readlink bug, see
 # <http://lists.gnu.org/archive/html/bug-coreutils/2008-02/msg00126.html>.
+# We use perl to replace 'readlink -f' if it doesn't exist...
+AC_CHECK_PROG(PERL, perl, perl)
 AC_MSG_CHECKING([for a suitable ``readlink -f'' program])
 [mkdir readlink-test &&
 mkdir readlink-test/a-long &&
