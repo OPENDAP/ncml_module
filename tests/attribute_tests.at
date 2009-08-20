@@ -1,0 +1,52 @@
+dnl Test suite for attributes
+
+AT_BANNER([Testing attributes...])
+
+dnl Basic attribute addition test
+AT_CHECK_ALL_DAP_RESPONSES([fnoc1_improved.ncml])
+
+dnl Test explicit element
+AT_CHECK_ALL_DAP_RESPONSES([fnoc1_explicit.ncml])
+
+dnl Test remove element
+AT_CHECK_ALL_DAP_RESPONSES([fnoc1_remove.ncml])
+
+dnl Test renaming
+AT_CHECK_ALL_DAP_RESPONSES([fnoc1_rename_test.ncml])
+
+dnl Test simple passthrough on a nest
+AT_CHECK_ALL_DAP_RESPONSES([nested_passthrough.ncml])
+
+dnl Test nested attribute containers (type="Structure")
+AT_CHECK_ALL_DAP_RESPONSES([nest_test.ncml])
+
+dnl Select out just one field
+AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([nested_passthrough.ncml], [[ DATA_GRANULE.PlanetaryGrid.percipitate ]], [nested_passthrough_cons_1.ncml])
+
+dnl Check that making invalid values for a given type produces an error!
+AT_RUN_BES_AND_MATCH([types/byte_bounds.ncml],["ddx"],["ParseError: Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/byte_invalid.ncml],["ddx"],["ParseError: Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/float32_invalid.ncml],["ddx"],["ParseError: Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/float32_min_bounds.ncml],["ddx"],["ParseError: Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/float32_max_bounds.ncml],["ddx"],["ParseError: Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/float64_invalid.ncml],["ddx"],["ParseError: Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/float64_min_bounds.ncml],["ddx"],["ParseError: Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/float64_max_bounds.ncml],["ddx"],["ParseError: Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/int16_invalid.ncml],["ddx"],["ParseError: Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/int16_min_bounds.ncml],["ddx"],["ParseError: Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/int16_max_bounds.ncml],["ddx"],["ParseError: Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/int32_invalid.ncml],["ddx"],["ParseError: Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/int32_min_bounds.ncml],["ddx"],["ParseError: Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/int32_max_bounds.ncml],["ddx"],["ParseError: Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/uint16_invalid.ncml],["ddx"],["ParseError: Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/uint16_min_bounds.ncml],["ddx"],["ParseError: Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/uint16_max_bounds.ncml],["ddx"],["ParseError: Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/uint32_invalid.ncml],["ddx"],["ParseError: Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/uint32_min_bounds.ncml],["ddx"],["ParseError: Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/uint32_max_bounds.ncml],["ddx"],["ParseError: Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/string_non_ascii.ncml],["ddx"],["ParseError: Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/string_overflow.ncml],["ddx"],["ParseError: Invalid Value"])
+
+
+
+
