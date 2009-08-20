@@ -13,7 +13,7 @@ lib_besdir=$(libdir)/bes
 lib_bes_LTLIBRARIES = libncml_module.la
 dist_bin_SCRIPTS = bes-ncml-data.sh
 
-SUBDIRS = bes-testsuite tests
+SUBDIRS = tests
 #TESTS = tests/testsuite
 
 BES_SRCS:=

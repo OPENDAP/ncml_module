@@ -40,11 +40,11 @@ BUILDING THE SOFTWARE
 
 3*) (*Optional): You can perform a 'make check' to test the module,
     but note that this REQUIRES that you have BOTH the netcdf and hdf4
-    handlers installed.  The testsuite uses netcdf and hdf4 datasets
-    for testing.  A portion of the suite uses DejaGNU, so you'll
-    need that as well.  Please see the BUILD REQUIREMENTS section
-    under TESTSUITE if you wish to run the tests and do not have these
-    handlers installed.  Otherwise, you may skip this step.
+    handlers already installed and working in Hyrax!  The testsuite
+    uses netcdf and hdf4 datasets for testing.  Please see the BUILD
+    REQUIREMENTS section under TESTSUITE if you wish to run the tests
+    and do not have these handlers installed.  Otherwise, you may skip
+    this step.
 
 4) Install the handler into the BES by running `make install'. 
 
@@ -155,8 +155,6 @@ BUILD REQUIREMENTS
 
        o perl: If you don't have a valid `readlink -f` command (Max OS
        	 X, e.g.)  then configure uses perl instead.
-
-       o DejaGNU (http://www.gnu.org/software/dejagnu/)
 
        o The current version of the netCDF Data Handling Module for
        	 Hyrax and its dependency: libnetcdf 3.x (or greater).  The
