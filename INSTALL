@@ -152,7 +152,10 @@ BUILD REQUIREMENTS
   o TESTSUITE: (for 'make check')
 
     o In order for the 'make check' tests to succeed, you will need:
-      
+
+       o perl: If you don't have a valid `readlink -f` command (Max OS
+       	 X, e.g.)  then configure uses perl instead.
+
        o DejaGNU (http://www.gnu.org/software/dejagnu/)
 
        o The current version of the netCDF Data Handling Module for
