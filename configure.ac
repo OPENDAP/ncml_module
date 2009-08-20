@@ -33,6 +33,9 @@ AC_SEARCH_LIBS([isdigit], [cctype])
 # Checks for library functions.
 AC_CHECK_FUNCS([strchr isdigit])
 
+# We use perl to replace 'readlink -f' if it doesn't exist...
+AC_CHECK_PROG(PERL, perl, perl)
+
 dnl Checks for specific libraries
 AC_CHECK_LIBDAP([3.9.2],
  [
@@ -47,6 +50,35 @@ AC_CHECK_BES([3.7.2],
 ],
 [ AC_MSG_ERROR([Could not find bes library and headers])
 ])
+
+# Test for a readlink bug, see
+# <http://lists.gnu.org/archive/html/bug-coreutils/2008-02/msg00126.html>.
+AC_MSG_CHECKING([for a suitable ``readlink -f'' program])
+[mkdir readlink-test &&
+mkdir readlink-test/a-long &&
+: > readlink-test/a-long/f &&
+ln -s a-long readlink-test/a &&
+for READLINK_F in \
+  'readlink -f' \
+  realpath \
+  false
+do
+  if
+    $READLINK_F > /dev/null 2>&1 \
+      readlink-test/a/../a/f 
+  then
+    break
+  fi
+done &&
+rm -rf readlink-test &&
+if [ "$READLINK_F" = false ]
+then]
+  AC_MSG_RESULT([none found, using own replacement])
+  [READLINK_F='perl -e '\''use Cwd qw(abs_path); print abs_path $$ARGV[0];'\'
+else]
+  AC_MSG_RESULT([$READLINK_F])
+[fi]
+AC_SUBST([READLINK_F])
 
 OPENDAP_DEBUG_OPTION
 
