@@ -86,7 +86,7 @@ dnl $3 == "pattern"
 dnl $4 == (optional) constraint_expression
 m4_define([AT_RUN_BES_AND_MATCH],
 [
-AT_SETUP([$2 response for $1])
+AT_SETUP([$2 response for $1: seeking match to $3])
 AT_KEYWORDS([$2])
 AT_MAKE_BESCMD_FILE([$1], [$2], [$4])
 AT_CHECK([besstandalone -c bes_conf_path -i ./test.bescmd], [], [stdout], [ignore])
