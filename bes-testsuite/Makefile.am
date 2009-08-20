@@ -23,12 +23,21 @@ EXTRA_DIST = ncml besstandalone.ncml common_tests.exp bes.conf.in
 
 DISTCLEANFILES = bes.conf
 
+# We need to find out where the preinstalled modules are
+BES_MODULES_DIR = `bes-config --modulesdir`
+
+# Resolve the ../ in the path so the BES doesn't complain about them
+canonical_abs_top_srcdir = `readlink -f ${abs_top_srcdir}`
+
+# this fails on distcheck...
+#		-e "s%[@]libdir[@]%${libdir}%" 
 bes.conf: bes.conf.in ../config.status
 	sed -e "s%[@]pkgdatadir[@]%${pkgdatadir}%" \
 		-e "s%[@]sysconfdir[@]%${sysconfdir}%" \
-		-e "s%[@]libdir[@]%${libdir}%" \
+		-e "s%[@]beslibdir[@]%${BES_MODULES_DIR}%" \
 		-e "s%[@]datadir[@]%${datadir}%" \
-		-e "s%[@]abs_top_srcdir[@]%${abs_top_srcdir}%" \
+		-e "s%[@]abs_top_srcdir[@]%${canonical_abs_top_srcdir}%" \
 		-e "s%[@]abs_top_builddir[@]%${abs_top_builddir}%" \
 		-e "s%[@]bindir[@]%${bindir}%" $< > bes.conf
+
 

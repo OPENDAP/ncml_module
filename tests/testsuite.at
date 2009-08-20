@@ -1,8 +1,10 @@
 m4_include([package.m4])
 
 # The template file used to create the input files for besstandalone
-m4_define([bescmd_template], [$srcdir/template.bescmd.in])
+m4_define([bescmd_template],[$abs_srcdir/template.bescmd.in])
+m4_define([bes_conf_path],[$abs_builddir/bes.conf])
 m4_define([datadir], [/data/ncml])
+m4_define([baselines_path],[${abs_srcdir}/baselines])
 
 AT_INIT([ncml autotest testsuite])
 
@@ -39,11 +41,11 @@ dnl $3 == baseline_filename (with path prefix but not response suffix!)
 dnl $4 == (optional) constraint_expression
 m4_define([AT_RUN_BES_AND_COMPARE],
 [
-AT_SETUP([Comparing $2 response for $1 to baseline $srcdir/baselines/$3])
+AT_SETUP([Comparing $2 response for $1 to baseline baselines_path/$3])
 AT_KEYWORDS([$2])
 AT_MAKE_BESCMD_FILE([$1], [$2], [$4])
-AT_CHECK([besstandalone -c $top_srcdir/bes-testsuite/bes.conf -i ./test.bescmd], [], [stdout], [ignore])
-AT_CHECK([diff -w -b -B $srcdir/baselines/$3.$2 stdout], [], [ignore], [], [])
+AT_CHECK([besstandalone -c bes_conf_path -i ./test.bescmd], [], [stdout], [ignore])
+AT_CHECK([diff -w -b -B baselines_path/$3.$2 stdout], [], [ignore], [], [])
 AT_CLEANUP
 ])
 
@@ -66,12 +68,12 @@ dnl $2 == baseline_filename (with path prefix but not response suffix!)
 dnl $3 == (optional) constraint_expression
 m4_define([AT_RUN_BES_AND_COMPARE_DODS_GETDAP],
 [
-AT_SETUP([Comparing dods response for $1 to getdap (ascii) baseline $srcdir/baselines/$2])
+AT_SETUP([Comparing dods response for $1 to getdap (ascii) baseline baselines_path/$2])
 AT_KEYWORDS([dods])
 AT_MAKE_BESCMD_FILE([$1], [dods], [$3])
-AT_CHECK([besstandalone -c $top_srcdir/bes-testsuite/bes.conf -i ./test.bescmd], [], [stdout], [ignore])
+AT_CHECK([besstandalone -c bes_conf_path -i ./test.bescmd], [], [stdout], [ignore])
 AT_CHECK([getdap stdout > stdout.getdap], [], [ignore], [ignore])
-AT_CHECK([diff -w -b -B $srcdir/baselines/$2.dods.getdap stdout.getdap], [], [ignore], [], [])
+AT_CHECK([diff -w -b -B baselines_path/$2.dods.getdap stdout.getdap], [], [ignore], [], [])
 AT_CLEANUP
 ])
 
@@ -87,7 +89,7 @@ m4_define([AT_RUN_BES_AND_MATCH],
 AT_SETUP([$2 response for $1])
 AT_KEYWORDS([$2])
 AT_MAKE_BESCMD_FILE([$1], [$2], [$4])
-AT_CHECK([besstandalone -c $top_srcdir/bes-testsuite/bes.conf -i ./test.bescmd], [], [stdout], [ignore])
+AT_CHECK([besstandalone -c bes_conf_path -i ./test.bescmd], [], [stdout], [ignore])
 AT_CHECK([fgrep $3 stdout], [], [ignore], [], [])
 AT_CLEANUP
 ])

@@ -41,17 +41,10 @@ BUILDING THE SOFTWARE
 3*) (*Optional): You can perform a 'make check' to test the module,
     but note that this REQUIRES that you have BOTH the netcdf and hdf4
     handlers installed.  The testsuite uses netcdf and hdf4 datasets
-    for testing.  A portion of the suite uses DejaGNU, so you'll need
-    that as well.  Please see the BUILD REQUIREMENTS section under
-    TESTSUITE if you wish to run the tests and do not have these
-    handlers installed.  Otherwise, you may skip this step.  A few
-    tests (numeric overflows, see NOTES below) fail for older versions
-    of libdap.  If these fail, make check will stop short.  You can
-    also run the Autotest suite by typing:
-
-    > cd tests; make check; cd ../
-
-    To continue and run the autotest suite if the bes-testsuite fails.
+    for testing.  A portion of the suite uses DejaGNU, so you'll
+    need that as well.  Please see the BUILD REQUIREMENTS section
+    under TESTSUITE if you wish to run the tests and do not have these
+    handlers installed.  Otherwise, you may skip this step.
 
 4) Install the handler into the BES by running `make install'. 
 
@@ -90,10 +83,10 @@ BUILDING THE SOFTWARE
 ---------------------------------------------------------------------------
 BUILDING FROM THE SVN REPOSITORY
 
-  If you are building from a SVN checkout, run 'autoreconf --verbose --install'
+  If you are building from a SVN checkout, run 'autoreconf --verbose'
   before './configure; make'. If you try to run autoconf, etc., by
   hand and wind up with build files that don't work, use 'autoreconf
-  --force --install --verbose'. Once autoreconf has made the configure and
+  --force --verbose'. Once autoreconf has made the configure and
   Makefile.in files, do ./configure; make; make install as outlined
   above.  Make sure you have all the GNU tools necessary --- see BUILD
   REQUIREMENTS below.

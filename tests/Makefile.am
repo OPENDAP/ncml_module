@@ -17,9 +17,17 @@ $(srcdir)/package.m4: $(top_srcdir)/configure.ac
 	echo '  [@PACKAGE_BUGREPORT@])'; \
 	} >'$(srcdir)/package.m4'
 
-EXTRA_DIST = testsuite.at $(srcdir)/package.m4 $(TESTSUITE) atlocal.in \
-	template.bescmd.in baselines
 TESTSUITE = $(srcdir)/testsuite
+TEST_FILES = 	variable_misc.at \
+		variable_new_arrays.at \
+		variable_new_multi_arrays.at \
+		variable_new_scalars.at \
+		variable_new_structures.at \
+		variable_remove.at \
+		variable_rename.at 
+
+EXTRA_DIST = testsuite.at $(TEST_FILES) $(srcdir)/package.m4 $(TESTSUITE) atlocal.in \
+	template.bescmd.in bes.conf.in baselines
 
 check-local: atconfig atlocal $(TESTSUITE)
 	$(SHELL) '$(TESTSUITE)' $(TESTSUITEFLAGS)
@@ -38,23 +46,34 @@ clean-local:
 	test ! -f '$(TESTSUITE)' || \
 	$(SHELL) '$(TESTSUITE)' --clean
 
-# Not sure if we need this yet...
-#distclean-local:
-#	-rm atconfig
+distclean-local:
+	-rm atconfig
+	-rm bes.conf
 
-TEST_FILES = 	variable_misc.at \
-		variable_new_arrays.at \
-		variable_new_multi_arrays.at \
-		variable_new_scalars.at \
-		variable_new_structures.at \
-		variable_remove.at \
-		variable_rename.at 
 
 # Use the missing script for better error checking on autom4te run.
 AUTOM4TE = $(SHELL) $(top_srcdir)/conf/missing --run autom4te
 #AUTOM4TE = autom4te
 AUTOTEST = $(AUTOM4TE) --language=autotest
-$(TESTSUITE): $(srcdir)/testsuite.at $(srcdir)/package.m4 $(TEST_FILES)
-	$(AUTOTEST) -I '$(srcdir)' -o $@.tmp $@.at
-	mv $@.tmp $@
+$(TESTSUITE): $(srcdir)/testsuite.at $(srcdir)/package.m4 bes.conf $(TEST_FILES)
+	$(AUTOTEST) -I '$(srcdir)' -o ${abs_top_builddir}/$@.tmp $@.at
+	mv ${abs_top_builddir}/$@.tmp ${abs_top_builddir}/$@
+
+# We need to find out where the preinstalled modules are
+BES_MODULES_DIR = `bes-config --modulesdir`
+
+# Resolve the ../ in the path so the BES doesn't complain about them
+canonical_abs_top_srcdir = `readlink -f ${abs_top_srcdir}`
+
+# this fails on distcheck...
+#		-e "s%[@]libdir[@]%${libdir}%" 
+bes.conf: bes.conf.in ../config.status
+	sed -e "s%[@]pkgdatadir[@]%${pkgdatadir}%" \
+		-e "s%[@]sysconfdir[@]%${sysconfdir}%" \
+		-e "s%[@]beslibdir[@]%${BES_MODULES_DIR}%" \
+		-e "s%[@]datadir[@]%${datadir}%" \
+		-e "s%[@]abs_top_srcdir[@]%${canonical_abs_top_srcdir}%" \
+		-e "s%[@]abs_top_builddir[@]%${abs_top_builddir}%" \
+		-e "s%[@]bindir[@]%${bindir}%" $< > bes.conf
+
 
