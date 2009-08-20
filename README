@@ -1,7 +1,7 @@
 
 $Id: README $
 
-Updated for version 0.9.1 (18 August 2009)
+Updated for version 0.9.1 (20 August 2009)
 
 -------------------------------------------------------------------------
 NOTE: THIS HANDLER IS NOT YET FULLY PUBLICLY RELEASED!  
@@ -9,7 +9,7 @@ NOTE: THIS HANDLER IS NOT YET FULLY PUBLICLY RELEASED!
 Please do not use in a live server until (Version 1.0.0 or higher).
 Thank you.  
 
-[Update 18 Aug 2009: Version 0.9.0 has been through a security audit
+[Update 20 Aug 2009: Version 0.9.0 has been through a security audit
 and code review and can be used live for adding just attribute
 metadata. v0.9.1 is still in alpha, however, and has not been audited
 at this time.]

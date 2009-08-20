@@ -2,7 +2,7 @@
 $Id: NEWS $
 
 -----------------------------------------------------------------------
-Version 0.9.1 (18 Aug 2009)
+Version 0.9.1 (20 Aug 2009)
 
  * Added functionality to remove and rename variables in an existing
    (wrapped) dataset using <remove> and variable@orgName in the proper
@@ -18,7 +18,8 @@ Version 0.9.1 (18 Aug 2009)
    dimensions in a variable@shape.  These are not shared, but simply
    refer to the dimension@length for the specified dimension.
 
- * New $srcdir/tests Autotest framework testbed. 
+ * New $srcdir/tests Autotest framework testbed.  Removed dependency
+   on DejaGNU.
 
 -----------------------------------------------------------------------
 Version 0.9.0 (27 Jul 2009)
