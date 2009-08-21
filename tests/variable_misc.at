@@ -8,4 +8,8 @@ dnl Test our installed sample virtual dataset works
 AT_CHECK_ALL_DAP_RESPONSES([sample_virtual_dataset.ncml])
 AT_CHECK_DATADDS_GETDAP([sample_virtual_dataset.ncml])
 
+dnl Test reentrance (wrapping NcML file within NcML file 
+AT_CHECK_ALL_DAP_RESPONSES([reentrancy_test.ncml])
+
+
 
