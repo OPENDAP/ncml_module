@@ -32,6 +32,7 @@
 #include <BESConstraintFuncs.h>
 #include <BESContainerStorage.h>
 #include <BESContainerStorageList.h>
+#include <BESDapNames.h>
 #include "BESDataDDSResponse.h"
 #include <BESDataNames.h>
 #include <BESDASResponse.h>
