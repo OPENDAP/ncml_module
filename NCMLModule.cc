@@ -60,21 +60,21 @@ NCMLModule::initialize( const string &modname )
     string cmd_name ;
 
     // Dap services
-    BESDEBUG( modname, modname << " handles dap services" << endl )
+    BESDEBUG( modname, modname << " handles dap services" << endl );
     BESDapService::handle_dap_service( modname ) ;
 
-    BESDEBUG( modname, "    adding " << NCML_CATALOG << " catalog" << endl )
+    BESDEBUG( modname, "    adding " << NCML_CATALOG << " catalog" << endl );
     if( !BESCatalogList::TheCatalogList()->ref_catalog( NCML_CATALOG ) )
       {
         BESCatalogList::TheCatalogList()->add_catalog( new BESCatalogDirectory( NCML_CATALOG ) ) ;
      }
      else
      {
-         BESDEBUG( modname, "    catalog already exists, skipping" << endl )
+         BESDEBUG( modname, "    catalog already exists, skipping" << endl );
      }
 
      BESDEBUG( modname, "    adding catalog container storage " << NCML_CATALOG
-                     << endl )
+                     << endl );
      if( !BESContainerStorageList::TheList()->ref_persistence( NCML_CATALOG ) )
      {
          BESContainerStorageCatalog *csc =
@@ -83,7 +83,7 @@ NCMLModule::initialize( const string &modname )
      }
      else
      {
-         BESDEBUG( modname, "    storage already exists, skipping" << endl )
+         BESDEBUG( modname, "    storage already exists, skipping" << endl );
      }
 
 
@@ -108,10 +108,10 @@ NCMLModule::terminate( const string &modname )
     string cmd_name ;
 
     BESDEBUG( modname, "    removing catalog container storage"
-                     << NCML_CATALOG << endl )
+                     << NCML_CATALOG << endl );
     BESContainerStorageList::TheList()->deref_persistence( NCML_CATALOG ) ;
 
-    BESDEBUG( modname, "    removing " << NCML_CATALOG << " catalog" << endl )
+    BESDEBUG( modname, "    removing " << NCML_CATALOG << " catalog" << endl );
     BESCatalogList::TheCatalogList()->deref_catalog( NCML_CATALOG ) ;
 
     // TERM_END
