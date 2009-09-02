@@ -46,7 +46,7 @@
 #include <BESTextInfo.h>
 #include <BESUtil.h>
 #include <BESVersionInfo.h>
-#include "cgi_util.h"
+#include "mime_util.h"
 #include "DDSLoader.h"
 #include <memory>
 #include "NCMLDebug.h"
