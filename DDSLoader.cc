@@ -45,7 +45,7 @@
 #include <BESTextInfo.h>
 #include <BESUtil.h>
 #include <BESVersionInfo.h>
-#include <libdap/mime_util.h>
+#include <mime_util.h>
 #include "NCMLDebug.h"
 #include "NCMLUtil.h"
 

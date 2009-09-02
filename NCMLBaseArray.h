@@ -29,7 +29,7 @@
 #ifndef __NCML_MODULE__NCMLBASEARRAY_H__
 #define __NCML_MODULE__NCMLBASEARRAY_H__
 
-#include <libdap/Array.h>
+#include <Array.h>
 #include <memory>
 #include "Shape.h"
 

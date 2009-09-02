@@ -29,7 +29,7 @@
 #ifndef __NCML_MODULE__RENAMED_ARRAY_WRAPPER_H__
 #define __NCML_MODULE__RENAMED_ARRAY_WRAPPER_H__
 
-#include <libdap/Array.h>
+#include <Array.h>
 #include <vector>
 using std::vector;
 using std::string;

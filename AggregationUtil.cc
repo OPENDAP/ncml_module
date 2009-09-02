@@ -27,9 +27,9 @@
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
 #include "AggregationUtil.h"
-#include <libdap/AttrTable.h>
-#include <libdap/BaseType.h>
-#include <libdap/DDS.h>
+#include <AttrTable.h>
+#include <BaseType.h>
+#include <DDS.h>
 #include "NCMLDebug.h" // This the ONLY dependency on NCML Module I want in this class since the macros there are general it's ok...
 
 using std::string;

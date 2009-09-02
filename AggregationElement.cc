@@ -29,7 +29,7 @@
 
 #include "AggregationElement.h"
 #include "AggregationUtil.h"
-#include <libdap/AttrTable.h>
+#include <AttrTable.h>
 #include "NCMLDebug.h"
 #include "NCMLParser.h"
 #include "NetcdfElement.h"

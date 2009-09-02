@@ -28,10 +28,10 @@
 /////////////////////////////////////////////////////////////////////////////
 #include "VariableElement.h"
 
-#include <libdap/Array.h>
-#include <libdap/BaseType.h>
-#include <libdap/Structure.h>
-#include <libdap/dods-limits.h>
+#include <Array.h>
+#include <BaseType.h>
+#include <Structure.h>
+#include <dods-limits.h>
 #include <ctype.h>
 #include "DimensionElement.h"
 #include <memory>

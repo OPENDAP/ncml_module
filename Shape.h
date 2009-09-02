@@ -32,7 +32,7 @@
 
 #include <iostream>
 #include <iterator>
-#include <libdap/Array.h>
+#include <Array.h>
 #include "NCMLDebug.h"
 #include <string>
 #include <vector>

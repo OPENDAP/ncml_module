@@ -29,7 +29,7 @@
 #ifndef __NCML_MODULE__AGGREGATION_UTIL_H__
 #define __NCML_MODULE__AGGREGATION_UTIL_H__
 
-#include <libdap/AttrTable.h>
+#include <AttrTable.h>
 #include <string>
 #include <vector>
 

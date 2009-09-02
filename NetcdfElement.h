@@ -175,7 +175,7 @@ namespace ncml_module
   private:
 
     /** Ask the parser to load our location into our response object. */
-    void NetcdfElement::loadLocation(NCMLParser& p);
+    void loadLocation(NCMLParser& p);
 
   private:
     string _location;
