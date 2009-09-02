@@ -29,7 +29,6 @@
 #include "config.h"
 #include "DDSLoader.h"
 
-#include "cgi_util.h"
 #include <BESConstraintFuncs.h>
 #include <BESContainerStorage.h>
 #include <BESContainerStorageList.h>
@@ -46,6 +45,7 @@
 #include <BESTextInfo.h>
 #include <BESUtil.h>
 #include <BESVersionInfo.h>
+#include <mime_util.h>
 #include "NCMLDebug.h"
 #include "NCMLUtil.h"
 
