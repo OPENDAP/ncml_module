@@ -18,7 +18,8 @@ $(srcdir)/package.m4: $(top_srcdir)/configure.ac
 	} >'$(srcdir)/package.m4'
 
 TESTSUITE = $(srcdir)/testsuite
-TEST_FILES = 	attribute_tests.at \
+TEST_FILES = 	aggregations.at \
+		attribute_tests.at \
 		variable_misc.at \
 		variable_new_arrays.at \
 		variable_new_multi_arrays.at \

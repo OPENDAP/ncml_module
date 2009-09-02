@@ -166,10 +166,6 @@ namespace ncml_module
             " Hierarchies of attributes are only allowed for attribute containers with type=Structure");
       }
 
-    // if we haven't done it yet, gotta handle explicit.
-    p.processMetadataDirectiveIfNeeded();
-
-
     // Convert the NCML type to a canonical type here.
     // "Structure" will remain as "Structure" for specialized processing.
     string internalType = p.convertNcmlTypeToCanonicalType(_type);

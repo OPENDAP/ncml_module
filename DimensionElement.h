@@ -29,6 +29,7 @@
 #ifndef __NCML_MODULE__DIMENSION_ELEMENT_H__
 #define __NCML_MODULE__DIMENSION_ELEMENT_H__
 
+#include "Dimension.h"
 #include "NCMLElement.h"
 #include <string>
 using std::string;
@@ -69,19 +70,22 @@ namespace ncml_module
     virtual void handleEnd(NCMLParser& p);
     virtual string toString() const;
 
-    const string& name() const { return _name; }
+    const string& name() const;
     const string& length() const { return _length; }
 
     /** Parsed version of length() */
-    unsigned int getLengthNumeric() const { return _size; }
+    unsigned int getLengthNumeric() const;
+    unsigned int getSize() const;
+
+    const agg_util::Dimension& getDimension() const { return _dim; }
 
   private:
 
-    /** Fill in _size from the string in _length.
+    /** Fill in _dim from our string _length and other attrs.
      * @exception Throws BESSyntaxUserError if the token in _length
      *            cannot be successfully parsed as an unsigned int.
      */
-    void parseAndCacheSize();
+    void parseAndCacheDimension();
 
     /** Make sure they didn't set any attributes we can't handle.
      * @exception Throw BESSyntaxUserError if there's an attribute we can't handle.
@@ -89,14 +93,15 @@ namespace ncml_module
     void validateOrThrow();
 
   private:
-    string _name;
-    string _length;
+    // string _name; // within _dim
+    string _length; // unparsed size
     string _orgName; // unused
     string _isUnlimited; // unused
     string _isShared; // unused
     string _isVariableLength; // unused
 
-    unsigned int _size; // parsed version of _length, cached.
+    // the actual parsed values from above...
+    agg_util::Dimension _dim;
   };
 
 }

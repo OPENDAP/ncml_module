@@ -27,6 +27,7 @@
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
 #include "ReadMetadataElement.h"
+#include "NetcdfElement.h"
 #include "NCMLDebug.h"
 #include "NCMLParser.h"
 #include "NCMLUtil.h"
@@ -69,11 +70,20 @@ namespace ncml_module
   void
   ReadMetadataElement::handleBegin(NCMLParser& p)
   {
-    if (!p.withinNetcdf())
+    if (!p.isScopeNetcdf())
         {
           THROW_NCML_PARSE_ERROR("Got <readMetadata/> while not within <netcdf>");
         }
-      p.changeMetadataDirective(NCMLParser::READ_METADATA);
+    NetcdfElement* dataset = p.getCurrentDataset();
+    VALID_PTR(dataset);
+
+    // Like Highlander, there can be only one!
+    if (dataset->getProcessedMetadataDirective())
+      {
+      THROW_NCML_PARSE_ERROR("Got " + toString() +
+          " element but we already got a metadata directive for the current dataset!  Only one may be specified.");
+      }
+    dataset->setProcessedMetadataDirective();
   }
 
   void

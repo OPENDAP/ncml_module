@@ -56,9 +56,11 @@ class BESDDSResponse;
 
 namespace ncml_module
 {
+  class AggregationElement;
   class DDSLoader;
   class DimensionElement;
   class NCMLElement;
+  class NetcdfElement;
 }
 
 using namespace libdap;
@@ -71,18 +73,11 @@ using namespace std;
  *  Core engine for parsing an NcML structure and modifying the DDS (which includes attribute data)
  *  of a single dataset by adding new metadata to it. (http://docs.opendap.org/index.php/AIS_Using_NcML).
  *
+ *  The main documentation for the NCML Module is here: http://docs.opendap.org/index.php/BES_-_Modules_-_NcML_Module
+ *
  *  For the purposes of this class "scope" will mean the attribute table at some place in the DDX (populated DDS object), be it at
  *  the global attribute table, inside a nested attribute container, inside a variable, or inside a nested variable (Structure, e.g.).
  *  This is basically the same as a "fully qualified name" in DAP 2 (ESE-RFC-004.1.1)
- *
- *  This parser can load a given DDX for a single netcdf@location and then modify it by:
- *
- *  1) Clearing all attributes if <explicit/> tag is given.
- *  2) Adding or modifying existing atomic attributes at any scope (global, variable, nested variable, nested attribute container)
- *  3) Adding (or traversing the scope of existing) attribute containers using <attribute name="foo" type="Structure"> to refer to the container.
- *  4) Traversing a hierarchy of variable scopes to set the scope for 1) or 2)
- *  5) We handle orgName renaming for attribute@orgName only.  This renames an attribute.
- *  6) We can remove an attribute (including container recursively) at any scope with <remove/>
  *
  *  Design and Control Flow:
  *
@@ -110,8 +105,6 @@ using namespace std;
  *  o We only handle local (same BES) datasets with this version (hopefully we can relax this to allow remote dataset augmentation
  *      as a bes.conf option or something.
  *
- *  o We can only handle a single <netcdf> node, i.e. we can only augment one location with metadata.  Future versions will allow aggregation, etc.
- *
  *  @author mjohnson <m.johnson@opendap.org>
  */
 namespace ncml_module
@@ -122,6 +115,7 @@ class NCMLParser : public SaxParser
 public: // Friends
   // We allow the various NCMLElement concrete classes to be friends so we can separate out the functionality
   // into several files, one for each NcML element type.
+  friend class AggregationElement;
   friend class AttributeElement;
   friend class DimensionElement;
   friend class ExplicitElement;
@@ -187,17 +181,6 @@ public:
   ////////////////////////////////////////////////////////////////////////////////
   ///////////////////// PRIVATE INTERFACE
 
-private: // Nested types
-
-  /**
-  * Whether <explicit/> or <readMetadata/> was specified.
-  * PERFORM_DEFAULT means we have not see either tag.
-  * READ_METADATA says we saw <readMetadata/>
-  * EXPLICIT means we saw <explicit/>
-  * PROCESSED means the directive was already processed for the current location since it happens only once.
-  */
-  enum SourceMetadataDirective { PERFORM_DEFAULT=0, READ_METADATA, EXPLICIT, PROCESSED };
-
 private: //methods
 
   /** Is the innermost scope an atomic (leaf) attribute? */
@@ -221,10 +204,13 @@ private: //methods
   /** Is the innermost scope a <netcdf> node? */
   bool isScopeNetcdf() const;
 
+  /** Is the innermost scope a <aggregation> node? */
+  bool isScopeAggregation() const;
+
   /**  Are we inside the scope of a location element <netcdf> at this point of the parse?
    * Note that this means anywhere in the the scope stack, not the innermost (local) scope
   */
-  bool withinNetcdf() const { return _parsingNetcdf; }
+  bool withinNetcdf() const { return _currentDataset != 0; }
 
   /** Returns whether there is a variable element on the scope stack SOMEWHERE.
    *  Note we could be nested down within multiple variables or attribute containers,
@@ -232,10 +218,59 @@ private: //methods
   */
   bool withinVariable() const { return withinNetcdf() && _pVar; }
 
-  /** Helper to get the dds from _response
-   *  Error to call _response is null.
+  DDSLoader& getDDSLoader() const { return _loader; }
+
+  /** @return the currently being parsed dataset (the NetcdfElement itself)
+   * or NULL if we're outside all netcdf elements.
    */
-  DDS* getDDS() const;
+  NetcdfElement* getCurrentDataset() const { return _currentDataset; }
+
+  /**
+   *  Set the current dataset as dataset.
+   *
+   *  Sets the current attribute table to be the global attribute table
+   *  of dataset.
+   *
+   *  Does NOT handle
+   *  nesting, but is called by pushCurrentDataset and popCurrentDataset.
+   *
+   *  REQUIRES: dataset && dataset->isValid()
+   *  After this call, (getCurrentDataset() == dataset)
+   */
+  void setCurrentDataset(NetcdfElement* dataset);
+
+  /** @return the root (top level) NetcdfElement, or NULL if we're not that far into a parse yet */
+  NetcdfElement* getRootDataset() const { return _rootDataset; }
+
+  /** Helper to get the dds from getCurrentDataset, or null.
+   */
+  DDS* getDDSForCurrentDataset() const;
+
+  /**
+   * "Push" the given dataset as the new current dataset.  If it's the root,
+   * then set it up as such with the top level response object.
+   * If not, then add it to the current aggregation element, which must exist or exception.
+   * Also make sure to maintain the invariant that the current table points to this
+   * dataset's table!
+   */
+  void pushCurrentDataset(NetcdfElement* dataset);
+
+  /**
+   * After establishing that dataset isn't root, this is called to
+   * prepare its response object and add it to the current aggregation of
+   * the current dataset (both of which must exist) as a child.
+   *
+   * @exception If the current dataset does not have an aggregation
+   */
+  void addChildDatasetToCurrentDataset(NetcdfElement* dataset);
+
+  /**
+   * "Pop" the current dataset.  We pass in a ptr to what we expect it to be
+   * for logic testing.  If dataset is NULL, we don't check the logic.
+   * If dataset is not null, we throw internal error if it doesn't match the
+   * _currentDataset!
+   */
+  void popCurrentDataset(NetcdfElement* dataset);
 
   /** @return whether we are handling a DataDDS request (in which case getDDS() is a DataDDS)
    * or not.
@@ -247,9 +282,10 @@ private: //methods
    */
   void resetParseState();
 
-  /** @brief Load the given location into the current _response
+  /** @brief Load the given location into
+   * the given response, making sure to use the given responseType.
    */
-  void loadLocation(const std::string& location);
+  void loadLocation(const std::string& location, DDSLoader::ResponseType responseType, BESDapResponse* response);
 
   /** Return the variable with name in the current _pVar container.
    * If null, that means look at the top level DDS.
@@ -335,6 +371,13 @@ private: //methods
     * */
   bool findAttribute(const string& name, AttrTable::Attr_iter& attr) const;
 
+  /** This clears out ALL the AttrTable's in dds recursively.
+    * First it clears the global DDS table, then recurses on all
+    * contained variables. */
+  void clearAllAttrTables(DDS* dds);
+
+  /** Clear the attribute table for \c var .  If constructor variable, recurse.  */
+  void clearVariableMetadataRecursively(BaseType* var);
 
   /** Do the proper tokenization of values for the given dapAttrTypeName into _tokens
    * using current _separators.
@@ -353,23 +396,6 @@ private: //methods
    */
   int tokenizeValuesForDAPType(vector<string>& tokens, const string& values, AttrType dapType, const string& separator);
 
-  /**
-   * Change the <explicit> vs <readMetadata> functionality, but doing error checking for parse errors
-   * @param newVal the new directive
-   */
-  void changeMetadataDirective(SourceMetadataDirective newVal);
-
-  /** If not already PROCESSED, will perform the metadata directive, effectively
-    * clearing the DDS attributes if if was set to explicit.
-    * */
-  void processMetadataDirectiveIfNeeded();
-
-  /** This clears out ALL the current DDS's AttrTable's recursively. */
-  void clearAllAttrTables();
-
-  /** Clear the attribute table for \c var .  If constructor variable, recurse.  */
-  void clearVariableMetadataRecursively(BaseType* var);
-
   /** Push the new scope onto the stack. */
   void enterScope(const string& name, ScopeStack::ScopeType type);
 
@@ -385,10 +411,13 @@ private: //methods
   /** Get a typed scope string */
   string getTypedScopeString() const;
 
-  /** Push the element onto the element stack */
+  /** Push the element onto the element stack
+   * and ref() it. */
   void pushElement(NCMLElement* elt);
 
-  /** Pop the element off the stack and delete it */
+  /** Pop the element off the stack and unref() it
+   * It may still exist if other objects maintain strong references to it.
+   * */
   void popElement();
 
   /** The top of the element stack, the thing we are currently processing */
@@ -400,27 +429,25 @@ private: //methods
   ElementStackConstIterator getElementStackBegin() const { return _elementStack.rbegin(); }
   ElementStackConstIterator getElementStackEnd() const { return _elementStack.rend(); }
 
-  /** Delete all the NCMLElement* in _elementStack and clear it. */
-  void deleteElementStack();
+  /** unref() all the NCMLElement* in _elementStack and clear it.
+   *  For completeness, if any NCMLElement's still have a non-zero count after being
+   *  unref()'d, they are FORCIBLY destroyed since technically they should not
+   *  exist outside of the scope of the parser.  This is technically a bug if it happens,
+   *   though, so we warn.
+   *  */
+  void clearElementStack();
 
-  /** @return the dimension with the given name, or NULL if none. */
-  const DimensionElement* getDimension(const std::string& name) const;
+  /**
+   * @return the first dimension with dimName in the fully enclosed scope from getCurrentDataset() to root or null if not found.
+   * */
+  const DimensionElement* getDimensionAtLexicalScope(const string& dimName) const;
 
-  /** Add the dimension to the dimension map.
-   * @exception if the element already exists in the map.
-   *
-   * The storage is a copy, and this will
-   * gain ownership of the memory after this call.
-   *
-   * @param copyToAdd : the dimension to add to the map, ownership passes to this.
+  /**
+   * Print out all the dimensions at current scope and all enclosing scopes from getCurrentDataset() to root.
+   * They are printed in order of most specific scope first to root scope last.
    */
-  void addDimension(DimensionElement* pCopyToAdd);
+  string printAllDimensionsAtLexicalScope() const;
 
-  /** @return a string containing all the current dimensions toString(). */
-  string printDimensions() const;
-
-  /** Delete any dimensions in the dimension map and clear it out. */
-  void deleteDimensions();
 
   /**  Cleanup state to as if we're a new object */
   void cleanup();
@@ -462,21 +489,22 @@ private: // data rep
   // name of the ncml file we are parsing
   string _filename;
 
-  // true if we have entered a netcdf element and not closed it yet.
-  bool _parsingNetcdf;
-
   // Handed in at creation, this is a helper to load a given DDS.  It is assumed valid for the life of this.
   DDSLoader& _loader;
 
   // The type of response in _response
   DDSLoader::ResponseType _responseType;
 
-  // The response object containing the DDS (or DataDDS) for the <netcdf> node we are processing, or null if not processing.
+  // The response object containing the DDS (or DataDDS) for the root dataset we are processing, or null if not processing.
   // Type is based on _responseType.   We do not own this memory!  It is a temp while we parse and is handed in.
+  // NOTE: The root dataset will use this for its response object!
   BESDapResponse* _response;
 
-  // what to do with existing metadata after it's read in from parent.
-  SourceMetadataDirective _metadataDirective;
+  // The root dataset, as a NetcdfElement*.
+  NetcdfElement* _rootDataset;
+
+  // The currently being parsed dataset, as a NetcdfElement
+  NetcdfElement* _currentDataset;
 
   // pointer to currently processed variable, or NULL if none (ie we're at global level).
   BaseType* _pVar;
@@ -497,10 +525,6 @@ private: // data rep
   // if empty() then we're in global dataset scope (or no scope if not parsing location yet).
   ScopeStack _scope;
 
-  // A table of dimensions valid for the current netcdf node's lexical scope.
-  // It is cleared when a netcdf element is closed.
-  // We won't have that many, so a vector is better than a map for this.
-  std::vector<DimensionElement*> _dimensions;
 
 }; // class NCMLParser
 

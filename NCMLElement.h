@@ -30,10 +30,12 @@
 #define __NCML_MODULE__NCMLELEMENT_H__
 
 #include <iostream>
-#include <memory>
+#include "RCObject.h"
 #include "SaxParser.h" // for AttrMap
 #include <string>
 #include <vector>
+
+using std::string;
 
 namespace ncml_module
 {
@@ -50,8 +52,12 @@ namespace ncml_module
    *
    *  New concrete subclasses MUST be entered in the factory or they cannot
    *  be created.
+   *
+   *  We subclass RCObject since we sometimes need to keep elements
+   *  around longer than just the SAX parser stack and need to keep track of
+   *  whether other objects need to hang onto strong references to them.
    */
-  class NCMLElement
+  class NCMLElement : public RCObject
   {
   public:
 
@@ -80,7 +86,7 @@ namespace ncml_module
        * @param eltName element type name
        * @param attrs the map of the attributes defined for the element
        */
-      std::auto_ptr<NCMLElement> makeElement(const std::string& eltTypeName, const AttributeMap& attrs);
+      RCPtr<NCMLElement> makeElement(const std::string& eltTypeName, const AttributeMap& attrs);
 
     private:
       // Possible prototypes we can create from.  Uses getTypeName() for match.
@@ -157,6 +163,14 @@ namespace ncml_module
      *         otherwise return the empty string.
      */
     static std::string printAttributeIfNotEmpty(const std::string& attrName, const std::string& attrValue);
+
+    /** @return whether the given attr is in the array validAttrs or not...  Helper for subclasses */
+    static bool isValidAttribute(const std::vector<string>& validAttrs, const string& attr);
+
+    /** @return whether all the attributes in attrMap are in validAttrs.
+     * If pInvalidAttributes, fill it in with all the illegal attributes.
+     */
+    static bool areAllAttributesValid(const AttributeMap& attrMap, const std::vector<string>& validAttrs, std::vector<string>* pInvalidAttributes=0);
   };
 
 }

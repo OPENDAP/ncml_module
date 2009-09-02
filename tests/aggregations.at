@@ -1,0 +1,34 @@
+dnl Test suite containing tests that don't fit another file
+AT_BANNER([------------------  AGGREGATION TESTS -----------------------])
+
+dnl Here we try to change the values of an existing variable, which is disallowed in this version
+AT_ASSERT_PARSE_ERROR([agg/error_multi_aggs.ncml])
+AT_ASSERT_PARSE_ERROR([agg/error_improper_netcdf_loc.ncml])
+AT_ASSERT_PARSE_ERROR([agg/error_agg_in_wrong_loc_1.ncml])
+AT_ASSERT_PARSE_ERROR([agg/error_agg_in_wrong_loc_2.ncml])
+AT_ASSERT_PARSE_ERROR([agg/error_agg_bad_attr.ncml])
+
+dnl UNION : Acceptance tests on attributes and variables for union
+dnl First, test a basic purely virtual dataset one level deep aggregates correctly.
+AT_CHECK_ALL_DAP_RESPONSES([agg/virtual_union.ncml])
+AT_CHECK_DATADDS_GETDAP([agg/virtual_union.ncml])
+
+dnl TODO test a two level nest to make sure that works correctly
+AT_CHECK_ALL_DAP_RESPONSES([agg/multi_nested_unions.ncml])
+AT_CHECK_DATADDS_GETDAP([agg/multi_nested_unions.ncml])
+
+dnl TODO test that NcML transformations can be applied to data AFTER
+dnl it has been aggregated.  
+AT_CHECK_ALL_DAP_RESPONSES([agg/modify_post_union.ncml])
+AT_CHECK_DATADDS_GETDAP([agg/modify_post_union.ncml])
+
+dnl TODO Test wrapped datasets that need to be loaded in.  This is 
+dnl especially important for dods and constraints...  How to tell the difference?  
+dnl maybe apply new metadata to the same loaded sets to
+dnl differentiate them?  can't change values....
+
+dnl TODO Find some actual aggregation data somewhere and run it
+dnl through TDS maybe?
+
+
+

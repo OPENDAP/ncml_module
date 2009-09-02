@@ -29,17 +29,19 @@
 #include "config.h"
 #include "NCMLParser.h"
 
-#include "AttrTable.h"
-#include "BaseType.h"
-#include "BESConstraintFuncs.h"
-#include "BESDataDDSResponse.h"
-#include "BESDDSResponse.h"
-#include "BESDebug.h"
-#include "cgi_util.h"
-#include "DAS.h"
-#include "DDS.h"
+#include "AggregationElement.h"
+#include <bes/BESConstraintFuncs.h>
+#include <bes/BESDataDDSResponse.h>
+#include <bes/BESDDSResponse.h>
+#include <bes/BESDebug.h>
 #include "DDSLoader.h"
 #include "DimensionElement.h"
+#include <libdap/AttrTable.h>
+#include <libdap/BaseType.h>
+#include <libdap/DAS.h>
+#include <libdap/DDS.h>
+#include <libdap/mime_util.h>
+#include <libdap/Structure.h>
 #include <map>
 #include <memory>
 #include "NCMLCommonTypes.h"
@@ -47,10 +49,9 @@
 #include "NCMLElement.h"
 #include "NCMLUtil.h"
 #include "NetcdfElement.h"
-#include "parser.h" // for the type checking...
+#include <parser.h> // for the type checking...
 #include "SaxParserWrapper.h"
 #include <sstream>
-#include "Structure.h"
 
 // For extra debug spew for now.
 #define DEBUG_NCML_PARSER_INTERNALS 1
@@ -72,16 +73,15 @@ const string NCMLParser::STRUCTURE_TYPE("Structure");
 
 NCMLParser::NCMLParser(DDSLoader& loader)
 : _filename("")
-, _parsingNetcdf(false)
 , _loader(loader)
 , _responseType(DDSLoader::eRT_RequestDDX)
 , _response(0)
-, _metadataDirective(PERFORM_DEFAULT)
+, _rootDataset(0)
+, _currentDataset(0)
 , _pVar(0)
 , _pCurrentTable(0)
 , _elementStack()
 , _scope()
-, _dimensions()
 {
   BESDEBUG("ncml", "Created NCMLParser." << endl);
 }
@@ -153,16 +153,16 @@ NCMLParser::onEndDocument()
 void
 NCMLParser::onStartElement(const std::string& name, const AttributeMap& attrs)
 {
-  // the auto_ptr will clean up memory on any exception in handleBegin().
-  // if we succeed, we release and store the element in a stack which the dtor must clean up.
-  std::auto_ptr<NCMLElement> elt = NCMLElement::Factory::getTheFactory().makeElement(name, attrs);
+  // Store it in a shared ptr in case this function exceptions before we store it in the element stack.
+  RCPtr<NCMLElement> elt = NCMLElement::Factory::getTheFactory().makeElement(name, attrs);
 
-  // If we found an element of the given type name
+  // If we actually created an element of the given type name
   if (elt.get())
     {
       elt->handleBegin(*this);
-      // Must release the auto_ptr for storing in a container.
-      pushElement(elt.release());
+      // tell the container to push the raw element, which will also ref() it on success
+      // otherwise ~RCPtr will unref() to 0 and thus nuke it on exception.
+      pushElement(elt.get());
     }
  else // Unknown element...
    {
@@ -255,6 +255,8 @@ NCMLParser::isScopeGlobal() const
   return withinNetcdf() && _scope.empty();
 }
 
+// TODO Clean up these next two calls with a parser state or something....
+// Dynamic casting all the time isn't super fast or clean if not needed...
 bool
 NCMLParser::isScopeNetcdf() const
 {
@@ -262,11 +264,113 @@ NCMLParser::isScopeNetcdf() const
   return (!_elementStack.empty() && dynamic_cast<NetcdfElement*>(_elementStack.back()));
 }
 
-DDS*
-NCMLParser::getDDS() const
+bool
+NCMLParser::isScopeAggregation() const
 {
-  NCML_ASSERT_MSG(_response, "getDDS() called when we're not processing a <netcdf> location and _response is null!");
-  return NCMLUtil::getDDSFromEitherResponse(_response);
+  // see if the last thing parsed was <netcdf>
+  return (!_elementStack.empty() && dynamic_cast<AggregationElement*>(_elementStack.back()));
+}
+
+DDS*
+NCMLParser::getDDSForCurrentDataset() const
+{
+  NetcdfElement* dataset = getCurrentDataset();
+  NCML_ASSERT_MSG(dataset, "getDDSForCurrentDataset() called when we're not processing a <netcdf> location!");
+  return dataset->getDDS();
+}
+
+void
+NCMLParser::pushCurrentDataset(NetcdfElement* dataset)
+{
+  VALID_PTR(dataset);
+  // The first one we get is the root  It's special!
+  // We tell it to use the top level response object for the
+  // parser, since that's what ultimately is returned
+  // and we don't want the root making its own we need to copy.
+  bool thisIsRoot = !_rootDataset;
+  if (thisIsRoot)
+    {
+      _rootDataset = dataset;
+      VALID_PTR(_response);
+      _rootDataset->borrowResponseObject(_response);
+    }
+  else
+    {
+      addChildDatasetToCurrentDataset(dataset);
+    }
+
+  // Will set the current attrtable as well.
+  setCurrentDataset(dataset);
+
+  // TODO: What do we do with the scope stack for a nested dataset?!
+}
+
+void
+NCMLParser::popCurrentDataset(NetcdfElement* dataset)
+{
+  if (dataset && dataset != _currentDataset)
+    {
+      THROW_NCML_INTERNAL_ERROR("NCMLParser::popCurrentDataset(): the dataset we expect on the top of the stack is not correct!");
+    }
+
+  dataset = getCurrentDataset();
+  VALID_PTR(dataset);
+
+  // If it's the root, we're done and need to clear up the state.
+  if (dataset == _rootDataset)
+    {
+      _rootDataset->unborrowResponseObject(_response);
+      _rootDataset = 0;
+      setCurrentDataset(0);
+    }
+  else
+    {
+      // If it's not the root, it should have a parent, so go get it and make that the new current.
+      NetcdfElement* parentDataset = dataset->getParentDataset();
+      NCML_ASSERT_MSG(parentDataset, "NCMLParser::popCurrentDataset() got non-root dataset, but it had no parent!!");
+      setCurrentDataset(parentDataset);
+    }
+}
+
+void
+NCMLParser::setCurrentDataset(NetcdfElement* dataset)
+{
+  if (dataset)
+    {
+    // Make sure it's state is ready to go with operations before making it current
+     NCML_ASSERT(dataset->isValid());
+
+     // Make the dataset current, and set the table as current.
+     // Force the attribute table to be the global one for the DDS.
+     _currentDataset = dataset;
+     NCML_ASSERT_MSG(dataset->getDDS(), "Logic error!  NCMLParser::pushCurrentDataset() can't find a DDS for the dataset!");
+     setCurrentAttrTable(&(dataset->getDDS()->get_attr_table()));
+     VALID_PTR(getGlobalAttrTable()); // make sure it worked
+    }
+  else
+    {
+      BESDEBUG("ncml", "NCMLParser::setCurrentDataset(): setting to NULL..." << endl);
+      _currentDataset = 0;
+      setCurrentAttrTable(0);
+    }
+}
+
+void
+NCMLParser::addChildDatasetToCurrentDataset(NetcdfElement* dataset)
+{
+  VALID_PTR(dataset);
+
+  AggregationElement* agg = _currentDataset->getChildAggregation();
+  if (!agg)
+    {
+      THROW_NCML_INTERNAL_ERROR("NCMLParser::addChildDatasetToCurrentDataset(): current dataset has no aggregation element!  We can't add it!");
+    }
+
+  // This will add as strong ref to dataset from agg (child) and a weak to agg from dataset (parent)
+  agg->addChildDataset(dataset);
+
+  // Force the dataset to create an internal response object for the request time we're processing
+  dataset->createResponseObject(_responseType);
 }
 
 bool
@@ -277,18 +381,20 @@ NCMLParser::parsingDataRequest() const
 }
 
 void
+NCMLParser::loadLocation(const std::string& location, DDSLoader::ResponseType responseType, BESDapResponse* response)
+{
+  VALID_PTR(response);
+  _loader.loadInto(location, responseType, response);
+}
+
+void
 NCMLParser::resetParseState()
 {
   _filename = "";
-  _parsingNetcdf = false;
-  _metadataDirective = PERFORM_DEFAULT;
   _pVar = 0;
   _pCurrentTable = 0;
 
   _scope.clear();
-
-  // Cleanup any memory in the _elementStack
-  deleteElementStack();
 
   // Not that this matters...
   _responseType = DDSLoader::eRT_RequestDDX;
@@ -296,22 +402,18 @@ NCMLParser::resetParseState()
   // We never own the memory in this, so just clear it.
   _response = 0;
 
+  // We don't own these either.
+  _rootDataset = 0;
+  _currentDataset = 0;
+
+  // Cleanup any memory in the _elementStack
+  clearElementStack();
+
   // just in case
   _loader.cleanup();
-
-  deleteDimensions();
 }
 
-void
-NCMLParser::loadLocation(const std::string& location)
-{
-  // We better have one!  This gets created up front now.  It will be an empty DDS
-  VALID_PTR(_response);
 
-  // Use the loader to load the location
-  // If not found, this call will throw an exception and we'll just unwind out.
-   _loader.loadInto(location, _responseType, _response);
-}
 
 BaseType*
 NCMLParser::getVariableInCurrentVariableContainer(const string& name)
@@ -339,7 +441,7 @@ BaseType*
 NCMLParser::getVariableInDDS(const string& varName)
 {
   BaseType::btp_stack varContext;
- return  getDDS()->var(varName, varContext);
+ return  getDDSForCurrentDataset()->var(varName, varContext);
 }
 
 void
@@ -368,11 +470,11 @@ NCMLParser::addCopyOfVariableAtCurrentScope(BaseType& varTemplate)
       NCML_ASSERT_MSG(_pVar->is_constructor_type(), "Expected _pVar is a container type!");
       _pVar->add_var(&varTemplate);
     }
-  else // Top level DDS
+  else // Top level DDS for current dataset
     {
       BESDEBUG("ncml", "Adding new variable to DDS top level.  Variable name=" << varTemplate.name() <<
           " and typename=" << varTemplate.type_name() << endl);
-      DDS* pDDS = getDDS();
+      DDS* pDDS = getDDSForCurrentDataset();
       pDDS->add_var(&varTemplate);
     }
 }
@@ -409,7 +511,7 @@ NCMLParser::deleteVariableAtCurrentScope(const string& name)
   else // Global
     {
       // we better have a DDS if we get here!
-      DDS* pDDS = getDDS();
+      DDS* pDDS = getDDSForCurrentDataset();
       VALID_PTR(pDDS);
       pDDS->del_var(name);
     }
@@ -423,9 +525,9 @@ NCMLParser::setCurrentVariable(BaseType* pVar)
      {
         _pCurrentTable = &(pVar->get_attr_table());
      }
-   else if (getDDS()) // null pvar but we have a dds, use global table
+   else if (getDDSForCurrentDataset()) // null pvar but we have a dds, use global table
      {
-       DDS* dds = getDDS();
+       DDS* dds = getDDSForCurrentDataset();
        _pCurrentTable = &(dds->get_attr_table());
      }
    else // just clear it out, no context
@@ -461,7 +563,7 @@ NCMLParser::typeCheckDAPVariable(const BaseType& var, const string& expectedType
 AttrTable*
 NCMLParser::getGlobalAttrTable()
 {
-  return &(getDDS()->get_attr_table());
+  return &(getDDSForCurrentDataset()->get_attr_table());
 }
 
 void
@@ -747,54 +849,8 @@ NCMLParser::checkDataIsValidForCanonicalTypeOrThrow(const string& type, const ve
 }
 
 void
-NCMLParser::changeMetadataDirective(SourceMetadataDirective newVal)
+NCMLParser::clearAllAttrTables(DDS* dds)
 {
-  // Only go back to default if we're not processing a <netcdf> node.
-  if (!_parsingNetcdf && newVal != PERFORM_DEFAULT)
-    {
-      THROW_NCML_PARSE_ERROR("<readMetadata/> or <explicit/> element found outside <netcdf> tree.");
-    }
-
-  // If it's already been set by the file (ie not default) can't change it (unless to PROCESSED).
-  if (_parsingNetcdf && _metadataDirective != PERFORM_DEFAULT && newVal != PROCESSED)
-    {
-      THROW_NCML_PARSE_ERROR("NcML file must contain one of <readMetadata/> or <explicit/>");
-    }
-
-  // Also an error to unprocess during a location parse if we already explicitly set it.
-  if (_parsingNetcdf && _metadataDirective != PERFORM_DEFAULT && newVal != PROCESSED)
-    {
-      THROW_NCML_INTERNAL_ERROR("Logic error: can't unprocess a metadata directive if we already processed it.");
-    }
-
-  // Otherwise, we can set it.
-  _metadataDirective = newVal;
-}
-
-void
-NCMLParser::processMetadataDirectiveIfNeeded()
-{
-  // only do it once.
-  if (_metadataDirective == PROCESSED)
-    {
-      return;
-    }
-
-  // If explicit, clear the DDS metadata
-  if (_metadataDirective == EXPLICIT)
-    {
-        BESDEBUG("ncml", "<explicit/> was used, so clearing all source metadata!" << endl);
-        clearAllAttrTables();
-    }
-
-  // In all cases, only do this once per location.
-  changeMetadataDirective(PROCESSED);
-}
-
-void
-NCMLParser::clearAllAttrTables()
-{
-  DDS* dds = getDDS();
   if (!dds)
   {
       return;
@@ -872,6 +928,7 @@ NCMLParser::pushElement(NCMLElement* elt)
 {
   VALID_PTR(elt);
   _elementStack.push_back(elt);
+  elt->ref(); // up the count!
 }
 
 void
@@ -879,7 +936,15 @@ NCMLParser::popElement()
 {
   NCMLElement* elt = _elementStack.back();
   _elementStack.pop_back();
-  delete elt;
+
+  // Keep the toString around if we plan to nuke him
+  string infoOnDeletedDude = ((elt->getRefCount() == 1)?(elt->toString()):(string("")));
+
+  // Drop the ref count.  If that forced a delete, print out the saved string.
+  if (elt->unref() == 0)
+    {
+      BESDEBUG("ncml", "NCMLParser::popElement: ref count hit 0 so we deleted element=" << infoOnDeletedDude << endl);
+    }
 }
 
 NCMLElement*
@@ -896,82 +961,54 @@ NCMLParser::getCurrentElement() const
 }
 
 void
-NCMLParser::deleteElementStack()
+NCMLParser::clearElementStack()
 {
   while (!_elementStack.empty())
     {
       NCMLElement* elt = _elementStack.back();
       _elementStack.pop_back();
-      delete elt;
+      // Hmm, technically, we could just delete them since we know we're done, but....
+      if (elt->unref() > 0)
+        {
+          BESDEBUG("ncml", "Got a non-zero reference count in NCMLParser::deleteElementStack!" << endl);
+          delete elt; // FORCE it to go away.
+        }
     }
+  _elementStack.resize(0);
 }
 
 const DimensionElement*
-NCMLParser::getDimension(const std::string& name) const
+NCMLParser::getDimensionAtLexicalScope(const string& dimName) const
 {
   const DimensionElement* ret = 0;
-  vector<DimensionElement*>::const_iterator endIt = _dimensions.end();
-  for (vector<DimensionElement*>::const_iterator it = _dimensions.begin(); it != endIt; ++it)
+  if (getCurrentDataset())
     {
-      const DimensionElement* pElt = *it;
-      VALID_PTR(pElt);
-      if (pElt->name() == name)
-        {
-          ret = pElt;
-          break;
-        }
+      ret = getCurrentDataset() -> getDimensionInFullScope(dimName);
     }
   return ret;
-}
-
-void
-NCMLParser::addDimension(DimensionElement* pCopyToAdd)
-{
-  VALID_PTR(pCopyToAdd);
-  if (getDimension(pCopyToAdd->name()))
-    {
-      THROW_NCML_INTERNAL_ERROR("NCMLParser::addDimension(): already found dimension with name while adding " + pCopyToAdd->toString());
-    }
-
-  _dimensions.push_back(pCopyToAdd);
-
-  BESDEBUG("ncml", "Added dimension to table.  Dimension Table is now: " << printDimensions() << endl);
 }
 
 string
-NCMLParser::printDimensions() const
+NCMLParser::printAllDimensionsAtLexicalScope() const
 {
-  string ret ="Dimensions = {\n";
-  vector<DimensionElement*>::const_iterator endIt = _dimensions.end();
-  vector<DimensionElement*>::const_iterator it;
-  for (it = _dimensions.begin(); it != endIt; ++it)
+  string ret("");
+  NetcdfElement* dataset = getCurrentDataset();
+  while(dataset)
     {
-      ret += (*it)->toString() + "\n";
+      ret += dataset->printDimensions();
+      dataset = dataset->getParentDataset();
     }
-  ret += "}";
   return ret;
 }
-
-void
-NCMLParser::deleteDimensions()
-{
-  while(!_dimensions.empty())
-    {
-      DimensionElement* pElt = _dimensions.back();
-      _dimensions.pop_back();
-      delete pElt;
-    }
-}
-
 
 void
 NCMLParser::cleanup()
 {
-  // The only memory we own is the _ddsResponse, which is in an auto_ptr so will
+  // The only memory we own is the _response, which is in an auto_ptr so will
   // either be returned to caller in parse() and cleared, or else
   // delete'd by our dtor via auto_ptr
 
-  // All other objects point into _ddsResponse temporarily, so nothing to destroy there.
+  // All other objects point into _response temporarily, so nothing to destroy there.
 
   // Just for completeness.
   resetParseState();

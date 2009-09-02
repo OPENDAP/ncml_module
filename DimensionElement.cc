@@ -30,6 +30,7 @@
 #include "NCMLDebug.h"
 #include "NCMLParser.h"
 #include "NCMLUtil.h"
+#include "NetcdfElement.h"
 #include <sstream>
 
 using std::string;
@@ -43,26 +44,24 @@ namespace ncml_module
 
   DimensionElement::DimensionElement()
   : NCMLElement()
-  , _name("")
   , _length("0")
   , _orgName("")
   , _isUnlimited("")
   , _isShared("")
   , _isVariableLength("")
-  , _size(0)
+  , _dim()
   {
   }
 
   DimensionElement::DimensionElement(const DimensionElement& proto)
   : NCMLElement(proto)
   {
-    _name = proto._name;
     _length = proto._length;
     _orgName = proto._orgName;
     _isUnlimited = proto._isUnlimited;
     _isShared = proto._isShared;
     _isVariableLength = proto._isVariableLength;
-    _size = proto._size;
+    _dim = proto._dim;
   }
 
   DimensionElement::~DimensionElement()
@@ -83,14 +82,14 @@ namespace ncml_module
   void
   DimensionElement::setAttributes(const AttributeMap& attrs)
   {
-    _name = NCMLUtil::findAttrValue(attrs, "name");
+    _dim.name = NCMLUtil::findAttrValue(attrs, "name");
     _length = NCMLUtil::findAttrValue(attrs, "length");
     _orgName = NCMLUtil::findAttrValue(attrs, "orgName");
     _isUnlimited = NCMLUtil::findAttrValue(attrs, "isUnlimited");;
     _isShared = NCMLUtil::findAttrValue(attrs, "isShared");;
     _isVariableLength = NCMLUtil::findAttrValue(attrs, "isVariableLength");
 
-    parseAndCacheSize();
+    parseAndCacheDimension();
     validateOrThrow();
   }
 
@@ -107,17 +106,21 @@ namespace ncml_module
             " scope=" + p.getScopeString());
       }
 
+    // This will be the scope we're to be added...
+    NetcdfElement* dataset = p.getCurrentDataset();
+    VALID_PTR(dataset);
+
     // Make sure the name is unique at this parse level or exception.
-    const DimensionElement* pExistingDim = p.getDimension(_name);
+    const DimensionElement* pExistingDim = dataset->getDimensionInLocalScope(name());
     if (pExistingDim)
       {
         THROW_NCML_PARSE_ERROR("Tried at add dimension " + toString() +
-            " but a dimension with name=" + _name +
+            " but a dimension with name=" + name() +
             " already exists in this scope=" + p.getScopeString());
       }
 
-    // Add a copy in since the parser cleans up this itself after handleEnd()
-    p.addDimension(this->clone());
+    // The dataset will maintain a strong reference to us while we're needed.
+    dataset->addDimension(this);
   }
 
   void
@@ -140,7 +143,7 @@ namespace ncml_module
   DimensionElement::toString() const
   {
     string ret = "<" + _sTypeName + " ";
-    ret += NCMLElement::printAttributeIfNotEmpty("name", _name);
+    ret += NCMLElement::printAttributeIfNotEmpty("name", name());
     ret += NCMLElement::printAttributeIfNotEmpty("length", _length);
     ret += NCMLElement::printAttributeIfNotEmpty("isShared", _isShared);
     ret += NCMLElement::printAttributeIfNotEmpty("isVariableLength", _isVariableLength);
@@ -150,19 +153,55 @@ namespace ncml_module
     return ret;
   }
 
+  const string&
+  DimensionElement::name() const
+  {
+    return _dim.name;
+  }
+
+  unsigned int
+  DimensionElement::getLengthNumeric() const
+  {
+    return _dim.size;
+  }
+
+  unsigned int
+  DimensionElement::getSize() const
+  {
+    return getLengthNumeric();
+  }
+
+
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////// PRIVATE IMPL
 
   void
-  DimensionElement::parseAndCacheSize()
+  DimensionElement::parseAndCacheDimension()
   {
     stringstream sis;
     sis.str(_length);
-    sis >> _size;
+    sis >> _dim.size;
     if (sis.fail())
       {
         THROW_NCML_PARSE_ERROR("Element " + toString() + " failed to parse the length attribute into a proper unsigned int!");
       }
+
+    // @TODO set the _dim.isSizeConstant from the isVariableLength, etc once we know how to use them for aggs
+    _dim.isSizeConstant = true;
+
+    if (_isShared == "true")
+      {
+        _dim.isShared = true;
+      }
+    else if (_isShared == "false")
+      {
+        _dim.isShared = false;
+      }
+    else if (!_isShared.empty())
+      {
+        THROW_NCML_PARSE_ERROR("dimension@isShared did not have value in {true,false}.");
+      }
+
   }
 
   void

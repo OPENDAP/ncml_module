@@ -30,6 +30,7 @@
 #include "NCMLDebug.h"
 #include "NCMLParser.h"
 #include "NCMLUtil.h"
+#include "NetcdfElement.h"
 
 namespace ncml_module
 {
@@ -69,11 +70,23 @@ namespace ncml_module
   void
   ExplicitElement::handleBegin(NCMLParser& p)
   {
-    if (!p.withinNetcdf())
+    if (!p.isScopeNetcdf())
         {
-          THROW_NCML_PARSE_ERROR("Got <explicit/> while not within <netcdf>");
+          THROW_NCML_PARSE_ERROR("Got <explicit/> while not a direct child of a <netcdf>");
         }
-      p.changeMetadataDirective(NCMLParser::EXPLICIT);
+    // this applies to the current dataset
+    NetcdfElement* dataset = p.getCurrentDataset();
+    VALID_PTR(dataset);
+
+    if (dataset->getProcessedMetadataDirective())
+      {
+        THROW_NCML_PARSE_ERROR("Got " + toString() +
+          " element but we already got a metadata directive for the current dataset!  Only one may be specified.");
+      }
+
+    dataset->setProcessedMetadataDirective();
+    VALID_PTR(dataset->getDDS());
+    p.clearAllAttrTables(dataset->getDDS());
   }
 
   void

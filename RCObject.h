@@ -1,0 +1,207 @@
+///////////////////////////////////////////////////////////////////////////////
+// This file is part of the "NcML Module" project, a BES module designed
+// to allow NcML files to be used to be used as a wrapper to add
+// AIS to existing datasets of any format.
+//
+// Copyright (c) 2009 OPeNDAP, Inc.
+// Author: Michael Johnson  <m.johnson@opendap.org>
+//
+// For more information, please also see the main website: http://opendap.org/
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//
+// Please see the files COPYING and COPYRIGHT for more information on the GLPL.
+//
+// You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
+/////////////////////////////////////////////////////////////////////////////
+#ifndef __NCML_MODULE__REF_COUNTED_OBJECT_H__
+#define __NCML_MODULE__REF_COUNTED_OBJECT_H__
+
+#include <string>
+
+namespace ncml_module
+{
+
+  /**
+   * @brief A base class for a simple reference counted object.
+   *
+   * Use as a base class for objects that need to delete themselves
+   * when their reference count goes to 0.
+   *
+   * When a strong reference to the object is required, the
+   * caller uses ref().  When the reference needs to be released,
+   * unref() is called.  p->unref() should be considered potentially
+   * identical to delete p; since it can cause the object to be deleted.
+   * The pointer should NOT be used after an unref() unless it was known
+   * to be preceded by a ref(), or unless the count is checked prior to unref()
+   * and found to be > 1.
+   *
+   * A new RCObject has a count of 0, and will only be destroyed automatically
+   * if the count goes from 1 back to 0, so the caller is in charge of it unless the first
+   * ref() call.  Be careful storing these in std::auto_ptr!  Instead, use a
+   * RCObjectRef(new RCObject()) in place of auto_ptr for hanging onto
+   * an RCOBject* in a local variable before possible early exit.
+   *
+   * @see RCPtr which can be used as a temporary
+   * reference similar to std::auto_ptr<T>, but which uses the
+   * reference counting system to safely handle a RCObject
+   * as a temporary in a location where an exception might cause it to be
+   * leaked.  This is especially useful when the object is removed from
+   * a refcounted container but safely needs to be used locally before destruction.
+   *
+   * @note This class influenced by Scott Meyers and Open Inventor ref counting stuff.
+   *
+   * @note I'd almost rather use boost::shared_ptr and boost::weak_ptr
+   * for this stuff since they can be used in STL containers and
+   * are thread-safe, but adding a boost dependency for just shared_ptr
+   * seems a bit like overkill now.  If we add boost in the future,
+   * consider changing this over!!
+   */
+  class RCObject
+  {
+  public:
+    RCObject();
+    virtual ~RCObject();
+
+    /** Increase the reference count by one */
+    int ref();
+
+    /** Decrease the reference count by one.  If it goes from 1 to 0,
+     * delete this and this is no longer valid.
+     * @return the new ref count.  If it is 0, the called knows the
+     * object was deleted.
+     *
+     * It is illegal to unref() an object with a count of 0.  We don't
+     * throw to allow use in dtors, so the caller is to not do it!
+     */
+    int unref() throw();
+
+    /** Get the current reference count */
+    int getRefCount() const;
+
+    /** Just prints the count and address  */
+    virtual std::string toString() const;
+
+  private: // interface
+
+    /** Same as toString(), just not virtual so we can always use it. */
+    std::string printRCObject() const;
+
+  private: // data rep
+
+    int _count;
+  };
+
+  /** @brief A reference to an RCObject which automatically ref() and deref() on creation and destruction.
+   *
+   * Use this for temporary references to an RCObject* instead of std::auto_ptr to avoid leaks or double deletion.
+   *
+   * For example,
+   *
+   * RCPtr obj = RCPtr(new RCObject());
+   * // count is now 1.
+   * // make a call to add to container that might throw exception.
+   * // we assume the container will up the ref() itself on a successful addition.
+   * addToContainer(obj.get());
+   * // if previous line exceptions, ~RCPtr will unref() it back to 0, causing it to delete.
+   * // if we get here, the object is safely in the container and has been ref() to 2,
+   * // so ~RCPtr correctly drops it back to 0.
+   *
+   * @note We don't do weak references, so make sure to not generate reference loops with back pointers!!
+   * Back pointers should be raw pointers (until/unless we add weak references) and ref() should only
+   * be called when it's a strong (ownership) reference!
+   */
+  template <class T>
+  class RCPtr
+  {
+  public:
+    RCPtr(T* pRef = 0)
+    {
+      _obj = pRef;
+      init();
+    }
+
+    RCPtr(const RCPtr& from)
+    : _obj(from._obj)
+    {
+      init();
+    }
+
+    ~RCPtr()
+    {
+      if (_obj)
+        {
+          _obj->unref();
+          _obj = 0;
+        }
+    }
+
+    RCPtr&
+    operator=(const RCPtr& rhs)
+    {
+      if (rhs._obj != _obj)
+        {
+         // keep it around for a deref
+          RCObject* oldObj = _obj;
+
+          // Grab the rhs object and up the ref.
+          _obj = rhs._obj;
+          init();
+
+          // We just dropped an old reference, so unref() is not null.
+          if (oldObj)
+            {
+            oldObj->unref();
+            }
+        }
+      return *this;
+    }
+
+    T&
+    operator*() const
+    {
+      // caller is on their own if they deref this as null,
+      // so should check with get() first.
+      return *_obj;
+    }
+
+    T*
+    operator->() const
+    {
+      return _obj;
+    }
+
+    T*
+    get() const
+    {
+      return _obj;
+    }
+
+  private:
+    void init()
+    {
+      if (_obj)
+        {
+          _obj->ref();
+        }
+    }
+
+  private:
+    T* _obj;
+  };
+
+}
+
+#endif /* __NCML_MODULE__REF_COUNTED_OBJECT_H__ */

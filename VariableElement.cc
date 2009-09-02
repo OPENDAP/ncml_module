@@ -155,9 +155,6 @@ namespace ncml_module
             p.getScopeString());
       }
 
-    // Make sure we've done this at least once before we continue.
-    p.processMetadataDirectiveIfNeeded();
-
     // If a request to rename the variable
     if (!_orgName.empty())
       {
@@ -558,7 +555,7 @@ namespace ncml_module
      }
    else
      {
-       const DimensionElement* pDim = p.getDimension(dimToken);
+       const DimensionElement* pDim = p.getDimensionAtLexicalScope(dimToken);
        if (pDim)
          {
            return pDim->getLengthNumeric();
@@ -566,7 +563,7 @@ namespace ncml_module
        else
          {
            THROW_NCML_PARSE_ERROR("Failed to find a dimension with name=" + dimToken +
-               " for variable=" + toString() + " with dimension table= " + p.printDimensions() +
+               " for variable=" + toString() + " with dimension table= " + p.printAllDimensionsAtLexicalScope() +
                " at scope=" + p.getScopeString());
          }
      }

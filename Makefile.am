@@ -21,8 +21,11 @@ BES_SRCS:=
 BES_HDRS:=
 
 NCML_SRCS = \
+		AggregationElement.cc \
+		AggregationUtil.cc \
 		AttributeElement.cc \
 		DDSLoader.cc \
+		Dimension.cc \
 		DimensionElement.cc \
 		ExplicitElement.cc \
 		MyBaseTypeFactory.cc \
@@ -34,6 +37,7 @@ NCML_SRCS = \
 		NCMLRequestHandler.cc \
 		NCMLUtil.cc \
 		NetcdfElement.cc \
+		RCObject.cc \
 		ReadMetadataElement.cc \
 		RemoveElement.cc \
 		RenamedArrayWrapper.cc \
@@ -46,8 +50,11 @@ NCML_SRCS = \
 		VariableElement.cc
 
 NCML_HDRS = \
+		AggregationElement.h \
+		AggregationUtil.h \
 		AttributeElement.h \
 		DDSLoader.h \
+		Dimension.h \
 		DimensionElement.h \
 		ExplicitElement.h \
 		MyBaseTypeFactory.h \
@@ -62,6 +69,7 @@ NCML_HDRS = \
 		NCMLResponseNames.h \
 		NCMLUtil.h \
 		NetcdfElement.h \
+		RCObject.h \
 		ReadMetadataElement.h \
 		RemoveElement.h \
 		RenamedArrayWrapper.h \

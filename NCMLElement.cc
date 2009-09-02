@@ -32,6 +32,7 @@
 #include "NCMLElement.h"
 
 // Factory Includes for Concrete Subtypes
+#include "AggregationElement.h"
 #include "AttributeElement.h"
 #include "DimensionElement.h"
 #include "ExplicitElement.h"
@@ -119,20 +120,21 @@ namespace ncml_module
     _sInstance->addPrototype(new VariableElement());
     _sInstance->addPrototype(new ValuesElement());
     _sInstance->addPrototype(new DimensionElement());
+    _sInstance->addPrototype(new AggregationElement());
   }
 
 
-  std::auto_ptr<NCMLElement>
+  RCPtr<NCMLElement>
   NCMLElement::Factory::makeElement(const string& eltTypeName, const AttributeMap& attrs)
   {
     ProtoList::const_iterator it = findPrototype(eltTypeName);
     if (it == _protos.end()) // not found
       {
         BESDEBUG("ncml", "NCMLElement::Factory cannot find prototype for element type=" << eltTypeName << endl);
-        return std::auto_ptr<NCMLElement>(0);
+        return RCPtr<NCMLElement>(0);
       }
 
-    std::auto_ptr<NCMLElement> newElt = std::auto_ptr<NCMLElement>((*it)->clone());
+    RCPtr<NCMLElement> newElt = RCPtr<NCMLElement>((*it)->clone());
     VALID_PTR(newElt.get());
     newElt->setAttributes(attrs);
     return newElt; //relinquish
@@ -144,5 +146,51 @@ namespace ncml_module
   {
     return ( (attrValue.empty())?(""):(attrName + "=\"" + attrValue + "\" "));
   }
+
+  bool
+  NCMLElement::isValidAttribute(const std::vector<string>& validAttrs, const string& attr)
+  {
+    bool ret = false;
+    for (unsigned int i=0; i<validAttrs.size(); ++i)
+      {
+        if (attr == validAttrs[i])
+          {
+            ret = true;
+            break;
+          }
+      }
+    return ret;
+  }
+
+  bool
+  NCMLElement::areAllAttributesValid(const AttributeMap& attrMap, const std::vector<string>& validAttrs, std::vector<string>* pInvalidAttributes/*=0*/)
+  {
+    if (pInvalidAttributes)
+      {
+        pInvalidAttributes->resize(0);
+      }
+    bool ret = true;
+    AttributeMap::const_iterator it;
+    AttributeMap::const_iterator endIt = attrMap.end();
+    for (it = attrMap.begin(); it != endIt; ++it)
+      {
+        const string& attr = it->first;
+        if (!isValidAttribute(validAttrs, attr))
+          {
+            ret = false;
+            if (pInvalidAttributes)
+              {
+                pInvalidAttributes->push_back(attr);
+              }
+            else
+              {
+                // Early exit only if we don't need the full list of bad ones...
+                break;
+              }
+          }
+      }
+    return ret;
+  }
+
 
 } // namespace ncml_module
