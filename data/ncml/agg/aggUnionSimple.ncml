@@ -4,8 +4,8 @@
   <attribute name="title" type="string" value="Union cldc and lflx"/>
 
   <aggregation type="union">
-    <netcdf location="agg/cldc.mean.nc"/>
-    <netcdf location="agg/lflx.mean.nc"/>
+    <netcdf location="/data/ncml/agg/cldc.mean.nc"/>
+    <netcdf location="/data/ncml/agg/lflx.mean.nc"/>
   </aggregation>
 
 </netcdf>

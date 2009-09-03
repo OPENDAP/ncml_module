@@ -27,8 +27,10 @@
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
 #include "Dimension.h"
+#include "NCMLDebug.h"// the only NCML dep we allow...
 
 using std::string;
+using std::vector;
 
 namespace agg_util
 {
@@ -50,5 +52,39 @@ namespace agg_util
 
   Dimension::~Dimension()
   {
+  }
+
+  bool
+  DimensionTable::findDimension(const std::string& name, Dimension* pOut) const
+  {
+    bool foundIt = false;
+    vector<Dimension>::const_iterator endIt = _dimensions.end();
+    vector<Dimension>::const_iterator it;
+    for (it = _dimensions.begin(); it != endIt; ++it)
+      {
+        if (it->name == name)
+          {
+            if (pOut)
+              {
+                *pOut = *it;
+              }
+            foundIt = true;
+            break;
+          }
+      }
+    return foundIt;
+  }
+
+  void
+  DimensionTable::addDimensionUnique(const Dimension& dim)
+  {
+    if (!findDimension(dim.name))
+      {
+        _dimensions.push_back(dim);
+      }
+    else
+      {
+        BESDEBUG("ncml", "A dimension with name=" << dim.name << " already exists.  Not adding." << endl);
+      }
   }
 }

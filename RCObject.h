@@ -68,6 +68,12 @@ namespace ncml_module
    * are thread-safe, but adding a boost dependency for just shared_ptr
    * seems a bit like overkill now.  If we add boost in the future,
    * consider changing this over!!
+   *
+   * @TODO Consider adding a pointer to an abstract MemoryPool or what have you
+   * so that a Factory can implement the interface and these objects can be stored
+   * in a list as well as returned from factory.  That way the factory can forcibly
+   * clear all dangling references from the pool in its dtor in the face of exception
+   * unwind or programmer ref counting error.
    */
   class RCObject
   {
@@ -75,8 +81,9 @@ namespace ncml_module
     RCObject();
     virtual ~RCObject();
 
-    /** Increase the reference count by one */
-    int ref();
+    /** Increase the reference count by one.
+     * const since we do not consider the ref count part of the semantic constness of the rep */
+    int ref() const;
 
     /** Decrease the reference count by one.  If it goes from 1 to 0,
      * delete this and this is no longer valid.
@@ -85,8 +92,10 @@ namespace ncml_module
      *
      * It is illegal to unref() an object with a count of 0.  We don't
      * throw to allow use in dtors, so the caller is to not do it!
+     *
+     * const since the reference count is not part of the semantic constness of the rep
      */
-    int unref() throw();
+    int unref() const throw();
 
     /** Get the current reference count */
     int getRefCount() const;
@@ -101,7 +110,9 @@ namespace ncml_module
 
   private: // data rep
 
-    int _count;
+    // The reference count... mutable since we want to ref count const objects as well,
+    // and the count doesn't affect the semantic constness of the subclasses.
+    mutable int _count;
   };
 
   /** @brief A reference to an RCObject which automatically ref() and deref() on creation and destruction.

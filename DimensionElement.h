@@ -70,6 +70,12 @@ namespace ncml_module
     virtual void handleEnd(NCMLParser& p);
     virtual string toString() const;
 
+    /**
+     * @return whether name() and getSize() are the same.
+     * This function doesn't care about the other attributes (yet?)
+     */
+    bool checkDimensionsMatch(const DimensionElement& rhs) const;
+
     const string& name() const;
     const string& length() const { return _length; }
 

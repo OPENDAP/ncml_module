@@ -739,11 +739,13 @@ static const TypeConverter& getTypeConverter()
   return *singleton;
 }
 
+#if 0 // Unused right now... might be later, but I hate compiler warnings.
 // Is the given type a DAP type?
 static bool isDAPType(const string& type)
 {
   return (String_to_AttrType(type) != Attr_unknown);
 }
+#endif // 0
 
 
 /* static */

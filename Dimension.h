@@ -31,6 +31,7 @@
 #define __AGG_UTIL__DIMENSION_H__
 
 #include <string>
+#include <vector>
 
 namespace agg_util
 {
@@ -69,7 +70,24 @@ namespace agg_util
   class DimensionTable
   {
   public:
+    DimensionTable(unsigned int capacity=0);
+    ~DimensionTable();
 
+    /** Add the dimension to the table if one with the same name doesn't already exist.
+     *  If a dimension with the same name is already there, it is NOT added.
+     */
+    void addDimensionUnique(const Dimension& dim);
+
+    /** Find the dimension with the given name.  If found,
+     * place it into pOut if pOut is non-null
+     * @return whether it was found
+     */
+    bool findDimension(const std::string& name, Dimension* pOut=0) const;
+
+    const std::vector<Dimension>& getDimensions() const { return _dimensions; }
+
+  private:
+    std::vector<Dimension> _dimensions;
   };
 
 }

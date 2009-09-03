@@ -22,10 +22,23 @@ dnl it has been aggregated.
 AT_CHECK_ALL_DAP_RESPONSES([agg/modify_post_union.ncml])
 AT_CHECK_DATADDS_GETDAP([agg/modify_post_union.ncml])
 
-dnl TODO Test wrapped datasets that need to be loaded in.  This is 
-dnl especially important for dods and constraints...  How to tell the difference?  
-dnl maybe apply new metadata to the same loaded sets to
-dnl differentiate them?  can't change values....
+dnl Test from the Unidata NCML Aggregation tutorial
+AT_CHECK_ALL_DAP_RESPONSES([agg/aggUnionSimple.ncml])
+
+dnl----------------- Dimensions ---------------------------
+dnl Test example virtual datasets with dimensions.
+
+dnl Check that a union with correct matching dimensions works
+dnl Technically, there's nothing to check since the dims are used 
+dnl inside the child datasets to generate data, and not otherwise...
+dnl Only shared would technically need to match, but DAP2 doesn't have them yet...
+AT_CHECK_ALL_DAP_RESPONSES([agg/union_with_dimensions.ncml])
+AT_CHECK_DATADDS_GETDAP([agg/union_with_dimensions.ncml])
+
+dnl Check parse error on a dimension mismatch in the union
+dnl This is where we'd have to make the error...  We're not
+dnl going to traverse into DAP objects to check dimensions for now...
+AT_ASSERT_PARSE_ERROR([agg/union_dimension_mismatch_error.ncml])
 
 dnl TODO Find some actual aggregation data somewhere and run it
 dnl through TDS maybe?

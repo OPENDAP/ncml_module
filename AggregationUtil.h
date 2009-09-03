@@ -26,8 +26,8 @@
 //
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
-#ifndef __NCML_MODULE__AGGREGATION_UTIL_H__
-#define __NCML_MODULE__AGGREGATION_UTIL_H__
+#ifndef __AGG_UTIL__AGGREGATION_UTIL_H__
+#define __AGG_UTIL__AGGREGATION_UTIL_H__
 
 #include <AttrTable.h>
 #include <string>
@@ -39,7 +39,7 @@ namespace libdap
   class DDS;
 };
 
-namespace ncml_module
+namespace agg_util
 {
   /**
    *   A static class for encapsulating the aggregation functionality on libdap.
@@ -110,4 +110,4 @@ namespace ncml_module
 
 }
 
-#endif /* __NCML_MODULE__AGGREGATION_UTIL_H__ */
+#endif /* __AGG_UTIL__AGGREGATION_UTIL_H__ */

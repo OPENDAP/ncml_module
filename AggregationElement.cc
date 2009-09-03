@@ -30,10 +30,13 @@
 #include "AggregationElement.h"
 #include "AggregationUtil.h"
 #include <AttrTable.h>
+#include "DimensionElement.h"
 #include "NCMLDebug.h"
 #include "NCMLParser.h"
 #include "NetcdfElement.h"
 #include <sstream>
+
+using agg_util::AggregationUtil;
 
 namespace ncml_module
 {
@@ -241,9 +244,16 @@ namespace ncml_module
   AggregationElement::processUnion()
   {
     BESDEBUG("ncml", "Processing a union aggregation..." << endl);
+
+    // Merge all the dimensions...  For now, it is a parse error if a dimension
+    // with the same name exists but has a different size.
+    // Since DAP2 doesn't have dimensions, we can't do this in agg_util, but
+    // have to do it here.
+    mergeDimensions();
+
+    // Merge the attributes and variables in all the DDS's into our parent DDS....
     vector<DDS*> datasetsInOrder;
     collectDatasetsInOrder(datasetsInOrder);
-    // We will collect them INTO the parent DDS
     DDS* pUnion = getParentDataset()->getDDS();
     AggregationUtil::performUnionAggregation(pUnion, datasetsInOrder);
   }
@@ -277,6 +287,54 @@ namespace ncml_module
       }
   }
 
+  void
+  AggregationElement::mergeDimensions(bool checkDimensionMismatch/*=true*/)
+  {
+    NetcdfElement* pParent = getParentDataset();
+    // For each dataset in the children....
+    vector<NetcdfElement*>::const_iterator datasetsEndIt = _datasets.end();
+    vector<NetcdfElement*>::const_iterator datasetsIt;
+    for (datasetsIt = _datasets.begin(); datasetsIt != datasetsEndIt; ++datasetsIt)
+      {
+        // Check each dimension in it compared to the parent
+        const NetcdfElement* dataset = *datasetsIt;
+        VALID_PTR(dataset);
+        const vector<DimensionElement*>& dimensions = dataset->getDimensionElements();
+        vector<DimensionElement*>::const_iterator dimEndIt = dimensions.end();
+        vector<DimensionElement*>::const_iterator dimIt;
+        for (dimIt = dimensions.begin(); dimIt != dimEndIt; ++dimIt)
+          {
+            const DimensionElement* pDim = *dimIt;
+            VALID_PTR(pDim);
+            const DimensionElement* pUnionDim = pParent->getDimensionInLocalScope(pDim->name());
+            if (pUnionDim)
+              {
+                // We'll check the dimensions match no matter what, but only warn unless we're told to check
+                if (!pUnionDim->checkDimensionsMatch(*pDim))
+                  {
+                    string msg = string("The union aggregation already had a dimension=") +
+                                        pUnionDim->toString() +
+                                        " but we found another with different cardinality: " +
+                                        pDim->toString() +
+                                        " This is likely an error and could cause a later exception.";
+                    BESDEBUG("ncml", "WARNING: " + msg);
+                    if (checkDimensionMismatch)
+                      {
+                        THROW_NCML_PARSE_ERROR(msg + " Scope=" + _parser->getScopeString());
+                      }
+                  }
+              }
+            else // if not in the union already, we want to add it!
+              {
+                // this will up the ref count for it so when child dataset dies, we're good.
+                BESDEBUG("ncml", "Dimension name=" << pDim->name() <<
+                    " was not found in the union yet, so adding it.  The full elt is: " <<
+                    pDim->toString() << endl);
+                pParent->addDimension( const_cast<DimensionElement*>(pDim) );
+              }
+          }
+      }
+  }
 
   vector<string>
   AggregationElement::getValidAttributes()

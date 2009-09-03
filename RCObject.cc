@@ -44,13 +44,13 @@ namespace ncml_module
  }
 
  int
- RCObject::ref()
+ RCObject::ref() const
  {
    return ++_count;
  }
 
  int
- RCObject::unref() throw()
+ RCObject::unref() const throw()
  {
    int tmp = --_count;
    if (_count == 0)

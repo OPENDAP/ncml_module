@@ -143,8 +143,8 @@ namespace ncml_module
     /** Clear the dimension table, releasing all strong references */
     void clearDimensions();
 
-    /** Get the dimension table local to this dataset, not its enclosing scope.  */
-    void getDimensions() const;
+    /** Get the list of dimension elements local to only this dataset, not its enclosing scope.  */
+    const std::vector<DimensionElement*>& getDimensionElements() const;
 
     /** Set our aggregtation to the given agg.
      *

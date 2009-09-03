@@ -99,6 +99,15 @@ namespace ncml_module
      */
     void collectDatasetsInOrder(vector<DDS*>& ddsList) const;
 
+    /**
+     * Perform the union aggregation on the child dataset dimensions tables into
+     * getParentDataset()'s dimension table.
+     * If checkDimensionMismatch is set, then we throw a parse error
+     * if a dimension with the same name is specified but its size doesn't
+     * match the one that is in the union.
+     */
+    void mergeDimensions(bool checkDimensionMismatch=true);
+
     static vector<string> getValidAttributes();
 
   private:

@@ -38,7 +38,7 @@ using libdap::AttrTable;
 using libdap::BaseType;
 using libdap::DDS;
 
-namespace ncml_module
+namespace agg_util
 {
   void
   AggregationUtil::performUnionAggregation(DDS* pOutputUnion, const vector<DDS*>& datasetsInOrder)

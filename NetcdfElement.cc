@@ -316,6 +316,12 @@ namespace ncml_module
     _dimensions.resize(0);
   }
 
+  const std::vector<DimensionElement*>&
+  NetcdfElement::getDimensionElements() const
+  {
+    return _dimensions;
+  }
+
   void
   NetcdfElement::setChildAggregation(AggregationElement* agg, bool throwIfExists/*=true*/)
   {
@@ -348,7 +354,6 @@ namespace ncml_module
   {
     return _parentAgg;
   }
-
 
   void
   NetcdfElement::setParentAggregation(AggregationElement* parent)

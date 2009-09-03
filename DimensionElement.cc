@@ -153,6 +153,13 @@ namespace ncml_module
     return ret;
   }
 
+  bool
+  DimensionElement::checkDimensionsMatch(const DimensionElement& rhs) const
+  {
+    return ( (this->name() == rhs.name()) &&
+             (this->getSize() == rhs.getSize()) );
+  }
+
   const string&
   DimensionElement::name() const
   {
