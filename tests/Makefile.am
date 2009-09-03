@@ -62,7 +62,7 @@ $(TESTSUITE): $(srcdir)/testsuite.at $(srcdir)/package.m4 bes.conf $(TEST_FILES)
 	mv ${srcdir}/$@.tmp ${srcdir}/$@
 
 # We need to find out where the preinstalled modules are
-BES_MODULES_DIR = `bes-config --modulesdir`
+#BES_MODULES_DIR = `bes-config --modulesdir`
 
 # Resolve the ../ in the path so the BES doesn't complain about them
 canonical_abs_top_srcdir =  `${READLINK_F} ${abs_top_srcdir}`
@@ -72,7 +72,7 @@ canonical_abs_top_srcdir =  `${READLINK_F} ${abs_top_srcdir}`
 bes.conf: bes.conf.in ../config.status
 	sed -e "s%[@]pkgdatadir[@]%${pkgdatadir}%" \
 		-e "s%[@]sysconfdir[@]%${sysconfdir}%" \
-		-e "s%[@]beslibdir[@]%${BES_MODULES_DIR}%" \
+		-e "s%[@]beslibdir[@]%${BES_MODULE_DIR}%" \
 		-e "s%[@]datadir[@]%${datadir}%" \
 		-e "s%[@]abs_top_srcdir[@]%${canonical_abs_top_srcdir}%" \
 		-e "s%[@]abs_top_builddir[@]%${abs_top_builddir}%" \
