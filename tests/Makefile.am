@@ -31,6 +31,9 @@ TEST_FILES = 	aggregations.at \
 EXTRA_DIST = testsuite.at $(TEST_FILES) $(srcdir)/package.m4 $(TESTSUITE) atlocal.in \
 	template.bescmd.in bes.conf.in baselines
 
+noinst_DATA = bes.conf
+DISTCLEANFILES = bes.conf
+
 check-local: atconfig atlocal $(TESTSUITE)
 	$(SHELL) '$(TESTSUITE)' $(TESTSUITEFLAGS)
 
@@ -60,9 +63,6 @@ AUTOTEST = $(AUTOM4TE) --language=autotest
 $(TESTSUITE): $(srcdir)/testsuite.at $(srcdir)/package.m4 bes.conf $(TEST_FILES)
 	$(AUTOTEST) -I '$(srcdir)' -o ${srcdir}/$@.tmp $@.at
 	mv ${srcdir}/$@.tmp ${srcdir}/$@
-
-# We need to find out where the preinstalled modules are
-#BES_MODULES_DIR = `bes-config --modulesdir`
 
 # Resolve the ../ in the path so the BES doesn't complain about them
 canonical_abs_top_srcdir =  `${READLINK_F} ${abs_top_srcdir}`
