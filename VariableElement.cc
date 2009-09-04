@@ -59,6 +59,7 @@ namespace ncml_module
   , _orgName("")
   , _shapeTokens()
   , _isNewNCMLVariable(false)
+  , _gotValues(false)
   {
   }
 
@@ -71,6 +72,7 @@ namespace ncml_module
     _orgName = proto._orgName;
     _shapeTokens = proto._shapeTokens;
     _isNewNCMLVariable = proto._isNewNCMLVariable;
+    _gotValues = proto._gotValues;
   }
 
   VariableElement::~VariableElement()
@@ -183,6 +185,15 @@ namespace ncml_module
     if (!p.isScopeVariable())
       {
         THROW_NCML_PARSE_ERROR("VariableElement::handleEnd called when not parsing a variable element!  Scope=" + p.getTypedScopeString());
+      }
+
+    // It's a parse error to make a new variable and not set its values.  Otherwise, we end up
+    // with internal errors on read() later....
+    if (_isNewNCMLVariable && !_gotValues)
+      {
+        THROW_NCML_PARSE_ERROR("Newly created variable=" + toString() +
+            " did not have values specified via autogeneration or a variables element.  Values must be set!" +
+            " Scope=" + p.getScopeString() );
       }
 
     NCML_ASSERT_MSG(p.getCurrentVariable(), "Error: VariableElement::handleEnd(): Expected non-null parser.getCurrentVariable()!");
@@ -375,6 +386,9 @@ namespace ncml_module
 
     // Make it be the scope for any incoming new attributes.
     enterScope(p, pActualVar);
+
+    // Structures technically don't have values, but we check later that we set them, so say we're good.
+    setGotValues();
   }
 
   void

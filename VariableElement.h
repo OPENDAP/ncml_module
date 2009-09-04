@@ -47,6 +47,18 @@ namespace ncml_module
    *
    * This class handles the processing of <variable> elements
    * in the NcML.
+   *
+   * The class handles all processing of variables, including
+   * setting lexical scope in the parser to the variable's attribute table,
+   * renaming variables, and creating new variables.
+   *
+   * _isNewVariable specifies if the variable was created new in this NcML parse, or
+   *    was just a lexical scope.
+   * _gotValues specifies if the variable had a contained <values> element processed on it yet.
+   *
+   * On handleEnd(), if _isNewVariable && !_gotValues, a parse error is thrown.
+   *
+   * It is also an error to specify a second <values> element if _gotValues.
    */
   class VariableElement : public NCMLElement
   {
@@ -87,6 +99,14 @@ namespace ncml_module
 
     /** @return whether this variable was created and added as a new variable in this parse */
     bool isNewVariable() const { return _isNewNCMLVariable; }
+
+    /** @return whether we got a values element set to us yet, used to make sure new
+     * variables get values once and only once.
+     */
+    bool checkGotValues() const { return _gotValues; }
+
+    /** Called once we set the values from ValuesElement so we are aware. */
+    void setGotValues() { _gotValues = true; }
 
   private:
 
@@ -238,6 +258,7 @@ namespace ncml_module
 
     vector<string> _shapeTokens; // tokenized version of _shape for dimensions
     bool _isNewNCMLVariable; // true if this variable was created new in the NcML file and isn't existing
+    bool _gotValues; // true once we get a valid <values> element with values in it.  Used for parse error checking
   };
 
 }

@@ -122,8 +122,15 @@ namespace ncml_module
         THROW_NCML_PARSE_ERROR("Got values element while not parsing a variable!  values=" + toString() + " at scope=" + p.getTypedScopeString());
       }
 
-    // OK, we're in a variable, that's good.  Nothing else to do since the content
-    // will contain the actual variables!
+    // Make sure we're the first values element on the variable or there is a problem!
+    const VariableElement* pVarElt = getContainingVariableElement(p);
+    VALID_PTR(pVarElt);
+    if (pVarElt->checkGotValues())
+      {
+        THROW_NCML_PARSE_ERROR("Got a values element when one was already specified for this variable=" +
+            pVarElt->toString() +
+            " at scope=" + p.getScopeString());
+      }
 
     // If we got a start and increment, we are supposed to auto-generate values for the variable
     if (shouldAutoGenerateValues())
@@ -184,6 +191,7 @@ namespace ncml_module
       }
     setVariableValuesFromTokens(p, *pVar);
     _gotContent = true;
+    setGotValuesOnOurVariableElement(p);
   }
 
   void
@@ -614,6 +622,8 @@ namespace ncml_module
         THROW_NCML_INTERNAL_ERROR("ValuesElement::autogenerateAndSetVariableValues: expected variable of type libdap::Array but failed to cast it!");
       }
 
+    setGotValuesOnOurVariableElement(p);
+
     // Next, find out the underlying type and use the classis template calls.
     libdap::BaseType* pTemplate = pArray->var();
     VALID_PTR(pTemplate);
@@ -695,7 +705,15 @@ namespace ncml_module
         }
     }
     return ret;
+  }
 
+  void
+  ValuesElement::setGotValuesOnOurVariableElement(NCMLParser& p)
+  {
+    // Ugh, I know I shouldn't do this, but...
+    VariableElement* pContainingVar = const_cast<VariableElement*>(getContainingVariableElement(p));
+    VALID_PTR(pContainingVar);
+    pContainingVar->setGotValues();
   }
 
 }

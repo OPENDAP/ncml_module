@@ -11,5 +11,10 @@ AT_CHECK_DATADDS_GETDAP([sample_virtual_dataset.ncml])
 dnl Test reentrance (wrapping NcML file within NcML file 
 AT_CHECK_ALL_DAP_RESPONSES([reentrancy_test.ncml])
 
+dnl Check that not specifying a values element for a new variable is a parse error
+AT_ASSERT_PARSE_ERROR([bugs/missing_str_values.ncml])
+
+dnl Also check that specifying values twice for a single new variable is a parse error
+AT_ASSERT_PARSE_ERROR([bugs/values_set_twice_error.ncml])
 
 

@@ -175,6 +175,10 @@ namespace ncml_module
     /** Get the VariableElement we are contained within in the parse */
     const VariableElement* getContainingVariableElement(NCMLParser& p) const;
 
+    /** Call setGotValues() on the containing variable element */
+    void setGotValuesOnOurVariableElement(NCMLParser& p);
+
+
   private: // Data Rep
     string _start;
     string _increment;
