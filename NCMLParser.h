@@ -39,6 +39,7 @@
 
 #include "AttrTable.h" // needed due to parameter with AttrTable::Attr_iter
 #include "DDSLoader.h"
+#include "NCMLElement.h" // NCMLElement::Factory
 #include "SaxParser.h" // interface superclass
 #include "ScopeStack.h"
 
@@ -430,10 +431,7 @@ private: //methods
   ElementStackConstIterator getElementStackEnd() const { return _elementStack.rend(); }
 
   /** unref() all the NCMLElement* in _elementStack and clear it.
-   *  For completeness, if any NCMLElement's still have a non-zero count after being
-   *  unref()'d, they are FORCIBLY destroyed since technically they should not
-   *  exist outside of the scope of the parser.  This is technically a bug if it happens,
-   *   though, so we warn.
+   * We don't delete them, but leave that up to the Factory dtor if there's dangling refs.
    *  */
   void clearElementStack();
 
@@ -499,6 +497,11 @@ private: // data rep
   // Type is based on _responseType.   We do not own this memory!  It is a temp while we parse and is handed in.
   // NOTE: The root dataset will use this for its response object!
   BESDapResponse* _response;
+
+  // The element factory to use to create our NCMLElement's.
+  // All objects created by this factory will be deleted in the dtor
+  // regardless of their ref counts!
+  NCMLElement::Factory _elementFactory;
 
   // The root dataset, as a NetcdfElement*.
   NetcdfElement* _rootDataset;

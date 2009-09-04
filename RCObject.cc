@@ -32,9 +32,15 @@
 
 namespace ncml_module
 {
-  RCObject::RCObject()
+  RCObject::RCObject(RCObjectPool* pool/*=0*/)
   : _count(0)
+  , _pool(pool)
   {
+    // If the pool doesn't already have us, put us in.
+    if (_pool && !_pool->contains(this))
+      {
+        _pool->add(this);
+      }
   }
 
  RCObject::~RCObject()
@@ -55,9 +61,18 @@ namespace ncml_module
    int tmp = --_count;
    if (_count == 0)
      {
-       BESDEBUG("ncml", "Object being deleted since its count hit 0.  " << printRCObject() <<
-           " with toString() == " << toString() << endl);
-       delete this;
+       if (_pool)
+         {
+           BESDEBUG("ncml:memory", "Releasing back to pool: Object ref count hit 0.  " << printRCObject() <<
+             " with toString() == " << toString() << endl);
+           _pool->release(const_cast<RCObject*>(this));
+         }
+       else
+         {
+           BESDEBUG("ncml:memory", "Calling delete: Object ref count hit 0.  " << printRCObject() <<
+             " with toString() == " << toString() << endl);
+           delete this;
+         }
      }
    return tmp;
  }
@@ -80,6 +95,73 @@ namespace ncml_module
    std::ostringstream oss;
    oss << "RCObject@(" << reinterpret_cast<const void*>(this) << ") _count=" << _count;
    return oss.str();
+ }
+
+
+ /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ //////////////////////////// RCObjectPool
+
+ RCObjectPool::RCObjectPool()
+ : _liveObjects()
+ {
+ }
+
+ RCObjectPool::~RCObjectPool()
+ {
+   deleteAllObjects();
+ }
+
+ bool
+ RCObjectPool::contains(RCObject* pObj) const
+ {
+   RCObjectSet::const_iterator foundIt = _liveObjects.find(pObj);
+   return (foundIt != _liveObjects.end());
+ }
+
+ void
+ RCObjectPool::add(RCObject* pObj)
+ {
+   if (contains(pObj))
+     {
+       throw string("Internal Pool Error: Object added twice!");
+     }
+   _liveObjects.insert(pObj);
+   pObj->_pool = this;
+ }
+
+ void
+ RCObjectPool::release(RCObject* pObj)
+ {
+   if (contains(pObj))
+     {
+       _liveObjects.erase(pObj);
+       pObj->_pool = 0;
+
+       // Delete it for now...  If we decide to subclass and implement a real pool,
+       // we'll want to push this onto a vector for reuse.
+       BESDEBUG("ncml:memory", "RCObjectPool::release(): Calling delete on released object=" << pObj->printRCObject() << endl);
+       delete pObj;
+     }
+   else
+     {
+       BESDEBUG("ncml:memory", "ERROR: RCObjectPool::release() called on object not in pool!!  Ignoring!" << endl);
+     }
+ }
+
+ void
+ RCObjectPool::deleteAllObjects()
+ {
+   BESDEBUG("ncml:memory", "RCObjectPool::deleteAllObjects() started...." << endl);
+   RCObjectSet::iterator endIt = _liveObjects.end();
+   RCObjectSet::iterator it = _liveObjects.begin();
+   for (; it != endIt; ++it)
+     {
+       RCObject* pObj = *it;
+       BESDEBUG("ncml:memory", "Calling delete on RCObject=" << pObj->printRCObject() << endl);
+       delete pObj;
+     }
+   _liveObjects.clear();
+   BESDEBUG("ncml:memory", "RCObjectPool::deleteAllObjects() complete!" << endl);
  }
 
 } // namespace ncml_module

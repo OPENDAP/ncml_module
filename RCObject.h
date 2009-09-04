@@ -29,10 +29,12 @@
 #ifndef __NCML_MODULE__REF_COUNTED_OBJECT_H__
 #define __NCML_MODULE__REF_COUNTED_OBJECT_H__
 
+#include <set>
 #include <string>
 
 namespace ncml_module
 {
+  class RCOBjectPool;
 
   /**
    * @brief A base class for a simple reference counted object.
@@ -77,8 +79,13 @@ namespace ncml_module
    */
   class RCObject
   {
+    friend class RCObjectPool;
+
   public:
-    RCObject();
+    /** If the pool is given, the object will be released back to the pool when its count hits 0,
+     * otherwise it will be deleted.
+     */
+    RCObject(RCObjectPool* pool=0);
     virtual ~RCObject();
 
     /** Increase the reference count by one.
@@ -113,6 +120,10 @@ namespace ncml_module
     // The reference count... mutable since we want to ref count const objects as well,
     // and the count doesn't affect the semantic constness of the subclasses.
     mutable int _count;
+
+    // If not null, the object is from the given pool and should be release()'d to the
+    // pool when count hits 0, not deleted.  If null, it can be deleted.
+    RCObjectPool* _pool;
   };
 
   /** @brief A reference to an RCObject which automatically ref() and deref() on creation and destruction.
@@ -213,6 +224,61 @@ namespace ncml_module
     T* _obj;
   };
 
+  typedef std::set<RCObject*> RCObjectSet;
+
+  /**
+   * A monitoring "pool" class for created RCObject's which allows us to
+   * forcibly delete any RCOBject's regardless of their ref counts
+   * when we know we are done with them, say after an exception.
+   *
+   * @TODO For now, this won't be a real pool, where objects are pre-allocated
+   * ahead of time and reused, etc.  Support for this sort of thing will
+   * require a template class containing a vector of reusable objects
+   * for each type we need to factory up.  At that point this will serve
+   * as a base class for the concrete pool.
+   */
+  class RCObjectPool
+  {
+    friend class RCObject;
+
+public:
+    /** Create an empty pool */
+    RCObjectPool();
+
+    /** Forcibly delete all remaining objects in pool, regardless of ref count */
+    virtual ~RCObjectPool();
+
+    /** @return whether the pool is currently monitoring the object
+     * or not.
+     */
+    bool contains(RCObject* pObj) const;
+
+    /** Add the object to the pool uniquely.
+      * When the pool is destroyed, pObj will be destroyed
+      * as well, regardless of its count, if it is still live.
+      */
+    void add(RCObject* pObj);
+
+    /**
+     * Tell the pool that the object's count is 0 and it can be released to be
+     * deleted or potentially reused again later.  This method is protected
+     * since we don't want users calling this, but only subclasses and our friend the RCObject itself.
+     */
+    void release(RCObject* pObj);
+
+protected:
+    /** Call delete on all objects remaining in _liveObjects and clear it out.
+     * After call, _liveObjects.empty().
+     */
+    void deleteAllObjects();
+
+private:
+
+    // A set of the live, monitored objects.
+    // Lookups are log(N) and entries unique, as required.
+    // All entries in this list will be delete'd in the dtor.
+    RCObjectSet _liveObjects;
+  };
 }
 
 #endif /* __NCML_MODULE__REF_COUNTED_OBJECT_H__ */

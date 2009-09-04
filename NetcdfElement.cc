@@ -93,7 +93,7 @@ namespace ncml_module
 
   NetcdfElement::~NetcdfElement()
   {
-    BESDEBUG("ncml", "~NetcdfElement called...");
+    BESDEBUG("ncml:memory", "~NetcdfElement called...");
     // Only if its ours do we nuke it.
     if (_weOwnResponse)
       {

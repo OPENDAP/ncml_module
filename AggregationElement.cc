@@ -83,7 +83,7 @@ namespace ncml_module
 
   AggregationElement::~AggregationElement()
   {
-    BESDEBUG("ncml", "~AggregationElement called...");
+    BESDEBUG("ncml:memory", "~AggregationElement called...");
     _type = "";
     _dimName= "";
     _recheckEvery = "";

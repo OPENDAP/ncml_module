@@ -154,7 +154,7 @@ void
 NCMLParser::onStartElement(const std::string& name, const AttributeMap& attrs)
 {
   // Store it in a shared ptr in case this function exceptions before we store it in the element stack.
-  RCPtr<NCMLElement> elt = NCMLElement::Factory::getTheFactory().makeElement(name, attrs);
+  RCPtr<NCMLElement> elt = _elementFactory.makeElement(name, attrs);
 
   // If we actually created an element of the given type name
   if (elt.get())
@@ -969,12 +969,8 @@ NCMLParser::clearElementStack()
     {
       NCMLElement* elt = _elementStack.back();
       _elementStack.pop_back();
-      // Hmm, technically, we could just delete them since we know we're done, but....
-      if (elt->unref() > 0)
-        {
-          BESDEBUG("ncml", "Got a non-zero reference count in NCMLParser::deleteElementStack!" << endl);
-          delete elt; // FORCE it to go away.
-        }
+      // unref() them... The Factory will take care of dangling memory...
+      elt->unref();
     }
   _elementStack.resize(0);
 }

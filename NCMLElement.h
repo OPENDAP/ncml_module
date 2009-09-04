@@ -62,7 +62,7 @@ namespace ncml_module
   public:
 
     /**
-     *  Singleton factory class for the NcML elements.
+     *  Factory class for the NcML elements.
      *  Assumption: Concrete subclasses MUST
      *  define the following static methods:
      *  static const string& ConcreteClassName::getTypeName();
@@ -70,14 +70,9 @@ namespace ncml_module
      * */
     class Factory
     {
-    private: // only the static can create the singleton
-      Factory() : _protos() {}
-
     public:
+      Factory();
       ~Factory();
-
-      /** Get the singleton */
-      static Factory& getTheFactory();
 
       /**
        * Create an element of the proper type with the given AttrMap
@@ -87,6 +82,11 @@ namespace ncml_module
        * @param attrs the map of the attributes defined for the element
        */
       RCPtr<NCMLElement> makeElement(const std::string& eltTypeName, const AttributeMap& attrs);
+
+    private: // Interface
+
+      /** Add the initial prototypes to this so we are ready to rumble */
+      void initialize();
 
     private:
       // Possible prototypes we can create from.  Uses getTypeName() for match.
@@ -102,16 +102,8 @@ namespace ncml_module
       /** Return the iterator for the prototype for elementTypeName, or _protos.end() if not found. */
       ProtoList::iterator findPrototype(const std::string& elementTypeName);
 
-      /** Create the singleton into _sInstance
-       * and populate it with concrete subclasses
-       */
-      static void createTheFactory();
-
-      // Singleton
-      static Factory*_sInstance;
-
-
       ProtoList _protos;
+      RCObjectPool _pool; // container for all created objects, will be flushed when dtor is called in case of leaks.
     };
 
   protected: // data rep

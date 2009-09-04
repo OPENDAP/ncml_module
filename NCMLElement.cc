@@ -47,8 +47,11 @@ using std::vector;
 
 namespace ncml_module
 {
-  // Start with no factory...
-  NCMLElement::Factory* NCMLElement::Factory::_sInstance = 0;
+  NCMLElement::Factory::Factory()
+  : _protos()
+  {
+    initialize();
+  }
 
   NCMLElement::Factory::~Factory()
   {
@@ -59,16 +62,6 @@ namespace ncml_module
         delete proto;
         _protos.pop_back();
       }
-  }
-
-  NCMLElement::Factory& NCMLElement::Factory::getTheFactory()
-  {
-    if (!_sInstance)
-      {
-        createTheFactory();
-      }
-    VALID_PTR(_sInstance);
-    return *_sInstance;
   }
 
   void
@@ -107,20 +100,18 @@ namespace ncml_module
   }
 
   void
-  NCMLElement::Factory::createTheFactory()
+  NCMLElement::Factory::initialize()
   {
-    _sInstance = new Factory();
-
     // Enter prototypes for all the concrete subclasses
-    _sInstance->addPrototype(new RemoveElement());
-    _sInstance->addPrototype(new ExplicitElement());
-    _sInstance->addPrototype(new ReadMetadataElement());
-    _sInstance->addPrototype(new NetcdfElement());
-    _sInstance->addPrototype(new AttributeElement());
-    _sInstance->addPrototype(new VariableElement());
-    _sInstance->addPrototype(new ValuesElement());
-    _sInstance->addPrototype(new DimensionElement());
-    _sInstance->addPrototype(new AggregationElement());
+    addPrototype(new RemoveElement());
+    addPrototype(new ExplicitElement());
+    addPrototype(new ReadMetadataElement());
+    addPrototype(new NetcdfElement());
+    addPrototype(new AttributeElement());
+    addPrototype(new VariableElement());
+    addPrototype(new ValuesElement());
+    addPrototype(new DimensionElement());
+    addPrototype(new AggregationElement());
   }
 
 
@@ -137,6 +128,10 @@ namespace ncml_module
     RCPtr<NCMLElement> newElt = RCPtr<NCMLElement>((*it)->clone());
     VALID_PTR(newElt.get());
     newElt->setAttributes(attrs);
+
+    // Add the object to our pool to delete it when the factory dtor is called
+    // if the ref count never hits 0.
+    _pool.add(newElt.get());
     return newElt; //relinquish
   }
 
