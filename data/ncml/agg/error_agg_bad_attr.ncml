@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!-- Parse error test for attributes in aggregation that aren't in schema -->
 <netcdf>
   
-<!-- aggregation@name is a bug -->
- <aggregation type="union" name="I_should_not_be_here" orgName="Nor_I">
+<!-- misspelled type  and name and orgName are bugs -->
+ <aggregation typee="union" name="I_should_not_be_here" orgName="Nor_I">
    <netcdf/>
    <netcdf/>   
  </aggregation>
