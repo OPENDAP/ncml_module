@@ -54,7 +54,8 @@ namespace ncml_module
   const vector<string> VariableElement::_sValidAttributes = getValidAttributes();
 
   VariableElement::VariableElement()
-  : _name("")
+  : NCMLElement(0)
+  , _name("")
   , _type("")
   , _shape("")
   , _orgName("")
@@ -65,7 +66,7 @@ namespace ncml_module
   }
 
   VariableElement::VariableElement(const VariableElement& proto)
-  : NCMLElement()
+  : NCMLElement(proto)
   {
     _name = proto._name;
     _type = proto._type;
@@ -107,13 +108,14 @@ namespace ncml_module
   }
 
   void
-  VariableElement::handleBegin(NCMLParser& p)
+  VariableElement::handleBegin()
   {
-    processBegin(p);
+    VALID_PTR(_parser);
+    processBegin(*_parser);
   }
 
   void
-  VariableElement::handleContent(NCMLParser& /* p */, const string& content)
+  VariableElement::handleContent(const string& content)
   {
     // Variables cannot have content like attribute.  It must be within a <values> element.
     if (!NCMLUtil::isAllWhitespace(content))
@@ -124,9 +126,9 @@ namespace ncml_module
   }
 
   void
-  VariableElement::handleEnd(NCMLParser& p)
+  VariableElement::handleEnd()
   {
-    processEnd(p);
+    processEnd(*_parser);
   }
 
   string

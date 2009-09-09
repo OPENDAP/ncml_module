@@ -159,7 +159,8 @@ NCMLParser::onStartElement(const std::string& name, const AttributeMap& attrs)
   // If we actually created an element of the given type name
   if (elt.get())
     {
-      elt->handleBegin(*this);
+      elt->setParser(this);
+      elt->handleBegin();
       // tell the container to push the raw element, which will also ref() it on success
       // otherwise ~RCPtr will unref() to 0 and thus nuke it on exception.
       pushElement(elt.get());
@@ -186,7 +187,7 @@ NCMLParser::onEndElement(const std::string& name)
   // If it matches the one on the top of the stack, then process and pop.
   if (elt->getTypeName() == name)
     {
-      elt->handleEnd(*this);
+      elt->handleEnd();
       popElement(); // handles delete
       elt = 0;
     }
@@ -203,7 +204,7 @@ NCMLParser::onCharacters(const std::string& content)
   NCMLElement* elt = getCurrentElement();
   if (elt)
     {
-      elt->handleContent(*this, content);
+      elt->handleContent(content);
     }
 }
 

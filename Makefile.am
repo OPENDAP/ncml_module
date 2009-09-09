@@ -47,6 +47,7 @@ NCML_SRCS = \
 		Shape.cc \
 		SimpleLocationParser.cc \
 		ValuesElement.cc \
+		VariableAggElement.cc \
 		VariableElement.cc
 
 NCML_HDRS = \
@@ -79,6 +80,7 @@ NCML_HDRS = \
 		ScopeStack.h \
 		SimpleLocationParser.h \
 		ValuesElement.h \
+		VariableAggElement.h \
 		VariableElement.h 
 
 libncml_module_la_SOURCES = $(NCML_SRCS) $(BES_SRCS) $(NCML_HDRS) $(BES_HDRS)

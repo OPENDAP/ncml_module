@@ -39,11 +39,12 @@ namespace ncml_module
   const vector<string> ReadMetadataElement::_sValidAttributes = vector<string>();
 
   ReadMetadataElement::ReadMetadataElement()
+  :NCMLElement(0)
   {
   }
 
-  ReadMetadataElement::ReadMetadataElement(const ReadMetadataElement& /* proto */)
-  : NCMLElement()
+  ReadMetadataElement::ReadMetadataElement(const ReadMetadataElement& proto)
+  : NCMLElement(proto)
   {
   }
 
@@ -72,13 +73,13 @@ namespace ncml_module
   }
 
   void
-  ReadMetadataElement::handleBegin(NCMLParser& p)
+  ReadMetadataElement::handleBegin()
   {
-    if (!p.isScopeNetcdf())
+    if (!_parser->isScopeNetcdf())
         {
           THROW_NCML_PARSE_ERROR("Got <readMetadata/> while not within <netcdf>");
         }
-    NetcdfElement* dataset = p.getCurrentDataset();
+    NetcdfElement* dataset = _parser->getCurrentDataset();
     VALID_PTR(dataset);
 
     // Like Highlander, there can be only one!
@@ -91,7 +92,7 @@ namespace ncml_module
   }
 
   void
-  ReadMetadataElement::handleContent(NCMLParser& /* p */, const string& content)
+  ReadMetadataElement::handleContent(const string& content)
   {
     if (!NCMLUtil::isAllWhitespace(content))
       {
@@ -101,7 +102,7 @@ namespace ncml_module
   }
 
   void
-  ReadMetadataElement::handleEnd(NCMLParser& /* p */)
+  ReadMetadataElement::handleEnd()
   {
   }
 

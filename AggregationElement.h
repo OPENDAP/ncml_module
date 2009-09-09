@@ -59,9 +59,9 @@ namespace ncml_module
     virtual const string& getTypeName() const;
     virtual AggregationElement* clone() const; // override clone with more specific subclass
     virtual void setAttributes(const AttributeMap& attrs);
-    virtual void handleBegin(NCMLParser& p);
-    virtual void handleContent(NCMLParser& p, const string& content);
-    virtual void handleEnd(NCMLParser& p);
+    virtual void handleBegin();
+    virtual void handleContent(const string& content);
+    virtual void handleEnd();
     virtual string toString() const;
 
     const string& type() const { return _type; }
@@ -80,6 +80,22 @@ namespace ncml_module
     /** Add a new dataset to the aggregation for the parse.
      * We now have a strong reference to it. */
     void addChildDataset(NetcdfElement* pDataset);
+
+    /** Set the variable with name as an aggregation variable for this
+     * aggregation.
+     */
+    void addAggregationVariable(const string& name);
+
+    /**
+     * @return whether the variable with name has been added as an aggregation variable
+     */
+    bool isAggregationVariable(const string& name) const;
+
+    string printAggregationVariables() const;
+
+    typedef vector<string>::const_iterator AggVarIter;
+    AggVarIter beginAggVarIter() const;
+    AggVarIter endAggVarIter() const;
 
   private: // methods
 
@@ -110,15 +126,16 @@ namespace ncml_module
     string _dimName;
     string _recheckEvery;
 
-    // Set in handleBegin().
-    NCMLParser* _parser;
-
     // Our containing NetcdfElement, which must exist.  This needs to be a weak reference to avoid ref loop....
     NetcdfElement* _parent;
 
     // The vector of loaded, parsed datasets, as NetcdfElement*.  We have a strong reference to these
     // if they are in this container and we must deref() them on dtor.
     vector<NetcdfElement*> _datasets;
+
+    // A vector containing the names of the variables to be aggregated in this aggregation.
+    // Not used for union.
+    vector<string> _aggVars;
   };
 
 }

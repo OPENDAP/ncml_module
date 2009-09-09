@@ -58,7 +58,8 @@ namespace ncml_module
   const vector<string> ValuesElement::_sValidAttributes = getValidAttributes();
 
   ValuesElement::ValuesElement()
-  : _start("")
+  : NCMLElement(0)
+  , _start("")
   , _increment("")
   , _separator(NCMLUtil::WHITESPACE)
   , _gotContent(false)
@@ -115,8 +116,11 @@ namespace ncml_module
   }
 
   void
-  ValuesElement::handleBegin(NCMLParser& p)
+  ValuesElement::handleBegin()
   {
+    VALID_PTR(_parser);
+    NCMLParser& p = *_parser;
+
     BESDEBUG("ncml", "ValuesElement::handleBegin called with element=" << toString() << " at scope=" << p.getScopeString() << endl);
 
     // First, make sure we're in a current parse start for this elemnent
@@ -146,8 +150,10 @@ namespace ncml_module
   }
 
   void
-  ValuesElement::handleContent(NCMLParser& p, const string& content)
+  ValuesElement::handleContent(const string& content)
   {
+    NCMLParser& p = *_parser;
+
     BESDEBUG("ncml", "ValuesElement::handleContent called for " << toString() << " with content=" << content << endl);
 
     // N.B. Technically, we're still in isScopeVariable() since we don't push values elements on the scopestack,
@@ -198,7 +204,7 @@ namespace ncml_module
   }
 
   void
-  ValuesElement::handleEnd(NCMLParser& /* p */)
+  ValuesElement::handleEnd()
   {
     BESDEBUG("ncml", "ValuesElement::handleEnd called for " << toString() << endl);
 

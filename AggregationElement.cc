@@ -45,13 +45,13 @@ namespace ncml_module
   const vector<string> AggregationElement::_sValidAttrs = getValidAttributes();
 
   AggregationElement::AggregationElement()
-    : NCMLElement()
+    : NCMLElement(0)
     , _type("")
     , _dimName("")
     , _recheckEvery("")
-    , _parser(0)
     , _parent(0)
     , _datasets()
+    , _aggVars()
   {
   }
 
@@ -60,9 +60,9 @@ namespace ncml_module
     , _type(proto._type)
     , _dimName(proto._dimName)
     , _recheckEvery(proto._recheckEvery)
-    , _parser(proto._parser)
     , _parent(proto._parent) // my parent is the same too... is this safe without a true weak reference?
-    , _datasets()
+    , _datasets() // deep copy below
+    , _aggVars(proto._aggVars)
   {
     // Deep copy all the datasets and add them to me...
     // This is potentially expensive in memory for large datasets, so let's tell someone.
@@ -87,7 +87,6 @@ namespace ncml_module
     _type = "";
     _dimName= "";
     _recheckEvery = "";
-    _parser = 0;
     _parent = 0;
 
     // Release strong references to the contained netcdfelements....
@@ -123,19 +122,19 @@ namespace ncml_module
   }
 
   void
-  AggregationElement::handleBegin(NCMLParser& p)
+  AggregationElement::handleBegin()
   {
     NCML_ASSERT(!getParentDataset());
 
     // Check that the immediate parent element is netcdf since we cannot put an aggregation anywhere else.
-    if (!p.isScopeNetcdf())
+    if (!_parser->isScopeNetcdf())
       {
         THROW_NCML_PARSE_ERROR("Got an <aggregation> = " + toString() +
           " at incorrect parse location.  They can only be direct children of <netcdf>.  Scope=" +
-          p.getScopeString());
+          _parser->getScopeString());
       }
 
-    NetcdfElement* dataset = p.getCurrentDataset();
+    NetcdfElement* dataset = _parser->getCurrentDataset();
     NCML_ASSERT_MSG(dataset, "We expected a non-noll current dataset while processing AggregationElement::handleBegin() for " + toString());
     // If the enclosing dataset already has an aggregation, this is a parse error.
     if (dataset->getChildAggregation())
@@ -146,12 +145,10 @@ namespace ncml_module
     // Set me as the aggregation for the current dataset.
     // This will set my parent and also ref() me.
     dataset->setChildAggregation(this);
-
-    _parser = &p;
   }
 
   void
-  AggregationElement::handleContent(NCMLParser& /* p */, const string& content)
+  AggregationElement::handleContent(const string& content)
   {
     // Aggregations do not specify content!
     if (!NCMLUtil::isAllWhitespace(content))
@@ -162,10 +159,10 @@ namespace ncml_module
   }
 
   void
-  AggregationElement::handleEnd(NCMLParser& p)
+  AggregationElement::handleEnd()
   {
     // Handle the actual processing!!
-    BESDEBUG("ncml", "Got AggregationElement::handleEnd(): Processing the aggregation!!");
+    BESDEBUG("ncml", "Got AggregationElement::handleEnd(): Processing the aggregation!!" << endl);
 
     if (_type == "union")
       {
@@ -186,7 +183,7 @@ namespace ncml_module
       }
     else
       {
-        THROW_NCML_PARSE_ERROR("Unknown aggregation type=" + _type + " at scope=" + p.getScopeString());
+        THROW_NCML_PARSE_ERROR("Unknown aggregation type=" + _type + " at scope=" + _parser->getScopeString());
       }
 
     _parser = 0;
@@ -215,6 +212,66 @@ namespace ncml_module
     // also set a weak reference to us as the parent
     pDataset->setParentAggregation(this);
   }
+
+  void
+  AggregationElement::addAggregationVariable(const string& name)
+  {
+    if (isAggregationVariable(name))
+      {
+        THROW_NCML_PARSE_ERROR("Tried to add an aggregation variable twice: name=" + name +
+            " at scope=" + _parser->getScopeString());
+      }
+    else
+      {
+        _aggVars.push_back(name);
+        BESDEBUG("ncml", "Added aggregation variable name=" + name);
+      }
+  }
+
+  bool
+  AggregationElement::isAggregationVariable(const string& name) const
+  {
+    bool ret = false;
+    AggVarIter endIt = endAggVarIter();
+    AggVarIter it = beginAggVarIter();
+    for (; it != endIt; ++it)
+      {
+        if (name == *it)
+          {
+            ret = true;
+            break;
+          }
+      }
+    return ret;
+  }
+
+  string
+  AggregationElement::printAggregationVariables() const
+  {
+    string ret("{ ");
+    AggVarIter endIt = endAggVarIter();
+    AggVarIter it = beginAggVarIter();
+    for (; it != endIt; ++it)
+      {
+        ret += *it;
+        ret += " ";
+      }
+    ret += "}";
+    return ret;
+  }
+
+  AggregationElement::AggVarIter
+  AggregationElement::beginAggVarIter() const
+  {
+    return _aggVars.begin();
+  }
+
+  AggregationElement::AggVarIter
+  AggregationElement::endAggVarIter() const
+  {
+    return _aggVars.end();
+  }
+
 
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -249,6 +306,8 @@ namespace ncml_module
   void
   AggregationElement::processJoinNew()
   {
+    BESDEBUG("ncml", "AggregationElement: beginning joinNew on the following aggVars=" +
+        printAggregationVariables() << endl);
     THROW_NCML_PARSE_ERROR("Unimplemented aggregation type: joinNew");
   }
 

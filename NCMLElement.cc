@@ -40,6 +40,7 @@
 #include "ReadMetadataElement.h"
 #include "RemoveElement.h"
 #include "ValuesElement.h"
+#include "VariableAggElement.h"
 #include "VariableElement.h"
 
 using std::string;
@@ -47,6 +48,9 @@ using std::vector;
 
 namespace ncml_module
 {
+
+  //////////////////////////////// NCMLElement::Factory
+
   NCMLElement::Factory::Factory()
   : _protos()
   {
@@ -112,6 +116,7 @@ namespace ncml_module
     addPrototype(new ValuesElement());
     addPrototype(new DimensionElement());
     addPrototype(new AggregationElement());
+    addPrototype(new VariableAggElement());
   }
 
 
@@ -133,6 +138,42 @@ namespace ncml_module
     // if the ref count never hits 0.
     _pool.add(newElt.get());
     return newElt; //relinquish
+  }
+
+  ///////////////////////////// Class NCMLElement
+
+
+  NCMLElement::NCMLElement(NCMLParser* p)
+  : _parser(p)
+  {
+  }
+
+  NCMLElement::NCMLElement(const NCMLElement& proto)
+  : _parser(proto._parser)
+  {
+  }
+
+  NCMLElement::~NCMLElement()
+  {
+    _parser = 0;
+  }
+
+  void
+  NCMLElement::setParser(NCMLParser* p)
+  {
+    // make sure we only call it once when we create it in the parser.
+    NCML_ASSERT_MSG(!_parser, "NCMLElement::setParser() called more than once.  Logic bug!");
+    _parser = p;
+  }
+
+  void
+  NCMLElement::handleContent(const string& content)
+  {
+    if (!NCMLUtil::isAllWhitespace(content))
+      {
+        THROW_NCML_PARSE_ERROR("Got non-whitespace for element content and didn't expect it.  Element=" + toString() + " content=\"" +
+            content + "\"");
+      }
   }
 
   bool

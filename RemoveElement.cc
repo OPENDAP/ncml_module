@@ -38,13 +38,14 @@ namespace ncml_module
   const vector<string> RemoveElement::_sValidAttributes = getValidAttributes();
 
   RemoveElement::RemoveElement()
-  : _name("")
+  : NCMLElement(0)
+  , _name("")
   , _type("")
   {
   }
 
   RemoveElement::RemoveElement(const RemoveElement& proto)
-  : NCMLElement()
+  : NCMLElement(proto)
   {
     _name = proto._name;
     _type = proto._type;
@@ -80,13 +81,14 @@ namespace ncml_module
   }
 
   void
-  RemoveElement::handleBegin(NCMLParser& p)
+  RemoveElement::handleBegin()
   {
-    processRemove(p);
+    VALID_PTR(_parser);
+    processRemove(*_parser);
   }
 
   void
-  RemoveElement::handleContent(NCMLParser& /* p */, const string& content)
+  RemoveElement::handleContent(const string& content)
   {
     if (!NCMLUtil::isAllWhitespace(content))
       {
@@ -96,7 +98,7 @@ namespace ncml_module
   }
 
   void
-  RemoveElement::handleEnd(NCMLParser&  /* p */)
+  RemoveElement::handleEnd()
   {
   }
 

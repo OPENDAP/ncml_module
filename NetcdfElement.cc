@@ -46,7 +46,8 @@ namespace ncml_module
   const vector<string> NetcdfElement::_sValidAttributes = getValidAttributes();
 
   NetcdfElement::NetcdfElement()
-  : _location("")
+  : NCMLElement(0)
+  , _location("")
   , _id("")
   , _title("")
   , _ncoords("")
@@ -54,7 +55,6 @@ namespace ncml_module
   , _addRecords("")
   , _coordValue("")
   , _fmrcDefinition("")
-  , _parser(0)
   , _gotMetadataDirective(false)
   , _weOwnResponse(false)
   , _response(0)
@@ -65,7 +65,7 @@ namespace ncml_module
   }
 
   NetcdfElement::NetcdfElement(const NetcdfElement& proto)
-  : NCMLElement()
+  : NCMLElement(0)
   , _location(proto._location)
   , _id(proto._id)
   , _title(proto._title)
@@ -74,7 +74,6 @@ namespace ncml_module
   , _addRecords(proto._addRecords)
   , _coordValue(proto._coordValue)
   , _fmrcDefinition(proto._fmrcDefinition)
-  , _parser(0)
   , _gotMetadataDirective(false)
   , _weOwnResponse(false)
   , _response(0)
@@ -116,7 +115,6 @@ namespace ncml_module
       }
     _response = 0; // but null it in all cases.
     _parentAgg = 0;
-    _parser = 0;
     clearDimensions();
 
     // _aggregation dtor will take care of the ref itself.
@@ -158,12 +156,10 @@ namespace ncml_module
   }
 
   void
-  NetcdfElement::handleBegin(NCMLParser& p)
+  NetcdfElement::handleBegin()
   {
     BESDEBUG("ncml", "NetcdfElement::handleBegin on " << toString() << endl);
-
-    // Keep our parser's pointer around so we don't pass it as an argument to all functions...
-    _parser = &p;
+    NCMLParser& p = *_parser;
 
     // Make sure that we are in an AggregationElement if we're not root!
     if (p.getRootDataset() && !p.isScopeAggregation())
@@ -184,7 +180,7 @@ namespace ncml_module
   }
 
   void
-  NetcdfElement::handleContent(NCMLParser& /* p */, const string& content)
+  NetcdfElement::handleContent(const string& content)
   {
     if (!NCMLUtil::isAllWhitespace(content))
       {
@@ -194,18 +190,18 @@ namespace ncml_module
   }
 
   void
-  NetcdfElement::handleEnd(NCMLParser& p)
+  NetcdfElement::handleEnd()
   {
     BESDEBUG("ncml", "NetcdfElement::handleEnd called!" << endl);
 
-    if (!p.isScopeNetcdf())
+    if (!_parser->isScopeNetcdf())
       {
         THROW_NCML_PARSE_ERROR("Got close of <netcdf> node while not within one!");
       }
 
     // Tell the parser to close the current dataset and figure out what the new current one is!
     // We pass our ptr to make sure that we're the current one to avoid logic bugs!!
-    p.popCurrentDataset(this);
+    _parser->popCurrentDataset(this);
 
 
     // We'll leave our element table around until we're destoryed since people are allowed to use it if they

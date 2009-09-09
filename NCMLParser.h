@@ -124,6 +124,7 @@ public: // Friends
   friend class ReadMetadataElement;
   friend class RemoveElement;
   friend class ValuesElement;
+  friend class VariableAggElement;
   friend class VariableElement;
 
 public:

@@ -107,14 +107,18 @@ namespace ncml_module
       RCObjectPool _pool; // container for all created objects, will be flushed when dtor is called in case of leaks.
     };
 
-  protected: // data rep
+
 
   protected:
     // Abstract: Only subclasses can create these
-    NCMLElement() {}
+    NCMLElement(NCMLParser* p);
+
+    NCMLElement(const NCMLElement& proto);
 
   public:
-    virtual ~NCMLElement() {}
+    virtual ~NCMLElement();
+
+    void setParser(NCMLParser* p);
 
     /** Return the type of the element, which should be:
      * the same as ConcreteClassName::getTypeName() */
@@ -143,21 +147,22 @@ namespace ncml_module
 
     /** Handle a begin on this element.
      * Called after creation and it is assumed the
-     * attributes are already set.
-     * @param p the parser to effect.
+     * attributes and _parser are already set.
      * */
-    virtual void handleBegin(NCMLParser& p) = 0;
+    virtual void handleBegin() = 0;
 
     /** Handle the characters content for the element.
+     * Default impl throws if the content is not all whitespace.
+     * Subclasses that handle non-whitespace content should override.
      * @param p the parser to effect.
      * @param content the string of characters in the element content.
      */
-    virtual void handleContent(NCMLParser& p, const std::string& content) = 0;
+    virtual void handleContent(const std::string& content);
 
     /** Handle the closing of this element.
      * @param p the parser to effect
      * */
-    virtual void handleEnd(NCMLParser& p) = 0;
+    virtual void handleEnd() = 0;
 
     /** Return a string describing the element */
     virtual std::string toString() const = 0;
@@ -168,8 +173,6 @@ namespace ncml_module
      */
     static std::string printAttributeIfNotEmpty(const std::string& attrName, const std::string& attrValue);
 
-
-
     /** @return whether the given attr is in the array validAttrs or not...  Helper for subclasses */
     static bool isValidAttribute(const std::vector<string>& validAttrs, const string& attr);
 
@@ -177,6 +180,9 @@ namespace ncml_module
      * If pInvalidAttributes, fill it in with all the illegal attributes.
      */
     static bool areAllAttributesValid(const AttributeMap& attrMap, const std::vector<string>& validAttrs, std::vector<string>* pInvalidAttributes=0);
+
+  protected: // data rep
+    NCMLParser* _parser;
   };
 
 }

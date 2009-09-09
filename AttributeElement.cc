@@ -37,7 +37,8 @@ namespace ncml_module
   const vector<string> AttributeElement::_sValidAttributes = getValidAttributes();
 
   AttributeElement::AttributeElement()
-  : _name("")
+  : NCMLElement(0)
+  , _name("")
   , _type("")
   , _value("")
   , _separator(NCMLUtil::WHITESPACE)
@@ -48,7 +49,7 @@ namespace ncml_module
   }
 
   AttributeElement::AttributeElement(const AttributeElement& proto)
-  : NCMLElement()
+  : NCMLElement(proto)
   {
     _name = proto._name;
     _type = proto._type;
@@ -86,21 +87,21 @@ namespace ncml_module
   }
 
   void
-  AttributeElement::handleBegin(NCMLParser& p)
+  AttributeElement::handleBegin()
   {
-    processAttribute(p);
+    processAttribute(*_parser);
   }
 
   void
-  AttributeElement::handleContent(NCMLParser& p, const string& content)
+  AttributeElement::handleContent(const string& content)
   {
     // We should know if it's valid here, but doublecheck with parser.
-     if (p.isScopeAtomicAttribute())
+     if (_parser->isScopeAtomicAttribute())
        {
          BESDEBUG("ncml", "Adding attribute values as characters content for atomic attribute=" << _name <<
              " value=\"" << content << "\"" << endl);
          _value = content;
-         mutateAttributeAtCurrentScope(p, _name, _type, _value);
+         mutateAttributeAtCurrentScope(*_parser, _name, _type, _value);
        }
      // Otherwise, it better be whitespace
      else if (!NCMLUtil::isAllWhitespace(content))
@@ -111,9 +112,9 @@ namespace ncml_module
   }
 
   void
-  AttributeElement::handleEnd(NCMLParser& p)
+  AttributeElement::handleEnd()
   {
-    processEndAttribute(p);
+    processEndAttribute(*_parser);
   }
 
   string

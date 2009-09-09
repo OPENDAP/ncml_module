@@ -70,9 +70,9 @@ namespace ncml_module
     virtual const string& getTypeName() const;
     virtual NetcdfElement* clone() const; // override clone with more specific subclass
     virtual void setAttributes(const AttributeMap& attrs);
-    virtual void handleBegin(NCMLParser& p);
-    virtual void handleContent(NCMLParser& p, const string& content);
-    virtual void handleEnd(NCMLParser& p);
+    virtual void handleBegin();
+    virtual void handleContent(const string& content);
+    virtual void handleEnd();
     virtual string toString() const;
 
     // Accessors for attributes we deal with.
@@ -200,9 +200,6 @@ namespace ncml_module
     string _addRecords;
     string _coordValue;
     string _fmrcDefinition;
-
-    // stored when we enter handleBegin();
-    NCMLParser* _parser;
 
     // Whether we got a metadata direction element { readMetadata | explicit } for this node yet.
     // Just used to check for more than one.

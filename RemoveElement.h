@@ -47,9 +47,9 @@ namespace ncml_module
     virtual const std::string& getTypeName() const;
     virtual RemoveElement* clone() const; // override clone with more specific subclass
     virtual void setAttributes(const AttributeMap& attrs);
-    virtual void handleBegin(NCMLParser& p);
-    virtual void handleContent(NCMLParser& p, const std::string& content);
-    virtual void handleEnd(NCMLParser& p);
+    virtual void handleBegin();
+    virtual void handleContent(const std::string& content);
+    virtual void handleEnd();
     virtual std::string toString() const;
 
     // Type of the element

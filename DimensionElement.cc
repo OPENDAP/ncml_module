@@ -43,7 +43,7 @@ namespace ncml_module
   const vector<string> DimensionElement::_sValidAttributes = getValidAttributes();
 
   DimensionElement::DimensionElement()
-  : NCMLElement()
+  : NCMLElement(0)
   , _length("0")
   , _orgName("")
   , _isUnlimited("")
@@ -99,21 +99,21 @@ namespace ncml_module
     validateOrThrow();
   }
 
-  void DimensionElement::handleBegin(NCMLParser& p)
+  void DimensionElement::handleBegin()
   {
     BESDEBUG("ncml", "DimensionElement::handleBegin called...");
 
     // Make sure we're placed at a valid parse location.
     // Direct child of <netcdf> only now since we dont handle <group>
-    if (!p.isScopeNetcdf())
+    if (!_parser->isScopeNetcdf())
       {
         THROW_NCML_PARSE_ERROR("Got dimension element = " + toString() +
             " at an invalid parse location.  Expected it as a direct child of <netcdf> element only." +
-            " scope=" + p.getScopeString());
+            " scope=" + _parser->getScopeString());
       }
 
     // This will be the scope we're to be added...
-    NetcdfElement* dataset = p.getCurrentDataset();
+    NetcdfElement* dataset = _parser->getCurrentDataset();
     VALID_PTR(dataset);
 
     // Make sure the name is unique at this parse level or exception.
@@ -122,7 +122,7 @@ namespace ncml_module
       {
         THROW_NCML_PARSE_ERROR("Tried at add dimension " + toString() +
             " but a dimension with name=" + name() +
-            " already exists in this scope=" + p.getScopeString());
+            " already exists in this scope=" + _parser->getScopeString());
       }
 
     // The dataset will maintain a strong reference to us while we're needed.
@@ -130,7 +130,7 @@ namespace ncml_module
   }
 
   void
-  DimensionElement::handleContent(NCMLParser& /* p */, const string& content)
+  DimensionElement::handleContent(const string& content)
   {
     // BESDEBUG("ncml", "DimensionElement::handleContent called...");
     if (!NCMLUtil::isAllWhitespace(content))
@@ -140,9 +140,9 @@ namespace ncml_module
   }
 
   void
-  DimensionElement::handleEnd(NCMLParser& /* p */)
+  DimensionElement::handleEnd()
   {
-    BESDEBUG("ncml", "DimensionElement::handleEnd called...");
+    // BESDEBUG("ncml", "DimensionElement::handleEnd called...");
   }
 
   string

@@ -26,38 +26,48 @@
 //
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
-#ifndef __NCML_MODULE__EXPLICIT_ELEMENT_H__
-#define __NCML_MODULE__EXPLICIT_ELEMENT_H__
+#ifndef __NCML_MODULE__VARIABLE_AGG_ELEMENT_H__
+#define __NCML_MODULE__VARIABLE_AGG_ELEMENT_H__
 
 #include "NCMLElement.h"
 
-using namespace std;
 namespace ncml_module
 {
+  class AggregationElement;
 
   /**
-   * @brief Concrete class for NcML <explicit> element
-   *
-   * This element simply removes all the metadata from the currently loaded DDX.
+   * @brief Element for the <variableAgg> element
+   * child of an <aggregation>.
    */
-  class ExplicitElement : public NCMLElement
+  class VariableAggElement : public NCMLElement
   {
   public:
-    ExplicitElement();
-    ExplicitElement(const ExplicitElement& proto);
-    virtual ~ExplicitElement();
+    static const string _sTypeName;
+    static const vector<string> _sValidAttributes;
+
+    VariableAggElement();
+    VariableAggElement(const VariableAggElement& proto);
+    virtual ~VariableAggElement();
     virtual const string& getTypeName() const;
-    virtual ExplicitElement* clone() const; // override clone with more specific subclass
+    virtual VariableAggElement* clone() const; // override clone with more specific subclass
     virtual void setAttributes(const AttributeMap& attrs);
     virtual void handleBegin();
-    virtual void handleContent(const string& content);
     virtual void handleEnd();
     virtual string toString() const;
 
-    static const string _sTypeName;
-    static const vector<string> _sValidAttributes; // will be empty, but check will work the same.
+    const string& name() const { return _name; }
+
+    /** Get our parent aggregation off the parser stack */
+    AggregationElement& getParentAggregation() const;
+
+  private: // methods
+
+    static vector<string> getValidAttributes();
+
+  private: // data rep
+    string _name;
   };
 
 }
 
-#endif /* __NCML_MODULE__EXPLICIT_ELEMENT_H__ */
+#endif /* __NCML_MODULE__VARIABLE_AGG_ELEMENT_H__ */

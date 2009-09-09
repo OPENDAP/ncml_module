@@ -39,11 +39,12 @@ namespace ncml_module
   const vector<string> ExplicitElement::_sValidAttributes = vector<string>(); // init to the empty vector... we should have none in here!
 
   ExplicitElement::ExplicitElement()
+  :NCMLElement(0)
   {
   }
 
   ExplicitElement::ExplicitElement(const ExplicitElement& /* proto */)
-  : NCMLElement()
+  : NCMLElement(0)
   {
   }
 
@@ -72,8 +73,9 @@ namespace ncml_module
   }
 
   void
-  ExplicitElement::handleBegin(NCMLParser& p)
+  ExplicitElement::handleBegin()
   {
+    NCMLParser& p = *_parser;
     if (!p.isScopeNetcdf())
         {
           THROW_NCML_PARSE_ERROR("Got <explicit/> while not a direct child of a <netcdf>");
@@ -94,7 +96,7 @@ namespace ncml_module
   }
 
   void
-  ExplicitElement::handleContent(NCMLParser& /* p */, const string& content)
+  ExplicitElement::handleContent(const string& content)
   {
     if (!NCMLUtil::isAllWhitespace(content))
       {
@@ -104,7 +106,7 @@ namespace ncml_module
   }
 
   void
-  ExplicitElement::handleEnd(NCMLParser& /* p */)
+  ExplicitElement::handleEnd()
   {
   }
 
