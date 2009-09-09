@@ -43,9 +43,17 @@ namespace ncml_module
 {
 
   const string NetcdfElement::_sTypeName = "netcdf";
+  const vector<string> NetcdfElement::_sValidAttributes = getValidAttributes();
 
   NetcdfElement::NetcdfElement()
   : _location("")
+  , _id("")
+  , _title("")
+  , _ncoords("")
+  , _enhance("")
+  , _addRecords("")
+  , _coordValue("")
+  , _fmrcDefinition("")
   , _parser(0)
   , _gotMetadataDirective(false)
   , _weOwnResponse(false)
@@ -59,6 +67,13 @@ namespace ncml_module
   NetcdfElement::NetcdfElement(const NetcdfElement& proto)
   : NCMLElement()
   , _location(proto._location)
+  , _id(proto._id)
+  , _title(proto._title)
+  , _ncoords(proto._ncoords)
+  , _enhance(proto._enhance)
+  , _addRecords(proto._addRecords)
+  , _coordValue(proto._coordValue)
+  , _fmrcDefinition(proto._fmrcDefinition)
   , _parser(0)
   , _gotMetadataDirective(false)
   , _weOwnResponse(false)
@@ -122,7 +137,24 @@ namespace ncml_module
   void
   NetcdfElement::setAttributes(const AttributeMap& attrs)
   {
+    // Make sure they exist in the schema, even if we don't support them.
+    validateAttributes(attrs, _sValidAttributes);
+
+    // set them
     _location = NCMLUtil::findAttrValue(attrs, "location");
+    _id = NCMLUtil::findAttrValue(attrs, "id");
+    _title = NCMLUtil::findAttrValue(attrs, "title");
+    _enhance = NCMLUtil::findAttrValue(attrs, "enhance");
+    _addRecords = NCMLUtil::findAttrValue(attrs, "addRecords");
+    // Aggregation children only below!
+    _ncoords = NCMLUtil::findAttrValue(attrs, "ncoords");
+    _coordValue = NCMLUtil::findAttrValue(attrs, "coordValue");
+    _fmrcDefinition = NCMLUtil::findAttrValue(attrs, "fmrcDefinition");
+
+    // If any attributes were specified that we don't support in this version, throw a parse error
+    // Note: We can't throw here if we're not in an aggregation context, can we?  Need the parser.
+    // @TODO Just add the parser to NCMLElement and set on creation as a backpointer so as not to keep passing it....
+    throwOnUnsupportedAttributes();
   }
 
   void
@@ -183,7 +215,16 @@ namespace ncml_module
   string
   NetcdfElement::toString() const
   {
-    return "<" + _sTypeName + " location=\"" + _location + "\" >";
+    return "<" + _sTypeName + " " +
+      "location=\"" + _location + "\"" + // always print this one even in empty.
+      printAttributeIfNotEmpty("id", _id) +
+      printAttributeIfNotEmpty("title", _title) +
+      printAttributeIfNotEmpty("enhance", _enhance) +
+      printAttributeIfNotEmpty("addRecords", _addRecords) +
+      printAttributeIfNotEmpty("ncoords", _ncoords) +
+      printAttributeIfNotEmpty("coordValue", _coordValue) +
+      printAttributeIfNotEmpty("fmrcDefinition", _fmrcDefinition) +
+      ">";
   }
 
   libdap::DDS*
@@ -380,5 +421,59 @@ namespace ncml_module
     // If not found, this call will throw an exception and we'll just unwind out.
      p.loadLocation(_location, p._responseType, _response);
   }
+
+  void
+  NetcdfElement::throwOnUnsupportedAttributes()
+  {
+    const string msgStart = "NetcdfElement: unsupported attribute: ";
+    const string msgEnd = " was declared.";
+    if (!_enhance.empty())
+      {
+        THROW_NCML_PARSE_ERROR( msgStart + "enhance" + msgEnd);
+      }
+    if (!_addRecords.empty())
+      {
+        THROW_NCML_PARSE_ERROR(msgStart + "addRecords" + msgEnd);
+      }
+    // Not until we do joinExisting
+    if (!_ncoords.empty())
+      {
+        THROW_NCML_PARSE_ERROR(msgStart + "ncoords" + msgEnd);
+      }
+    if (!_coordValue.empty())
+      {
+        THROW_NCML_PARSE_ERROR(msgStart + "coordValue" + msgEnd);
+      }
+    if (!_fmrcDefinition.empty())
+      {
+         THROW_NCML_PARSE_ERROR(msgStart + "fmrcDefinition" + msgEnd);
+      }
+  }
+
+  vector<string>
+  NetcdfElement::getValidAttributes()
+  {
+    vector<string> validAttrs;
+    validAttrs.reserve(9);
+
+    // We don't parse or deal with this at all, but people can specify it for their validating editors,
+    // so let it through.
+    validAttrs.push_back("xmlns");
+
+    validAttrs.push_back("location");
+    validAttrs.push_back("id");
+    validAttrs.push_back("title");
+    validAttrs.push_back("enhance");
+    validAttrs.push_back("addRecords");
+
+    // following only valid inside aggregation, will need to test for that later.
+    validAttrs.push_back("ncoords");
+    validAttrs.push_back("coordValue");
+    validAttrs.push_back("fmrcDefinition");
+
+
+    return validAttrs;
+  }
+
 
 }

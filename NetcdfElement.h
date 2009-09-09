@@ -62,6 +62,7 @@ namespace ncml_module
   {
   public:
     static const string _sTypeName;
+    static const vector<string> _sValidAttributes;
 
     NetcdfElement();
     NetcdfElement(const NetcdfElement& proto);
@@ -73,6 +74,12 @@ namespace ncml_module
     virtual void handleContent(NCMLParser& p, const string& content);
     virtual void handleEnd(NCMLParser& p);
     virtual string toString() const;
+
+    // Accessors for attributes we deal with.
+    // TODO Add these as we support aggregation attributes
+    const string& location() const { return _location; }
+    const string& id() const { return _id; }
+    const string& title() const { return _title; }
 
     /**
      * @return whether this is initialized properly and ready to be used.
@@ -177,8 +184,22 @@ namespace ncml_module
     /** Ask the parser to load our location into our response object. */
     void loadLocation(NCMLParser& p);
 
+    /** Check the value of the attribute fields and if any are
+     * !empty() that we don't support, throw a parse error to tell the author.
+     */
+    void throwOnUnsupportedAttributes();
+
+    static vector<string> getValidAttributes();
+
   private:
     string _location;
+    string _id;
+    string _title;
+    string _ncoords;
+    string _enhance;
+    string _addRecords;
+    string _coordValue;
+    string _fmrcDefinition;
 
     // stored when we enter handleBegin();
     NCMLParser* _parser;

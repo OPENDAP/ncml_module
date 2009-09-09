@@ -34,6 +34,7 @@
 namespace ncml_module
 {
   const string AttributeElement::_sTypeName = "attribute";
+  const vector<string> AttributeElement::_sValidAttributes = getValidAttributes();
 
   AttributeElement::AttributeElement()
   : _name("")
@@ -80,6 +81,8 @@ namespace ncml_module
     _value = NCMLUtil::findAttrValue(attrs, "value");
     _separator = NCMLUtil::findAttrValue(attrs, "separator", NCMLUtil::WHITESPACE);
     _orgName = NCMLUtil::findAttrValue(attrs, "orgName");
+
+    validateAttributes(attrs, _sValidAttributes);
   }
 
   void
@@ -430,6 +433,18 @@ namespace ncml_module
       }
   }
 
+  vector<string>
+  AttributeElement::getValidAttributes()
+  {
+    vector<string> attrs;
+    attrs.reserve(10);
+    attrs.push_back("name");
+    attrs.push_back("type");
+    attrs.push_back("value");
+    attrs.push_back("orgName");
+    attrs.push_back("separator");
+    return attrs;
+  }
 }
 
 

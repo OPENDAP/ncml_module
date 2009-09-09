@@ -31,7 +31,6 @@
 
 #include "NCMLElement.h"
 
-using namespace std;
 namespace ncml_module
 {
 
@@ -57,6 +56,7 @@ namespace ncml_module
     virtual string toString() const;
 
     static const string _sTypeName;
+    static const vector<string> _sValidAttributes; // will be empty
   };
 
 }

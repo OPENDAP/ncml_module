@@ -135,6 +135,53 @@ namespace ncml_module
     return newElt; //relinquish
   }
 
+  bool
+  NCMLElement::validateAttributes(const AttributeMap& attrs,
+                                  const vector<string>& validAttrs,
+                                  vector<string>* pInvalidAttrs /* = 0 */,
+                                  bool printInvalid /* = true */,
+                                  bool throwOnError /* = true */)
+  {
+    bool ret = true; // optimism in the face of uncertainty!
+
+    // Make sure we always have an array to put results in.
+    vector<string> myInvalidAttrs;
+    if (!pInvalidAttrs)
+      {
+        pInvalidAttrs = &myInvalidAttrs;
+      }
+    VALID_PTR(pInvalidAttrs);
+
+    // Check the lists
+    if (!areAllAttributesValid(attrs, validAttrs, pInvalidAttrs))
+      {
+        // If any is wrong, cons up the list of errors.
+        ret = false;
+
+        // If we need to print or throw the error cases, then build the list up
+        if (printInvalid || throwOnError)
+          {
+            std::ostringstream oss;
+            oss << "Got invalid attribute for element = " << getTypeName();
+            oss << " The invalid attributes were: {";
+            for (unsigned int i=0; i<pInvalidAttrs->size(); ++i)
+              {
+                oss << (*pInvalidAttrs)[i];
+                if (i < pInvalidAttrs->size()-1)  oss << ", ";
+              }
+            oss << "}";
+            if (printInvalid)
+              {
+                BESDEBUG("ncml", oss.str() << endl);
+              }
+            if (throwOnError)
+              {
+                THROW_NCML_PARSE_ERROR(oss.str());
+              }
+          }
+      }
+    return ret;
+  }
 
   std::string
   NCMLElement::printAttributeIfNotEmpty(const std::string& attrName, const std::string& attrValue)

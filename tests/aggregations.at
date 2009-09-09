@@ -6,7 +6,6 @@ AT_ASSERT_PARSE_ERROR([agg/error_multi_aggs.ncml])
 AT_ASSERT_PARSE_ERROR([agg/error_improper_netcdf_loc.ncml])
 AT_ASSERT_PARSE_ERROR([agg/error_agg_in_wrong_loc_1.ncml])
 AT_ASSERT_PARSE_ERROR([agg/error_agg_in_wrong_loc_2.ncml])
-AT_ASSERT_PARSE_ERROR([agg/error_agg_bad_attr.ncml])
 
 dnl UNION : Acceptance tests on attributes and variables for union
 dnl First, test a basic purely virtual dataset one level deep aggregates correctly.

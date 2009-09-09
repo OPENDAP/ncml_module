@@ -30,15 +30,12 @@
 #define __NCML_MODULE__VARIABLE_ELEMENT_H__
 
 #include "NCMLElement.h"
-#include <string>
-#include <vector>
 
 namespace libdap
 {
   class BaseType;
 }
 
-using namespace std;
 namespace ncml_module
 {
 
@@ -64,7 +61,7 @@ namespace ncml_module
   {
   public:
     static const string _sTypeName;
-
+    static const vector<string> _sValidAttributes;
 
     VariableElement();
     VariableElement(const VariableElement& proto);
@@ -247,6 +244,8 @@ namespace ncml_module
      * cannot return the correct value without overflow.
      */
     unsigned int getProductOfDimensionSizes(NCMLParser& p) const;
+
+    static vector<string> getValidAttributes();
 
   private:
     string _name;

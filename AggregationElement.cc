@@ -118,20 +118,8 @@ namespace ncml_module
     _dimName = NCMLUtil::findAttrValue(attrs, "dimName", "");
     _recheckEvery = NCMLUtil::findAttrValue(attrs, "recheckEvery", "");
 
-    vector<string> invalidAttrs;
-    if (!areAllAttributesValid(attrs, _sValidAttrs, &invalidAttrs))
-      {
-        std::ostringstream oss;
-        oss << "Got invalid attribute for element = " << _sTypeName;
-        oss << " The invalid attributes were: {";
-        for (unsigned int i=0; i<invalidAttrs.size(); ++i)
-          {
-            oss << invalidAttrs[i];
-            if (i < invalidAttrs.size()-1)  oss << ", ";
-          }
-        oss << "}";
-        THROW_NCML_PARSE_ERROR(oss.str());
-      }
+    // default is to print errors and throw which we want.
+    validateAttributes(attrs, _sValidAttrs);
   }
 
   void

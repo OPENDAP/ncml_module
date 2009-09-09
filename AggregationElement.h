@@ -31,17 +31,12 @@
 
 #include "NCMLElement.h"
 #include "NCMLUtil.h"
-#include <string>
-#include <vector>
 
 namespace libdap
 {
   class DDS;
 };
 
-
-using std::string;
-using std::vector;
 using libdap::DDS;
 
 namespace ncml_module

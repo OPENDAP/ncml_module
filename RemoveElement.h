@@ -54,6 +54,7 @@ namespace ncml_module
 
     // Type of the element
     static const std::string _sTypeName;
+    static const vector<string> _sValidAttributes;
 
   private:
 
@@ -78,6 +79,8 @@ namespace ncml_module
      * to remove the named variables at the current parser scope of p.
      * */
     void processRemoveVariable(NCMLParser& p);
+
+    static vector<string> getValidAttributes();
 
   private: // data rep
     std::string _name;

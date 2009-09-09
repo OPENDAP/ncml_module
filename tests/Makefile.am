@@ -20,6 +20,7 @@ $(srcdir)/package.m4: $(top_srcdir)/configure.ac
 TESTSUITE = $(srcdir)/testsuite
 TEST_FILES = 	aggregations.at \
 		attribute_tests.at \
+		parse_error_misc.at \
 		variable_misc.at \
 		variable_new_arrays.at \
 		variable_new_multi_arrays.at \

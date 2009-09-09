@@ -51,6 +51,7 @@ namespace ncml_module
 {
 
   const string VariableElement::_sTypeName = "variable";
+  const vector<string> VariableElement::_sValidAttributes = getValidAttributes();
 
   VariableElement::VariableElement()
   : _name("")
@@ -97,6 +98,8 @@ namespace ncml_module
   void
   VariableElement::setAttributes(const AttributeMap& attrs)
   {
+    validateAttributes(attrs, _sValidAttributes);
+
     _name = NCMLUtil::findAttrValue(attrs, "name");
     _type = NCMLUtil::findAttrValue(attrs,"type", "");
     _shape = NCMLUtil::findAttrValue(attrs, "shape", "");
@@ -610,5 +613,17 @@ namespace ncml_module
        product *= dimSize;
      }
    return product;
+ }
+
+ vector<string>
+ VariableElement::getValidAttributes()
+ {
+   vector<string> validAttrs;
+   validAttrs.reserve(4);
+   validAttrs.push_back("name");
+   validAttrs.push_back("type");
+   validAttrs.push_back("shape");
+   validAttrs.push_back("orgName");
+   return validAttrs;
  }
 }

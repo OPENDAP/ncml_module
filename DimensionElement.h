@@ -31,8 +31,6 @@
 
 #include "Dimension.h"
 #include "NCMLElement.h"
-#include <string>
-using std::string;
 
 namespace ncml_module
 {
@@ -58,6 +56,7 @@ namespace ncml_module
   {
   public:
     static const string _sTypeName;
+    static const vector<string> _sValidAttributes;
 
     DimensionElement();
     DimensionElement(const DimensionElement& proto);
@@ -97,6 +96,11 @@ namespace ncml_module
      * @exception Throw BESSyntaxUserError if there's an attribute we can't handle.
      * */
     void validateOrThrow();
+
+    /** @return the list of valid attributes as a new vector
+     * Used to set the static.
+     */
+    static vector<string> getValidAttributes();
 
   private:
     // string _name; // within _dim

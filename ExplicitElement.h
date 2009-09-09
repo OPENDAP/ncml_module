@@ -55,6 +55,7 @@ namespace ncml_module
     virtual string toString() const;
 
     static const string _sTypeName;
+    static const vector<string> _sValidAttributes; // will be empty, but check will work the same.
   };
 
 }

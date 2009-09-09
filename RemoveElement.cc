@@ -35,6 +35,7 @@ namespace ncml_module
 {
   // The element name
   const string RemoveElement::_sTypeName = "remove";
+  const vector<string> RemoveElement::_sValidAttributes = getValidAttributes();
 
   RemoveElement::RemoveElement()
   : _name("")
@@ -70,8 +71,12 @@ namespace ncml_module
   void
   RemoveElement::setAttributes(const AttributeMap& attrs)
   {
+    validateAttributes(attrs, _sValidAttributes);
+
     _name = NCMLUtil::findAttrValue(attrs, "name");
     _type = NCMLUtil::findAttrValue(attrs, "type");
+
+    // We do other validation on the actual values later, so no need here.
   }
 
   void
@@ -152,6 +157,16 @@ namespace ncml_module
 
     // Remove the variable from the current container scope, either the dataset variable list or the current variable container.
     p.deleteVariableAtCurrentScope(_name);
+  }
+
+  vector<string>
+  RemoveElement::getValidAttributes()
+  {
+    vector<string> validAttrs;
+    validAttrs.reserve(2);
+    validAttrs.push_back("name");
+    validAttrs.push_back("type");
+    return validAttrs;
   }
 
 } // ncml_module

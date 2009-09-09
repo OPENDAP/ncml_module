@@ -50,7 +50,7 @@ namespace ncml_module
    */
   class AttributeElement : public NCMLElement
   {
-  public:
+  public: // methods
     AttributeElement();
     AttributeElement(const AttributeElement& proto);
     virtual ~AttributeElement();
@@ -62,7 +62,9 @@ namespace ncml_module
     virtual void handleEnd(NCMLParser& p);
     virtual string toString() const;
 
+public: // data rep
     static const string _sTypeName;
+    static const vector<string> _sValidAttributes;
 
   private: // method
 
@@ -169,6 +171,10 @@ namespace ncml_module
      * set the parser's current AttrTable to the containers parent container.
      */
     void processEndAttribute(NCMLParser& p);
+
+    /** @return the list of the valid attributes for this element as a new vector.
+     * Used to set _sValidAttributes */
+    static vector<string> getValidAttributes();
 
   private:
     string _name;

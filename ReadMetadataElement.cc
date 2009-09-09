@@ -36,6 +36,7 @@ namespace ncml_module
 {
 
   const string ReadMetadataElement::_sTypeName = "readMetadata";
+  const vector<string> ReadMetadataElement::_sValidAttributes = vector<string>();
 
   ReadMetadataElement::ReadMetadataElement()
   {
@@ -63,8 +64,11 @@ namespace ncml_module
   }
 
   void
-  ReadMetadataElement::setAttributes(const AttributeMap& /* attrs */)
+  ReadMetadataElement::setAttributes(const AttributeMap&  attrs)
   {
+    // make sure that none are specifed, basically.  We'll list them out in here if we get any
+    // which is why this rather than check map size and throw.
+    validateAttributes(attrs, _sValidAttributes);
   }
 
   void

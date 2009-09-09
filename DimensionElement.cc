@@ -40,7 +40,7 @@ namespace ncml_module
 {
   // the parse name of the element
   const string DimensionElement::_sTypeName = "dimension";
-
+  const vector<string> DimensionElement::_sValidAttributes = getValidAttributes();
 
   DimensionElement::DimensionElement()
   : NCMLElement()
@@ -89,7 +89,13 @@ namespace ncml_module
     _isShared = NCMLUtil::findAttrValue(attrs, "isShared");;
     _isVariableLength = NCMLUtil::findAttrValue(attrs, "isVariableLength");
 
+    // First check that we didn't get any typos...
+    validateAttributes(attrs, _sValidAttributes);
+
+    // Parse the size etc
     parseAndCacheDimension();
+
+    // Final validation for things we implemented
     validateOrThrow();
   }
 
@@ -225,4 +231,17 @@ namespace ncml_module
       }
   }
 
+  vector<string>
+  DimensionElement::getValidAttributes()
+  {
+    vector<string> validAttrs;
+    validAttrs.reserve(10);
+    validAttrs.push_back("name");
+    validAttrs.push_back("length");
+    validAttrs.push_back("isUnlimited");
+    validAttrs.push_back("isVariableLength");
+    validAttrs.push_back("isShared");
+    validAttrs.push_back("orgName");
+    return validAttrs;
+  }
 }

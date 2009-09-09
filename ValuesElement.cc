@@ -55,6 +55,7 @@ using namespace libdap;
 namespace ncml_module
 {
   const string ValuesElement::_sTypeName = "values";
+  const vector<string> ValuesElement::_sValidAttributes = getValidAttributes();
 
   ValuesElement::ValuesElement()
   : _start("")
@@ -96,6 +97,8 @@ namespace ncml_module
   void
   ValuesElement::setAttributes(const AttributeMap& attrs)
   {
+    validateAttributes(attrs, _sValidAttributes);
+
     _start = NCMLUtil::findAttrValue(attrs, "start");
     _increment = NCMLUtil::findAttrValue(attrs, "increment");
     _separator = NCMLUtil::findAttrValue(attrs, "separator", NCMLUtil::WHITESPACE);
@@ -715,5 +718,18 @@ namespace ncml_module
     VALID_PTR(pContainingVar);
     pContainingVar->setGotValues();
   }
+
+  vector<string>
+  ValuesElement::getValidAttributes()
+  {
+    vector<string> validAttrs;
+    validAttrs.reserve(3);
+    validAttrs.push_back("start");
+    validAttrs.push_back("increment");
+    validAttrs.push_back("separator");
+    // we disallow npts since it was deprecated and we'll be used for new files.
+    return validAttrs;
+  }
+
 
 }

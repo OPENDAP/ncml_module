@@ -36,6 +36,7 @@
 #include <vector>
 
 using std::string;
+using std::vector;
 
 namespace ncml_module
 {
@@ -129,6 +130,17 @@ namespace ncml_module
      */
     virtual void setAttributes(const AttributeMap& attrs) = 0;
 
+    /** Check that the given attributes are all in the valid set, otherwise
+     * fill in *pInvalidAttrs with the problematic ones if it's not null.
+     * If pInvalidAttrs && printInvalid is set, we print the problematic attributes to BESDEBUG "ncml" channel
+     * If throwOnError is set, we throw a parse error instead of returning.
+     * @return whether all attributes are in the valid set if not throw
+     */
+    virtual bool validateAttributes(const AttributeMap& attrs, const vector<string>& validAttrs,
+        vector<string>* pInvalidAttrs = 0,
+        bool printInvalid = true,
+        bool throwOnError = true);
+
     /** Handle a begin on this element.
      * Called after creation and it is assumed the
      * attributes are already set.
@@ -155,6 +167,8 @@ namespace ncml_module
      *         otherwise return the empty string.
      */
     static std::string printAttributeIfNotEmpty(const std::string& attrName, const std::string& attrValue);
+
+
 
     /** @return whether the given attr is in the array validAttrs or not...  Helper for subclasses */
     static bool isValidAttribute(const std::vector<string>& validAttrs, const string& attr);

@@ -52,6 +52,7 @@ namespace ncml_module
   {
   public:
     static const string _sTypeName;
+    static const vector<string> _sValidAttributes;
 
     ValuesElement();
     ValuesElement(const ValuesElement& proto);
@@ -178,6 +179,7 @@ namespace ncml_module
     /** Call setGotValues() on the containing variable element */
     void setGotValuesOnOurVariableElement(NCMLParser& p);
 
+    static vector<string> getValidAttributes();
 
   private: // Data Rep
     string _start;

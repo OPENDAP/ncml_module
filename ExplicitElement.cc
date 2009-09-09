@@ -36,6 +36,7 @@ namespace ncml_module
 {
 
   const string ExplicitElement::_sTypeName = "explicit";
+  const vector<string> ExplicitElement::_sValidAttributes = vector<string>(); // init to the empty vector... we should have none in here!
 
   ExplicitElement::ExplicitElement()
   {
@@ -63,8 +64,11 @@ namespace ncml_module
   }
 
   void
-  ExplicitElement::setAttributes(const AttributeMap& /* attrs */)
+  ExplicitElement::setAttributes(const AttributeMap& attrs )
   {
+    // make sure that none are specifed, basically.  We'll list them out in here if we get any
+    // which is why this rather than check map size and throw.
+    validateAttributes(attrs, _sValidAttributes);
   }
 
   void
