@@ -23,6 +23,25 @@ Attributes {
         String parent_stat "Individual Obs\\012I";
         Float32 add_offset 3276.500000;
         Float32 scale_factor 0.1000000015;
+        cldc {
+        }
+        time {
+            String units "days since 1-1-1 00:00:0.0";
+            String long_name "Time";
+            String delta_t "0000-01-00 00:00:00";
+            String avg_period "0000-01-00 00:00:00";
+            Float64 actual_range 715511.00000000000, 729360.00000000000;
+        }
+        lat {
+            String long_name "Latitude";
+            String units "degrees_north";
+            Float32 actual_range 10.00000000, -10.00000000;
+        }
+        lon {
+            String long_name "Longitude";
+            String units "degrees_east";
+            Float32 actual_range 0.5000000000, 359.5000000;
+        }
     }
     lflx {
         Float32 valid_range -1000.000000, 1000.000000;
@@ -39,5 +58,24 @@ Attributes {
         String parent_stat "Individual Obs\\012I";
         Float32 add_offset 2276.500000;
         Float32 scale_factor 0.1000000015;
+        lflx {
+        }
+        time {
+            String units "days since 1-1-1 00:00:0.0";
+            String long_name "Time";
+            String delta_t "0000-01-00 00:00:00";
+            String avg_period "0000-01-00 00:00:00";
+            Float64 actual_range 715511.00000000000, 729360.00000000000;
+        }
+        lat {
+            String long_name "Latitude";
+            String units "degrees_north";
+            Float32 actual_range 10.00000000, -10.00000000;
+        }
+        lon {
+            String long_name "Longitude";
+            String units "degrees_east";
+            Float32 actual_range 0.5000000000, 359.5000000;
+        }
     }
 }

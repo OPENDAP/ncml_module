@@ -50,6 +50,9 @@ namespace ncml_module
    */
   class AttributeElement : public NCMLElement
   {
+  private:
+    AttributeElement& operator=(const AttributeElement& rhs); // disallow
+
   public: // methods
     AttributeElement();
     AttributeElement(const AttributeElement& proto);

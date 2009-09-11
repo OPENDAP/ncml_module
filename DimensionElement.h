@@ -54,6 +54,9 @@ namespace ncml_module
    */
   class DimensionElement : public ncml_module::NCMLElement
   {
+  private:
+    DimensionElement& operator=(const DimensionElement& rhs); // disallow
+
   public:
     static const string _sTypeName;
     static const vector<string> _sValidAttributes;

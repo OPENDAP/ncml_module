@@ -107,13 +107,15 @@ namespace ncml_module
       RCObjectPool _pool; // container for all created objects, will be flushed when dtor is called in case of leaks.
     };
 
-
-
   protected:
     // Abstract: Only subclasses can create these
     NCMLElement(NCMLParser* p);
 
     NCMLElement(const NCMLElement& proto);
+
+  private:
+    // Disallow assignment for now
+    NCMLElement& operator=(const NCMLElement& rhs);
 
   public:
     virtual ~NCMLElement();

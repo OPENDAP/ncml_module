@@ -60,6 +60,9 @@ namespace ncml_module
    */
   class NetcdfElement : public NCMLElement
   {
+  private:
+    NetcdfElement& operator=(const NetcdfElement& rhs); //disallow
+
   public:
     static const string _sTypeName;
     static const vector<string> _sValidAttributes;

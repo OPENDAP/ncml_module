@@ -43,6 +43,8 @@ namespace ncml_module
    */
   class ReadMetadataElement : public NCMLElement
   {
+  private:
+    ReadMetadataElement& operator=(const ReadMetadataElement&); //disallow
   public:
     ReadMetadataElement();
     ReadMetadataElement(const ReadMetadataElement& proto);

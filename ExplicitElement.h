@@ -42,6 +42,9 @@ namespace ncml_module
    */
   class ExplicitElement : public NCMLElement
   {
+  private:
+    ExplicitElement& operator=(const ExplicitElement& rhs); // disallow
+
   public:
     ExplicitElement();
     ExplicitElement(const ExplicitElement& proto);

@@ -50,6 +50,9 @@ namespace ncml_module
 
   class ValuesElement : public NCMLElement
   {
+  private:
+    ValuesElement& operator=(const ValuesElement& rhs); // disallow
+
   public:
     static const string _sTypeName;
     static const vector<string> _sValidAttributes;

@@ -80,12 +80,20 @@ namespace ncml_module
   class RCObject
   {
     friend class RCObjectPool;
+  private:
+    RCObject& operator=(const RCObject& rhs); //disallow
 
   public:
     /** If the pool is given, the object will be released back to the pool when its count hits 0,
      * otherwise it will be deleted.
      */
     RCObject(RCObjectPool* pool=0);
+
+    /** Copy ctor: Starts count at 0 and adds us to the proto's pool
+     * if it exists.
+     */
+    RCObject(const RCObject& proto);
+
     virtual ~RCObject();
 
     /** Increase the reference count by one.

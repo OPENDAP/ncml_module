@@ -36,8 +36,17 @@ namespace ncml_module
   : _count(0)
   , _pool(pool)
   {
-    // If the pool doesn't already have us, put us in.
-    if (_pool && !_pool->contains(this))
+    if (_pool)
+      {
+        _pool->add(this);
+      }
+  }
+
+  RCObject::RCObject(const RCObject& proto)
+  : _count(0) // new objects have no count, forget what the proto has!
+  , _pool(proto._pool)
+  {
+    if (_pool)
       {
         _pool->add(this);
       }

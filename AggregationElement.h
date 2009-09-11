@@ -46,6 +46,9 @@ namespace ncml_module
 
   class AggregationElement : public NCMLElement
   {
+  private:
+    AggregationElement& operator=(const AggregationElement& rhs); // disallow
+
   public:
     // Name of the element
     static const string _sTypeName;

@@ -20,6 +20,9 @@ AT_CHECK_ALL_DAP_RESPONSES([nested_passthrough.ncml])
 dnl Test nested attribute containers (type="Structure")
 AT_CHECK_ALL_DAP_RESPONSES([nest_test.ncml])
 
+dnl Test that we can add to Grid map vectors.
+AT_CHECK_ALL_DAP_RESPONSES([grid_attributes.ncml])
+
 dnl Select out just one field
 AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([nested_passthrough.ncml], [[ DATA_GRANULE.PlanetaryGrid.percipitate ]], [nested_passthrough_cons_1.ncml])
 

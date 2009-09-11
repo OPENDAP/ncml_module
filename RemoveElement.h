@@ -39,6 +39,9 @@ namespace ncml_module
   /** Concrete subclass for the <remove> NcML element */
   class RemoveElement : public NCMLElement
   {
+  private:
+    RemoveElement& operator=(const RemoveElement&); // disallow
+
   public:
     RemoveElement();
     RemoveElement(const RemoveElement& proto);
