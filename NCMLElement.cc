@@ -149,7 +149,8 @@ namespace ncml_module
   }
 
   NCMLElement::NCMLElement(const NCMLElement& proto)
-  : _parser(proto._parser)
+  : RCObject(proto)
+  , _parser(proto._parser)
   {
   }
 

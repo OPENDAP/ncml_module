@@ -105,6 +105,36 @@ namespace ncml_module
     return (str.find_first_not_of(" \t\n") == string::npos);
   }
 
+  void
+  NCMLUtil::trimLeft(std::string& input, const std::string& trimChars /* = WHITESPACE */)
+  {
+    size_t firstValid = input.find_first_not_of(trimChars);
+    input.erase(0, firstValid);
+  }
+
+    /** Trim off any number of any character in trimChars from the right side of input.
+     *  @return the substring after removing all trailing characters in trimChars.
+     */
+  void
+  NCMLUtil::trimRight(std::string& input, const std::string& trimChars /* = WHITESPACE */)
+  {
+    size_t lastValid = input.find_last_not_of(trimChars);
+    if (lastValid != string::npos)
+      {
+        input.erase(lastValid+1, string::npos);
+      }
+  }
+
+  void
+  NCMLUtil::trimAll(std::vector<std::string>& tokens, const std::string& trimChars /* = WHITESPACE */)
+  {
+    unsigned int num = tokens.size();
+    for (unsigned int i=0; i<num; ++i)
+      {
+        trim(tokens[i], trimChars);
+      }
+  }
+
 
   const std::string&
   NCMLUtil::findAttrValue(const AttributeMap& map, const std::string& name, const std::string& def/*=""*/)

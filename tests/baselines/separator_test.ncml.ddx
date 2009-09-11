@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Dataset name="separator_test.ncml"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns="http://xml.opendap.org/ns/DAP2"
+xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/dap2.xsd">
+
+    <Attribute name="foo" type="Int32">
+        <value>1</value>
+        <value>2</value>
+        <value>3</value>
+        <value>4</value>
+        <value>5</value>
+    </Attribute>
+    <Attribute name="bar" type="String">
+        <value>a</value>
+        <value>b</value>
+        <value>c</value>
+        <value>d</value>
+        <value>e</value>
+    </Attribute>
+    <Attribute name="baz" type="String">
+        <value> a </value>
+        <value> b </value>
+        <value> c </value>
+        <value> d </value>
+        <value> e </value>
+    </Attribute>
+    <Attribute name="frobozz" type="Url">
+        <value>http://www.gnu.org</value>
+        <value>http://www.opendap.org</value>
+    </Attribute>
+
+
+    <dataBLOB href=""/>
+</Dataset>

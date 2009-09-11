@@ -623,7 +623,7 @@ NCMLParser::tokenizeAttrValues(vector<string>& tokens, const string& values, con
     }
 
   string msg = "";
-  for (int i=0; i<numTokens; i++)
+  for (int i=0; i<tokens.size(); i++)
     {
       if (i > 0)
         {
@@ -644,31 +644,32 @@ int
 NCMLParser::tokenizeValuesForDAPType(vector<string>& tokens, const string& values, AttrType dapType, const string& separator)
 {
   tokens.resize(0);  // Start empty.
+  int numTokens = 0;
 
-  // For URL and String, just push it onto the end, one token.
-  if (dapType ==  Attr_string || dapType == Attr_url)
-    {
-       tokens.push_back(values);
-       return 1;
-    }
-  else if (dapType == Attr_unknown)
+  if (dapType == Attr_unknown)
     {
       // Do out best to recover....
       BESDEBUG("ncml", "Warning: tokenizeValuesForDAPType() got unknown DAP type!  Attempting to continue..." << endl);
       tokens.push_back(values);
-      return 1;
+      numTokens = 1;
     }
   else if (dapType == Attr_container)
     {
       // Not supposed to have values, just push empty string....
       BESDEBUG("ncml", "Warning: tokenizeValuesForDAPType() got container type, we should not have values!" << endl);
       tokens.push_back("");
-      return 1;
+     numTokens = 1;
     }
-  else // For all other atomic types, do a split.
+  else // For all other atomic types, do a split on separator
     {
-      return NCMLUtil::tokenize(values, tokens, separator);
+      numTokens = NCMLUtil::tokenize(values, tokens, separator);
+      // Trim off any leading or trailing whitespace on numerical types or URL's, but not strings
+      if (dapType !=  Attr_string)
+        {
+          NCMLUtil::trimAll(tokens);
+        }
     }
+  return numTokens;
 }
 
 

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<netcdf title="Testing separator">
+  
+  <!-- Make sure the whitespace on tokens is trimmed for numeric type's but not string -->
+  <attribute name="foo" type="int" separator=",">
+    1 , 2 , 3 , 4 , 5  
+  </attribute>
+
+  <!-- Make sure this generates 5 values in the DDX! -->
+  <attribute name="bar" type="string" separator=",">a,b,c,d,e</attribute>
+
+  <!-- Make sure that we do NOT trim whitespace for string type arrays 
+    Each resultant string in the DDX should have a leading and trailing space -->
+  <attribute name="baz" type="string" separator=","> a , b , c , d , e </attribute>
+
+  <!-- Make sure we DO trim URL's into tokens -->
+  <attribute name="frobozz" type="URL" separator=",">
+    http://www.gnu.org, 
+    http://www.opendap.org
+  </attribute>
+
+</netcdf>

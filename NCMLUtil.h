@@ -82,6 +82,27 @@ namespace ncml_module
     /** Is all the string whitespace as defined by chars in WHITESPACE ?  */
     static bool isAllWhitespace(const std::string& str);
 
+    /** Trim off any number of any character in trimChars from the left side of str in place.
+     */
+    static void trimLeft(std::string& str, const std::string& trimChars = WHITESPACE);
+
+    /** Trim off any number of any character in trimChars from the right side of str in place
+     */
+    static void trimRight(std::string& str, const std::string& trimChars = WHITESPACE);
+
+    /** Trim from both left and right.
+     */
+    static void trim(std::string& str, const std::string& trimChars = WHITESPACE)
+    {
+      trimLeft(str, trimChars);
+      trimRight(str, trimChars);
+    }
+
+    /** Call trim on each string in tokens.
+     * tokens is mutated to contain the trimmed strings.
+     */
+    static void trimAll(std::vector<std::string>& tokens, const std::string& trimChars = WHITESPACE);
+
 
     /** @brief Return the value of the given attribute from the map, else the given default.
      * @param map  map to search
