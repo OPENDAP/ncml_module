@@ -24,13 +24,19 @@ to add metadata to existing datasets.
    
 For information on how to build and install the NcML Data Module,
 please see the INSTALL file.
-       
+
 More detailed and/or up-to-date documentation for this module can be
 found at: http://docs.opendap.org/index.php/BES_-_Modules_-_NcML_Module
 
+Note that adding metadata to HDF or NetCDF datasets may involve a
+little more care due to deviations from the DAP2 spec in those
+handlers in their creation of the DAS response.  Please see the
+related sections below or the Wiki for more information.
+       
 The current version implements only a subset of NcML 2.2
 functionality, and also adds some functionality -- please see the
-sections "Functionality" and "NcML Additions" below.
+sections "Functionality" and "NcML Additions" below and the Wiki for
+more details.
 
 ----------------------------------------------------------------------
 * Contents
@@ -40,6 +46,7 @@ sections "Functionality" and "NcML Additions" below.
   * NcML Additions
   * Example NcML
   * HDF4 DAS Compatibility Issue
+  * NetCDF DAS Compatibility Issue
   * Copyright
 
 ----------------------------------------------------------------------
@@ -222,6 +229,28 @@ lexical scope for attributes relies on the correct DAS form --- to
 handle this, the user should start with a "passthrough" NcML file and
 use the DAS from that as the starting point for knowing the structure
 the NcML handler expects to see in the NcML file.
+
+----------------------------------------------------------------------
+* NetCDF DAS Compatibility Issue
+
+Similarly there is a problem with the DAS created by the NetCDF Module
+in the case of Grid (at least).  A NetCDF dataset with shared
+dimensions will generate a DAP 2 Grid for the data with map vectors
+for these dimensions.  Attributes (metadata) specified on these map
+vectors is placed into the dataset attribute container instead of
+within the Grid attribute contrainer, however, which is a deviation
+from the DAP 2 specification.  The NcML handler uses the (correctly
+created) DDX to generate the DAS, so the output of an NcML dataset
+with a Grid in it will have the map vector attributes within the Grid
+container.  This is DIFFERENT from the original DAS response for the
+dataset, however.  
+
+To specify or change attributes on map vectors, the
+NcML author needs to use the DDX lexical scoping to specify the
+location of the map vector attributes.  The easiest way to do this is
+to start from a "passthrough" NcML file with just the wrapped dataset
+and ask for the DAS response.  This will show the attribute hierarchy
+that the NcML Module is expecting.
 
 ----------------------------------------------------------------------
 * Copyright
