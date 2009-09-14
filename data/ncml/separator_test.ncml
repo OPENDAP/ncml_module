@@ -18,5 +18,24 @@
     http://www.gnu.org, 
     http://www.opendap.org
   </attribute>
+  
+  <!-- Make sure unspecified separator for string defaults to not separating -->
+  <attribute name="zork" type="string">I am a string without a specified separator so won't get separated into an array.</attribute>
+
+  <!-- Unless we force it to do so by giving space explicitly as separator-->
+  <attribute name="enchanter" type="string" separator=" ">Each One Is A Token</attribute>
+
+  <!-- Also check values@separator works with strings...  -->
+  <variable name="sorcerer" type="string">
+    <values>Test string shouldn't get separated!</values>
+  </variable>
+
+  <variable name="grue" type="string" shape="3">
+    <values>This is three</values>
+  </variable>
+  
+  <variable name="dungeon_master" type="string" shape="3">
+    <values separator="*">This*is*three</values>
+  </variable>
 
 </netcdf>

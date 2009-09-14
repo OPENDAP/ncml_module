@@ -61,7 +61,7 @@ namespace ncml_module
   : NCMLElement(0)
   , _start("")
   , _increment("")
-  , _separator(NCMLUtil::WHITESPACE)
+  , _separator("")
   , _gotContent(false)
   , _tokens()
   {
@@ -74,8 +74,8 @@ namespace ncml_module
     _start = proto._start;
     _increment = proto._increment;
     _separator = proto._separator;
-
-    // We don't really care about the ephemeral state of _tokens or _gotContent in a copy....
+    _gotContent = proto._gotContent;
+    _tokens = proto._tokens;
   }
 
   ValuesElement::~ValuesElement()
@@ -102,7 +102,7 @@ namespace ncml_module
 
     _start = NCMLUtil::findAttrValue(attrs, "start");
     _increment = NCMLUtil::findAttrValue(attrs, "increment");
-    _separator = NCMLUtil::findAttrValue(attrs, "separator", NCMLUtil::WHITESPACE);
+    _separator = NCMLUtil::findAttrValue(attrs, "separator", ""); // empty means "not specified" and becoems whitesoace for all but string
 
     // Validate them... if _start is specified, then _increment must be as well!
     if (!_start.empty() && _increment.empty())
@@ -187,16 +187,22 @@ namespace ncml_module
         (pVar->type() == dods_str_c || pVar->type() == dods_url_c))
       {
         _tokens.resize(0);
-        _tokens.push_back(content);
+        _tokens.push_back(string(content));
       }
     // Don't tokenize a char array either, since we want to read all the char's in.
     else if (pVar->is_vector_type() && getNCMLTypeForVariable(p) == "char")
       {
         NCMLUtil::tokenizeChars(content, _tokens); // tokenize with no separator so each char is token.
       }
-    else
+    else if (pVar->is_vector_type() && getNCMLTypeForVariable(p) == "string")
       {
-        NCMLUtil::tokenize(content, _tokens, _separator);
+        string sep = ((_separator.empty())?(NCMLUtil::WHITESPACE):(_separator));
+        NCMLUtil::tokenize(content, _tokens, sep);
+      }
+    else // for arrays of other values, use whitespace separation for default if not specified.
+      {
+        string sep = ((_separator.empty())?(NCMLUtil::WHITESPACE):(_separator));
+        NCMLUtil::tokenize(content, _tokens, sep);
       }
     setVariableValuesFromTokens(p, *pVar);
     _gotContent = true;

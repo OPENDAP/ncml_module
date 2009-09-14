@@ -623,7 +623,7 @@ NCMLParser::tokenizeAttrValues(vector<string>& tokens, const string& values, con
     }
 
   string msg = "";
-  for (int i=0; i<tokens.size(); i++)
+  for (unsigned int i=0; i<tokens.size(); i++)
     {
       if (i > 0)
         {
@@ -660,14 +660,19 @@ NCMLParser::tokenizeValuesForDAPType(vector<string>& tokens, const string& value
       tokens.push_back("");
      numTokens = 1;
     }
+  else if (dapType == Attr_string)
+    {
+      // Don't use whitespace as default separator for strings.
+      // If they explicitly set it, then fine.
+      // We don't trim strings either.  All whitespace, trailing or leading, is left.
+      numTokens = NCMLUtil::tokenize(values, tokens, separator);
+    }
   else // For all other atomic types, do a split on separator
     {
-      numTokens = NCMLUtil::tokenize(values, tokens, separator);
-      // Trim off any leading or trailing whitespace on numerical types or URL's, but not strings
-      if (dapType !=  Attr_string)
-        {
-          NCMLUtil::trimAll(tokens);
-        }
+      // Use whitespace as default if sep not set
+      string sep = ((separator.empty())?(NCMLUtil::WHITESPACE):(separator));
+      numTokens = NCMLUtil::tokenize(values, tokens, sep);
+      NCMLUtil::trimAll(tokens);
     }
   return numTokens;
 }

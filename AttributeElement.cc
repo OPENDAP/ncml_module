@@ -80,7 +80,7 @@ namespace ncml_module
     _name = NCMLUtil::findAttrValue(attrs, "name");
     _type = NCMLUtil::findAttrValue(attrs,"type");
     _value = NCMLUtil::findAttrValue(attrs, "value");
-    _separator = NCMLUtil::findAttrValue(attrs, "separator", NCMLUtil::WHITESPACE);
+    _separator = NCMLUtil::findAttrValue(attrs, "separator", ""); // empty is unspecified...  whitespace if not string
     _orgName = NCMLUtil::findAttrValue(attrs, "orgName");
 
     validateAttributes(attrs, _sValidAttributes);
