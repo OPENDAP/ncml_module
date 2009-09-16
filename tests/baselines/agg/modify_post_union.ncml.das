@@ -1,5 +1,5 @@
 Attributes {
-    String Dataset_Description "";
+    String Dataset_Description "This is a union.";
     SelfReferentialVariable {
     }
     Foo {

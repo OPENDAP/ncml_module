@@ -1,0 +1,5 @@
+Attributes {
+    String Empty "";
+    EmptyVar {
+    }
+}

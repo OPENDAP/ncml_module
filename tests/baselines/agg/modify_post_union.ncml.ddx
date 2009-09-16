@@ -5,7 +5,7 @@ xmlns="http://xml.opendap.org/ns/DAP2"
 xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/dap2.xsd">
 
     <Attribute name="Dataset_Description" type="String">
-        <value></value>
+        <value>This is a union.</value>
     </Attribute>
 
     <String name="SelfReferentialVariable"/>

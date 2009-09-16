@@ -27,6 +27,10 @@ dnl Test that attribute@separator works as advertised
 AT_CHECK_ALL_DAP_RESPONSES([separator_test.ncml])
 AT_CHECK_DATADDS_GETDAP([separator_test.ncml])
 
+dnl Make sure we can enter an empty string as a value for string
+AT_CHECK_ALL_DAP_RESPONSES([bugs/empty_attr_string.ncml])
+AT_CHECK_DATADDS_GETDAP([bugs/empty_attr_string.ncml])
+
 dnl Select out just one field
 AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([nested_passthrough.ncml], [[ DATA_GRANULE.PlanetaryGrid.percipitate ]], [nested_passthrough_cons_1.ncml])
 

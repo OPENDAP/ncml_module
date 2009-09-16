@@ -3,7 +3,7 @@
 <netcdf>
   
   <!-- These come before the aggregation so don't affect it -->
-  <attribute name="Dataset_Description" type="string" value=""/>
+  <attribute name="Dataset_Description" type="string" value="This is a union."/>
   <variable name="SelfReferentialVariable" type="string">
     <values>My name is "SelfReferentialVariable"</values>
   </variable>

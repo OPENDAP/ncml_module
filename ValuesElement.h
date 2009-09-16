@@ -182,6 +182,11 @@ namespace ncml_module
     /** Call setGotValues() on the containing variable element */
     void setGotValuesOnOurVariableElement(NCMLParser& p);
 
+    /** If a var of type string or url is specified, we need to explicitly push an
+     * empty string since the parser won't actually make the call.
+     */
+    void dealWithEmptyStringValues();
+
     static vector<string> getValidAttributes();
 
   private: // Data Rep

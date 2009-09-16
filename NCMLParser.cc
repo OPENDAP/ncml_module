@@ -611,6 +611,11 @@ NCMLParser::tokenizeAttrValues(vector<string>& tokens, const string& values, con
 
   // If we're valid type, tokenize us according to type.
   int numTokens = tokenizeValuesForDAPType(tokens, values, dapType, separator);
+  if (numTokens == 0 &&
+      ( (dapType == Attr_string) || (dapType == Attr_url) ) )
+    {
+      tokens.push_back(""); // 0 tokens will cause a problem later, so push empty string!
+    }
 
   // Now type check the tokens are valid strings for the type.
   NCMLParser::checkDataIsValidForCanonicalTypeOrThrow(dapAttrTypeName, tokens);

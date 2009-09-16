@@ -214,6 +214,12 @@ namespace ncml_module
   {
     BESDEBUG("ncml", "ValuesElement::handleEnd called for " << toString() << endl);
 
+    // if unspecified, string and url vars get set to empty string ""
+    if (!shouldAutoGenerateValues())
+      {
+        dealWithEmptyStringValues();
+      }
+
     if (!shouldAutoGenerateValues() && !_gotContent)
       {
         THROW_NCML_PARSE_ERROR("Values element=" + toString() + " expected content for values but didn't get any!");
@@ -729,6 +735,17 @@ namespace ncml_module
     VariableElement* pContainingVar = const_cast<VariableElement*>(getContainingVariableElement(p));
     VALID_PTR(pContainingVar);
     pContainingVar->setGotValues();
+  }
+
+  void
+  ValuesElement::dealWithEmptyStringValues()
+  {
+    // To reuse all the logic, we'll just explicitly call handleContent("")
+    // which will push an empty string token for scalar string and url.
+    if (!_gotContent)
+      {
+        handleContent("");
+      }
   }
 
   vector<string>
