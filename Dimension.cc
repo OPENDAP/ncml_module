@@ -42,7 +42,7 @@ namespace agg_util
   {
   }
 
-  Dimension::Dimension(const string& nameArg, unsigned int sizeArg, bool isSharedArg=false, bool isSizeConstantArg=false)
+  Dimension::Dimension(const string& nameArg, unsigned int sizeArg, bool isSharedArg, bool isSizeConstantArg)
   : name(nameArg)
   , size(sizeArg)
   , isShared(isSharedArg)

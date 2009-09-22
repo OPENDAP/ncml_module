@@ -63,6 +63,7 @@ namespace ncml_module
 
     DimensionElement();
     DimensionElement(const DimensionElement& proto);
+    DimensionElement(const agg_util::Dimension& dim);
     virtual ~DimensionElement();
     virtual const string& getTypeName() const;
     virtual DimensionElement* clone() const; // override clone with more specific subclass

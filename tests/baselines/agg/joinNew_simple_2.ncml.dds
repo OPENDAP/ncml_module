@@ -1,0 +1,4 @@
+Dataset {
+    Int32 V[day = 4][station = 5];
+    Int32 V_expected[day = 4][station = 5];
+} joinNew_simple_2.ncml;

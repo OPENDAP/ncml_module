@@ -29,8 +29,11 @@
 
 #include "AggregationElement.h"
 #include "AggregationUtil.h"
+#include <Array.h> // libdap
 #include <AttrTable.h>
+#include "Dimension.h" // agg_util
 #include "DimensionElement.h"
+#include "MyBaseTypeFactory.h"
 #include "NCMLDebug.h"
 #include "NCMLParser.h"
 #include "NetcdfElement.h"
@@ -308,7 +311,70 @@ namespace ncml_module
   {
     BESDEBUG("ncml", "AggregationElement: beginning joinNew on the following aggVars=" +
         printAggregationVariables() << endl);
-    THROW_NCML_PARSE_ERROR("Unimplemented aggregation type: joinNew");
+
+    // Union the dimensions of the chid sets so they're available
+    BESDEBUG("ncml", "Merging dimensions from children into aggregated dataset..." << endl);
+    mergeDimensions();
+
+    // For each aggregation variable:
+    // 1) Look it up in the datasets in order and pull it out into an array
+    // 2) Make a new NCMLArray<T> of the right type
+    // 3) Make the AggregationUtil call to fill in the array
+    // This will prepare the parent dataset with the aggregated variables.
+    // This allows us to then just call perforUnionAggregation and it will
+    // union the non agg ones in there since the aggregated ones already exist in union.
+
+    // Gather up the children datasets
+    vector<DDS*> datasetsInOrder;
+    collectDatasetsInOrder(datasetsInOrder);
+
+    // This is where the output variables go
+    DDS* pAggDDS = getParentDataset()->getDDS();
+
+    // For now we will explicitly create the new dimension for lookups.
+    unsigned int newDimSize = datasetsInOrder.size(); // ASSUMES we find an aggVar in EVERY dataset!
+    getParentDataset()->addDimension(new DimensionElement(agg_util::Dimension(_dimName, newDimSize)));
+
+    vector<string>::const_iterator endIt = _aggVars.end();
+    for (vector<string>::const_iterator it = _aggVars.begin(); it != endIt; ++it)
+      {
+        const string& varName = *it;
+        BESDEBUG("ncml", "Aggregating on aggVar=" << varName << "..." << endl);
+
+        vector<Array*> inputs;
+        inputs.reserve(datasetsInOrder.size());
+        unsigned int found = AggregationUtil::collectVariableArraysInOrder(inputs, varName, datasetsInOrder);
+
+        // We need one aggVar per set in order to set the dimension right.
+        if (found != datasetsInOrder.size())
+          {
+            THROW_NCML_PARSE_ERROR("In performing joinNew aggregation=" + toString() +
+                " we did not find an aggregation variables named " + varName +
+                " in all of the child datasets of the aggregation!");
+          }
+
+        // Create the output Array as NCMLArray of proper type,
+        // saving in the auto_ptr since we'll work with a copy and want this destroyed
+        BaseType* protoVar = inputs[0]->var();
+        VALID_PTR(protoVar);
+        const string& typeName = protoVar->type_name();
+        string arrayTypeName = "Array<" + typeName + ">";
+        auto_ptr<BaseType> newArrayBT = MyBaseTypeFactory::makeArrayTemplateVariable(arrayTypeName, varName);
+
+        // Add the array to the parent dataset.  N.B. this copies it and adds the copy!
+        pAggDDS->add_var(newArrayBT.get());
+
+        // So pull out the actual one in the DDS so we modify that one.
+        Array* pJoinedArray = dynamic_cast<Array*>(pAggDDS->var(varName));
+        NCML_ASSERT_MSG(pJoinedArray, "Couldn't get the new aggregation Array from the parent DDS!");
+
+        // Perform the aggregation
+        bool copyData = false; // @TODO for now... later for a DODS call we'll need to set it to true and add that code.
+        AggregationUtil::produceOuterDimensionJoinedArray(pJoinedArray, varName, _dimName, inputs, copyData);
+      }
+
+    // Perform union on all unaggregated variables (i.e. not already added to parent)
+    AggregationUtil::performUnionAggregation(pAggDDS, datasetsInOrder);
   }
 
   void
@@ -392,5 +458,7 @@ namespace ncml_module
     attrs.push_back("recheckEvery");
     return attrs;
   }
+
+
 
 }; // namespace ncml_module

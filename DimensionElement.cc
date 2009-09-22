@@ -55,13 +55,28 @@ namespace ncml_module
 
   DimensionElement::DimensionElement(const DimensionElement& proto)
   : NCMLElement(proto)
+  , _length(proto._length)
+  , _orgName(proto._orgName)
+  , _isUnlimited(proto._isUnlimited)
+  , _isShared(proto._isShared)
+  , _isVariableLength(proto._isVariableLength)
+  , _dim(proto._dim)
   {
-    _length = proto._length;
-    _orgName = proto._orgName;
-    _isUnlimited = proto._isUnlimited;
-    _isShared = proto._isShared;
-    _isVariableLength = proto._isVariableLength;
-    _dim = proto._dim;
+  }
+
+  DimensionElement::DimensionElement(const agg_util::Dimension& dim)
+  : NCMLElement(0)
+  , _length("0")
+  , _orgName("")
+  , _isUnlimited("")
+  , _isShared("")
+  , _isVariableLength("")
+  , _dim(dim)
+  {
+    // Set string to match the int size
+    ostringstream oss;
+    oss << dim.size;
+    _length = oss.str();
   }
 
   DimensionElement::~DimensionElement()

@@ -50,7 +50,7 @@ namespace agg_util
   {
   public:
     Dimension();
-    Dimension(const std::string& nameArg, unsigned int sizeArg, bool isSharedArg, bool isSizeConstantArg);
+    Dimension(const std::string& nameArg, unsigned int sizeArg, bool isSharedArg=false, bool isSizeConstantArg=true);
     ~Dimension();
 
     // The name of the dimension (merely mnemonic)

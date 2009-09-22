@@ -27,6 +27,7 @@
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
 #include "AggregationUtil.h"
+#include <Array.h> // libdap
 #include <AttrTable.h>
 #include <BaseType.h>
 #include <DDS.h>
@@ -34,6 +35,7 @@
 
 using std::string;
 using std::vector;
+using libdap::Array;
 using libdap::AttrTable;
 using libdap::BaseType;
 using libdap::DDS;
@@ -178,6 +180,153 @@ namespace agg_util
           }
       }
     return ret;
+  }
+
+  void
+  AggregationUtil::produceOuterDimensionJoinedArray(
+            Array* pJoinedArray,
+            const std::string& joinedArrayName,
+            const std::string& newOuterDimName,
+            const std::vector<libdap::Array*>& fromVars,
+            bool copyData)
+  {
+    string funcName = "AggregationUtil::createOuterDimensionJoinedArray:";
+
+    NCML_ASSERT_MSG(fromVars.size() > 0,
+        funcName +  "Must be at least one Array in input!");
+
+    // uses the first one as template for type and shape
+    if (!validateArrayTypesAndShapesMatch(fromVars, true))
+      {
+        THROW_NCML_PARSE_ERROR(funcName + " The input arrays must all have the same data type and dimensions but do not!");
+      }
+
+    // The first will be used to "set up" the pJoinedArray
+    Array* templateArray = fromVars[0];
+    VALID_PTR(templateArray);
+    BaseType* templateVar = templateArray->var();
+    NCML_ASSERT_MSG(templateVar,
+        funcName + "Expected a non-NULL prototype BaseType in the first Array!");
+
+    // Set the template var for the type.
+    pJoinedArray->add_var(templateVar);
+    // and force the name to be the desired one, not the prototype's
+    pJoinedArray->set_name(joinedArrayName);
+
+    // Copy the attribute table from the template over...  We're not merging or anything.
+    pJoinedArray->set_attr_table(templateArray->get_attr_table());
+
+    // Create a new outer dimension based on the number of inputs we have.
+    // These append_dim calls go left to right, so we need to add the new dim FIRST.
+    pJoinedArray->append_dim(fromVars.size(), newOuterDimName);
+
+    // Use the template to add inner dimensions to the new array
+    for (Array::Dim_iter it = templateArray->dim_begin(); it != templateArray->dim_end(); ++it)
+      {
+        int dimSize = templateArray->dimension_size(it);
+        string dimName = templateArray->dimension_name(it);
+        pJoinedArray->append_dim(dimSize, dimName);
+      }
+
+
+    // If we're supposed to, read the data from the input Array's and then copy it into the
+    // new pJoinedArray
+    // TODO We need to make the Vector class let us set the storage up in the first place
+    // and allow us to poke data into it in ranges with a start index (rowmajor) and number to copy.
+    if (copyData)
+      {
+        THROW_NCML_INTERNAL_ERROR("Unimplemented: produceOuterDimensionJoinedArray cannot copy data yet!");
+      }
+  }
+
+  bool
+  AggregationUtil::validateArrayTypesAndShapesMatch(
+       const std::vector<libdap::Array*>& arrays,
+       bool enforceMatchingDimNames)
+  {
+    NCML_ASSERT(arrays.size() > 0);
+    bool valid = true;
+    Array* pTemplate = 0;
+    for (vector<Array*>::const_iterator it = arrays.begin(); it != arrays.end(); ++it)
+      {
+        // Set the template from the first one.
+        if (!pTemplate)
+          {
+            pTemplate = *it;
+            VALID_PTR(pTemplate);
+            continue;
+          }
+
+        valid = ( valid &&
+                  doTypesMatch(*pTemplate, **it) &&
+                  doShapesMatch(*pTemplate, **it, enforceMatchingDimNames)
+                );
+        // No use continuing
+        if (!valid)
+          {
+            break;
+          }
+      }
+    return valid;
+  }
+
+  bool
+  AggregationUtil::doTypesMatch(const libdap::Array& lhsC, const libdap::Array& rhsC)
+  {
+    // semantically const
+    Array& lhs = const_cast<Array&>(lhsC);
+    Array& rhs = const_cast<Array&>(rhsC);
+    return (lhs.var() && rhs.var() && lhs.var()->type() == rhs.var()->type());
+  }
+
+  bool
+  AggregationUtil::doShapesMatch(const libdap::Array& lhsC, const libdap::Array& rhsC, bool checkDimNames)
+  {
+    // semantically const
+    Array& lhs = const_cast<Array&>(lhsC);
+    Array& rhs = const_cast<Array&>(rhsC);
+
+    // Check the number of dims matches first.
+    bool valid = true;
+    if (lhs.dimensions() != rhs.dimensions())
+      {
+         valid = false;
+      }
+    else
+      {
+        // Then iterate on both in sync and compare.
+        Array::Dim_iter rhsIt = rhs.dim_begin();
+        for (Array::Dim_iter lhsIt = lhs.dim_begin(); lhsIt != lhs.dim_end(); (++lhsIt, ++rhsIt) )
+          {
+            valid = (valid && ( lhs.dimension_size(lhsIt) == rhs.dimension_size(rhsIt) ));
+
+            if (checkDimNames)
+              {
+                valid = (valid &&  ( lhs.dimension_name(lhsIt) == rhs.dimension_name(rhsIt) ));
+              }
+          }
+      }
+    return valid;
+  }
+
+  unsigned int
+  AggregationUtil::collectVariableArraysInOrder(std::vector<Array*>& varArrays, const std::string& collectVarName, const vector<DDS*>& datasetsInOrder)
+  {
+    unsigned int count = 0;
+    vector<DDS*>::const_iterator endIt = datasetsInOrder.end();
+    vector<DDS*>::const_iterator it;
+    for (it = datasetsInOrder.begin(); it != endIt; ++it)
+      {
+        DDS* pDDS = const_cast<DDS*>(*it);
+        VALID_PTR(pDDS);
+        Array* pVar = dynamic_cast<Array*>(findVariableAtDDSTopLevel(*pDDS, collectVarName));
+        if (pVar)
+          {
+            varArrays.push_back(pVar);
+            count++;
+          }
+      }
+    return count;
   }
 
 }

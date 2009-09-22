@@ -39,8 +39,29 @@ dnl This is where we'd have to make the error...  We're not
 dnl going to traverse into DAP objects to check dimensions for now...
 AT_ASSERT_PARSE_ERROR([agg/union_dimension_mismatch_error.ncml])
 
-dnl TODO Find some actual aggregation data somewhere and run it
-dnl through TDS maybe?
+dnl ------------ joinNew -----------------
+dnl Tests for simple joinNew aggregation 
+AT_CHECK_DAS([agg/joinNew_simple.ncml])
+AT_CHECK_DDS([agg/joinNew_simple.ncml])
+AT_CHECK_DDX([agg/joinNew_simple.ncml])
+dnl TODO Data tests!!
+
+dnl Another example with more datasets
+AT_CHECK_DAS([agg/joinNew_simple_2.ncml])
+AT_CHECK_DDS([agg/joinNew_simple_2.ncml])
+AT_CHECK_DDX([agg/joinNew_simple_2.ncml])
+dnl TODO Data tests!
+
+dnl Test the parse error branches
+dnl Test that not having an aggregation variable in all datasets is an error
+AT_ASSERT_PARSE_ERROR([agg/joinNew_error_1.ncml])
+dnl Test that datasets not all matching type is an error
+AT_ASSERT_PARSE_ERROR([agg/joinNew_error_2.ncml])
+dnl Test datasets not matching shapes is an error
+AT_ASSERT_PARSE_ERROR([agg/joinNew_error_3.ncml])
+dnl Test datasets not matching dimension length is error
+AT_ASSERT_PARSE_ERROR([agg/joinNew_error_4.ncml])
+
 
 
 
