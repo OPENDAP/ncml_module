@@ -52,6 +52,12 @@ AT_CHECK_DDS([agg/joinNew_simple_2.ncml])
 AT_CHECK_DDX([agg/joinNew_simple_2.ncml])
 dnl TODO Data tests!
 
+dnl Another with more than one aggregation variable
+AT_CHECK_DAS([agg/joinNew_simple_3.ncml])
+AT_CHECK_DDS([agg/joinNew_simple_3.ncml])
+AT_CHECK_DDX([agg/joinNew_simple_3.ncml])
+
+
 dnl Test the parse error branches
 dnl Test that not having an aggregation variable in all datasets is an error
 AT_ASSERT_PARSE_ERROR([agg/joinNew_error_1.ncml])
