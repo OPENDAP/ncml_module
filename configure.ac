@@ -5,6 +5,7 @@
 AC_PREREQ(2.61)
 AC_INIT(ncml_module, 0.9.1, opendap-tech@opendap.org)
 AC_CONFIG_AUX_DIR([conf])
+AC_CONFIG_MACRO_DIR([conf])
 
 AM_INIT_AUTOMAKE
 
