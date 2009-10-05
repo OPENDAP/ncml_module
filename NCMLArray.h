@@ -296,6 +296,12 @@ protected:
    */
   virtual void cacheValuesIfNeeded()
   {
+    // If the super Vector has no capacity, it's not set up correctly, so don't call this or we get exception.
+    if (get_value_capacity() == 0)
+      {
+        BESDEBUG("ncml", "cacheValuesIfNeeded: the superclass Vector has no data so not copying...");
+      }
+
     // If we haven't gotten this yet, go get it,
     // assuming the super Vector contains all values
     if (!_allValues)

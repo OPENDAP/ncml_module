@@ -40,23 +40,6 @@ dnl going to traverse into DAP objects to check dimensions for now...
 AT_ASSERT_PARSE_ERROR([agg/union_dimension_mismatch_error.ncml])
 
 dnl ------------ joinNew -----------------
-dnl Tests for simple joinNew aggregation 
-AT_CHECK_DAS([agg/joinNew_simple.ncml])
-AT_CHECK_DDS([agg/joinNew_simple.ncml])
-AT_CHECK_DDX([agg/joinNew_simple.ncml])
-dnl TODO Data tests!!
-
-dnl Another example with more datasets
-AT_CHECK_DAS([agg/joinNew_simple_2.ncml])
-AT_CHECK_DDS([agg/joinNew_simple_2.ncml])
-AT_CHECK_DDX([agg/joinNew_simple_2.ncml])
-dnl TODO Data tests!
-
-dnl Another with more than one aggregation variable
-AT_CHECK_DAS([agg/joinNew_simple_3.ncml])
-AT_CHECK_DDS([agg/joinNew_simple_3.ncml])
-AT_CHECK_DDX([agg/joinNew_simple_3.ncml])
-
 
 dnl Test the parse error branches
 dnl Test that not having an aggregation variable in all datasets is an error
@@ -68,6 +51,39 @@ AT_ASSERT_PARSE_ERROR([agg/joinNew_error_3.ncml])
 dnl Test datasets not matching dimension length is error
 AT_ASSERT_PARSE_ERROR([agg/joinNew_error_4.ncml])
 
+dnl Tests for simple joinNew aggregation 
+AT_CHECK_ALL_DAP_RESPONSES([agg/joinNew_simple.ncml])
+AT_CHECK_DATADDS_GETDAP([agg/joinNew_simple.ncml])
+
+dnl Another example with more datasets
+AT_CHECK_ALL_DAP_RESPONSES([agg/joinNew_simple_2.ncml])
+AT_CHECK_DATADDS_GETDAP([agg/joinNew_simple_2.ncml])
+
+dnl Another with more than one aggregation variable
+AT_CHECK_ALL_DAP_RESPONSES([agg/joinNew_simple_3.ncml])
+AT_CHECK_DATADDS_GETDAP([agg/joinNew_simple_3.ncml])
+
+dnl =======================================================
+dnl Test constraints on the virtual dataset aggs
+
+dnl Test that the outer dimension slices match the original datasets
+AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([agg/joinNew_simple.ncml],[[ V[0][0:4] ]], [agg/joinNew_simple_cons_1.ncml])
+AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([agg/joinNew_simple.ncml],[[ V[1][0:4] ]], [agg/joinNew_simple_cons_2.ncml])
+
+dnl Test grabbing a slice from the "middle" of an aggregated set
+AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([agg/joinNew_simple_2.ncml],[[ V[2][1:2] ]], [agg/joinNew_simple_2_cons_1.ncml])
+
+dnl Grab two separate dataset slices from the middle
+AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([agg/joinNew_simple_2.ncml],[[ V[1:2][0:4] ]], [agg/joinNew_simple_2_cons_2.ncml])
+
+dnl Grab an outside dimension slice of just one entry (second entry of all datasets)
+AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([agg/joinNew_simple_2.ncml],[[ V[0:3][1] ]], [agg/joinNew_simple_2_cons_3.ncml])
+
+dnl Test a Netcdf Array aggregation, in this case three fnoc1.nc appended together as a joinNew
+AT_CHECK_ALL_DAP_RESPONSES([agg/netcdf_joinNew.ncml])
+AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([agg/netcdf_joinNew.ncml],[[ u[1][0][10:11][10:11] ]], [agg/netcdf_joinNew_cons_1.ncml])
+
+dnl TODO support for Grid and coordValue for the new map vector.
 
 
 

@@ -1,20 +1,18 @@
 #!/bin/sh
 
 # Usage: from the tests subdirectory:
-#    ./generate_baselines.sh filename.ncml constraint_expr [output_prefix]
+#    ./generate_baselines.sh filename.ncml [constraint_expr] [output_prefix]
 # 
 # This script is used to run the besstandalone on a particular
 # NcML file and save off the DAP responses { das|dds|dods|ddx} 
 # into the baselines directory.  It is assumed the caller
 # will check these for accuracy before including them in the testsuite.at
 # 
-# The optional second argument is the prefix for the output files,
+# A constraint expression may be optionally specified as the second argument.
+#
+# The optional third argument is the prefix for the output files,
 # which are named as $prefix.$response.  If not specified, 
 # the input filename is used.
-# 
-# NOTE: It assumes the existence of ../bes-testsuite/bes.conf for running 
-# besstandalone properly!  [TODO perhaps relax this to generate bes.conf within here
-# as well as we move away from bes-testsuite]
 #
 # @author mjohnson <m.johnson@opendap.org>
 

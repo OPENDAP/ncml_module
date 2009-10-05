@@ -89,7 +89,7 @@ namespace ncml_module
       {
         for (unsigned int i=0; i<_dims.size(); ++i)
           {
-            ret = areDimensionsEqual(_dims[0], rhs._dims[0]);
+            ret = areDimensionsEqual(_dims[i], rhs._dims[i]);
             if (!ret) // just give up...
               {
                 break;

@@ -180,7 +180,7 @@ namespace ncml_module
       }
     else // compare the current values to those currently in our Array slice
       {
-        return ((*_currentConstraints) == getSuperShape());
+        return ((*_currentConstraints) != getSuperShape());
       }
   }
 

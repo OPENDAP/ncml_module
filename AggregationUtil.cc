@@ -39,6 +39,7 @@ using libdap::Array;
 using libdap::AttrTable;
 using libdap::BaseType;
 using libdap::DDS;
+using libdap::Vector;
 
 namespace agg_util
 {
@@ -228,14 +229,14 @@ namespace agg_util
         pJoinedArray->append_dim(dimSize, dimName);
       }
 
-
-    // If we're supposed to, read the data from the input Array's and then copy it into the
-    // new pJoinedArray
-    // TODO We need to make the Vector class let us set the storage up in the first place
-    // and allow us to poke data into it in ranges with a start index (rowmajor) and number to copy.
     if (copyData)
       {
-        THROW_NCML_INTERNAL_ERROR("Unimplemented: produceOuterDimensionJoinedArray cannot copy data yet!");
+        // Make sure we have capacity for the full length of the up-ranked shape.
+        pJoinedArray->reserve_value_capacity(pJoinedArray->length());
+        // Glom the data together in
+        joinArrayData(pJoinedArray, fromVars,
+              false, // we already reserved the space
+              true); // but please clear the Vector buffers after you use each Array in fromVars to help on memory.
       }
   }
 
@@ -327,6 +328,66 @@ namespace agg_util
           }
       }
     return count;
+  }
+
+  void
+  AggregationUtil::joinArrayData(Array* pAggArray,
+       const std::vector<Array*>& varArrays,
+       bool reserveStorage/*=true*/,
+       bool clearDataAfterUse/*=false*/)
+  {
+    // Make sure we get a pAggArray with a type var we can deal with.
+    VALID_PTR(pAggArray->var());
+    NCML_ASSERT_MSG(pAggArray->var()->is_simple_type(),
+        "AggregationUtil::joinArrayData: the output Array is not of a simple type!  Can't aggregate!");
+
+    // If the caller wants us to do it, sum up length() and reserve that much.
+    if (reserveStorage)
+      {
+        // Figure it how much we need...
+        unsigned int totalLength = 0;
+        {
+          vector<Array*>::const_iterator it;
+          vector<Array*>::const_iterator endIt = varArrays.end();
+          for (it = varArrays.begin(); it != endIt; ++it)
+            {
+              Array* pArr = *it;
+              if (pArr)
+                {
+                  totalLength += pArr->length();
+                }
+            }
+        }
+        pAggArray->reserve_value_capacity(totalLength);
+      }
+
+    // For each Array, make sure it's read in and copy its data into the output.
+    unsigned int nextElt = 0;  // keeps track of where we are to write next in the output
+    vector<Array*>::const_iterator it;
+    vector<Array*>::const_iterator endIt = varArrays.end();
+    for (it = varArrays.begin(); it != endIt; ++it)
+      {
+        Array* pArr = *it;
+        VALID_PTR(pArr);
+        NCML_ASSERT_MSG(pArr->var() && (pArr->var()->type() == pAggArray->var()->type()),
+            "AggregationUtil::joinArrayData: one of the arrays to join has different type than output!  Can't aggregate!");
+
+        // Make sure it was read in...
+        if (!pArr->read_p())
+          {
+            pArr->read();
+          }
+
+        // Copy it in with the Vector call and update our location
+        nextElt += pAggArray->set_value_slice_from_row_major_vector(*pArr, nextElt);
+
+        if (clearDataAfterUse)
+          {
+            pArr->clear_local_data();
+          }
+      }
+
+    // That's all folks!
   }
 
 }

@@ -3,7 +3,7 @@
 # Configure script for OPeNDAP NCML data handler
 
 AC_PREREQ(2.61)
-AC_INIT(ncml_module, 0.9.1, opendap-tech@opendap.org)
+AC_INIT(ncml_module, 0.9.2, opendap-tech@opendap.org)
 AC_CONFIG_AUX_DIR([conf])
 AC_CONFIG_MACRO_DIR([conf])
 
@@ -35,7 +35,7 @@ AC_SEARCH_LIBS([isdigit], [cctype])
 AC_CHECK_FUNCS([strchr isdigit])
 
 dnl Checks for specific libraries
-AC_CHECK_LIBDAP([3.9.2],
+AC_CHECK_LIBDAP([3.10.0],
  [
   LIBS="$LIBS $DAP_LIBS"
   CPPFLAGS="$CPPFLAGS $DAP_CFLAGS"

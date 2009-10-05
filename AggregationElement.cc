@@ -34,6 +34,7 @@
 #include "Dimension.h" // agg_util
 #include "DimensionElement.h"
 #include "MyBaseTypeFactory.h"
+#include "NCMLBaseArray.h"
 #include "NCMLDebug.h"
 #include "NCMLParser.h"
 #include "NetcdfElement.h"
@@ -368,9 +369,20 @@ namespace ncml_module
         Array* pJoinedArray = dynamic_cast<Array*>(pAggDDS->var(varName));
         NCML_ASSERT_MSG(pJoinedArray, "Couldn't get the new aggregation Array from the parent DDS!");
 
-        // Perform the aggregation
-        bool copyData = false; // @TODO for now... later for a DODS call we'll need to set it to true and add that code.
-        AggregationUtil::produceOuterDimensionJoinedArray(pJoinedArray, varName, _dimName, inputs, copyData);
+        // Perform the aggregation, copying data as well if the parser is known to be doing a data request.
+        bool handleData = _parser->parsingDataRequest();
+        AggregationUtil::produceOuterDimensionJoinedArray(pJoinedArray, varName, _dimName, inputs, handleData);
+
+        if (handleData)
+          {
+            // If it's data request, we need to make sure the NCMLArray<T> is properly finished up.
+            NCMLBaseArray* pJoinedArrayDownCast = dynamic_cast<NCMLBaseArray*>(pJoinedArray);
+            NCML_ASSERT_MSG(pJoinedArrayDownCast, "processJoinNew: dynamic cast to NCMLBaseArray for aggregation failed!");
+            // Tell it to copy the values down and cache the current shape in case we get constraints added later!
+            // TODO this is kind of smelly... Maybe we want a valueChanged() listener way up in Vector?
+            // Seems like something useful to know in subclasses without them overriding all the set calls like I did here...
+            pJoinedArrayDownCast->cacheSuperclassStateIfNeeded();
+          }
       }
 
     // Perform union on all unaggregated variables (i.e. not already added to parent)

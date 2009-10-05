@@ -162,7 +162,36 @@ namespace agg_util
      * @param collectVarName  the name of the variable to find at top level DDS in datasetsInOrder
      * @param datasetsInOrder the datasets to search for the Array's within.
      */
-    static unsigned int collectVariableArraysInOrder(std::vector<libdap::Array*>& varArrays, const std::string& collectVarName, const std::vector<libdap::DDS*>& datasetsInOrder);
+    static unsigned int collectVariableArraysInOrder(
+          std::vector<libdap::Array*>& varArrays,
+          const std::string& collectVarName,
+          const std::vector<libdap::DDS*>& datasetsInOrder);
+
+    /**
+     * Copy the simple type data Vector for each Array in varArrays into pAggArray, sequentially,
+     * effectively appending all the row major data in each entry in varArray into the row major order
+     * of pAggArray.
+     *
+     * If the data in varArray's has not been read, it calls read() on each Array first.
+
+     * If reserveStorage is set, pAggArray will first have enough its capacity reserved to store all the data within varArray's
+     * (the sum of all lengths).  This should be false if the caller already reserved the proper capacity.
+     *
+     * @param pAggArray the output to place the appended data
+     * @param varArrays the Array's whose data is to be copied into pAggArray, in the order of the vector.
+     * @param reserveStorage  if true, sets the capacity of pAggArray to be enough to contain all the elements in varArrays.
+     *                        Note: this might not match the length of the ouput, so the caller really should do this!
+     * @param clearDayaAfterUse  if true, Vector::clear_local_data() will be called on each member of varArray's after it is copied into the output.
+     *                           this should tighten up memory if its known the data will no longer be needed.
+     *
+     * @exception if any Array in varArray's does not have the same element type as pAggArray.
+     * @exception if there is not enough storage in pAggArray to collect all the data.
+     * @exception on any problems will a read() call on any Array in varArrays.
+     */
+    static void joinArrayData(libdap::Array* pAggArray,
+        const std::vector<libdap::Array*>& varArrays,
+        bool reserveStorage=true,
+        bool clearDataAfterUse=false);
   };
 
 }

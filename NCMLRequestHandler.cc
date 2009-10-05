@@ -154,6 +154,9 @@ NCMLRequestHandler::ncml_build_das( BESDataHandlerInterface &dhi )
     BESDEBUG("ncml", "Creating DAS response from the location DDX..." << endl);
     NCMLUtil::populateDASFromDDS(das, *dds);
 
+    // Apply constraints to the result
+    dhi.data[POST_CONSTRAINT] = dhi.container->get_constraint();
+
     // loaded_bdds destroys itself.
     return false ;
 }
