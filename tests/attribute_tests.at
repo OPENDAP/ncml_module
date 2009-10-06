@@ -31,6 +31,24 @@ dnl Make sure we can enter an empty string as a value for string
 AT_CHECK_ALL_DAP_RESPONSES([bugs/empty_attr_string.ncml])
 AT_CHECK_DATADDS_GETDAP([bugs/empty_attr_string.ncml])
 
+dnl Check for an attribute of type OtherXML
+AT_CHECK_ALL_DAP_RESPONSES([attribute_OtherXML.ncml])
+
+dnl Make sure we can rename an existing OtherXML attribute... Different codebranch...
+AT_CHECK_DDX([attribute_OtherXML_rename.ncml])
+
+dnl Make sure if the OtherXML contains <attribute> element that we don't end parse early
+dnl but wait for the depth to be finished...
+AT_CHECK_DDX([attribute_OtherXML_Attribute.ncml])
+
+dnl Check for malformed OtherXML content (the parser still insures 
+dnl well-formedness of the XML as we accumulate it).
+AT_RUN_BES_AND_MATCH([attribute_OtherXML_malformed.ncml],["ddx"],["ParseError: libxml SAX2 parser error"])
+
+dnl Check that having a non-empty value is an error for OtherXML type.  Don't
+dnl put your XML in there!!
+AT_RUN_BES_AND_MATCH([attribute_OtherXML_val_error.ncml],["ddx"],["ParseError"])
+
 dnl Select out just one field
 AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([nested_passthrough.ncml], [[ DATA_GRANULE.PlanetaryGrid.percipitate ]], [nested_passthrough_cons_1.ncml])
 

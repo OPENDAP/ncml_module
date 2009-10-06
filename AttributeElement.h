@@ -35,6 +35,10 @@ namespace libdap
 {
   class AttrTable;
 }
+namespace ncml_module
+{
+  class OtherXMLParser;
+}
 
 using namespace std;
 namespace ncml_module
@@ -175,6 +179,12 @@ public: // data rep
      */
     void processEndAttribute(NCMLParser& p);
 
+    /**
+     * If parsing type=="OtherXML", we create an OtherXMLParser proxy parser and
+     * tell the NCMLParser to use it until this element is closed.
+     */
+    void startOtherXMLParse(NCMLParser& p);
+
     /** @return the list of the valid attributes for this element as a new vector.
      * Used to set _sValidAttributes */
     static vector<string> getValidAttributes();
@@ -188,6 +198,11 @@ public: // data rep
 
     // Temp for tokenizing
     vector<string> _tokens;
+
+    // If we're parsing an attr of type OtherXML,
+    // We will create and pass this into the NCMLParser to collect
+    // the OtherXML string.  We own the memory.
+    OtherXMLParser* _pOtherXMLParser;
   };
 
 }

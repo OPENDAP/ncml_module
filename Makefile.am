@@ -37,6 +37,7 @@ NCML_SRCS = \
 		NCMLRequestHandler.cc \
 		NCMLUtil.cc \
 		NetcdfElement.cc \
+		OtherXMLParser.cc \
 		RCObject.cc \
 		ReadMetadataElement.cc \
 		RemoveElement.cc \
@@ -70,6 +71,7 @@ NCML_HDRS = \
 		NCMLResponseNames.h \
 		NCMLUtil.h \
 		NetcdfElement.h \
+		OtherXMLParser.h \
 		RCObject.h \
 		ReadMetadataElement.h \
 		RemoveElement.h \

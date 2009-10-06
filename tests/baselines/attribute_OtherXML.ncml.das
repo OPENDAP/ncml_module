@@ -1,0 +1,18 @@
+Attributes {
+    OtherXML TestOtherXML "
+    <Domain xmlns=\"http://www.opengis.net/wcs/1.1\" xmlns:gml=\"http://www.opengis.net/gml/3.2\" xmlns:ows=\"http://www.opengis.net/ows/1.1\">
+      <SpatialDomain>
+        <ows:BoundingBox crs=\"urn:ogc:def:crs:EPSG::4326\">
+          <ows:LowerCorner>-97.8839 21.736</ows:LowerCorner>
+          <ows:UpperCorner>-57.2312 46.4944</ows:UpperCorner>
+        </ows:BoundingBox>
+      </SpatialDomain>
+      <TemporalDomain>
+        <gml:timePosition>2008-03-27T16:00:00.000Z</gml:timePosition>
+      </TemporalDomain>
+    </Domain>
+    <SupportedCRS xmlns=\"http://www.opengis.net/wcs/1.1\">urn:ogc:def:crs:EPSG::4326</SupportedCRS>
+    <SupportedFormat xmlns=\"http://www.opengis.net/wcs/1.1\">netcdf-cf1.0</SupportedFormat>
+    <SupportedFormat xmlns=\"http://www.opengis.net/wcs/1.1\">dap2.0</SupportedFormat>
+  ";
+}

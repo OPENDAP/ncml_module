@@ -30,6 +30,7 @@
 #include "NCMLDebug.h"
 #include "NCMLParser.h"
 #include "NCMLUtil.h"
+#include "OtherXMLParser.h"
 
 namespace ncml_module
 {
@@ -44,6 +45,7 @@ namespace ncml_module
   , _separator(NCMLUtil::WHITESPACE)
   , _orgName("")
   , _tokens()
+  , _pOtherXMLParser(0)
   {
     _tokens.reserve(256); // not sure what a good number is, but better than resizing all the time.
   }
@@ -56,10 +58,12 @@ namespace ncml_module
     _value = proto._value;
     _separator = proto._separator;
     _orgName = proto._orgName;
+    _pOtherXMLParser = 0;
   }
 
   AttributeElement::~AttributeElement()
   {
+    delete _pOtherXMLParser;
   }
 
   const string&
@@ -100,8 +104,7 @@ namespace ncml_module
        {
          BESDEBUG("ncml", "Adding attribute values as characters content for atomic attribute=" << _name <<
              " value=\"" << content << "\"" << endl);
-         _value = content;
-         mutateAttributeAtCurrentScope(*_parser, _name, _type, _value);
+         _value = content; // save the content unless we end the element, then we'll set it.
        }
      // Otherwise, it better be whitespace
      else if (!NCMLUtil::isAllWhitespace(content))
@@ -195,13 +198,16 @@ namespace ncml_module
   void
   AttributeElement::processAtomicAttributeAtCurrentScope(NCMLParser& p)
   {
+
     // If no orgName, just process with name.
      if (_orgName.empty())
        {
          if (p.attributeExistsAtCurrentScope(_name))
            {
-             BESDEBUG("ncml", "Found existing attribute named: " << _name << " and changing to type=" << _type << " and value=" << _value << endl);
-             mutateAttributeAtCurrentScope(p, _name, _type, _value);
+             BESDEBUG("ncml", "Found existing attribute named: " << _name << " with type=" << _type << " at scope=" <<
+                 p.getScopeString() << endl);
+             // We set this when the element closes now!
+             // mutateAttributeAtCurrentScope(p, _name, _type, _value);
            }
          else
            {
@@ -213,6 +219,12 @@ namespace ncml_module
      else // if orgName then we want to rename an existing attribute, handle that separately
        {
          renameAtomicAttribute(p);
+       }
+
+     // If it's of type OtherXML, we need to set a proxy parser.
+     if (_type == "OtherXML")
+       {
+         startOtherXMLParse(p);
        }
 
      // In all cases, also push the scope on the stack in case we get values as content.
@@ -276,10 +288,27 @@ namespace ncml_module
   {
     VALID_PTR(p.getCurrentAttrTable());
 
-    // Split the value string properly if the type is one that can be a vector.
-    p.tokenizeAttrValues(_tokens, _value, getInternalType(), _separator);
+    string internalType = getInternalType();
 
-    p.getCurrentAttrTable()->append_attr(_name, getInternalType(), &(_tokens));
+    // OtherXML cannot be vector, only scalar, so enforce that.
+    if (internalType != "OtherXML")
+      {
+        // Split the value string properly if the type is one that can be a vector.
+        p.tokenizeAttrValues(_tokens, _value, internalType, _separator);
+        p.getCurrentAttrTable()->append_attr(_name, internalType, &(_tokens));
+      }
+    else // if we are OtherXML
+      {
+        // At this point, we expect the value to be null.  It will show up in content...
+        BESDEBUG("ncml", "Addinng new attribute of type OtherXML data." << endl);
+        if (!_value.empty())
+          {
+            THROW_NCML_PARSE_ERROR("Adding new Attribute of type=OtherXML:  Cannot specify"
+                " an attribute@value for OtherXML --- it must be set in the content!  Scope was: "
+                + p.getScopeString() );
+          }
+        p.getCurrentAttrTable()->append_attr(_name, internalType, _value);
+      }
   }
 
   void
@@ -300,12 +329,20 @@ namespace ncml_module
     // Make sure to turn it into internal DAP type for tokenize and storage
     actualType = p.convertNcmlTypeToCanonicalType(actualType);
 
-    // Split the values if needed
-    p.tokenizeAttrValues(_tokens, value, actualType, _separator);
-
     // Can't mutate, so just delete and reenter it.  This move change the ordering... Do we care?
     pTable->del_attr(name);
-    pTable->append_attr(name, actualType, &(_tokens));
+
+    // Split the values if needed, again avoiding OtherXML being tokenized since it's a scalar by definition.
+    if (actualType == "OtherXML")
+      {
+        BESDEBUG("ncml", "Setting OtherXML data to: " << endl << _value << endl);
+        pTable->append_attr(name, actualType, _value);
+      }
+    else
+      {
+        p.tokenizeAttrValues(_tokens, value, actualType, _separator);
+        pTable->append_attr(name, actualType, &(_tokens));
+      }
   }
 
   void
@@ -330,11 +367,6 @@ namespace ncml_module
                                " already exists at the current scope=" + p.getScopeString());
       }
 
-    // OK, if it's there, let's rename it...  We'll need to:
-    // 1) Pull out the existing data from _orgName
-    // 2) Delete the old entry for _orgName
-    // 3) Add the new entry with the saved data under the new _name
-    // 4) * (consider this) If _value is !empty(), then mutate the entry or error?
     AttrTable::Attr_iter it;
     bool gotIt = p.findAttribute(_orgName, it);
     NCML_ASSERT(gotIt);  // logic bug check, we check above
@@ -343,14 +375,14 @@ namespace ncml_module
     NCML_ASSERT_MSG( !pTable->is_container(it),
         "LOGIC ERROR: renameAtomicAttribute() got an attribute container where it expected an atomic attribute!");
 
-    // 1) Copy the entire vector explicitly here!
+    // Copy the entire vector explicitly here!
     vector<string>* pAttrVec = pTable->get_attr_vector(it);
     NCML_ASSERT_MSG(pAttrVec, "Unexpected NULL from get_attr_vector()");
     // Copy it!
     vector<string> orgData = *pAttrVec;
     AttrType orgType = pTable->get_attr_type(it);
 
-    // 2) Out with the old
+    // Delete the old one
     pTable->del_attr(_orgName);
 
     // Hmm, what to do if the types are different?  I'd say use the new one....
@@ -361,10 +393,12 @@ namespace ncml_module
        typeToUse = _type;
     }
 
-    // 3) In with the new entry for the old data.
+    // We'll record the type for the rename as well, for setting the data in the end element.
+    _type = typeToUse;
+
     pTable->append_attr(_name, typeToUse, &orgData);
 
-    // 4) If value was specified, let's go call mutate on the thing we just made to change the data.  Seems
+    // If value was specified, let's go call mutate on the thing we just made to change the data.  Seems
     // odd a user would do this, but it's allowable I think.
     if (!_value.empty())
       {
@@ -418,7 +452,21 @@ namespace ncml_module
 
     if (p.isScopeAtomicAttribute())
       {
-        // Nothing to do but pop it off scope stack, we're still within the containing AttrTable.
+        // If it was an OtherXML, then set the _value from the proxy parser.
+        if (_type == "OtherXML")
+          {
+            VALID_PTR(_pOtherXMLParser);
+            _value = _pOtherXMLParser->getString();
+            SAFE_DELETE(_pOtherXMLParser);
+          }
+
+        // Set the values that we have gotten if we're not a rename, or if we ARE a rename but have a new _value
+        if (_orgName.empty() ||
+            (!_orgName.empty() && !_value.empty()) )
+          {
+            mutateAttributeAtCurrentScope(*_parser, _name, _type, _value);
+          }
+        // And pop the attr table
         p.exitScope();
       }
     else if (p.isScopeAttributeContainer())
@@ -434,6 +482,14 @@ namespace ncml_module
       }
   }
 
+  void
+  AttributeElement::startOtherXMLParse(NCMLParser& p)
+  {
+    // this owns the memory.
+    _pOtherXMLParser = new OtherXMLParser(p);
+    p.enterOtherXMLParsingState(_pOtherXMLParser);
+  }
+
   vector<string>
   AttributeElement::getValidAttributes()
   {
@@ -446,6 +502,8 @@ namespace ncml_module
     attrs.push_back("separator");
     return attrs;
   }
+
+
 }
 
 

@@ -62,6 +62,7 @@ namespace ncml_module
   class DimensionElement;
   class NCMLElement;
   class NetcdfElement;
+  class OtherXMLParser;
 }
 
 using namespace libdap;
@@ -342,7 +343,7 @@ private: //methods
  void setCurrentVariable(BaseType* pVar);
 
  /** Return whether the actual type of \c var match the type \c expectedType.
-  *  Here expectedType is assumed to have been through the @@@
+  *  Here expectedType is assumed to have been through the
   *  Special cases for NcML:
   *  1) We map expectedType == "Structure" to match DAP Constructor types: Grid, Sequence, Structure.
   *  2) We define expectedType.empty() to match ANY DAP type.
@@ -436,6 +437,12 @@ private: //methods
    *  */
   void clearElementStack();
 
+  /** Helper call from onStartElement to do the work if we're not in OtherXML parsing state. */
+  void processStartNCMLElement(const std::string& name, const AttributeMap& attrs);
+
+  /** Helper call from onEndElement to do the work if we're not in OtherXML parsing state. */
+  void processEndNCMLElement(const std::string& name);
+
   /**
    * @return the first dimension with dimName in the fully enclosed scope from getCurrentDataset() to root or null if not found.
    * */
@@ -446,6 +453,22 @@ private: //methods
    * They are printed in order of most specific scope first to root scope last.
    */
   string printAllDimensionsAtLexicalScope() const;
+
+  /**
+   * Put the parser into an OtherXML parsing state where it no longer
+   * creates NCMLElement's, but just leaves the element on top of the stack
+   * while it parses in arbitrary XML until the top level NCMLElement is finally
+   * closed, whereupon it goes back into the normal parsing state.
+   *
+   * It's up to the caller to handle the memory for the pointer and to
+   * handle how the parsed data is used.
+   *
+   * @param pOtherXMLParser  weak pointer (not owned) which acts as the proxy
+   *                to receive all parser calls until the element on the stack that created
+   *                it is closed.
+   */
+  void enterOtherXMLParsingState(OtherXMLParser* pOtherXMLParser);
+  bool isParsingOtherXML() const;
 
 
   /**  Cleanup state to as if we're a new object */
@@ -529,6 +552,10 @@ private: // data rep
   // if empty() then we're in global dataset scope (or no scope if not parsing location yet).
   ScopeStack _scope;
 
+  // If not null, we've temporarily stopped the normal NCML parse and are passing
+  // all calls to this proxy until the element on the stack when it was added is
+  // closed (and the parser depth is zero!).
+  OtherXMLParser* _pOtherXMLParser;
 
 }; // class NCMLParser
 

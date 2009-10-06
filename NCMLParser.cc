@@ -49,6 +49,7 @@
 #include "NCMLElement.h"
 #include "NCMLUtil.h"
 #include "NetcdfElement.h"
+#include "OtherXMLParser.h"
 #include <parser.h> // for the type checking...
 #include "SaxParserWrapper.h"
 #include <sstream>
@@ -82,6 +83,7 @@ NCMLParser::NCMLParser(DDSLoader& loader)
 , _pCurrentTable(0)
 , _elementStack()
 , _scope()
+, _pOtherXMLParser(0)
 {
   BESDEBUG("ncml", "Created NCMLParser." << endl);
 }
@@ -153,29 +155,37 @@ NCMLParser::onEndDocument()
 void
 NCMLParser::onStartElement(const std::string& name, const AttributeMap& attrs)
 {
-  // Store it in a shared ptr in case this function exceptions before we store it in the element stack.
-  RCPtr<NCMLElement> elt = _elementFactory.makeElement(name, attrs);
-
-  // If we actually created an element of the given type name
-  if (elt.get())
+  // If we have a proxy set for OtherXML, pass calls there.
+  if (isParsingOtherXML())
     {
-      elt->setParser(this);
-      elt->handleBegin();
-      // tell the container to push the raw element, which will also ref() it on success
-      // otherwise ~RCPtr will unref() to 0 and thus nuke it on exception.
-      pushElement(elt.get());
+      VALID_PTR(_pOtherXMLParser);
+      _pOtherXMLParser->onStartElement(name, attrs);
     }
- else // Unknown element...
-   {
-     if (sThrowExceptionOnUnknownElements)
-       {
-         THROW_NCML_PARSE_ERROR("Unknown element type=" + name + " found in NcML parse with scope=" + _scope.getScopeString());
-       }
-     else
-       {
-         BESDEBUG("ncml", "Start of <" << name << "> element.  Element unsupported, ignoring." << endl);
-       }
-   }
+  else // Otherwise do the standard NCML parse
+    {
+      processStartNCMLElement(name, attrs);
+    }
+}
+
+// Local helper for below...
+// Sees whether we are closing the element on top
+// of the NCMLElement stack and that we're not parsing
+// OtherXML, or if we are that its depth is now zero.
+static bool shouldStopOtherXMLParse(NCMLElement* top, const string& closingElement, OtherXMLParser& rProxyParser)
+{
+  // If the stack top element name is the same as the element we are closing...
+  // and the parse depth is 0, then we're done.
+  // We MUST check the parse depth in case the other XML has an Attribute in it!
+  // We want to be sure we're closing the right one.
+  if (top->getTypeName() == closingElement &&
+      rProxyParser.getParseDepth() == 0)
+    {
+      return true;
+    }
+  else // we're not done.
+    {
+      return false;
+    }
 }
 
 void
@@ -184,27 +194,50 @@ NCMLParser::onEndElement(const std::string& name)
   NCMLElement* elt = getCurrentElement();
   VALID_PTR(elt);
 
-  // If it matches the one on the top of the stack, then process and pop.
-  if (elt->getTypeName() == name)
+  // First, handle the OtherXML proxy parsing case
+  if (isParsingOtherXML())
     {
-      elt->handleEnd();
-      popElement(); // handles delete
-      elt = 0;
+      VALID_PTR(_pOtherXMLParser);
+      // If we're closing the element that caused the OtherXML parse...
+      if (shouldStopOtherXMLParse(elt, name, *_pOtherXMLParser))
+        {
+          // Then we want to clear the proxy from this and
+          // call the end on the top of the element stack.
+          // We assume it has access to the OtherXML parser
+          // and will use the data.
+          _pOtherXMLParser = 0;
+          processEndNCMLElement(name);
+        }
+      else
+        {
+          // Pass through to proxy
+          _pOtherXMLParser->onEndElement(name);
+        }
     }
-  else // the names don't match, so just ignore it.
+  else // Do the regular NCMLElement call.
     {
-      BESDEBUG("ncml", "End of <" << name << "> element unsupported currently, ignoring." << endl);
+      // Call the regular NCMLElement end element.
+      processEndNCMLElement(name);
     }
 }
 
 void
 NCMLParser::onCharacters(const std::string& content)
 {
-  // If we got an element on the stack, hand it off.  Otherwise, do nothing.
-  NCMLElement* elt = getCurrentElement();
-  if (elt)
+  // If we're parsing OtherXML, send the call to the proxy.
+  if (isParsingOtherXML())
     {
-      elt->handleContent(content);
+      VALID_PTR(_pOtherXMLParser);
+      _pOtherXMLParser->onCharacters(content);
+    }
+  else // Standard NCML parse
+    {
+      // If we got an element on the stack, hand it off.  Otherwise, do nothing.
+      NCMLElement* elt = getCurrentElement();
+      if (elt)
+        {
+          elt->handleContent(content);
+        }
     }
 }
 
@@ -412,6 +445,9 @@ NCMLParser::resetParseState()
 
   // just in case
   _loader.cleanup();
+
+  // In case we had one, null it.  The setter is in charge of the memory.
+  _pOtherXMLParser = 0;
 }
 
 
@@ -612,7 +648,7 @@ NCMLParser::tokenizeAttrValues(vector<string>& tokens, const string& values, con
   // If we're valid type, tokenize us according to type.
   int numTokens = tokenizeValuesForDAPType(tokens, values, dapType, separator);
   if (numTokens == 0 &&
-      ( (dapType == Attr_string) || (dapType == Attr_url) ) )
+      ( (dapType == Attr_string) || (dapType == Attr_url) || (dapType == Attr_other_xml)))
     {
       tokens.push_back(""); // 0 tokens will cause a problem later, so push empty string!
     }
@@ -735,6 +771,7 @@ static TypeConverter* makeTypeConverter()
       // allow both url cases due to old bug where "Url" is returned in dds rather then DAP2 spec "URL"
       tc["Url"] = "URL";
       tc["URL"] = "URL";
+      tc["OtherXML"] = "OtherXML"; // Pass it through
     }
 
   return ptc;
@@ -791,6 +828,7 @@ NCMLParser::checkDataIsValidForCanonicalTypeOrThrow(const string& type, const ve
   Float64
   String
   URL
+  OtherXML
 */
   bool valid = true;
   vector<string>::const_iterator it;
@@ -844,6 +882,14 @@ NCMLParser::checkDataIsValidForCanonicalTypeOrThrow(const string& type, const ve
             {
               THROW_NCML_PARSE_ERROR("Invalid Value: The " + type + " attribute value (not shown) has an invalid non-ascii character.");
             }
+        }
+
+      // For OtherXML, there's nothing to check so just say it's OK.
+      // The SAX parser checks it for wellformedness already,
+      // but ultimately it's just an arbitrary string...
+      else if (type == "OtherXML")
+        {
+          valid &= true;
         }
 
       else
@@ -987,6 +1033,53 @@ NCMLParser::clearElementStack()
   _elementStack.resize(0);
 }
 
+void
+NCMLParser::processStartNCMLElement(const std::string& name, const AttributeMap& attrs)
+{
+  // Store it in a shared ptr in case this function exceptions before we store it in the element stack.
+  RCPtr<NCMLElement> elt = _elementFactory.makeElement(name, attrs);
+
+  // If we actually created an element of the given type name
+  if (elt.get())
+    {
+      elt->setParser(this);
+      elt->handleBegin();
+      // tell the container to push the raw element, which will also ref() it on success
+      // otherwise ~RCPtr will unref() to 0 and thus nuke it on exception.
+      pushElement(elt.get());
+    }
+ else // Unknown element...
+   {
+     if (sThrowExceptionOnUnknownElements)
+       {
+         THROW_NCML_PARSE_ERROR("Unknown element type=" + name + " found in NcML parse with scope=" + _scope.getScopeString());
+       }
+     else
+       {
+         BESDEBUG("ncml", "Start of <" << name << "> element.  Element unsupported, ignoring." << endl);
+       }
+   }
+}
+
+void
+NCMLParser::processEndNCMLElement(const std::string& name)
+{
+  NCMLElement* elt = getCurrentElement();
+  VALID_PTR(elt);
+
+  // If it matches the one on the top of the stack, then process and pop.
+  if (elt->getTypeName() == name)
+    {
+      elt->handleEnd();
+      popElement(); // handles delete
+    }
+  else // the names don't match, so just ignore it.
+    {
+      BESDEBUG("ncml", "End of <" << name << "> element unsupported currently, ignoring." << endl);
+    }
+}
+
+
 const DimensionElement*
 NCMLParser::getDimensionAtLexicalScope(const string& dimName) const
 {
@@ -1009,6 +1102,19 @@ NCMLParser::printAllDimensionsAtLexicalScope() const
       dataset = dataset->getParentDataset();
     }
   return ret;
+}
+
+void
+NCMLParser::enterOtherXMLParsingState(OtherXMLParser* pOtherXMLParser)
+{
+  BESDEBUG("ncml", "Entering state for parsing OtherXML!" << endl);
+  _pOtherXMLParser = pOtherXMLParser;
+}
+
+bool
+NCMLParser::isParsingOtherXML() const
+{
+  return _pOtherXMLParser;
 }
 
 void
