@@ -461,10 +461,23 @@ NCMLParser::getVariableInCurrentVariableContainer(const string& name)
 BaseType*
 NCMLParser::getVariableInContainer(const string& varName, BaseType* pContainer)
 {
-  BaseType::btp_stack varContext;
+  // BaseType::btp_stack varContext;
   if (pContainer)
   {
-    return pContainer->var(varName, varContext);
+    // @@@ Old code... recurses and uses dots as field separators... Not good.
+    //return pContainer->var(varName, varContext);
+    // It has to be a Constructor!
+    Constructor* pCtor = dynamic_cast<Constructor*>(pContainer);
+    if (!pCtor)
+      {
+        BESDEBUG("ncml", "WARNING: NCMLParser::getVariableInContainer:  "
+            "Expected a BaseType of subclass Constructor, but didn't get it!" << endl);
+        return 0;
+      }
+    else
+      {
+        return NCMLUtil::getVariableNoRecurse(*pCtor, varName);
+      }
   }
   else
     {
@@ -477,8 +490,17 @@ NCMLParser::getVariableInContainer(const string& varName, BaseType* pContainer)
 BaseType*
 NCMLParser::getVariableInDDS(const string& varName)
 {
-  BaseType::btp_stack varContext;
- return  getDDSForCurrentDataset()->var(varName, varContext);
+  // BaseType::btp_stack varContext;
+  // return  getDDSForCurrentDataset()->var(varName, varContext);
+  DDS* pDDS = getDDSForCurrentDataset();
+  if (pDDS)
+    {
+      return NCMLUtil::getVariableNoRecurse(*pDDS, varName);
+    }
+  else
+    {
+      return 0;
+    }
 }
 
 void
@@ -618,6 +640,7 @@ NCMLParser::attributeExistsAtCurrentScope(const string& name)
   return foundIt;
 }
 
+#if 0
 bool
 NCMLParser::findAttribute(const string& name, AttrTable::Attr_iter& attr) const
 {
@@ -633,6 +656,22 @@ NCMLParser::findAttribute(const string& name, AttrTable::Attr_iter& attr) const
       return false;
     }
  }
+#endif
+
+bool
+NCMLParser::findAttribute(const string& name, AttrTable::Attr_iter& attr) const
+{
+  if (_pCurrentTable)
+    {
+      attr = _pCurrentTable->simple_find(name);
+      return (attr != _pCurrentTable->attr_end());
+    }
+  else
+    {
+      return false;
+    }
+}
+
 
 int
 NCMLParser::tokenizeAttrValues(vector<string>& tokens, const string& values, const string& dapAttrTypeName, const string& separator)

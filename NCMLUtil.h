@@ -33,6 +33,7 @@ namespace libdap
 {
   // FDecls
   class BaseType;
+  class Constructor;
   class DDS;
   class DAS;
 }
@@ -141,6 +142,24 @@ namespace ncml_module
      * to also set the name of the template _var if there is one.
      */
     static void setVariableNameProperly(libdap::BaseType* pVar, const std::string& name);
+
+    /**
+         * Return the variable in dds top level (no recursing, no fully qualified name dot notation)
+         * if it exists, else 0.
+         * The name IS ALLOWED to contain a dot '.', but this is interpreted as PART OF THE NAME
+         * and not as a field separator!
+         */
+    static libdap::BaseType* getVariableNoRecurse(const libdap::DDS& dds, const std::string& name);
+
+    /**
+     * Return the variable in dds top level (no recursing, no fully qualified name dot notation)
+     * if it exists, else 0.
+     * The name IS ALLOWED to contain a dot '.', but this is interpreted as PART OF THE NAME
+     * and not as a field separator!
+     */
+    static libdap::BaseType* getVariableNoRecurse(const libdap::Constructor& varContainer, const std::string& name);
+
+
   };
 }
 

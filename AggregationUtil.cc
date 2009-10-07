@@ -110,9 +110,8 @@ namespace agg_util
   AggregationUtil::findAttribute(const AttrTable& inTable, const string& name, AttrTable::Attr_iter& attr)
   {
     AttrTable& inTableSemanticConst = const_cast<AttrTable&>(inTable);
-    AttrTable* pContainer = 0;
-    inTableSemanticConst.find(name, &pContainer, &attr);
-    return (pContainer != 0);
+    attr = inTableSemanticConst.simple_find(name);
+    return (attr != inTableSemanticConst.attr_end());
   }
 
   void

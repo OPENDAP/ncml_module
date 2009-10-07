@@ -83,20 +83,17 @@ using namespace std;
  *
  *  Design and Control Flow:
  *
- *  1) We use the SaxParser interface callbacks to handle calls from a SAX parser which we create on parse() call.
+ *  o We use the SaxParser interface callbacks to handle calls from a SAX parser which we create on parse() call.
  *
- *  2) We assume a single <netcdf> node with a local data in netcdf@location.  When we parse this node, we use a DDSLoader to
- *  create a new DDS with DDX information (full AttrTable's) in it.
- *
- *  3) We maintain a pointer to the currently active AttrTable as we get other SAX parser calls.  As we enter/exit the lexical scope of
+ *  o We maintain a pointer to the currently active AttrTable as we get other SAX parser calls.  As we enter/exit the lexical scope of
  *  attribute containers or Constructor variables we keep track of this on a scope stack which allows us to know the fully qualified name
  *  of the current scope as well as the type of the innermost scope for error checking.
  *
- *  4) As we process NcML elements we modify the DDS as needed.  The elements are all subclasses of NCMLElement
+ *  o As we process NcML elements we modify the DDS as needed.  The elements are all subclasses of NCMLElement
  *      and are factoried up in onStartElement for polymorphic dispatch.  A stack of these is kept for calling
  *      handleContent() and handleEnd() on them as needed.
  *
- *  5) When complete, we return the loaded and transformed DDS to the caller.
+ *  o When complete, we return the loaded and transformed DDS to the caller.
  *
  *  We throw BESInternalError for logic errors in the code such as failed asserts or null pointers.
  *
@@ -292,18 +289,26 @@ private: //methods
 
   /** Return the variable with name in the current _pVar container.
    * If null, that means look at the top level DDS.
+   * Does NOT recurse or handle field separator dot notation!
+   * Dot is a valid character for the name of the variable.
    * @param name the name of the variable to lookup in the _pVar
    * @return the variable or NULL if not found.
    */
   BaseType* getVariableInCurrentVariableContainer(const string& name);
 
-  /** Look up the variable called varName in pContainer.
-       If !pContainer, look in _dds top level.
-       @return the BaseType* or NULL if not found.
+  /**
+   * Look up the variable called varName in pContainer.
+   * If !pContainer, look in _dds top level.
+   * Does NOT recurse or handle field separator dot notation!
+   * Dot is a valid character for the name of the variable.
+   *  @return the BaseType* or NULL if not found.
    */
  BaseType* getVariableInContainer(const string& varName, BaseType* pContainer);
 
- /** Lookup and return the variable named varName in the DDS and return it.
+ /**
+  * Lookup and return the variable named varName in the DDS and return it.
+  * Does NOT recurse or handle field separator dot notation!
+  * Dot is a valid character for the name of the variable.
   * @param varName name of the variable to find in the top level getDDS().
   * @return the variable pointer else NULL if not found.
   */

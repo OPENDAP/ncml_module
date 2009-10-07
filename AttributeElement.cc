@@ -258,7 +258,7 @@ namespace ncml_module
          AttrTable* pCurrentTable = p.getCurrentAttrTable();
 
          // See if the attribute container already exists in current scope.
-         pAT = pCurrentTable->find_container(_name);
+         pAT = pCurrentTable->simple_find_container(_name);
          if (!pAT) // doesn't already exist
            {
              // So create a new one
@@ -411,7 +411,7 @@ namespace ncml_module
   {
     AttrTable* pTable = p.getCurrentAttrTable();
     VALID_PTR(pTable);
-    AttrTable* pAT = pTable->find_container(_orgName);
+    AttrTable* pAT = pTable->simple_find_container(_orgName);
     if (!pAT)
       {
         THROW_NCML_PARSE_ERROR("renameAttributeContainer: Failed to find attribute container with orgName=" + _orgName +
