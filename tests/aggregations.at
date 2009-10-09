@@ -83,6 +83,11 @@ dnl Test a Netcdf Array aggregation, in this case three fnoc1.nc appended togeth
 AT_CHECK_ALL_DAP_RESPONSES([agg/netcdf_joinNew.ncml])
 AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([agg/netcdf_joinNew.ncml],[[ u[1][0][10:11][10:11] ]], [agg/netcdf_joinNew_cons_1.ncml])
 
+dnl Test with HDF5 Datasets
+AT_CHECK_ALL_DAP_RESPONSES([agg/joinNew_hdf5.ncml])
+
+dnl TODO Test with HDF4
+
 dnl TODO support for Grid and coordValue for the new map vector.
 
 

@@ -65,11 +65,12 @@ BES.LogVerbose=no
 # BES.module.ff=@libdir@/bes/libff_module.so
 # BES.module.csv=@libdir@/bes/libcsv_module.so
 
-BES.modules=dap,cmd,nc,h4,ncml
+BES.modules=dap,cmd,nc,h4,h5,ncml
 BES.module.dap=@beslibdir@/libdap_module.so
 BES.module.cmd=@beslibdir@/libdap_xml_module.so
 BES.module.nc=@beslibdir@/libnc_module.so
 BES.module.h4=@beslibdir@/libhdf4_module.so
+BES.module.h5=@beslibdir@/libhdf5_module.so
 BES.module.ncml=@abs_top_builddir@/.libs/libncml_module.so
 
 
@@ -109,7 +110,7 @@ BES.Data.RootDirectory=/dev/null
 
 # BES.Catalog.catalog.TypeMatch=nc:.*\.(nc|NC)(\.gz|\.bz2|\.Z)?$;h4.*\.(hdf|HDF|eos)(\.gz|\.bz2|\.Z)?$;
 
-BES.Catalog.catalog.TypeMatch=nc:.*.nc(.bz2|.gz|.Z)?$;h4:.*.(hdf|HDF|eos)(.bz2|.gz|.Z)?$;csv:.*.csv(.bz2|.gz|.Z)?$;ncml:.*.ncml(.bz2|.gz|.Z)?$;
+BES.Catalog.catalog.TypeMatch=nc:.*.nc(.bz2|.gz|.Z)?$;h4:.*.(hdf|HDF|eos)(.bz2|.gz|.Z)?$;csv:.*.csv(.bz2|.gz|.Z)?$;ncml:.*.ncml(.bz2|.gz|.Z)?$;h5:.*.h5(.bz2|.gz|.Z)?$;
 
 # Normally, when a client asks for a data catalog, all files and directories
 # are shown. Use the following two parameters to customize this behavior.

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Dataset name="joinNew_hdf5.ncml"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns="http://xml.opendap.org/ns/DAP2"
+xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/dap2.xsd">
+
+    <Attribute name="HDF5_ROOT_GROUP" type="Container">
+        <Attribute name="Dataset" type="String">
+            <value>TestArray</value>
+        </Attribute>
+    </Attribute>
+    <Attribute name="H5_GLOBAL" type="Container">
+        <Attribute name="HDF5_OBJ_FULLPATH" type="String">
+            <value>H5_GLOBAL</value>
+        </Attribute>
+        <Attribute name="Desc" type="String">
+            <value>&quot;I am a test data from hdfview                                                                                                  &quot;</value>
+        </Attribute>
+    </Attribute>
+
+    <Array name="/TestArray">
+        <Attribute name="HDF5_OBJ_FULLPATH" type="String">
+            <value>/TestArray</value>
+        </Attribute>
+        <Float32/>
+        <dimension name="file" size="2"/>
+        <dimension size="1"/>
+        <dimension size="5"/>
+    </Array>
+
+    <dataBLOB href=""/>
+</Dataset>

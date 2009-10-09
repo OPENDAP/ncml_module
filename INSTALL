@@ -1,7 +1,7 @@
 
 $Id: INSTALL $
 
-Updated for version 0.9.1 (20 Aug 2009)
+Updated for version 0.9.2 [SVN TRUNK] (8 Oct 2009)
 
 Installation instructions for the OPeNDAP Hyrax server NcML Data Handling Module.
 
@@ -39,12 +39,12 @@ BUILDING THE SOFTWARE
 2) Type `make' to build the handler.
 
 3*) (*Optional): You can perform a 'make check' to test the module,
-    but note that this REQUIRES that you have BOTH the netcdf and hdf4
-    handlers already installed and working in Hyrax!  The testsuite
-    uses netcdf and hdf4 datasets for testing.  Please see the BUILD
-    REQUIREMENTS section under TESTSUITE if you wish to run the tests
-    and do not have these handlers installed.  Otherwise, you may skip
-    this step.
+    but note that this REQUIRES that you have all of the netcdf, hdf4,
+    and hdf5 handlers already installed and working in Hyrax!  The
+    testsuite uses netcdf, hdf4 and hdf5 datasets for testing.  Please
+    see the BUILD REQUIREMENTS section under TESTSUITE if you wish to
+    run the tests and do not have these handlers installed.
+    Otherwise, you may skip this step.
 
 4) Install the handler into the BES by running `make install'. 
 
@@ -99,9 +99,9 @@ BUILD REQUIREMENTS
   
     o To build from a fresh SVN checkout, you'll need:
 
-      	 o automake 1.10
-      	 o autoconf 2.61
-	 o libtool 1.5.6 
+      	 o automake 1.11
+      	 o autoconf 2.62
+	 o libtool 2.2.6
 
       Earlier versions may work, but
       may cause problems, particularly with the 'distcheck' target for
@@ -124,15 +124,12 @@ BUILD REQUIREMENTS
       built the code using Microsoft's Visual C++ 6.0 and GNU gcc/++
       3.2.1, 3.3, 3.4 and 4.0
 
-    o You need the libdap library version 3.9.4 or greater to build
+    o You need the libdap library version 3.10.0 or greater to build
       and install this software. If you're using Linux, this means
       either building from source or using the libdap and libdap-devel
       RPM packages.  These are available at
       http://www.opendap.org/download/hyrax.html.  NOTE: libdap
-      requires libxml2 2.6.16 and libcurl 7.10.6 as well.  [NOTE: If
-      3.9.4 is not released when you build the software, you may build
-      with 3.9.3, but several tests will fail and there will be a
-      minor memory leak in the BES.]
+      requires libxml2 2.6.16 and libcurl 7.10.6 as well.  
       	  
     o You'll need version 3.7.2 or greater of the BES software
       installed before building the handler.  This is part of Hyrax
@@ -173,6 +170,14 @@ BUILD REQUIREMENTS
 
 	 o Note: if you install from an RPM, you need to run
 	 "bes-hdf4-data.sh" to tell the BES to load the HDF4 module.
+
+       o The current version of the HDF5 Data Handling Module for
+       	 Hyrax and its dependencies.
+       	 The handler is found at
+       	 http://www.opendap.org/download/hyrax.html.
+
+	 o Note: if you install from an RPM, you need to run
+	 "bes-hdf5-data.sh" to tell the BES to load the HDF5 module.
 
        o The new testsuite now also uses Autotest, which is part of
        Autoconf.  This should work fine if you have autoconf installed
@@ -236,13 +241,8 @@ DEBUGGING AIDS
 ---------------------------------------------------------------------------
 NOTES
 
-  o The NcML Module was built to work with Hyrax 1.5.2 server.
+  o The NcML Module was built to work with Hyrax 1.6 server.
 
-  o The Int32 and UInt32 min and max bounds tests -- 42, 42, 47, 48 --
-  are known to fail for libdap 3.9.3.  3.9.4 or greater should solve
-  this problem.
 
-  o There is also a known (small) memory leak for libdap 3.9.3.
-  Again, 3.9.4 will solve this.
 
 
