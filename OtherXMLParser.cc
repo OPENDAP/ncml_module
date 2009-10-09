@@ -127,13 +127,15 @@ OtherXMLParser::onCharacters(const std::string& content)
 void
 OtherXMLParser::onParseWarning(std::string msg)
 {
-  THROW_NCML_PARSE_ERROR("OtherXMLParser: got SAX parse warning while parsing OtherXML.  Msg was: " + msg);
+  THROW_NCML_PARSE_ERROR(-1, // the SAX errors have the line in there already
+      "OtherXMLParser: got SAX parse warning while parsing OtherXML.  Msg was: " + msg);
 }
 
 void
 OtherXMLParser::onParseError(std::string msg)
 {
-  THROW_NCML_PARSE_ERROR("OtherXMLParser: got SAX parse error while parsing OtherXML.  Msg was: " + msg);
+  THROW_NCML_PARSE_ERROR(-1,
+      "OtherXMLParser: got SAX parse error while parsing OtherXML.  Msg was: " + msg);
 }
 
 }

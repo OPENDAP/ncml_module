@@ -164,7 +164,8 @@ namespace ncml_module
     // Make sure that we are in an AggregationElement if we're not root!
     if (p.getRootDataset() && !p.isScopeAggregation())
       {
-         THROW_NCML_PARSE_ERROR("Got a nested <netcdf> element which was NOT a direct child of an <aggregation>!");
+         THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+             "Got a nested <netcdf> element which was NOT a direct child of an <aggregation>!");
       }
 
     // Tell the parser we got a new current dataset.
@@ -184,7 +185,8 @@ namespace ncml_module
   {
     if (!NCMLUtil::isAllWhitespace(content))
       {
-        THROW_NCML_PARSE_ERROR("Got non-whitespace for element content and didn't expect it.  Element=" + toString() + " content=\"" +
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Got non-whitespace for element content and didn't expect it.  Element=" + toString() + " content=\"" +
             content + "\"");
       }
   }
@@ -196,7 +198,8 @@ namespace ncml_module
 
     if (!_parser->isScopeNetcdf())
       {
-        THROW_NCML_PARSE_ERROR("Got close of <netcdf> node while not within one!");
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Got close of <netcdf> node while not within one!");
       }
 
     // Tell the parser to close the current dataset and figure out what the new current one is!
@@ -425,24 +428,29 @@ namespace ncml_module
     const string msgEnd = " was declared.";
     if (!_enhance.empty())
       {
-        THROW_NCML_PARSE_ERROR( msgStart + "enhance" + msgEnd);
+        THROW_NCML_PARSE_ERROR( _parser->getParseLineNumber(),
+            msgStart + "enhance" + msgEnd);
       }
     if (!_addRecords.empty())
       {
-        THROW_NCML_PARSE_ERROR(msgStart + "addRecords" + msgEnd);
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            msgStart + "addRecords" + msgEnd);
       }
     // Not until we do joinExisting
     if (!_ncoords.empty())
       {
-        THROW_NCML_PARSE_ERROR(msgStart + "ncoords" + msgEnd);
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            msgStart + "ncoords" + msgEnd);
       }
     if (!_coordValue.empty())
       {
-        THROW_NCML_PARSE_ERROR(msgStart + "coordValue" + msgEnd);
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            msgStart + "coordValue" + msgEnd);
       }
     if (!_fmrcDefinition.empty())
       {
-         THROW_NCML_PARSE_ERROR(msgStart + "fmrcDefinition" + msgEnd);
+         THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+             msgStart + "fmrcDefinition" + msgEnd);
       }
   }
 

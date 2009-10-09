@@ -110,7 +110,7 @@ namespace agg_util
   AggregationUtil::findAttribute(const AttrTable& inTable, const string& name, AttrTable::Attr_iter& attr)
   {
     AttrTable& inTableSemanticConst = const_cast<AttrTable&>(inTable);
-    attr = inTableSemanticConst.simple_find(name);
+     attr = inTableSemanticConst.simple_find(name);
     return (attr != inTableSemanticConst.attr_end());
   }
 
@@ -198,7 +198,8 @@ namespace agg_util
     // uses the first one as template for type and shape
     if (!validateArrayTypesAndShapesMatch(fromVars, true))
       {
-        THROW_NCML_PARSE_ERROR(funcName + " The input arrays must all have the same data type and dimensions but do not!");
+        THROW_NCML_PARSE_ERROR(-1, // Unspecified parse line for this case...
+            funcName + " The input arrays must all have the same data type and dimensions but do not!");
       }
 
     // The first will be used to "set up" the pJoinedArray

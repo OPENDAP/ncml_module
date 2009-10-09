@@ -167,6 +167,9 @@ public:
 
   bool parsing() const { return !_filename.empty(); }
 
+  /** Get the line of the NCML file the parser is currently parsing */
+  int getParseLineNumber() const { return _currentParseLine; }
+
   ////////////////////////////////////////////////////////////////////////////////
   // Interface SaxParser:  Wrapped calls from the libxml C SAX parser
 
@@ -177,6 +180,7 @@ public:
   virtual void onCharacters(const std::string& content);
   virtual void onParseWarning(std::string msg);
   virtual void onParseError(std::string msg);
+  virtual void setParseLineNumber(int line);
 
   ////////////////////////////////////////////////////////////////////////////////
   ///////////////////// PRIVATE INTERFACE
@@ -561,6 +565,9 @@ private: // data rep
   // all calls to this proxy until the element on the stack when it was added is
   // closed (and the parser depth is zero!).
   OtherXMLParser* _pOtherXMLParser;
+
+  // Where we are in the parse to help debugging, set from the SaxParser interface.
+  int _currentParseLine;
 
 }; // class NCMLParser
 

@@ -81,8 +81,9 @@ namespace ncml_module
        * @return the new element or NULL if eltTypeName had to prototype.
        * @param eltName element type name
        * @param attrs the map of the attributes defined for the element
+       * @param parser  the parser which is creating the element.
        */
-      RCPtr<NCMLElement> makeElement(const std::string& eltTypeName, const AttributeMap& attrs);
+      RCPtr<NCMLElement> makeElement(const std::string& eltTypeName, const AttributeMap& attrs, NCMLParser& parser);
 
     private: // Interface
 

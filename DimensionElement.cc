@@ -122,7 +122,8 @@ namespace ncml_module
     // Direct child of <netcdf> only now since we dont handle <group>
     if (!_parser->isScopeNetcdf())
       {
-        THROW_NCML_PARSE_ERROR("Got dimension element = " + toString() +
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Got dimension element = " + toString() +
             " at an invalid parse location.  Expected it as a direct child of <netcdf> element only." +
             " scope=" + _parser->getScopeString());
       }
@@ -135,7 +136,8 @@ namespace ncml_module
     const DimensionElement* pExistingDim = dataset->getDimensionInLocalScope(name());
     if (pExistingDim)
       {
-        THROW_NCML_PARSE_ERROR("Tried at add dimension " + toString() +
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Tried at add dimension " + toString() +
             " but a dimension with name=" + name() +
             " already exists in this scope=" + _parser->getScopeString());
       }
@@ -150,7 +152,8 @@ namespace ncml_module
     // BESDEBUG("ncml", "DimensionElement::handleContent called...");
     if (!NCMLUtil::isAllWhitespace(content))
       {
-        THROW_NCML_PARSE_ERROR("Got illegal (non-whitespace) content in element " + toString());
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Got illegal (non-whitespace) content in element " + toString());
       }
   }
 
@@ -211,7 +214,8 @@ namespace ncml_module
     sis >> _dim.size;
     if (sis.fail())
       {
-        THROW_NCML_PARSE_ERROR("Element " + toString() + " failed to parse the length attribute into a proper unsigned int!");
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Element " + toString() + " failed to parse the length attribute into a proper unsigned int!");
       }
 
     // @TODO set the _dim.isSizeConstant from the isVariableLength, etc once we know how to use them for aggs
@@ -227,7 +231,8 @@ namespace ncml_module
       }
     else if (!_isShared.empty())
       {
-        THROW_NCML_PARSE_ERROR("dimension@isShared did not have value in {true,false}.");
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "dimension@isShared did not have value in {true,false}.");
       }
 
   }
@@ -241,8 +246,9 @@ namespace ncml_module
         !_isVariableLength.empty() ||
         !_orgName.empty() )
       {
-        THROW_NCML_PARSE_ERROR("Dimension element " + toString() + " has unexpected unimplemented attributes. "
-                               "This version of the module only handles name and length.");
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Dimension element " + toString() + " has unexpected unimplemented attributes. "
+            "This version of the module only handles name and length.");
       }
   }
 

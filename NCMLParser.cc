@@ -68,6 +68,8 @@ namespace ncml_module {
 // An attribute or variable with type "Structure" will match this string.
 const string NCMLParser::STRUCTURE_TYPE("Structure");
 
+// Just cuz I hate magic -1.  Used in _currentParseLine
+static const int NO_CURRENT_PARSE_LINE_NUMBER = -1;
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 ////// Public
@@ -84,6 +86,7 @@ NCMLParser::NCMLParser(DDSLoader& loader)
 , _elementStack()
 , _scope()
 , _pOtherXMLParser(0)
+, _currentParseLine(NO_CURRENT_PARSE_LINE_NUMBER)
 {
   BESDEBUG("ncml", "Created NCMLParser." << endl);
 }
@@ -252,9 +255,16 @@ void
 NCMLParser::onParseError(std::string msg)
 {
   // Pretty much have to give up on malformed XML.
-  THROW_NCML_PARSE_ERROR("libxml SAX2 parser error! msg={" + msg + "} Terminating parse!");
+  THROW_NCML_PARSE_ERROR(getParseLineNumber(),
+      "libxml SAX2 parser error! msg={" + msg + "} Terminating parse!");
 }
 
+void
+NCMLParser::setParseLineNumber(int line)
+{
+  _currentParseLine = line;
+  // BESDEBUG("ncml", "******** Now parsing line: " << line << endl);
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Non-public Implemenation
@@ -552,7 +562,8 @@ NCMLParser::deleteVariableAtCurrentScope(const string& name)
       Structure* pVarContainer = dynamic_cast<Structure*>(_pVar);
       if (!pVarContainer)
         {
-          THROW_NCML_PARSE_ERROR( "NCMLParser::deleteVariableAtCurrentScope called with _pVar not a "
+          THROW_NCML_PARSE_ERROR( getParseLineNumber(),
+                                  "NCMLParser::deleteVariableAtCurrentScope called with _pVar not a "
                                   "Structure class variable!  "
                                   "We can only delete variables from top DDS or within a Structure now.  scope=" +
                                   getTypedScopeString());
@@ -561,7 +572,8 @@ NCMLParser::deleteVariableAtCurrentScope(const string& name)
       BaseType* pToBeNuked = pVarContainer->var(name);
       if (!pToBeNuked)
         {
-          THROW_NCML_PARSE_ERROR( "Tried to remove variable from a Structure, but couldn't find the variable with name=" + name +
+          THROW_NCML_PARSE_ERROR( getParseLineNumber(),
+                                  "Tried to remove variable from a Structure, but couldn't find the variable with name=" + name +
                                   "at scope=" + getScopeString());
         }
       // Silently fails, so assume it worked.
@@ -640,24 +652,6 @@ NCMLParser::attributeExistsAtCurrentScope(const string& name)
   return foundIt;
 }
 
-#if 0
-bool
-NCMLParser::findAttribute(const string& name, AttrTable::Attr_iter& attr) const
-{
-  AttrTable* pContainer = 0;
-
-  if (_pCurrentTable)
-    {
-      _pCurrentTable->find(name, &pContainer, &attr);
-      return (pContainer != 0);
-    }
-  else
-    {
-      return false;
-    }
- }
-#endif
-
 bool
 NCMLParser::findAttribute(const string& name, AttrTable::Attr_iter& attr) const
 {
@@ -680,8 +674,10 @@ NCMLParser::tokenizeAttrValues(vector<string>& tokens, const string& values, con
   AttrType dapType = String_to_AttrType(dapAttrTypeName);
   if (dapType == Attr_unknown)
     {
-      THROW_NCML_PARSE_ERROR("Attempting to tokenize attribute value failed since we found an unknown internal DAP type=" + dapAttrTypeName +
-           " for the current fully qualified attribute=" + _scope.getScopeString());
+      THROW_NCML_PARSE_ERROR(getParseLineNumber(),
+            "Attempting to tokenize attribute value failed since"
+            " we found an unknown internal DAP type=" + dapAttrTypeName +
+            " for the current fully qualified attribute=" + _scope.getScopeString());
     }
 
   // If we're valid type, tokenize us according to type.
@@ -913,13 +909,15 @@ NCMLParser::checkDataIsValidForCanonicalTypeOrThrow(const string& type, const ve
               std::stringstream msg;
               msg << "Invalid Value: The "<< type << " attribute value (not shown) exceeded max string length of " << MAX_DAP_STRING_SIZE <<
               " at scope=" << _scope.getScopeString() << endl;
-              THROW_NCML_PARSE_ERROR(msg.str());
+              THROW_NCML_PARSE_ERROR(getParseLineNumber(), msg.str());
             }
 
           valid &= NCMLUtil::isAscii(*it);
           if (!valid)
             {
-              THROW_NCML_PARSE_ERROR("Invalid Value: The " + type + " attribute value (not shown) has an invalid non-ascii character.");
+              THROW_NCML_PARSE_ERROR(getParseLineNumber(),
+                  "Invalid Value: The " + type +
+                  " attribute value (not shown) has an invalid non-ascii character.");
             }
         }
 
@@ -940,8 +938,9 @@ NCMLParser::checkDataIsValidForCanonicalTypeOrThrow(const string& type, const ve
       // Early throw so we know which token it was.
       if (!valid)
         {
-          THROW_NCML_PARSE_ERROR("Invalid Value given for type=" + type + " with value=" + (*it) + " was invalidly formed or out of range" +
-               _scope.getScopeString());
+          THROW_NCML_PARSE_ERROR(getParseLineNumber(),
+              "Invalid Value given for type=" + type + " with value=" + (*it) + " was invalidly formed or out of range" +
+              _scope.getScopeString());
         }
     }
   // All is good if we get here.
@@ -1076,12 +1075,11 @@ void
 NCMLParser::processStartNCMLElement(const std::string& name, const AttributeMap& attrs)
 {
   // Store it in a shared ptr in case this function exceptions before we store it in the element stack.
-  RCPtr<NCMLElement> elt = _elementFactory.makeElement(name, attrs);
+  RCPtr<NCMLElement> elt = _elementFactory.makeElement(name, attrs, *this);
 
   // If we actually created an element of the given type name
   if (elt.get())
     {
-      elt->setParser(this);
       elt->handleBegin();
       // tell the container to push the raw element, which will also ref() it on success
       // otherwise ~RCPtr will unref() to 0 and thus nuke it on exception.
@@ -1091,7 +1089,9 @@ NCMLParser::processStartNCMLElement(const std::string& name, const AttributeMap&
    {
      if (sThrowExceptionOnUnknownElements)
        {
-         THROW_NCML_PARSE_ERROR("Unknown element type=" + name + " found in NcML parse with scope=" + _scope.getScopeString());
+         THROW_NCML_PARSE_ERROR(getParseLineNumber(),
+             "Unknown element type=" + name +
+             " found in NcML parse with scope=" + _scope.getScopeString());
        }
      else
        {

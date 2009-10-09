@@ -81,13 +81,16 @@ namespace ncml_module
     // Make sure the name is not empty or this is uselss.
     if (_name.empty())
       {
-        THROW_NCML_PARSE_ERROR("Cannot have variableAgg@name empty! Scope=" + _parser->getScopeString());
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Cannot have variableAgg@name empty! Scope=" + _parser->getScopeString());
       }
 
     // Also make sure we are the direct child of an aggregation or it's an error as well!
     if (!_parser->isScopeAggregation())
       {
-        THROW_NCML_PARSE_ERROR("Got a variableAgg element not as a direct child of an aggregation!  elt=" + toString() +
+        THROW_NCML_PARSE_ERROR(
+            _parser->getParseLineNumber(),
+            "Got a variableAgg element not as a direct child of an aggregation!  elt=" + toString() +
             " at scope=" + _parser->getScopeString() );
       }
 

@@ -120,7 +120,9 @@ namespace ncml_module
     // Variables cannot have content like attribute.  It must be within a <values> element.
     if (!NCMLUtil::isAllWhitespace(content))
       {
-        THROW_NCML_PARSE_ERROR("Got non-whitespace for element content and didn't expect it.  Element=" + toString() + " content=\"" +
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Got non-whitespace for element content and didn't expect it.  "
+            "Element=" + toString() + " content=\"" +
             content + "\"");
       }
   }
@@ -152,13 +154,16 @@ namespace ncml_module
 
     if (!p.withinNetcdf())
       {
-        THROW_NCML_PARSE_ERROR("Got element " + toString() + " while not in <netcdf> node!");
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Got element " + toString() + " while not in <netcdf> node!");
       }
 
     // Can only specify variable globally or within a composite variable now.
     if (!(p.isScopeGlobal() || p.isScopeCompositeVariable()))
       {
-        THROW_NCML_PARSE_ERROR("Got <variable> element while not within a <netcdf> or within variable container.  scope=" +
+        THROW_NCML_PARSE_ERROR(
+            _parser->getParseLineNumber(),
+            "Got <variable> element while not within a <netcdf> or within variable container.  scope=" +
             p.getScopeString());
       }
 
@@ -189,14 +194,18 @@ namespace ncml_module
     BESDEBUG("ncml", "VariableElement::handleEnd called at scope:" << p.getScopeString() << endl);
     if (!p.isScopeVariable())
       {
-        THROW_NCML_PARSE_ERROR("VariableElement::handleEnd called when not parsing a variable element!  Scope=" + p.getTypedScopeString());
+        THROW_NCML_PARSE_ERROR(
+            _parser->getParseLineNumber(),
+            "VariableElement::handleEnd called when not parsing a variable element!  "
+            "Scope=" + p.getTypedScopeString());
       }
 
     // It's a parse error to make a new variable and not set its values.  Otherwise, we end up
     // with internal errors on read() later....
     if (_isNewNCMLVariable && !_gotValues)
       {
-        THROW_NCML_PARSE_ERROR("Newly created variable=" + toString() +
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Newly created variable=" + toString() +
             " did not have values specified via autogeneration or a variables element.  Values must be set!" +
             " Scope=" + p.getScopeString() );
       }
@@ -231,11 +240,13 @@ namespace ncml_module
     // We're gonna ignore that until we allow addition of variables, but let's leave this check here for now
     if (!_type.empty() && !p.typeCheckDAPVariable(*pVar, p.convertNcmlTypeToCanonicalType(_type)))
       {
-        THROW_NCML_PARSE_ERROR("Type Mismatch in variable element with name=" + _name +
+        THROW_NCML_PARSE_ERROR(
+            _parser->getParseLineNumber(),
+            "Type Mismatch in variable element with name=" + _name +
             " at scope=" + p.getScopeString() +
             " Expected type=" + _type +
             " but found variable with type=" + pVar->type_name() +
-                "  To match a variable of any type, please do not specify variable@type.");
+            "  To match a variable of any type, please do not specify variable@type.");
       }
 
     // Use this variable as the new scope until we get a handleEnd()
@@ -256,7 +267,9 @@ namespace ncml_module
     BaseType* pOrgVar = p.getVariableInCurrentVariableContainer(_orgName);
     if (!pOrgVar)
       {
-        THROW_NCML_PARSE_ERROR("Renaming variable failed for element=" + toString() + " since no variable with orgName=" + _orgName +
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Renaming variable failed for element=" + toString() +
+            " since no variable with orgName=" + _orgName +
             " exists at current parser scope=" + p.getScopeString());
       }
     BESDEBUG("ncml", "Found variable with name=" << _orgName << endl);
@@ -266,7 +279,8 @@ namespace ncml_module
     BaseType* pExisting = p.getVariableInCurrentVariableContainer(_name);
     if (pExisting)
       {
-        THROW_NCML_PARSE_ERROR("Renaming variable failed for element=" + toString() +
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Renaming variable failed for element=" + toString() +
             " since a variable with name=" + _name +
             " already exists at current parser scope=" + p.getScopeString());
       }
@@ -333,14 +347,16 @@ namespace ncml_module
     // Type cannot be empty for a new variable!!
     if (_type.empty())
       {
-        THROW_NCML_PARSE_ERROR("Must have non-empty variable@type when creating new variable=" + toString());
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Must have non-empty variable@type when creating new variable=" + toString());
       }
 
     // Convert the type to the canonical type...
     string type = p.convertNcmlTypeToCanonicalType(_type);
     if (_type.empty())
       {
-        THROW_NCML_PARSE_ERROR("Unknown type for new variable=" + toString());
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Unknown type for new variable=" + toString());
       }
 
     // Tokenize the _shape string
@@ -374,7 +390,9 @@ namespace ncml_module
     // First, make sure we are at a parse scope that ALLOWS variables to be added!
     if (!(p.isScopeCompositeVariable() || p.isScopeGlobal()))
       {
-        THROW_NCML_PARSE_ERROR("Cannot add a new Structure variable at current scope!  TypedScope=" + p.getTypedScopeString());
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Cannot add a new Structure variable at current scope!  "
+            "TypedScope=" + p.getTypedScopeString());
       }
 
     auto_ptr<BaseType> pNewVar = MyBaseTypeFactory::makeVariable("Structure", _name);
@@ -430,7 +448,8 @@ namespace ncml_module
     // Make sure the size of the flattened Array in memory (product of dimensions) is within the DAP2 limit...
     if (getProductOfDimensionSizes(p) > static_cast<unsigned int>(DODS_MAX_ARRAY)) // actually the call itself will throw...
       {
-        THROW_NCML_PARSE_ERROR("Product of dimension sizes for Array must be < (2^31-1).");
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Product of dimension sizes for Array must be < (2^31-1).");
       }
   }
 
@@ -498,7 +517,8 @@ namespace ncml_module
     // First, make sure we are at a parse scope that ALLOWS variables to be added!
     if (!(p.isScopeCompositeVariable() || p.isScopeGlobal()))
       {
-        THROW_NCML_PARSE_ERROR("Cannot add a new scalar variable at current scope!  TypedScope=" + p.getTypedScopeString());
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Cannot add a new scalar variable at current scope!  TypedScope=" + p.getTypedScopeString());
       }
 
     // Destroy it no matter what sicne add_var copies it
@@ -568,8 +588,9 @@ namespace ncml_module
        token >> dim;
        if (token.fail())
          {
-           THROW_NCML_PARSE_ERROR( "Trying to get the dimension size in shape=" + _shape + " for token " + dimToken +
-                                   " failed to parse the unsigned int!");
+           THROW_NCML_PARSE_ERROR( _parser->getParseLineNumber(),
+               "Trying to get the dimension size in shape=" + _shape + " for token " + dimToken +
+               " failed to parse the unsigned int!");
          }
      }
    else
@@ -581,8 +602,10 @@ namespace ncml_module
          }
        else
          {
-           THROW_NCML_PARSE_ERROR("Failed to find a dimension with name=" + dimToken +
-               " for variable=" + toString() + " with dimension table= " + p.printAllDimensionsAtLexicalScope() +
+           THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+               "Failed to find a dimension with name=" + dimToken +
+               " for variable=" + toString() +
+               " with dimension table= " + p.printAllDimensionsAtLexicalScope() +
                " at scope=" + p.getScopeString());
          }
      }
@@ -609,7 +632,8 @@ namespace ncml_module
        // if multiplying this in will cause over DODS_MAX_ARRAY, then error
        if (dimSize > (DODS_MAX_ARRAY/product))
          {
-           THROW_NCML_PARSE_ERROR("Product of dimension sizes exceeds the maximum DAP2 size of 2147483647 (2^31-1)!");
+           THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+               "Product of dimension sizes exceeds the maximum DAP2 size of 2147483647 (2^31-1)!");
          }
        // otherwise, multiply it in
        product *= dimSize;

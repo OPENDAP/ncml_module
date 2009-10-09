@@ -109,7 +109,8 @@ namespace ncml_module
      // Otherwise, it better be whitespace
      else if (!NCMLUtil::isAllWhitespace(content))
        {
-         THROW_NCML_PARSE_ERROR("Got characters content for a non-atomic attribute!"
+         THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+             "Got characters content for a non-atomic attribute!"
              " attribute@value is not allowed for attribute@type=Structure!");
        }
   }
@@ -164,12 +165,15 @@ namespace ncml_module
     // which could be anywhere including glboal attributes, nested attributes, or some level down a variable tree.
     if (!p.withinNetcdf())
       {
-        THROW_NCML_PARSE_ERROR("Got <attribute> element while not within a <netcdf> node!");
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Got <attribute> element while not within a <netcdf> node!");
       }
 
     if (p.isScopeAtomicAttribute())
       {
-        THROW_NCML_PARSE_ERROR("Got new <attribute> while in a leaf <attribute> at scope=" + p.getScopeString() +
+        THROW_NCML_PARSE_ERROR(
+            _parser->getParseLineNumber(),
+            "Got new <attribute> while in a leaf <attribute> at scope=" + p.getScopeString() +
             " Hierarchies of attributes are only allowed for attribute containers with type=Structure");
       }
 
@@ -178,7 +182,9 @@ namespace ncml_module
     string internalType = p.convertNcmlTypeToCanonicalType(_type);
     if (internalType.empty())
       {
-        THROW_NCML_PARSE_ERROR("Unknown NCML type=" + _type + " for attribute name=" + _name + " at scope=" + p.getScopeString());
+        THROW_NCML_PARSE_ERROR(
+            _parser->getParseLineNumber(),
+            "Unknown NCML type=" + _type + " for attribute name=" + _name + " at scope=" + p.getScopeString());
       }
 
     p.printScope();
@@ -240,7 +246,8 @@ namespace ncml_module
     // Technically it's an error to have a value for a container, so just check and warn.
     if (!_value.empty())
       {
-        THROW_NCML_PARSE_ERROR("Found non empty() value attribute for attribute container at scope=" + p.getTypedScopeString());
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Found non empty() value attribute for attribute container at scope=" + p.getTypedScopeString());
       }
 
     // Make sure we're in a valid context.
@@ -303,7 +310,8 @@ namespace ncml_module
         BESDEBUG("ncml", "Addinng new attribute of type OtherXML data." << endl);
         if (!_value.empty())
           {
-            THROW_NCML_PARSE_ERROR("Adding new Attribute of type=OtherXML:  Cannot specify"
+            THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+                "Adding new Attribute of type=OtherXML:  Cannot specify"
                 " an attribute@value for OtherXML --- it must be set in the content!  Scope was: "
                 + p.getScopeString() );
           }
@@ -354,15 +362,17 @@ namespace ncml_module
     // Check for user errors
     if (!p.attributeExistsAtCurrentScope(_orgName))
       {
-        THROW_NCML_PARSE_ERROR("Failed to change name of non-existent attribute with orgName=" + _orgName +
-                               " and new name=" + _name + " at the current scope=" + p.getScopeString());
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Failed to change name of non-existent attribute with orgName=" + _orgName +
+            " and new name=" + _name + " at the current scope=" + p.getScopeString());
       }
 
     // If the name we're renaming to already exists, we'll assume that's an error as well, since the user probably
     // wants to know that.
     if (p.attributeExistsAtCurrentScope(_name))
       {
-        THROW_NCML_PARSE_ERROR("Failed to change name of existing attribute orgName=" + _orgName +
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+                               "Failed to change name of existing attribute orgName=" + _orgName +
                                " because an attribute with the new name=" + _name +
                                " already exists at the current scope=" + p.getScopeString());
       }
@@ -414,13 +424,15 @@ namespace ncml_module
     AttrTable* pAT = pTable->simple_find_container(_orgName);
     if (!pAT)
       {
-        THROW_NCML_PARSE_ERROR("renameAttributeContainer: Failed to find attribute container with orgName=" + _orgName +
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "renameAttributeContainer: Failed to find attribute container with orgName=" + _orgName +
             " at scope=" + p.getScopeString());
       }
 
     if (p.attributeExistsAtCurrentScope(_name))
       {
-        THROW_NCML_PARSE_ERROR("Renaming attribute container with orgName=" + _orgName +
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Renaming attribute container with orgName=" + _orgName +
             " to new name=" + _name +
             " failed since an attribute already exists with that name at scope=" + p.getScopeString());
       }
@@ -478,7 +490,8 @@ namespace ncml_module
       }
     else // Can't close an attribute if we're not in one!
       {
-        THROW_NCML_PARSE_ERROR("Got end of attribute element while not parsing an attribute!");
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Got end of attribute element while not parsing an attribute!");
       }
   }
 

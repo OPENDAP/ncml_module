@@ -44,6 +44,7 @@
 #include "BESForbiddenError.h"
 #include "BESNotFoundError.h"
 #include "NCMLCommonTypes.h"
+#include "NCMLDebug.h"
 #include "SaxParser.h"
 
 using namespace std;
@@ -102,7 +103,8 @@ static int toAttrMap(AttributeMap& map, const xmlChar** attrs)
     { \
       try \
       { \
-        SaxParser& parser = _spw_->getParser();
+        SaxParser& parser = _spw_->getParser(); \
+        parser.setParseLineNumber(_spw_->getCurrentParseLine());
 
 // This is required after the end of the actual calls to the parser.
 #define END_SAFE_PARSER_BLOCK } \
@@ -221,38 +223,26 @@ static void ncmlFatalError(void* userData, const char* msg, ...)
   END_SAFE_PARSER_BLOCK;
 }
 
-static void setupParser(xmlSAXHandler& handler)
-{
-  handler.startDocument = ncmlStartDocument;
-  handler.endDocument = ncmlEndDocument;
-  handler.startElement = ncmlStartElement;
-  handler.endElement = ncmlEndElement;
-  handler.warning = ncmlWarning;
-  handler.error = ncmlFatalError;
-  handler.fatalError = ncmlFatalError;
-  handler.characters = ncmlCharacters;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // class SaxParserWrapper impl
 
 SaxParserWrapper::SaxParserWrapper(SaxParser& parser)
 : _parser(parser)
 , _handler() // inits to all nulls.
+, _context(0)
 , _state(NOT_PARSING)
 , _errorMsg("")
 , _errorType(0)
 , _errorFile("")
 , _errorLine(-1)
 {
-  // register the static C functions.
-  setupParser(_handler);
 }
 
 SaxParserWrapper::~SaxParserWrapper()
 {
   // Really not much to do...  everything cleans itself up.
   _state = NOT_PARSING;
+  cleanupParser();
 }
 
 bool
@@ -268,9 +258,21 @@ SaxParserWrapper::parse(const string& ncmlFilename)
 
   // OK, now we're parsing
   _state = PARSING;
-  // Any BESError thrown in SaxParser callbacks will be deferred in here.
-  int errNo = xmlSAXUserParseFile(&_handler, this, ncmlFilename.c_str());
-  success = (errNo == 0);
+
+  setupParser(ncmlFilename);
+
+  // Old way where we have no context.
+  //  int errNo = xmlSAXUserParseFile(&_handler, this, ncmlFilename.c_str());
+  //  success = (errNo == 0);
+
+  // Any BESError thrown in SaxParser callbacks will be deferred by the safe handler blocks
+  // So that we safely pass this line.
+  // Even if not, _context is cleared in dtor just in case.
+  xmlParseDocument(_context);
+
+  success = (_context->errNo == 0);
+
+  cleanupParser();
 
   // If we deferred an exception during the libxml parse call, now's the time to rethrow it.
   if (isExceptionState())
@@ -280,7 +282,7 @@ SaxParserWrapper::parse(const string& ncmlFilename)
 
   // Otherwise, we're also done parsing.
   _state = NOT_PARSING;
-  return (errNo == 0); // success
+  return success;
 }
 
 void
@@ -327,5 +329,63 @@ SaxParserWrapper::rethrowException()
       throw BESInternalError("Unknown exception type.", __FILE__, __LINE__);
       break;
   }
+}
+
+int
+SaxParserWrapper::getCurrentParseLine() const
+{
+  if (_context)
+    {
+      return xmlSAX2GetLineNumber(_context);
+    }
+  else
+    {
+      return  -1;
+    }
+}
+
+void
+SaxParserWrapper::setupParser(const string& filename)
+{
+  // Put our static functions into the handler
+  _handler.startDocument = ncmlStartDocument;
+  _handler.endDocument = ncmlEndDocument;
+  _handler.startElement = ncmlStartElement;
+  _handler.endElement = ncmlEndElement;
+  _handler.warning = ncmlWarning;
+  _handler.error = ncmlFatalError;
+  _handler.fatalError = ncmlFatalError;
+  _handler.characters = ncmlCharacters;
+
+  // Create the parser context for the file
+  _context = xmlCreateFileParserCtxt(filename.c_str());
+  if (!_context)
+    {
+      THROW_NCML_PARSE_ERROR(-1,
+          "Cannot parse: Unable to create a libxml parse context for " + filename);
+    }
+
+  // Tell the context what handlers to use
+  _context->sax = &_handler;
+
+  // All callbacks should come back with this.
+  _context->userData = this;
+
+  // Don't validate
+  _context->validate = false;
+}
+
+void
+SaxParserWrapper::cleanupParser() throw ()
+{
+  if (_context)
+    {
+      // Remove our handler from it.
+      _context->sax = NULL;
+
+      // Free it up.
+      xmlFreeParserCtxt(_context);
+      _context = 0;
+    }
 }
 

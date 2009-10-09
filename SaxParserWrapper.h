@@ -31,7 +31,7 @@
 #define __NCML_MODULE__SAX_PARSER_WRAPPER_H__
 
 #include <string>
-#include <libxml/parser.h>
+#include <libxml/parserInternals.h>
 #include "BESError.h"
 
 using namespace std;
@@ -83,6 +83,11 @@ private: // Data Rep
      to the SaxParser interface.
    */
   xmlSAXHandler _handler;
+
+  /** the xml parser context (internals) so we can get access to line numbers
+   *  in the parse and pass them along for better debug output on exception.
+   */
+  xmlParserCtxtPtr _context;
 
   /** Current state of the parser.  If EXCEPTION, _error will be the deferred exception. */
   ParserState _state;
@@ -144,6 +149,19 @@ public:
    * from the preserved state at deferral time.
    */
   void rethrowException();
+
+  /** Return the current line of the parse we're on, assuming we're not in an exception state
+   * and that we are parsing.
+   */
+  int getCurrentParseLine() const;
+
+private:
+
+  /** Prepare the parser to load the given filename, setting up the handler and context */
+  void setupParser(const string& filename);
+
+  /** Clean the _context and any other state */
+  void cleanupParser() throw ();
 
 }; // class SaxParserWrapper
 

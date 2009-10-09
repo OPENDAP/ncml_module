@@ -90,7 +90,7 @@ AT_SETUP([$2 response for $1: seeking match to $3])
 AT_KEYWORDS([$2])
 AT_MAKE_BESCMD_FILE([$1], [$2], [$4])
 AT_CHECK([besstandalone -c bes_conf_path -i ./test.bescmd], [], [stdout], [ignore])
-AT_CHECK([fgrep $3 stdout], [], [ignore], [], [])
+AT_CHECK([grep $3 stdout], [], [ignore], [], [])
 AT_CLEANUP
 ])
 
@@ -153,7 +153,7 @@ dnl $1 is ncml_filename
 dnl $2 == [optional] constraint
 m4_define([AT_ASSERT_PARSE_ERROR],
 [AT_BANNER([Testing that $1 contains a ParseError...])
-AT_RUN_BES_AND_MATCH([$1],["ddx"],["ParseError"],[$2])
+AT_RUN_BES_AND_MATCH([$1],["ddx"],[".*ParseError.*"],[$2])
 ])
 
 dnl -----------------------------------------------------------------

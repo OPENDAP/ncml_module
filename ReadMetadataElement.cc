@@ -77,7 +77,8 @@ namespace ncml_module
   {
     if (!_parser->isScopeNetcdf())
         {
-          THROW_NCML_PARSE_ERROR("Got <readMetadata/> while not within <netcdf>");
+          THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+              "Got <readMetadata/> while not within <netcdf>");
         }
     NetcdfElement* dataset = _parser->getCurrentDataset();
     VALID_PTR(dataset);
@@ -85,8 +86,10 @@ namespace ncml_module
     // Like Highlander, there can be only one!
     if (dataset->getProcessedMetadataDirective())
       {
-      THROW_NCML_PARSE_ERROR("Got " + toString() +
-          " element but we already got a metadata directive for the current dataset!  Only one may be specified.");
+      THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+          "Got " + toString() +
+          " element but we already got a metadata directive"
+          " for the current dataset!  Only one may be specified.");
       }
     dataset->setProcessedMetadataDirective();
   }
@@ -96,7 +99,9 @@ namespace ncml_module
   {
     if (!NCMLUtil::isAllWhitespace(content))
       {
-        THROW_NCML_PARSE_ERROR("Got non-whitespace for element content and didn't expect it.  Element=" + toString() + " content=\"" +
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Got non-whitespace for element content and didn't expect it."
+            " Element=" + toString() + " content=\"" +
             content + "\"");
       }
   }

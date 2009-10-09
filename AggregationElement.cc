@@ -133,7 +133,8 @@ namespace ncml_module
     // Check that the immediate parent element is netcdf since we cannot put an aggregation anywhere else.
     if (!_parser->isScopeNetcdf())
       {
-        THROW_NCML_PARSE_ERROR("Got an <aggregation> = " + toString() +
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+          "Got an <aggregation> = " + toString() +
           " at incorrect parse location.  They can only be direct children of <netcdf>.  Scope=" +
           _parser->getScopeString());
       }
@@ -143,7 +144,8 @@ namespace ncml_module
     // If the enclosing dataset already has an aggregation, this is a parse error.
     if (dataset->getChildAggregation())
       {
-        THROW_NCML_PARSE_ERROR("Got <aggregation> = " + toString() + " but the enclosing dataset = " + dataset->toString() +
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Got <aggregation> = " + toString() + " but the enclosing dataset = " + dataset->toString() +
             " already had an aggregation set!  There can be only one!");
       }
     // Set me as the aggregation for the current dataset.
@@ -157,7 +159,8 @@ namespace ncml_module
     // Aggregations do not specify content!
     if (!NCMLUtil::isAllWhitespace(content))
       {
-      THROW_NCML_PARSE_ERROR("Got non-whitespace for content and didn't expect it.  Element=" + toString() + " content=\"" +
+      THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+          "Got non-whitespace for content and didn't expect it.  Element=" + toString() + " content=\"" +
           content + "\"");
       }
   }
@@ -183,11 +186,13 @@ namespace ncml_module
     else if (_type == "forecastModelRunCollection" ||
              _type == "forecastModelSingleRunCollection")
       {
-        THROW_NCML_PARSE_ERROR("Sorry, we do not implement the forecastModelRunCollection aggregations in this version of the NCML Module!");
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Sorry, we do not implement the forecastModelRunCollection aggregations in this version of the NCML Module!");
       }
     else
       {
-        THROW_NCML_PARSE_ERROR("Unknown aggregation type=" + _type + " at scope=" + _parser->getScopeString());
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Unknown aggregation type=" + _type + " at scope=" + _parser->getScopeString());
       }
 
     _parser = 0;
@@ -222,7 +227,8 @@ namespace ncml_module
   {
     if (isAggregationVariable(name))
       {
-        THROW_NCML_PARSE_ERROR("Tried to add an aggregation variable twice: name=" + name +
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Tried to add an aggregation variable twice: name=" + name +
             " at scope=" + _parser->getScopeString());
       }
     else
@@ -349,7 +355,8 @@ namespace ncml_module
         // We need one aggVar per set in order to set the dimension right.
         if (found != datasetsInOrder.size())
           {
-            THROW_NCML_PARSE_ERROR("In performing joinNew aggregation=" + toString() +
+            THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+                "In performing joinNew aggregation=" + toString() +
                 " we did not find an aggregation variables named " + varName +
                 " in all of the child datasets of the aggregation!");
           }
@@ -392,7 +399,8 @@ namespace ncml_module
   void
   AggregationElement::processJoinExisting()
   {
-    THROW_NCML_PARSE_ERROR("Unimplemented aggregation type: joinExisting");
+    THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+        "Unimplemented aggregation type: joinExisting");
   }
 
   void
@@ -445,7 +453,8 @@ namespace ncml_module
                     BESDEBUG("ncml", "WARNING: " + msg);
                     if (checkDimensionMismatch)
                       {
-                        THROW_NCML_PARSE_ERROR(msg + " Scope=" + _parser->getScopeString());
+                        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+                            msg + " Scope=" + _parser->getScopeString());
                       }
                   }
               }

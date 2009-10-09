@@ -31,6 +31,7 @@
 #define __NCML_MODULE__NCML_DEBUG__
 
 #include <assert.h>
+#include <sstream>
 #include <string>
 #include "BESDebug.h"
 #include "BESInternalError.h"
@@ -52,8 +53,14 @@
                                                           __FILE__, __LINE__); }
 
 // Spew the std::string msg to debug channel then throw a BESSyntaxUserError.  For parse and syntax errors in the NCML.
-#define THROW_NCML_PARSE_ERROR(msg) { BESDEBUG(NCML_MODULE_DBG_CHANNEL, "NCMLModule ParseError: " << (msg) << endl); \
-                                   throw BESSyntaxUserError(std::string("NCMLModule ParseError: ") + std::string(msg), __FILE__, __LINE__); }
+#define THROW_NCML_PARSE_ERROR(parseLine, msg) { \
+      ostringstream __NCML_PARSE_ERROR_OSS__; \
+      __NCML_PARSE_ERROR_OSS__ << "NCMLModule ParseError: at line " << (parseLine) << ": " << (msg); \
+      BESDEBUG(NCML_MODULE_DBG_CHANNEL, \
+              __NCML_PARSE_ERROR_OSS__.str() << endl); \
+          throw BESSyntaxUserError( __NCML_PARSE_ERROR_OSS__.str(), \
+              __FILE__, \
+              __LINE__); }
 
 // My own assert to throw an internal error instead of assert() which calls abort(), which is not so nice to do on a server.
 #define NCML_ASSERT(cond)   { if (!(cond)) { THROW_NCML_INTERNAL_ERROR(std::string("ASSERTION FAILED: ") + std::string(#cond)); } }

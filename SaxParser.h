@@ -79,6 +79,13 @@ public:
   /** An unrecoverable parse error occurred */
   virtual void onParseError(std::string msg) = 0;
 
+  /** Before any of the callbacks are issued, this function is called to let the implementing
+   * parser know what line number in the parse the next callback is being issued from to allow
+   * for more informative error messages.
+   * (Default impl is to ignore it now).
+   */
+  virtual void setParseLineNumber(int /* line */) {}
+
 }; // class SaxParser
 
 } // namespace ncml_module

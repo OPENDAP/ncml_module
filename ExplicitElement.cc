@@ -78,7 +78,8 @@ namespace ncml_module
     NCMLParser& p = *_parser;
     if (!p.isScopeNetcdf())
         {
-          THROW_NCML_PARSE_ERROR("Got <explicit/> while not a direct child of a <netcdf>");
+          THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+              "Got <explicit/> while not a direct child of a <netcdf>");
         }
     // this applies to the current dataset
     NetcdfElement* dataset = p.getCurrentDataset();
@@ -86,8 +87,9 @@ namespace ncml_module
 
     if (dataset->getProcessedMetadataDirective())
       {
-        THROW_NCML_PARSE_ERROR("Got " + toString() +
-          " element but we already got a metadata directive for the current dataset!  Only one may be specified.");
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Got " + toString() +
+            " element but we already got a metadata directive for the current dataset!  Only one may be specified.");
       }
 
     dataset->setProcessedMetadataDirective();
@@ -100,7 +102,8 @@ namespace ncml_module
   {
     if (!NCMLUtil::isAllWhitespace(content))
       {
-        THROW_NCML_PARSE_ERROR("Got non-whitespace for element content and didn't expect it.  Element=" + toString() + " content=\"" +
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Got non-whitespace for element content and didn't expect it.  Element=" + toString() + " content=\"" +
             content + "\"");
       }
   }

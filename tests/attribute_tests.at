@@ -43,7 +43,7 @@ AT_CHECK_DDX([attribute_OtherXML_Attribute.ncml])
 
 dnl Check for malformed OtherXML content (the parser still insures 
 dnl well-formedness of the XML as we accumulate it).
-AT_RUN_BES_AND_MATCH([attribute_OtherXML_malformed.ncml],["ddx"],["ParseError: libxml SAX2 parser error"])
+AT_RUN_BES_AND_MATCH([attribute_OtherXML_malformed.ncml],["ddx"],["ParseError:.*libxml SAX2 parser error"])
 
 dnl Check that having a non-empty value is an error for OtherXML type.  Don't
 dnl put your XML in there!!
@@ -59,28 +59,28 @@ dnl From a bug where the same named attribute with dots in it (a URL as the NAME
 AT_CHECK_ALL_DAP_RESPONSES([bugs/attr_name_is_url_bug.ncml])
 
 dnl Check that making invalid values for a given type produces an error!
-AT_RUN_BES_AND_MATCH([types/byte_bounds.ncml],["ddx"],["ParseError: Invalid Value"])
-AT_RUN_BES_AND_MATCH([types/byte_invalid.ncml],["ddx"],["ParseError: Invalid Value"])
-AT_RUN_BES_AND_MATCH([types/float32_invalid.ncml],["ddx"],["ParseError: Invalid Value"])
-AT_RUN_BES_AND_MATCH([types/float32_min_bounds.ncml],["ddx"],["ParseError: Invalid Value"])
-AT_RUN_BES_AND_MATCH([types/float32_max_bounds.ncml],["ddx"],["ParseError: Invalid Value"])
-AT_RUN_BES_AND_MATCH([types/float64_invalid.ncml],["ddx"],["ParseError: Invalid Value"])
-AT_RUN_BES_AND_MATCH([types/float64_min_bounds.ncml],["ddx"],["ParseError: Invalid Value"])
-AT_RUN_BES_AND_MATCH([types/float64_max_bounds.ncml],["ddx"],["ParseError: Invalid Value"])
-AT_RUN_BES_AND_MATCH([types/int16_invalid.ncml],["ddx"],["ParseError: Invalid Value"])
-AT_RUN_BES_AND_MATCH([types/int16_min_bounds.ncml],["ddx"],["ParseError: Invalid Value"])
-AT_RUN_BES_AND_MATCH([types/int16_max_bounds.ncml],["ddx"],["ParseError: Invalid Value"])
-AT_RUN_BES_AND_MATCH([types/int32_invalid.ncml],["ddx"],["ParseError: Invalid Value"])
-AT_RUN_BES_AND_MATCH([types/int32_min_bounds.ncml],["ddx"],["ParseError: Invalid Value"])
-AT_RUN_BES_AND_MATCH([types/int32_max_bounds.ncml],["ddx"],["ParseError: Invalid Value"])
-AT_RUN_BES_AND_MATCH([types/uint16_invalid.ncml],["ddx"],["ParseError: Invalid Value"])
-AT_RUN_BES_AND_MATCH([types/uint16_min_bounds.ncml],["ddx"],["ParseError: Invalid Value"])
-AT_RUN_BES_AND_MATCH([types/uint16_max_bounds.ncml],["ddx"],["ParseError: Invalid Value"])
-AT_RUN_BES_AND_MATCH([types/uint32_invalid.ncml],["ddx"],["ParseError: Invalid Value"])
-AT_RUN_BES_AND_MATCH([types/uint32_min_bounds.ncml],["ddx"],["ParseError: Invalid Value"])
-AT_RUN_BES_AND_MATCH([types/uint32_max_bounds.ncml],["ddx"],["ParseError: Invalid Value"])
-AT_RUN_BES_AND_MATCH([types/string_non_ascii.ncml],["ddx"],["ParseError: Invalid Value"])
-AT_RUN_BES_AND_MATCH([types/string_overflow.ncml],["ddx"],["ParseError: Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/byte_bounds.ncml],["ddx"],["ParseError:.*Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/byte_invalid.ncml],["ddx"],["ParseError:.*Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/float32_invalid.ncml],["ddx"],["ParseError:.*Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/float32_min_bounds.ncml],["ddx"],["ParseError:.*Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/float32_max_bounds.ncml],["ddx"],["ParseError:.*Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/float64_invalid.ncml],["ddx"],["ParseError:.*Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/float64_min_bounds.ncml],["ddx"],["ParseError:.*Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/float64_max_bounds.ncml],["ddx"],["ParseError:.*Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/int16_invalid.ncml],["ddx"],["ParseError:.*Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/int16_min_bounds.ncml],["ddx"],["ParseError:.*Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/int16_max_bounds.ncml],["ddx"],["ParseError:.*Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/int32_invalid.ncml],["ddx"],["ParseError:.*Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/int32_min_bounds.ncml],["ddx"],["ParseError:.*Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/int32_max_bounds.ncml],["ddx"],["ParseError:.*Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/uint16_invalid.ncml],["ddx"],["ParseError:.*Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/uint16_min_bounds.ncml],["ddx"],["ParseError:.*Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/uint16_max_bounds.ncml],["ddx"],["ParseError:.*Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/uint32_invalid.ncml],["ddx"],["ParseError:.*Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/uint32_min_bounds.ncml],["ddx"],["ParseError:.*Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/uint32_max_bounds.ncml],["ddx"],["ParseError:.*Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/string_non_ascii.ncml],["ddx"],["ParseError:.*Invalid Value"])
+AT_RUN_BES_AND_MATCH([types/string_overflow.ncml],["ddx"],["ParseError:.*Invalid Value"])
 
 
 

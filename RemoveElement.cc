@@ -92,7 +92,9 @@ namespace ncml_module
   {
     if (!NCMLUtil::isAllWhitespace(content))
       {
-        THROW_NCML_PARSE_ERROR("Got non-whitespace for element content and didn't expect it.  Element=" + toString() + " content=\"" +
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Got non-whitespace for element content and didn't expect it. "
+            "Element=" + toString() + " content=\"" +
             content + "\"");
       }
   }
@@ -116,7 +118,8 @@ namespace ncml_module
   {
     if ( !(_type.empty() || _type == "attribute" || _type == "variable") )
       {
-        THROW_NCML_PARSE_ERROR("Illegal type in remove element: type=" + _type +
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Illegal type in remove element: type=" + _type +
             "  This version of the parser can only remove type=\"attribute\" or type=\"variable\".");
       }
 
@@ -141,7 +144,8 @@ namespace ncml_module
     bool gotIt = p.findAttribute(_name, it);
     if (!gotIt)
       {
-        THROW_NCML_PARSE_ERROR("In remove element, could not find attribute to remove name=" + _name +
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "In remove element, could not find attribute to remove name=" + _name +
             " at the current scope=" + p.getScopeString());
       }
 

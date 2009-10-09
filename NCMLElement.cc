@@ -30,6 +30,7 @@
 #include "NCMLCommonTypes.h"
 #include "NCMLDebug.h"
 #include "NCMLElement.h"
+#include "NCMLParser.h"
 
 // Factory Includes for Concrete Subtypes
 #include "AggregationElement.h"
@@ -121,7 +122,7 @@ namespace ncml_module
 
 
   RCPtr<NCMLElement>
-  NCMLElement::Factory::makeElement(const string& eltTypeName, const AttributeMap& attrs)
+  NCMLElement::Factory::makeElement(const string& eltTypeName, const AttributeMap& attrs, NCMLParser& parser)
   {
     ProtoList::const_iterator it = findPrototype(eltTypeName);
     if (it == _protos.end()) // not found
@@ -132,6 +133,8 @@ namespace ncml_module
 
     RCPtr<NCMLElement> newElt = RCPtr<NCMLElement>((*it)->clone());
     VALID_PTR(newElt.get());
+    // set the parser first if given it since exceptions use it
+    newElt->setParser(&parser);
     newElt->setAttributes(attrs);
 
     // Add the object to our pool to delete it when the factory dtor is called
@@ -172,7 +175,8 @@ namespace ncml_module
   {
     if (!NCMLUtil::isAllWhitespace(content))
       {
-        THROW_NCML_PARSE_ERROR("Got non-whitespace for element content and didn't expect it.  Element=" + toString() + " content=\"" +
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Got non-whitespace for element content and didn't expect it.  Element=" + toString() + " content=\"" +
             content + "\"");
       }
   }
@@ -218,7 +222,8 @@ namespace ncml_module
               }
             if (throwOnError)
               {
-                THROW_NCML_PARSE_ERROR(oss.str());
+                THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+                    oss.str());
               }
           }
       }
