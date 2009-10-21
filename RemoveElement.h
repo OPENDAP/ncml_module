@@ -49,7 +49,7 @@ namespace ncml_module
 
     virtual const std::string& getTypeName() const;
     virtual RemoveElement* clone() const; // override clone with more specific subclass
-    virtual void setAttributes(const AttributeMap& attrs);
+    virtual void setAttributes(const XMLAttributeMap& attrs);
     virtual void handleBegin();
     virtual void handleContent(const std::string& content);
     virtual void handleEnd();

@@ -133,21 +133,21 @@ namespace ncml_module
   }
 
   void
-  NetcdfElement::setAttributes(const AttributeMap& attrs)
+  NetcdfElement::setAttributes(const XMLAttributeMap& attrs)
   {
     // Make sure they exist in the schema, even if we don't support them.
     validateAttributes(attrs, _sValidAttributes);
 
     // set them
-    _location = NCMLUtil::findAttrValue(attrs, "location");
-    _id = NCMLUtil::findAttrValue(attrs, "id");
-    _title = NCMLUtil::findAttrValue(attrs, "title");
-    _enhance = NCMLUtil::findAttrValue(attrs, "enhance");
-    _addRecords = NCMLUtil::findAttrValue(attrs, "addRecords");
+    _location = attrs.getValueForLocalNameOrDefault("location");
+    _id = attrs.getValueForLocalNameOrDefault("id");
+    _title = attrs.getValueForLocalNameOrDefault("title");
+    _enhance = attrs.getValueForLocalNameOrDefault("enhance");
+    _addRecords = attrs.getValueForLocalNameOrDefault("addRecords");
     // Aggregation children only below!
-    _ncoords = NCMLUtil::findAttrValue(attrs, "ncoords");
-    _coordValue = NCMLUtil::findAttrValue(attrs, "coordValue");
-    _fmrcDefinition = NCMLUtil::findAttrValue(attrs, "fmrcDefinition");
+    _ncoords = attrs.getValueForLocalNameOrDefault("ncoords");
+    _coordValue = attrs.getValueForLocalNameOrDefault("coordValue");
+    _fmrcDefinition = attrs.getValueForLocalNameOrDefault("fmrcDefinition");
 
     // If any attributes were specified that we don't support in this version, throw a parse error
     // Note: We can't throw here if we're not in an aggregation context, can we?  Need the parser.

@@ -67,10 +67,10 @@ namespace ncml_module
   }
 
   void
-  VariableAggElement::setAttributes(const AttributeMap& attrs)
+  VariableAggElement::setAttributes(const XMLAttributeMap& attrs)
   {
     validateAttributes(attrs, _sValidAttributes);
-    _name = NCMLUtil::findAttrValue(attrs, "name", "");
+    _name = attrs.getValueForLocalNameOrDefault("name", "");
   }
 
   void

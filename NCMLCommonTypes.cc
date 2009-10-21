@@ -30,7 +30,5 @@
 
 namespace ncml_module
 {
-
-
 } // namespace ncml_module
 

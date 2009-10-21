@@ -70,12 +70,12 @@ namespace ncml_module
   }
 
   void
-  RemoveElement::setAttributes(const AttributeMap& attrs)
+  RemoveElement::setAttributes(const XMLAttributeMap& attrs)
   {
     validateAttributes(attrs, _sValidAttributes);
 
-    _name = NCMLUtil::findAttrValue(attrs, "name");
-    _type = NCMLUtil::findAttrValue(attrs, "type");
+    _name = attrs.getValueForLocalNameOrDefault("name");
+    _type = attrs.getValueForLocalNameOrDefault("type");
 
     // We do other validation on the actual values later, so no need here.
   }

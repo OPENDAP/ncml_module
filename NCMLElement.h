@@ -31,7 +31,7 @@
 
 #include <iostream>
 #include "RCObject.h"
-#include "SaxParser.h" // for AttrMap
+#include "XMLHelpers.h"
 #include <string>
 #include <vector>
 
@@ -83,7 +83,7 @@ namespace ncml_module
        * @param attrs the map of the attributes defined for the element
        * @param parser  the parser which is creating the element.
        */
-      RCPtr<NCMLElement> makeElement(const std::string& eltTypeName, const AttributeMap& attrs, NCMLParser& parser);
+      RCPtr<NCMLElement> makeElement(const std::string& eltTypeName, const XMLAttributeMap& attrs, NCMLParser& parser);
 
     private: // Interface
 
@@ -135,7 +135,7 @@ namespace ncml_module
     /** Set the attributes of this from the map.
      * @param attrs the attribute map to set this class to.
      */
-    virtual void setAttributes(const AttributeMap& attrs) = 0;
+    virtual void setAttributes(const XMLAttributeMap& attrs) = 0;
 
     /** Check that the given attributes are all in the valid set, otherwise
      * fill in *pInvalidAttrs with the problematic ones if it's not null.
@@ -143,7 +143,8 @@ namespace ncml_module
      * If throwOnError is set, we throw a parse error instead of returning.
      * @return whether all attributes are in the valid set if not throw
      */
-    virtual bool validateAttributes(const AttributeMap& attrs, const vector<string>& validAttrs,
+    virtual bool validateAttributes(const XMLAttributeMap& attrs,
+        const vector<string>& validAttrs,
         vector<string>* pInvalidAttrs = 0,
         bool printInvalid = true,
         bool throwOnError = true);
@@ -182,7 +183,9 @@ namespace ncml_module
     /** @return whether all the attributes in attrMap are in validAttrs.
      * If pInvalidAttributes, fill it in with all the illegal attributes.
      */
-    static bool areAllAttributesValid(const AttributeMap& attrMap, const std::vector<string>& validAttrs, std::vector<string>* pInvalidAttributes=0);
+    static bool areAllAttributesValid(const XMLAttributeMap& attrMap,
+        const std::vector<string>& validAttrs,
+        std::vector<string>* pInvalidAttributes=0);
 
   protected: // data rep
     NCMLParser* _parser;

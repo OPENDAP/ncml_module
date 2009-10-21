@@ -67,7 +67,7 @@ namespace ncml_module
     virtual ~DimensionElement();
     virtual const string& getTypeName() const;
     virtual DimensionElement* clone() const; // override clone with more specific subclass
-    virtual void setAttributes(const AttributeMap& attrs);
+    virtual void setAttributes(const XMLAttributeMap& attrs);
     virtual void handleBegin();
     virtual void handleContent(const string& content);
     virtual void handleEnd();

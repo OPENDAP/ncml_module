@@ -29,6 +29,7 @@
 #include "NCMLDebug.h"
 #include "NCMLParser.h"
 #include "OtherXMLParser.h"
+#include "XMLHelpers.h"
 
 namespace ncml_module
 {
@@ -78,43 +79,67 @@ OtherXMLParser::onEndDocument()
 }
 
 void
-OtherXMLParser::onStartElement(const std::string& name, const AttributeMap& attrs)
+OtherXMLParser::onStartElement(const std::string& name, const XMLAttributeMap& attrs)
 {
-  // Append this element and all its attributes onto the string
-  _otherXML += "<" + name;
+  appendOpenStartElementTag(name, "");
+  appendAttributes(attrs);
+  // no namespaces for this set of calls...  presumably in the attributes
+  appendCloseStartElementTag();
 
-  // If there's attributes, copy them in...
-  if (!attrs.empty())
-    {
-      for (AttributeMap::const_iterator it = attrs.begin();
-          it != attrs.end();
-          ++it)
-        {
-          _otherXML += ( string(" ") +
-                        it->first +
-                        "=\"" +
-                        it->second +
-                        "\"" );
-        }
-    }
-
-  _otherXML += ">";
-
-  ++_depth;
+  pushDepth();
 }
 
 void
 OtherXMLParser::onEndElement(const std::string& name)
 {
-  _otherXML += ( string("</") + name + ">" );
-  --_depth;
+  appendEndElementTag(name);
+  popDepth();
+}
 
-  // Check for underflow
-  if (_depth < 0)
+void
+OtherXMLParser::onStartElementWithNamespace(
+          const std::string& localname,
+          const std::string& prefix,
+          const std::string& /* uri */,
+          const XMLAttributeMap& attributes,
+          const XMLNamespaceMap& namespaces)
+{
+  appendOpenStartElementTag(localname, prefix);
+  appendAttributes(attributes);
+
+  // if a root element, grab ALL the namespaces from the parents since we will be
+  // disconnected from them and will lose the namespaces if not
+  if (_depth == 0)
     {
-      // I am not sure this is internal or user can cause it... making it internal for now...
-      THROW_NCML_INTERNAL_ERROR("OtherXMLElement::onEndElement: _depth < 0!  Logic error in parsing OtherXML.");
+      BESDEBUG("ncml", "Got depth 0 OtherXML element while parsing OtherXML attribute..." <<
+          " Pulling all un-shadowed ancestral namespaces into the element with localname=" <<
+          localname << endl);
+
+      // initialize it with the local node namespaces, since they
+      // take precedence over the stack
+      XMLNamespaceMap ancestralNamespaces(namespaces);
+      // then fill in the rest from the current stack
+      _rParser.getXMLNamespaceStack().getFlattenedNamespacesUsingLexicalScoping(ancestralNamespaces);
+      appendNamespaces(ancestralNamespaces);
     }
+  else // Append the ones local to JUST this element if not root
+    {
+      appendNamespaces(namespaces);
+    }
+
+  appendCloseStartElementTag();
+
+  pushDepth();
+}
+
+void
+OtherXMLParser::onEndElementWithNamespace(
+          const std::string& localname,
+          const std::string& prefix,
+          const std::string& /*uri*/)
+{
+   appendEndElementTag(XMLAttribute::getQName(prefix, localname));
+   popDepth();
 }
 
 void
@@ -138,4 +163,65 @@ OtherXMLParser::onParseError(std::string msg)
       "OtherXMLParser: got SAX parse error while parsing OtherXML.  Msg was: " + msg);
 }
 
+void
+OtherXMLParser::appendOpenStartElementTag(const std::string& localname, const std::string& prefix)
+{
+  // Append this element and all its attributes onto the string
+  _otherXML += string("<");
+  _otherXML += XMLAttribute::getQName(prefix, localname);
 }
+
+void
+OtherXMLParser::appendAttributes(const XMLAttributeMap& attributes)
+{
+  for (XMLAttributeMap::const_iterator it = attributes.begin();
+        it != attributes.end();
+        ++it)
+    {
+      _otherXML += ( string(" ") +
+          it->getQName() +
+          "=\"" +
+          it->value +
+          "\"" );
+    }
+}
+
+void
+OtherXMLParser::appendNamespaces(const XMLNamespaceMap& namespaces)
+{
+  _otherXML += namespaces.getAllNamespacesAsAttributeString();
+}
+
+void
+OtherXMLParser::appendCloseStartElementTag()
+{
+  _otherXML += ">";
+}
+
+void
+OtherXMLParser::appendEndElementTag(const string& qname)
+{
+  _otherXML += ( string("</") + qname + ">" );
+}
+
+void
+OtherXMLParser::pushDepth()
+{
+  ++_depth;
+}
+
+void
+OtherXMLParser::popDepth()
+{
+  --_depth;
+
+  // Check for underflow
+  if (_depth < 0)
+    {
+      // I am not sure this is internal or user can cause it... making it internal for now...
+      THROW_NCML_INTERNAL_ERROR("OtherXMLElement::onEndElement: _depth < 0!  Logic error in parsing OtherXML.");
+    }
+}
+
+
+} // namespace ncml_module

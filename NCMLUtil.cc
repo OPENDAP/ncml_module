@@ -136,22 +136,6 @@ namespace ncml_module
       }
   }
 
-
-  const std::string&
-  NCMLUtil::findAttrValue(const AttributeMap& map, const std::string& name, const std::string& def/*=""*/)
-  {
-    AttributeMap::const_iterator it = map.find(name);
-    if (it == map.end())
-      {
-        return def;
-      }
-    else
-      {
-        return (*it).second;
-      }
-  }
-
-
   /** Recursion helper:
    *  Recurse on the members of composite variable consVar and recursively add their AttrTables
    *  to the given dasTable for the container.

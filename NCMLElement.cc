@@ -27,7 +27,6 @@
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
 
-#include "NCMLCommonTypes.h"
 #include "NCMLDebug.h"
 #include "NCMLElement.h"
 #include "NCMLParser.h"
@@ -122,7 +121,7 @@ namespace ncml_module
 
 
   RCPtr<NCMLElement>
-  NCMLElement::Factory::makeElement(const string& eltTypeName, const AttributeMap& attrs, NCMLParser& parser)
+  NCMLElement::Factory::makeElement(const string& eltTypeName, const XMLAttributeMap& attrs, NCMLParser& parser)
   {
     ProtoList::const_iterator it = findPrototype(eltTypeName);
     if (it == _protos.end()) // not found
@@ -182,7 +181,7 @@ namespace ncml_module
   }
 
   bool
-  NCMLElement::validateAttributes(const AttributeMap& attrs,
+  NCMLElement::validateAttributes(const XMLAttributeMap& attrs,
                                   const vector<string>& validAttrs,
                                   vector<string>* pInvalidAttrs /* = 0 */,
                                   bool printInvalid /* = true */,
@@ -252,18 +251,20 @@ namespace ncml_module
   }
 
   bool
-  NCMLElement::areAllAttributesValid(const AttributeMap& attrMap, const std::vector<string>& validAttrs, std::vector<string>* pInvalidAttributes/*=0*/)
+  NCMLElement::areAllAttributesValid(const XMLAttributeMap& attrMap,
+      const std::vector<string>& validAttrs,
+      std::vector<string>* pInvalidAttributes/*=0*/)
   {
     if (pInvalidAttributes)
       {
         pInvalidAttributes->resize(0);
       }
     bool ret = true;
-    AttributeMap::const_iterator it;
-    AttributeMap::const_iterator endIt = attrMap.end();
+    XMLAttributeMap::const_iterator it;
+    XMLAttributeMap::const_iterator endIt = attrMap.end();
     for (it = attrMap.begin(); it != endIt; ++it)
       {
-        const string& attr = it->first;
+        const string& attr = it->localname;
         if (!isValidAttribute(validAttrs, attr))
           {
             ret = false;

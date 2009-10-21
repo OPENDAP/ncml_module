@@ -40,7 +40,6 @@ namespace libdap
 
 class BESDapResponse;
 
-#include "NCMLCommonTypes.h"
 #include <string>
 #include <vector>
 
@@ -104,17 +103,7 @@ namespace ncml_module
      */
     static void trimAll(std::vector<std::string>& tokens, const std::string& trimChars = WHITESPACE);
 
-
-    /** @brief Return the value of the given attribute from the map, else the given default.
-     * @param map  map to search
-     * @param name name of the attribute to find
-     * @param default  what to return if name not found
-     * @return the attribute value or default as a const reference.
-     */
-    static const std::string& findAttrValue(const AttributeMap& map, const std::string& name, const std::string& def="");
-
-
-     /** Given we have a valid attribute tree inside of the DDS, recreate it in the DAS.
+    /** Given we have a valid attribute tree inside of the DDS, recreate it in the DAS.
           @param das the das to clear and populate
           @param dds_const the source dds
       */

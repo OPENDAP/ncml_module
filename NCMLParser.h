@@ -42,6 +42,7 @@
 #include "NCMLElement.h" // NCMLElement::Factory
 #include "SaxParser.h" // interface superclass
 #include "ScopeStack.h"
+#include "XMLHelpers.h"
 
 //FDecls
 namespace libdap
@@ -170,13 +171,29 @@ public:
   /** Get the line of the NCML file the parser is currently parsing */
   int getParseLineNumber() const { return _currentParseLine; }
 
+  /** If using namespaces, get the current stack of namespaces. Might be empty. */
+  const XMLNamespaceStack& getXMLNamespaceStack() const { return _namespaceStack; }
+
   ////////////////////////////////////////////////////////////////////////////////
   // Interface SaxParser:  Wrapped calls from the libxml C SAX parser
 
   virtual void onStartDocument();
   virtual void onEndDocument();
-  virtual void onStartElement(const std::string& name, const AttributeMap& attrs);
+  virtual void onStartElement(const std::string& name, const XMLAttributeMap& attrs);
   virtual void onEndElement(const std::string& name);
+
+  virtual void onStartElementWithNamespace(
+        const std::string& localname ,
+        const std::string& prefix,
+        const std::string& uri,
+        const XMLAttributeMap& attributes,
+        const XMLNamespaceMap& namespaces);
+
+  virtual void onEndElementWithNamespace(
+        const std::string& localname,
+        const std::string& prefix,
+        const std::string& uri);
+
   virtual void onCharacters(const std::string& content);
   virtual void onParseWarning(std::string msg);
   virtual void onParseError(std::string msg);
@@ -447,7 +464,7 @@ private: //methods
   void clearElementStack();
 
   /** Helper call from onStartElement to do the work if we're not in OtherXML parsing state. */
-  void processStartNCMLElement(const std::string& name, const AttributeMap& attrs);
+  void processStartNCMLElement(const std::string& name, const XMLAttributeMap& attrs);
 
   /** Helper call from onEndElement to do the work if we're not in OtherXML parsing state. */
   void processEndNCMLElement(const std::string& name);
@@ -560,6 +577,11 @@ private: // data rep
   // scope we're in.  In other words, this stack will refer to the container where _pCurrTable is in the DDS.
   // if empty() then we're in global dataset scope (or no scope if not parsing location yet).
   ScopeStack _scope;
+
+  // Keeps track of the XMLNamespace's that come in with each new
+  // onStartElementWithNamespace and gets popped on
+  // onEndElementWithNamespace.
+  XMLNamespaceStack _namespaceStack;
 
   // If not null, we've temporarily stopped the normal NCML parse and are passing
   // all calls to this proxy until the element on the stack when it was added is

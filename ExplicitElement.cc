@@ -65,7 +65,7 @@ namespace ncml_module
   }
 
   void
-  ExplicitElement::setAttributes(const AttributeMap& attrs )
+  ExplicitElement::setAttributes(const XMLAttributeMap& attrs )
   {
     // make sure that none are specifed, basically.  We'll list them out in here if we get any
     // which is why this rather than check map size and throw.

@@ -96,13 +96,13 @@ namespace ncml_module
   }
 
   void
-  ValuesElement::setAttributes(const AttributeMap& attrs)
+  ValuesElement::setAttributes(const XMLAttributeMap& attrs)
   {
     validateAttributes(attrs, _sValidAttributes);
 
-    _start = NCMLUtil::findAttrValue(attrs, "start");
-    _increment = NCMLUtil::findAttrValue(attrs, "increment");
-    _separator = NCMLUtil::findAttrValue(attrs, "separator", ""); // empty means "not specified" and becoems whitesoace for all but string
+    _start = attrs.getValueForLocalNameOrDefault("start");
+    _increment = attrs.getValueForLocalNameOrDefault("increment");
+    _separator = attrs.getValueForLocalNameOrDefault("separator", ""); // empty means "not specified" and becoems whitesoace for all but string
 
     // Validate them... if _start is specified, then _increment must be as well!
     if (!_start.empty() && _increment.empty())

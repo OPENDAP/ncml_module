@@ -29,10 +29,14 @@
 #ifndef __NCML_MODULE__SAX_PARSER_H__
 #define __NCML_MODULE__SAX_PARSER_H__
 
-#include "NCMLCommonTypes.h"
+#include <string>
 
 namespace ncml_module
 {
+  // FDecls
+  class XMLAttributeMap;
+  class XMLNamespaceMap;
+
   /**
    * @brief Interface class for the wrapper between libxml C SAX parser and our NCMLParser.
    *
@@ -48,24 +52,52 @@ protected:
   SaxParser(); // Interface class
 
 public:
-
-
   virtual ~SaxParser() {};
 
   virtual void onStartDocument() = 0;
   virtual void onEndDocument() = 0;
 
-  /** Called at the start of the element with the given name and attribute dictionary
-    *  The args are only valid for the duration of the call, so copy if necessary to keep.
-    * @param name name of the element
-    * @param attrs a map of any attributes -> values.  Volatile for this call.
-    * */
-  virtual void onStartElement(const std::string& name, const AttributeMap& attrs) = 0;
+  /** @deprecated We are preferring onStartElementWithNamespace() now
+   *  Called at the start of the element with the given name and attribute dictionary
+   *  The args are only valid for the duration of the call, so copy if necessary to keep.
+   * @param name name of the element
+   * @param attrs a map of any attributes -> values.  Volatile for this call.
+   * @see onStartElementWithNamespace()
+   */
+  virtual void onStartElement(const std::string& name, const XMLAttributeMap& attrs) = 0;
 
-  /** Called at the end of the element with the given name.
+  /** @deprecated We are preferring onEndElementWithNamespace() now.
+   *   Called at the end of the element with the given name.
     *  The args are only valid for the duration of the call, so copy if necessary to keep.
-    * */
+    */
   virtual void onEndElement(const std::string& name) = 0;
+
+  /**
+   * SAX2 start element call with gets namespace information.
+   * @param localname the localname of the element
+   * @param prefix the namespace prefix of the element, or "" if none.
+   * @param uri the uri for the namespace of the element.
+   * @param attributes  table of the attributes (excluding namespace attributes
+   *                    prefixed with xmlns)
+   * @param namespace  table of all the namespaces specification on this element
+   * */
+
+  virtual void onStartElementWithNamespace(
+      const std::string& localname,
+      const std::string& prefix,
+      const std::string& uri,
+      const XMLAttributeMap& attributes,
+      const XMLNamespaceMap& namespaces) = 0;
+
+  /** SAX2 End element with namespace information.
+   * @param localname  the localname of the element
+   * @param prefix the namespace prefix or "" on the element
+   * @param uri  the uri (or "") associated with the namespace of the element.
+   */
+  virtual void onEndElementWithNamespace(
+      const std::string& localname,
+      const std::string& prefix,
+      const std::string& uri) = 0;
 
   /** Called when characters are encountered within an element.
    * content is only valid for the call duration.

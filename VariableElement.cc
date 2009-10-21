@@ -97,14 +97,14 @@ namespace ncml_module
   }
 
   void
-  VariableElement::setAttributes(const AttributeMap& attrs)
+  VariableElement::setAttributes(const XMLAttributeMap& attrs)
   {
     validateAttributes(attrs, _sValidAttributes);
 
-    _name = NCMLUtil::findAttrValue(attrs, "name");
-    _type = NCMLUtil::findAttrValue(attrs,"type", "");
-    _shape = NCMLUtil::findAttrValue(attrs, "shape", "");
-    _orgName = NCMLUtil::findAttrValue(attrs, "orgName", "");
+    _name = attrs.getValueForLocalNameOrDefault("name", "");
+    _type = attrs.getValueForLocalNameOrDefault("type", "");
+    _shape = attrs.getValueForLocalNameOrDefault("shape", "");
+    _orgName = attrs.getValueForLocalNameOrDefault("orgName", "");
   }
 
   void

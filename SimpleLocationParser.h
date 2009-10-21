@@ -31,6 +31,7 @@
 #define __NCML_MODULE__SIMPLE_LOCATION_PARSER_H__
 
 #include "SaxParser.h"
+#include "XMLHelpers.h"
 
 namespace ncml_module
 {
@@ -64,7 +65,7 @@ namespace ncml_module
     virtual void onEndDocument() {  }
 
     /** We only use this get the the nedcdf@location attribute out */
-    virtual void onStartElement(const std::string& name, const AttributeMap& attrs);
+    virtual void onStartElement(const std::string& name, const XMLAttributeMap& attrs);
 
     virtual void onEndElement(const std::string& /* name */) {  }
     virtual void onCharacters(const std::string& /* content */) {  };

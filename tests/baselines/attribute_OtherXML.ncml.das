@@ -1,6 +1,6 @@
 Attributes {
     OtherXML TestOtherXML "
-    <Domain xmlns=\"http://www.opengis.net/wcs/1.1\" xmlns:gml=\"http://www.opengis.net/gml/3.2\" xmlns:ows=\"http://www.opengis.net/ows/1.1\">
+    <Domain xmlns=\"http://www.opengis.net/wcs/1.1\" xmlns:ows=\"http://www.opengis.net/ows/1.1\" xmlns:gml=\"http://www.opengis.net/gml/3.2\">
       <SpatialDomain>
         <ows:BoundingBox crs=\"urn:ogc:def:crs:EPSG::4326\">
           <ows:LowerCorner>-97.8839 21.736</ows:LowerCorner>

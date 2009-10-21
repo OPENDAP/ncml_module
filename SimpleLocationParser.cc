@@ -58,11 +58,11 @@ SimpleLocationParser::parseAndGetLocation(const string& filename)
 }
 
 void
-SimpleLocationParser::onStartElement(const string& name, const AttributeMap& attrs)
+SimpleLocationParser::onStartElement(const string& name, const XMLAttributeMap& attrs)
 {
   if (name == "netcdf")
     {
-      _location = NCMLUtil::findAttrValue(attrs, "location");
+      _location = attrs.getValueForLocalNameOrDefault("location", "");
     }
 }
 

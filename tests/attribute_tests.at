@@ -49,6 +49,19 @@ dnl Check that having a non-empty value is an error for OtherXML type.  Don't
 dnl put your XML in there!!
 AT_RUN_BES_AND_MATCH([attribute_OtherXML_val_error.ncml],["ddx"],["ParseError"])
 
+dnl Test the new namespace flattern that pulls all ancestral namespaces into 
+dnl each root OtherXML element so it is namespace-closed when serialized.
+dnl From WCS example
+AT_CHECK_DDX([OtherXML_with_ancestral_namespace.ncml])
+
+dnl Another test to make sure multiple levels can contain a namespace and OtherXML
+dnl still serializes them all
+AT_CHECK_DDX([OtherXML_nested_namespaces.ncml])
+
+dnl Make sure that if a namespace is shadowed in a lower NCML element that it gets
+dnl properly shadowed in the namespace closure of the OtherXML roots.
+AT_CHECK_DDX([OtherXML_shadowed_namespace.ncml])
+
 dnl Select out just one field
 AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([nested_passthrough.ncml], [[ DATA_GRANULE.PlanetaryGrid.percipitate ]], [nested_passthrough_cons_1.ncml])
 

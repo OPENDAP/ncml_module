@@ -29,14 +29,10 @@
 #ifndef __NCML_MODULE__NCML_COMMON_TYPES_H__
 #define __NCML_MODULE__NCML_COMMON_TYPES_H__
 
-#include <map>
-#include <string>
-
 // A location for common typedefs we use throughout the module.
 namespace ncml_module
 {
-  /** A map of attribute anme to attribute values. */
-  typedef std::map<std::string, std::string> AttributeMap;
+  // TODO Currently unused, but could be soon, so I will leave it for now.
 } // namespace ncml_module
 
 #endif /* __NCML_MODULE__NCML_COMMON_TYPES_H__ */

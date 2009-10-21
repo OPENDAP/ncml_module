@@ -43,9 +43,15 @@
 #include "BESSyntaxUserError.h"
 #include "BESForbiddenError.h"
 #include "BESNotFoundError.h"
-#include "NCMLCommonTypes.h"
 #include "NCMLDebug.h"
 #include "SaxParser.h"
+#include "XMLHelpers.h"
+
+// Toggle to tell the parser to use the Sax2 start/end element
+// calls with namespace information.
+// [ TODO We probably want to remove the non-namespace pathways at some point,
+// but I will leave them here for now in case there's issues ]
+#define NCML_PARSER_USE_SAX2_NAMESPACES 1
 
 using namespace std;
 using namespace ncml_module;
@@ -53,27 +59,39 @@ using namespace ncml_module;
 ////////////////////////////////////////////////////////////////////////////////
 // Helpers
 
-// convert to a string... Might want a way around this.
-static string makeString(const xmlChar* chars)
+#if NCML_PARSER_USE_SAX2_NAMESPACES
+static const int SAX2_NAMESPACE_ATTRIBUTE_ARRAY_STRIDE = 5;
+static int toXMLAttributeMapWithNamespaces(XMLAttributeMap& attrMap, const xmlChar** attributes, int num_attributes)
 {
-  // HACK This cast might be dangerous, but since DAP specifies Strings and URL's are US-ASCII, this
-  // cast _should_ do the right thing.  xmlChar is an unsigned char now.
-  return string( reinterpret_cast<const char*>(chars) );
+  attrMap.clear();
+  for (int i=0; i<num_attributes; ++i)
+    {
+      XMLAttribute attr;
+      attr.fromSAX2NamespaceAttributes(attributes);
+      attributes += SAX2_NAMESPACE_ATTRIBUTE_ARRAY_STRIDE; // jump to start of next record
+      attrMap.addAttribute(attr);
+    }
+  return num_attributes;
 }
-
-// Empty then fill the map with <attribName.attribValue> pairs from attrs.
-static int toAttrMap(AttributeMap& map, const xmlChar** attrs)
+#else
+// Assumes the non-namespace calls, so attrs is stride 2 {name,value}
+static int toXMLAttributeMapNoNamespaces(XMLAttributeMap& attrMap, const xmlChar** attrs)
 {
-  map.clear();
+  attrMap.clear();
   int count=0;
   while (attrs && *attrs != NULL)
-  {
-    map.insert(make_pair<string,string>(makeString(*attrs), makeString(*(attrs+1))));
-    attrs += 2;
-    count++;
-  }
-  return count;
+    {
+      XMLAttribute attr;
+      attr.localname = XMLUtil::xmlCharToString(*attrs);
+      attr.value = XMLUtil::xmlCharToString(*(attrs+1));
+      attrMap.addAttribute(attr);
+      attrs += 2;
+      count++;
+    }
+    return count;
 }
+#endif // NCML_PARSER_USE_SAX2_NAMESPACES
+
 
 /////////////////////////////////////////////////////////////////////
 // Callback we will register that just pass on to our C++ engine
@@ -149,6 +167,8 @@ static void ncmlEndDocument(void* userData)
   END_SAFE_PARSER_BLOCK;
 }
 
+#if !NCML_PARSER_USE_SAX2_NAMESPACES
+
 static void ncmlStartElement(void *  userData,
     const xmlChar * name,
     const xmlChar ** attrs)
@@ -156,9 +176,9 @@ static void ncmlStartElement(void *  userData,
   // BESDEBUG("ncml", "ncmlStartElement called for:<" << name << ">" << endl);
   BEGIN_SAFE_PARSER_BLOCK(userData);
 
-  string nameS = makeString(name);
-  AttributeMap map;
-  toAttrMap(map, attrs);
+  string nameS = XMLUtil::xmlCharToString(name);
+  XMLAttributeMap map;
+  toXMLAttributeMapNoNamespaces(map, attrs);
 
   // These args will be valid for the scope of the call.
   parser.onStartElement(nameS, map);
@@ -171,11 +191,67 @@ static void ncmlEndElement(void *  userData,
 {
   BEGIN_SAFE_PARSER_BLOCK(userData);
 
-  string nameS = makeString(name);
+  string nameS = XMLUtil::xmlCharToString(name);
   parser.onEndElement(nameS);
 
   END_SAFE_PARSER_BLOCK;
 }
+#endif //  !NCML_PARSER_USE_SAX2_NAMESPACES
+
+#if NCML_PARSER_USE_SAX2_NAMESPACES
+static
+void
+ncmlSax2StartElementNs(void *userData,
+                       const xmlChar *localname,
+                       const xmlChar *prefix,
+                       const xmlChar *URI,
+                       int nb_namespaces,
+                       const xmlChar **namespaces,
+                       int nb_attributes,
+                       int /* nb_defaulted */,
+                       const xmlChar **attributes)
+{
+  // BESDEBUG("ncml", "ncmlStartElement called for:<" << name << ">" << endl);
+  BEGIN_SAFE_PARSER_BLOCK(userData);
+
+  XMLAttributeMap attrMap;
+  toXMLAttributeMapWithNamespaces(attrMap, attributes, nb_attributes);
+
+  XMLNamespaceMap nsMap;
+  nsMap.fromSAX2Namespaces(namespaces, nb_namespaces);
+
+  // These args will be valid for the scope of the call.
+  string localnameString = XMLUtil::xmlCharToString(localname);
+  string prefixString = XMLUtil::xmlCharToString(prefix);
+  string uriString = XMLUtil::xmlCharToString(URI);
+
+  parser.onStartElementWithNamespace(
+      localnameString,
+      prefixString,
+      uriString,
+      attrMap,
+      nsMap);
+
+  END_SAFE_PARSER_BLOCK;
+}
+
+static
+void
+ncmlSax2EndElementNs(void *userData,
+                     const xmlChar *localname,
+                     const xmlChar *prefix,
+                     const xmlChar *URI)
+{
+  BEGIN_SAFE_PARSER_BLOCK(userData);
+
+  string localnameString = XMLUtil::xmlCharToString(localname);
+  string prefixString = XMLUtil::xmlCharToString(prefix);
+  string uriString = XMLUtil::xmlCharToString(URI);
+  parser.onEndElementWithNamespace(localnameString, prefixString, uriString);
+
+  END_SAFE_PARSER_BLOCK;
+}
+#endif // NCML_PARSER_USE_SAX2_NAMESPACES
 
 static void ncmlCharacters(void* userData, const xmlChar* content, int len)
 {
@@ -344,34 +420,90 @@ SaxParserWrapper::getCurrentParseLine() const
     }
 }
 
+static void setAllHandlerCBToNulls(xmlSAXHandler& h)
+{
+  h.internalSubset = 0;
+  h.isStandalone = 0;
+  h.hasInternalSubset = 0;
+  h.hasExternalSubset = 0;
+  h.resolveEntity = 0;
+  h.getEntity = 0;
+  h.entityDecl = 0;
+  h.notationDecl = 0;
+  h.attributeDecl = 0;
+  h.elementDecl = 0;
+  h.unparsedEntityDecl = 0;
+  h.setDocumentLocator = 0;
+  h.startDocument = 0;
+  h.endDocument = 0;
+  h.startElement = 0;
+  h.endElement = 0;
+  h.reference = 0;
+  h.characters = 0;
+  h.ignorableWhitespace = 0;
+  h.processingInstruction = 0;
+  h.comment = 0;
+  h.warning = 0;
+  h.error = 0;
+  h.fatalError = 0;
+  h.getParameterEntity = 0;
+  h.cdataBlock = 0;
+  h.externalSubset = 0;
+
+  // unsigned int initialized; magic number the init should fill in
+  /* The following fields are extensions available only on version 2 */
+  // void *_private; //i'd assume i don't set this either...
+
+  h.startElementNs = 0;
+  h.endElementNs = 0;
+  h.serror = 0;
+}
+
 void
 SaxParserWrapper::setupParser(const string& filename)
 {
+  // setup the handler for version 2,
+  // which sets an internal version magic number
+  // into _handler.initialized
+  // but which doesn't clear the handlers to 0.
+  xmlSAXVersion(&_handler, 2);
+
+  // Initialize all handlers to 0 by hand to start
+  // so we don't blow those internal magic numbers.
+  setAllHandlerCBToNulls(_handler);
+
   // Put our static functions into the handler
   _handler.startDocument = ncmlStartDocument;
   _handler.endDocument = ncmlEndDocument;
-  _handler.startElement = ncmlStartElement;
-  _handler.endElement = ncmlEndElement;
   _handler.warning = ncmlWarning;
   _handler.error = ncmlFatalError;
   _handler.fatalError = ncmlFatalError;
   _handler.characters = ncmlCharacters;
 
-  // Create the parser context for the file
+  // We'll use one or the other until we're sure it works.
+#if NCML_PARSER_USE_SAX2_NAMESPACES
+  _handler.startElement = 0;
+  _handler.endElement = 0;
+  _handler.startElementNs = ncmlSax2StartElementNs;
+  _handler.endElementNs = ncmlSax2EndElementNs;
+#else
+  _handler.startElement = ncmlStartElement;
+  _handler.endElement = ncmlEndElement;
+  _handler.startElementNs = 0;
+  _handler.endElementNs = 0;
+#endif // NCML_PARSER_USE_SAX2_NAMESPACES
+
+  // Create the non-validating parser context for the file
+  // using this as the userData for making exception-safe
+  // C++ calls.
   _context = xmlCreateFileParserCtxt(filename.c_str());
   if (!_context)
     {
       THROW_NCML_PARSE_ERROR(-1,
           "Cannot parse: Unable to create a libxml parse context for " + filename);
     }
-
-  // Tell the context what handlers to use
   _context->sax = &_handler;
-
-  // All callbacks should come back with this.
   _context->userData = this;
-
-  // Don't validate
   _context->validate = false;
 }
 

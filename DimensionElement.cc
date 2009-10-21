@@ -95,14 +95,14 @@ namespace ncml_module
   }
 
   void
-  DimensionElement::setAttributes(const AttributeMap& attrs)
+  DimensionElement::setAttributes(const XMLAttributeMap& attrs)
   {
-    _dim.name = NCMLUtil::findAttrValue(attrs, "name");
-    _length = NCMLUtil::findAttrValue(attrs, "length");
-    _orgName = NCMLUtil::findAttrValue(attrs, "orgName");
-    _isUnlimited = NCMLUtil::findAttrValue(attrs, "isUnlimited");;
-    _isShared = NCMLUtil::findAttrValue(attrs, "isShared");;
-    _isVariableLength = NCMLUtil::findAttrValue(attrs, "isVariableLength");
+    _dim.name = attrs.getValueForLocalNameOrDefault("name");
+    _length = attrs.getValueForLocalNameOrDefault("length");
+    _orgName = attrs.getValueForLocalNameOrDefault("orgName");
+    _isUnlimited = attrs.getValueForLocalNameOrDefault("isUnlimited");;
+    _isShared = attrs.getValueForLocalNameOrDefault("isShared");;
+    _isVariableLength = attrs.getValueForLocalNameOrDefault("isVariableLength");
 
     // First check that we didn't get any typos...
     validateAttributes(attrs, _sValidAttributes);

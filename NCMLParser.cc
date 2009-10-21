@@ -44,7 +44,6 @@
 #include <Structure.h>
 #include <map>
 #include <memory>
-#include "NCMLCommonTypes.h"
 #include "NCMLDebug.h"
 #include "NCMLElement.h"
 #include "NCMLUtil.h"
@@ -85,6 +84,7 @@ NCMLParser::NCMLParser(DDSLoader& loader)
 , _pCurrentTable(0)
 , _elementStack()
 , _scope()
+, _namespaceStack()
 , _pOtherXMLParser(0)
 , _currentParseLine(NO_CURRENT_PARSE_LINE_NUMBER)
 {
@@ -156,7 +156,7 @@ NCMLParser::onEndDocument()
 }
 
 void
-NCMLParser::onStartElement(const std::string& name, const AttributeMap& attrs)
+NCMLParser::onStartElement(const std::string& name, const XMLAttributeMap& attrs)
 {
   // If we have a proxy set for OtherXML, pass calls there.
   if (isParsingOtherXML())
@@ -221,6 +221,69 @@ NCMLParser::onEndElement(const std::string& name)
     {
       // Call the regular NCMLElement end element.
       processEndNCMLElement(name);
+    }
+}
+
+void
+NCMLParser::onStartElementWithNamespace(
+        const std::string& localname ,
+        const std::string& prefix,
+        const std::string& uri,
+        const XMLAttributeMap& attributes,
+        const XMLNamespaceMap& namespaces)
+{
+  // If we have a proxy set for OtherXML, pass calls there.
+    if (isParsingOtherXML())
+      {
+        VALID_PTR(_pOtherXMLParser);
+        _pOtherXMLParser->onStartElementWithNamespace(localname,
+            prefix,
+            uri,
+            attributes,
+            namespaces);
+      }
+    else // Otherwise do the standard NCML parse
+      // but keep the namespaces on the stack.  We don't do this for OtherXML.
+      {
+        _namespaceStack.push(namespaces);
+        processStartNCMLElement(localname, attributes);
+      }
+}
+
+void
+NCMLParser::onEndElementWithNamespace(
+        const std::string& localname,
+        const std::string& prefix,
+        const std::string& uri)
+{
+  NCMLElement* elt = getCurrentElement();
+  VALID_PTR(elt);
+
+  // First, handle the OtherXML proxy parsing case
+  if (isParsingOtherXML())
+    {
+      VALID_PTR(_pOtherXMLParser);
+      // If we're closing the element that caused the OtherXML parse...
+      if (shouldStopOtherXMLParse(elt, localname, *_pOtherXMLParser))
+        {
+          // Then we want to clear the proxy from this and
+          // call the end on the top of the element stack.
+          // We assume it has access to the OtherXML parser
+          // and will use the data.
+          _pOtherXMLParser = 0;
+          processEndNCMLElement(localname);
+        }
+      else
+        {
+          // Pass through to proxy
+          _pOtherXMLParser->onEndElementWithNamespace(localname, prefix, uri);
+        }
+    }
+  else // Do the regular NCMLElement call.
+    {
+      // Call the regular NCMLElement end element.
+      processEndNCMLElement(localname);
+      _namespaceStack.pop();
     }
 }
 
@@ -452,6 +515,8 @@ NCMLParser::resetParseState()
 
   // Cleanup any memory in the _elementStack
   clearElementStack();
+
+  _namespaceStack.clear();
 
   // just in case
   _loader.cleanup();
@@ -1041,7 +1106,7 @@ NCMLParser::popElement()
   // Drop the ref count.  If that forced a delete, print out the saved string.
   if (elt->unref() == 0)
     {
-      BESDEBUG("ncml", "NCMLParser::popElement: ref count hit 0 so we deleted element=" << infoOnDeletedDude << endl);
+      BESDEBUG("ncml:memory", "NCMLParser::popElement: ref count hit 0 so we deleted element=" << infoOnDeletedDude << endl);
     }
 }
 
@@ -1072,7 +1137,7 @@ NCMLParser::clearElementStack()
 }
 
 void
-NCMLParser::processStartNCMLElement(const std::string& name, const AttributeMap& attrs)
+NCMLParser::processStartNCMLElement(const std::string& name, const XMLAttributeMap& attrs)
 {
   // Store it in a shared ptr in case this function exceptions before we store it in the element stack.
   RCPtr<NCMLElement> elt = _elementFactory.makeElement(name, attrs, *this);

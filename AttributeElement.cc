@@ -79,13 +79,13 @@ namespace ncml_module
   }
 
   void
-  AttributeElement::setAttributes(const AttributeMap& attrs )
+  AttributeElement::setAttributes(const XMLAttributeMap& attrs )
   {
-    _name = NCMLUtil::findAttrValue(attrs, "name");
-    _type = NCMLUtil::findAttrValue(attrs,"type");
-    _value = NCMLUtil::findAttrValue(attrs, "value");
-    _separator = NCMLUtil::findAttrValue(attrs, "separator", ""); // empty is unspecified...  whitespace if not string
-    _orgName = NCMLUtil::findAttrValue(attrs, "orgName");
+    _name = attrs.getValueForLocalNameOrDefault("name");
+    _type = attrs.getValueForLocalNameOrDefault("type");
+    _value = attrs.getValueForLocalNameOrDefault("value");
+    _separator = attrs.getValueForLocalNameOrDefault("separator");
+    _orgName = attrs.getValueForLocalNameOrDefault("orgName");
 
     validateAttributes(attrs, _sValidAttributes);
   }

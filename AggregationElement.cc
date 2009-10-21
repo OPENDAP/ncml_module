@@ -115,11 +115,11 @@ namespace ncml_module
   }
 
   void
-  AggregationElement::setAttributes(const AttributeMap& attrs)
+  AggregationElement::setAttributes(const XMLAttributeMap& attrs)
   {
-    _type = NCMLUtil::findAttrValue(attrs,"type", "");
-    _dimName = NCMLUtil::findAttrValue(attrs, "dimName", "");
-    _recheckEvery = NCMLUtil::findAttrValue(attrs, "recheckEvery", "");
+    _type = attrs.getValueForLocalNameOrDefault("type", "");
+    _dimName = attrs.getValueForLocalNameOrDefault("dimName", "");
+    _recheckEvery = attrs.getValueForLocalNameOrDefault("recheckEvery", "");
 
     // default is to print errors and throw which we want.
     validateAttributes(attrs, _sValidAttrs);

@@ -76,14 +76,49 @@ namespace ncml_module
     virtual void onEndDocument();
 
     // This is the main calls, they just keep consing up a string with all the XML in it.
-    virtual void onStartElement(const std::string& name, const AttributeMap& attrs);
+    virtual void onStartElement(const std::string& name, const XMLAttributeMap& attrs);
     virtual void onEndElement(const std::string& name);
     virtual void onCharacters(const std::string& content);
+
+    virtual void onStartElementWithNamespace(
+           const std::string& localname ,
+           const std::string& prefix,
+           const std::string& uri,
+           const XMLAttributeMap& attributes,
+           const XMLNamespaceMap& namespaces);
+
+     virtual void onEndElementWithNamespace(
+           const std::string& localname,
+           const std::string& prefix,
+           const std::string& uri);
 
     // Implemented to add explanation that the error occured
     // within the OtherXML parse and not the NCMLParser.
     virtual void onParseWarning(std::string msg);
     virtual void onParseError(std::string msg);
+
+  private: // helpers
+
+    // Add "<prefix:localname " or "<localname " to _otherXML
+    void appendOpenStartElementTag(const std::string& localname, const std::string& prefix);
+
+    // For each attribute in attributes, append it to _otherXML
+    void appendAttributes(const XMLAttributeMap& attributes);
+
+    // For each namespace in XMLNamespaceMap, append it to  _otherXML
+    void appendNamespaces(const XMLNamespaceMap& namespaces);
+
+    // Append ">" since we don't handle self-closing via sax
+    void appendCloseStartElementTag();
+
+    // Append a </qname> to _otherXML
+    void appendEndElementTag(const string& qname);
+
+    // Increase the depth
+    void pushDepth();
+
+    // Decrease the depth checking for underflow and throw internal exception if so.
+    void popDepth();
 
   private: // Data rep
     NCMLParser& _rParser; // ref to the enclosing parser so we can get to its state if need be.

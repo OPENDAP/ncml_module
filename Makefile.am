@@ -49,7 +49,8 @@ NCML_SRCS = \
 		SimpleLocationParser.cc \
 		ValuesElement.cc \
 		VariableAggElement.cc \
-		VariableElement.cc
+		VariableElement.cc \
+		XMLHelpers.cc 
 
 NCML_HDRS = \
 		AggregationElement.h \
@@ -83,7 +84,8 @@ NCML_HDRS = \
 		SimpleLocationParser.h \
 		ValuesElement.h \
 		VariableAggElement.h \
-		VariableElement.h 
+		VariableElement.h \
+		XMLHelpers.h
 
 libncml_module_la_SOURCES = $(NCML_SRCS) $(BES_SRCS) $(NCML_HDRS) $(BES_HDRS)
 libncml_module_la_CPPFLAGS = $(BES_CPPFLAGS)
