@@ -29,6 +29,7 @@
 #ifndef __NCML_MODULE__RENAMED_ARRAY_WRAPPER_H__
 #define __NCML_MODULE__RENAMED_ARRAY_WRAPPER_H__
 
+#include "config.h"
 #include <Array.h>
 #include <vector>
 using std::vector;
@@ -58,13 +59,6 @@ namespace ncml_module
    * which will retain its original name for purposes of read(), but will be forced
    * to use the new name when serializing.
    *
-   * The only data of this class which will be valid will be the name (the new name) and the
-   * constraints (i.e. _dims).  Since the add_constraint() is not virtual,
-   * we are forced to maintain them in this and propagate them to the wrapped class
-   * when read() is called.
-   *
-   * @todo When the bugs in NCArray::set_name are fixed and all other handlers known to work with set_name,
-   * we can eliminate the need for this class.
    */
   class RenamedArrayWrapper : public libdap::Array
   {
@@ -83,6 +77,12 @@ namespace ncml_module
     RenamedArrayWrapper& operator=(const RenamedArrayWrapper& rhs);
 
     // OVERRIDES OF ALL VIRTUALS!
+
+    virtual void add_constraint(Dim_iter i, int start, int stride, int stop);
+    virtual void reset_constraint();
+
+    /** @deprecated */
+    virtual void clear_constraint();
 
     virtual string toString();
     virtual string toString() const;
@@ -124,18 +124,26 @@ namespace ncml_module
     virtual bool check_semantics(string &msg, bool all = false);
     virtual bool ops(BaseType *b, int op);
 
+#if FILE_METHODS // from BaseType.h, whether we include FILE* methods
     virtual void print_decl(FILE *out, string space = "    ",
         bool print_semi = true,
         bool constraint_info = false,
         bool constrained = false);
+    virtual void print_xml(FILE *out, string space = "    ",
+            bool constrained = false);
+    virtual void print_val(FILE *out, string space = "",
+            bool print_decl_p = true);
+#endif // FILE_METHODS
+
     virtual void print_decl(ostream &out, string space = "    ",
         bool print_semi = true,
         bool constraint_info = false,
         bool constrained = false);
-    virtual void print_xml(FILE *out, string space = "    ",
-        bool constrained = false);
     virtual void print_xml(ostream &out, string space = "    ",
         bool constrained = false);
+    virtual void print_val(ostream &out, string space = "",
+        bool print_decl_p = true);
+
 
     virtual unsigned int width();
     virtual unsigned int buf2val(void **val);
@@ -145,11 +153,6 @@ namespace ncml_module
     virtual bool serialize(ConstraintEvaluator &eval, DDS &dds,
         Marshaller &m, bool ce_eval = true);
     virtual bool deserialize(UnMarshaller &um, DDS *dds, bool reuse = false);
-
-    virtual void print_val(FILE *out, string space = "",
-        bool print_decl_p = true);
-    virtual void print_val(ostream &out, string space = "",
-        bool print_decl_p = true);
 
     virtual bool set_value(dods_byte *val, int sz);
     virtual bool set_value(vector<dods_byte> &val, int sz);
@@ -192,7 +195,15 @@ namespace ncml_module
     /** Set the wrapped array to have name() == this->_orgName for now */
     void withOrgName();
 
-    /** Force the local shape into the wrapped array */
+    /** Force the local shape (including constraints) into the wrapped array.
+     * We use this helper in almost every function, but feel this is OK
+     * since it's:
+     * 1) Easier to maintain (not dealing with making many Array funcs
+     *    virtual and keeping state in sync that way
+     * 2) We don't expect that the syncing will really take that long
+     *    compared to other calls and should amortize
+     * 3) It's not clear how often this class will be used.
+     **/
     void syncConstraints() const { const_cast<RenamedArrayWrapper*>(this)->syncConstraints(); }
     void syncConstraints();
 

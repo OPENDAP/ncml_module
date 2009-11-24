@@ -97,6 +97,33 @@ namespace ncml_module
   ////////////////////////////////////////////////////////////////////////////////////////////////////////
   /// Wrappers
 
+  void
+  RenamedArrayWrapper::add_constraint(Dim_iter i, int start, int stride, int stop)
+  {
+    // Make sure the dimensions all match before we add and resync.
+    syncConstraints();
+    Array::add_constraint(i, start, stride, stop);
+    syncConstraints();
+  }
+
+  void
+  RenamedArrayWrapper::reset_constraint()
+  {
+    // must keep our copy and the wrappee in sync since
+    // they could be used at both levels.
+    Array::reset_constraint();
+    syncConstraints(); // make sure dims all match
+    _pArray->reset_constraint();
+  }
+
+  void
+  RenamedArrayWrapper::clear_constraint()
+  {
+    Array::clear_constraint();
+    syncConstraints(); // make dims match
+    _pArray->clear_constraint();
+  }
+
   string
   RenamedArrayWrapper::toString()
   {
@@ -254,25 +281,13 @@ namespace ncml_module
     return _pArray->ops(b, op);
   }
 
+#if FILE_METHODS // from libdap/BaseType.h, whether to include FILE* methods
   void
   RenamedArrayWrapper::print_decl(FILE *out,
       string space /* = "    "*/,
       bool print_semi /* = true*/,
       bool constraint_info /* = false*/,
       bool constrained /* = false */)
-  {
-    syncConstraints();
-    withNewName();
-    _pArray->print_decl(out, space, print_semi, constraint_info, constrained);
-    withOrgName();
-  }
-
-  void
-  RenamedArrayWrapper::print_decl(ostream &out,
-      string space /* = "    "*/,
-      bool print_semi /* = true*/,
-      bool constraint_info /* = false*/,
-      bool constrained /* = false*/)
   {
     syncConstraints();
     withNewName();
@@ -288,6 +303,32 @@ namespace ncml_module
     syncConstraints();
     withNewName();
     _pArray->print_xml(out, space, constrained);
+    withOrgName();
+  }
+
+
+  void
+  RenamedArrayWrapper::print_val(FILE *out,
+      string space /* = ""*/,
+      bool print_decl_p /* = true*/)
+  {
+    syncConstraints();
+    withNewName();
+    print_val(out, space, print_decl_p);
+    withOrgName();
+  }
+#endif // FILE_METHODS
+
+  void
+  RenamedArrayWrapper::print_decl(ostream &out,
+      string space /* = "    "*/,
+      bool print_semi /* = true*/,
+      bool constraint_info /* = false*/,
+      bool constrained /* = false*/)
+  {
+    syncConstraints();
+    withNewName();
+    _pArray->print_decl(out, space, print_semi, constraint_info, constrained);
     withOrgName();
   }
 
@@ -321,18 +362,6 @@ namespace ncml_module
   {
     syncConstraints();
     return _pArray->val2buf(val, reuse);
-  }
-
-
-  void
-  RenamedArrayWrapper::print_val(FILE *out,
-      string space /* = ""*/,
-      bool print_decl_p /* = true*/)
-  {
-    syncConstraints();
-    withNewName();
-    print_val(out, space, print_decl_p);
-    withOrgName();
   }
 
   void
@@ -624,8 +653,6 @@ namespace ncml_module
   void
   RenamedArrayWrapper::syncConstraints()
   {
-    // Grr, I wish the _shape was protected or add_constraint was virtual...  This makes it harder...
-
     // First see if the number of dimensions is correct.  We may not need to bother with this,
     // just constraint propagation
     if (_pArray->dimensions() != dimensions())
@@ -642,7 +669,10 @@ namespace ncml_module
          Array::dimension& wrapDim = *wrapIt;
          wrapDim = thisDim; // copy them!
       }
-    _pArray->update_length(this->length());
+    // this calculates it's length fine, then set it to the wrapped
+    // since it has no way to know we changed the dimensions...
+    update_length(this->length());
+    _pArray->set_length(this->length());
     NCML_ASSERT_MSG(this->length() == _pArray->length(), "RenamedArrayWrapper::syncConstraints(): length() of this and wrapped do not match!!");
   }
 }
