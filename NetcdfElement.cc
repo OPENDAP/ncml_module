@@ -35,9 +35,11 @@
 #include "NCMLDebug.h"
 #include "NCMLParser.h"
 #include "NCMLUtil.h"
+#include <sstream>
 
 using namespace std;
 using libdap::DDS;
+using agg_util::DDSLoader;
 
 namespace ncml_module
 {
@@ -57,6 +59,7 @@ namespace ncml_module
   , _fmrcDefinition("")
   , _gotMetadataDirective(false)
   , _weOwnResponse(false)
+  , _loaded(false)
   , _response(0)
   , _aggregation(0)
   , _parentAgg(0)
@@ -76,6 +79,7 @@ namespace ncml_module
   , _fmrcDefinition(proto._fmrcDefinition)
   , _gotMetadataDirective(false)
   , _weOwnResponse(false)
+  , _loaded(false)
   , _response(0)
   , _aggregation(0)
   , _parentAgg(0) // we can't really set this to the proto one or we break an invariant...
@@ -149,9 +153,6 @@ namespace ncml_module
     _coordValue = attrs.getValueForLocalNameOrDefault("coordValue");
     _fmrcDefinition = attrs.getValueForLocalNameOrDefault("fmrcDefinition");
 
-    // If any attributes were specified that we don't support in this version, throw a parse error
-    // Note: We can't throw here if we're not in an aggregation context, can we?  Need the parser.
-    // @TODO Just add the parser to NCMLElement and set on creation as a backpointer so as not to keep passing it....
     throwOnUnsupportedAttributes();
   }
 
@@ -172,12 +173,15 @@ namespace ncml_module
     // If this is the root, it also needs to set up our response!!
     p.pushCurrentDataset(this);
 
+#if 0 // we now will lazy evaluate these...
     // Use the loader to load the location specified in the <netcdf> element.
     // If not found, this call will throw an exception and we'll just unwind out.
     if (!_location.empty())
       {
-        loadLocation(p);
+        loadLocation();
       }
+#endif
+
   }
 
   void
@@ -202,6 +206,13 @@ namespace ncml_module
             "Got close of <netcdf> node while not within one!");
       }
 
+    // If we had an aggregation, we must tell it to finish any post-processing that
+    // it needs to do to make the aggregations correct (like add Grid map vectors
+    // for new dimensions)
+    if (_aggregation.get())
+      {
+        _aggregation->processParentDatasetComplete();
+      }
     // Tell the parser to close the current dataset and figure out what the new current one is!
     // We pass our ptr to make sure that we're the current one to avoid logic bugs!!
     _parser->popCurrentDataset(this);
@@ -229,6 +240,12 @@ namespace ncml_module
   libdap::DDS*
   NetcdfElement::getDDS() const
   {
+    // lazy eval loading the dds
+    if (!_loaded)
+      {
+        const_cast<NetcdfElement*>(this)->loadLocation();
+      }
+
     if (_response)
       {
         return NCMLUtil::getDDSFromEitherResponse(_response);
@@ -287,13 +304,13 @@ namespace ncml_module
     vector<DimensionElement*>::const_iterator endIt = _dimensions.end();
     for (vector<DimensionElement*>::const_iterator it = _dimensions.begin(); it != endIt; ++it)
       {
-      const DimensionElement* pElt = *it;
-      VALID_PTR(pElt);
-      if (pElt->name() == name)
-        {
-        ret = pElt;
-        break;
-        }
+        const DimensionElement* pElt = *it;
+        VALID_PTR(pElt);
+        if (pElt->name() == name)
+          {
+            ret = pElt;
+            break;
+          }
       }
     return ret;
   }
@@ -401,14 +418,74 @@ namespace ncml_module
     _parentAgg = parent;
   }
 
+
+#if 0 // not sure we need this yet...
+  template <typename T>
+  int
+  NetcdfElement::getCoordValueVector(vector<T>& values) const
+  {
+    // clear it out just in case.
+    values.resize(0);
+
+    // first, tokenize into strings
+    vector<string> tokens;
+    int numToks = NCMLUtil::tokenize(_coordValue, tokens, NCMLUtil::WHITESPACE);
+    values.reserve(numToks);
+
+    for (int i=0; i<numToks; ++i)
+      {
+        stringstream iss(tokens[i]);
+        T val;
+        iss >> val;
+        if (iss.fail())
+          {
+            THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+                "NetcdfElement::getCoordValueVector(): "
+                "Could not parse the token \"" + tokens[i] + "\""
+                " into the required data type.");
+          }
+        else
+          {
+            values.push_back(val);
+          }
+      }
+  }
+#endif
+
+  bool
+  NetcdfElement::getCoordValueAsDouble(double& val) const
+  {
+    if (_coordValue.empty())
+      {
+        return false;
+      }
+
+    std::istringstream iss(_coordValue);
+    double num;
+    iss >> num;
+    // eof() to make sure we parsed it all.  >> can stop early on malformedness.
+    if (iss.fail() || !iss.eof() )
+      {
+        return false;
+      }
+    else
+      {
+        val = num;
+        return true;
+      }
+  }
+
+
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /// Private Impl
 
   void
-  NetcdfElement::loadLocation(NCMLParser& p)
+  NetcdfElement::loadLocation()
   {
     if (_location.empty())
       {
+        // nothing to load, so we're loaded I guess.
+        _loaded = true;
         return;
       }
 
@@ -418,7 +495,11 @@ namespace ncml_module
 
     // Use the loader to load the location
     // If not found, this call will throw an exception and we'll just unwind out.
-     p.loadLocation(_location, p._responseType, _response);
+     if (_parser)
+      {
+         _parser->loadLocation(_location, _parser->_responseType, _response);
+         _loaded = true;
+      }
   }
 
   void
@@ -442,11 +523,8 @@ namespace ncml_module
         THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
             msgStart + "ncoords" + msgEnd);
       }
-    if (!_coordValue.empty())
-      {
-        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
-            msgStart + "coordValue" + msgEnd);
-      }
+
+    // not until fmrc
     if (!_fmrcDefinition.empty())
       {
          THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
@@ -460,21 +538,15 @@ namespace ncml_module
     vector<string> validAttrs;
     validAttrs.reserve(9);
 
-    // We don't parse or deal with this at all, but people can specify it for their validating editors,
-    // so let it through.
-    validAttrs.push_back("xmlns");
-
     validAttrs.push_back("location");
     validAttrs.push_back("id");
     validAttrs.push_back("title");
     validAttrs.push_back("enhance");
     validAttrs.push_back("addRecords");
-
     // following only valid inside aggregation, will need to test for that later.
     validAttrs.push_back("ncoords");
     validAttrs.push_back("coordValue");
     validAttrs.push_back("fmrcDefinition");
-
 
     return validAttrs;
   }

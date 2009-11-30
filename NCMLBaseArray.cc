@@ -193,7 +193,7 @@ namespace ncml_module
         delete _currentConstraints; _currentConstraints = 0;
       }
     _currentConstraints = new Shape(*this);
-    BESDEBUG("ncml", "NCMLBaseArray: Cached current constraints:" << (*_currentConstraints) << endl);
+    //BESDEBUG("ncml", "NCMLBaseArray: Cached current constraints:" << (*_currentConstraints) << endl);
   }
 
 
@@ -210,7 +210,7 @@ namespace ncml_module
     _noConstraints = new Shape(*this);
     _noConstraints->setToUnconstrained();
 
-    BESDEBUG("ncml", "NCMLBaseArray: cached unconstrained shape=" << (*_noConstraints) << endl);
+    //BESDEBUG("ncml", "NCMLBaseArray: cached unconstrained shape=" << (*_noConstraints) << endl);
   }
 
   void

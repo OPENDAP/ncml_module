@@ -3,4 +3,6 @@ Attributes {
     }
     V_expected {
     }
+    day {
+    }
 }

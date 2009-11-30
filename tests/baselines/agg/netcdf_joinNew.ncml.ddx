@@ -77,6 +77,10 @@ xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/d
         <Float32/>
         <dimension name="time" size="16"/>
     </Array>
+    <Array name="source">
+        <String/>
+        <dimension name="source" size="3"/>
+    </Array>
 
     <dataBLOB href=""/>
 </Dataset>

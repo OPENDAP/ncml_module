@@ -31,7 +31,11 @@
 
 #include <memory>
 #include <string>
+
+// libdap
+#include "Array.h"
 #include "BaseType.h" // need the Type enum...
+
 
 namespace libdap
 {
@@ -90,8 +94,12 @@ namespace ncml_module
     /** Make an Array<T> where T is the DAP simpel type for the values in the Array.
      * This creates the proper template class of NCMLArray<T> now rather than Array so we can handle
      * constraints.
+     * @param type the parameterized name of the Array type, e.g. "Array<String>",
+     *             Attay<UInt32>, etc.
+     * @param name the name to give the new Array
+     * @param addTemplateVar  whether to create and add the template var so that var() is non-null.
      */
-    static std::auto_ptr<libdap::BaseType> makeArrayTemplateVariable(const string& type, const string& name);
+    static std::auto_ptr<libdap::Array> makeArrayTemplateVariable(const string& type, const string& name, bool addTemplateVar);
 
 
   private: //data rep

@@ -83,6 +83,7 @@ namespace ncml_module
     const string& location() const { return _location; }
     const string& id() const { return _id; }
     const string& title() const { return _title; }
+    const string& coordValue() const { return _coordValue; }
 
     /**
      * @return whether this is initialized properly and ready to be used.
@@ -121,7 +122,7 @@ namespace ncml_module
      * to create a dynamic response object of the given type.
      * This call or borrowResponseObject() must be called before this is used.
      */
-    void createResponseObject(DDSLoader::ResponseType type);
+    void createResponseObject(agg_util::DDSLoader::ResponseType type);
 
     /**
      * @return the DimensionElement with the given name in the
@@ -182,10 +183,35 @@ namespace ncml_module
     /** Set my parent AggregationElement to parent. This is a weak reference.  */
     void setParentAggregation(AggregationElement* parent);
 
+
+#if 0 // not sure we need this yet
+    /**
+     * Assuming whitespace separated tokens, parse the tokens in _coordValue attribute
+     * into the vector of values of the given type T.
+     * If _coordValue.empty(), then values.size() == 0.
+     * @param values the vector to parse the coordValue attribute into.
+     * @return the number of values added (ie values.size() )
+     * @exception will throw a parse error if the values cannot be parsed as the
+     *  given type T.
+     */
+    template <typename T> int getCoordValueVector(vector<T>& values) const;
+#endif
+
+    /**
+     * Parse the netcdf@coordValue attribute as a double.
+     * If successful, put the value in val and return true.
+     * If unsuccessful, val is unchanged and false is returned.
+     * ASSUMES: there is only ONE token in the coordValue field.
+     * TODO: look into loading multiple values later as needed.
+     * @param val  output the parsed value here if possible
+     * @return whether the parse was successful
+     */
+    bool getCoordValueAsDouble(double& val) const;
+
   private:
 
     /** Ask the parser to load our location into our response object. */
-    void loadLocation(NCMLParser& p);
+    void loadLocation();
 
     /** Check the value of the attribute fields and if any are
      * !empty() that we don't support, throw a parse error to tell the author.
@@ -210,6 +236,9 @@ namespace ncml_module
 
     // Whether we own the memory for _response and need to destroy it in dtor or not.
     bool _weOwnResponse;
+
+    // true after loadLocation has been called.
+    bool _loaded;
 
     // Our response object
     // We OWN it if we're not the root element,

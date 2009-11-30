@@ -35,6 +35,7 @@
 #include <BESDapNames.h>
 #include <BESDapResponse.h>
 #include <BESDataDDSResponse.h>
+#include <BESDataHandlerInterface.h>
 #include <BESDDSResponse.h>
 #include <BESDebug.h>
 #include <BESInternalError.h>
@@ -50,7 +51,7 @@
 #include "NCMLUtil.h"
 
 using namespace std;
-using namespace ncml_module;
+using namespace agg_util;
 
 DDSLoader::DDSLoader(BESDataHandlerInterface& dhi)
 : _dhi(dhi)
@@ -64,6 +65,39 @@ DDSLoader::DDSLoader(BESDataHandlerInterface& dhi)
 , _origResponse(0)
 {
 }
+
+// WE ONLY COPY THE DHI!  I got forced to impl this.
+DDSLoader::DDSLoader(const DDSLoader& proto)
+: _dhi(proto._dhi)
+, _hijacked(false)
+, _filename("")
+, _store(0)
+, _containerSymbol("")
+, _origAction("")
+, _origActionName("")
+, _origContainer(0)
+, _origResponse(0)
+{
+}
+
+DDSLoader&
+DDSLoader::operator=(const DDSLoader& rhs)
+{
+  if (&rhs == this)
+    {
+      return *this;
+    }
+
+  // First cleanup any state
+  ensureClean();
+
+  // Now copy the dhi only, since
+  // we assume we'll be using this fresh.
+  // Normally we don't want to copy these
+  // but I got forced into it.
+  _dhi.make_copy(rhs._dhi);
+}
+
 
 DDSLoader::~DDSLoader()
 {
@@ -113,7 +147,7 @@ DDSLoader::loadInto(const std::string& location, ResponseType type, BESDapRespon
                            << pResponse->get_request_xml_base() << endl);
 
   // Figure out which underlying type of response it is to get the DDS (or DataDDS via DDS super).
-  DDS* pDDS = NCMLUtil::getDDSFromEitherResponse(pResponse);
+  DDS* pDDS = ncml_module::NCMLUtil::getDDSFromEitherResponse(pResponse);
   if (!pDDS)
     {
       THROW_NCML_INTERNAL_ERROR("DDSLoader::load expected BESDDSResponse or BESDataDDSResponse but got neither!");

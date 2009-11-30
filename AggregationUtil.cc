@@ -27,11 +27,19 @@
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
 #include "AggregationUtil.h"
+
+// agg_util includes
+#include "Dimension.h"
+
+// libdap includes
 #include <Array.h> // libdap
 #include <AttrTable.h>
 #include <BaseType.h>
 #include <DDS.h>
+
+// Outside includes (MINIMIZE THESE!)
 #include "NCMLDebug.h" // This the ONLY dependency on NCML Module I want in this class since the macros there are general it's ok...
+
 
 using std::string;
 using std::vector;
@@ -182,6 +190,21 @@ namespace agg_util
     return ret;
   }
 
+  template <class LibdapType>
+  LibdapType*
+  AggregationUtil::findTypedVariableAtDDSTopLevel(const libdap::DDS& dds, const string& name)
+  {
+    BaseType* pBT = findVariableAtDDSTopLevel(dds, name);
+    if (pBT)
+      {
+        return dynamic_cast<LibdapType*>(pBT);
+      }
+    else
+      {
+        return 0;
+      }
+  }
+
   void
   AggregationUtil::produceOuterDimensionJoinedArray(
             Array* pJoinedArray,
@@ -330,6 +353,26 @@ namespace agg_util
     return count;
   }
 
+  bool
+  AggregationUtil::couldBeCoordinateVariable(BaseType* pBT)
+  {
+    Array* pArr = dynamic_cast<Array*>(pBT);
+    if (pArr &&
+        (pArr->dimensions() == 1))
+      {
+        // only one dimension, so grab the first and make sure we only got one.
+        Array::Dim_iter it = pArr->dim_begin();
+        bool matches = (pArr->dimension_name(it) == pArr->name());
+        NCML_ASSERT_MSG( (++it == pArr->dim_end()),
+              "Logic error: NCMLUtil::isCoordinateVariable(): expected one dimension from Array, but got more!");
+        return matches;
+      }
+    else
+      {
+        return false;
+      }
+  }
+
   void
   AggregationUtil::joinArrayData(Array* pAggArray,
        const std::vector<Array*>& varArrays,
@@ -389,5 +432,36 @@ namespace agg_util
 
     // That's all folks!
   }
+
+  void
+  AggregationUtil::printConstraints(std::ostream& os, const Array& rcArray)
+  {
+//    struct dimension
+//        {
+//            int size;  ///< The unconstrained dimension size.
+//            string name;    ///< The name of this dimension.
+//            int start;  ///< The constraint start index
+//            int stop;  ///< The constraint end index
+//            int stride;  ///< The constraint stride
+//            int c_size;  ///< Size of dimension once constrained
+//        };
+    os << "Array constraints: " << endl;
+    Array& theArray = const_cast<Array&>(rcArray);
+    Array::Dim_iter it;
+    Array::Dim_iter endIt = theArray.dim_end();
+    for (it = theArray.dim_begin(); it != endIt; ++it)
+      {
+        Array::dimension d = *it;
+        os << "Dim = {" << endl;
+        os << "name=" << d.name << endl;
+        os << "start=" << d.start << endl;
+        os << "stride=" << d.stride << endl;
+        os << "stop=" << d.stop << endl;
+        os << " }" << endl;
+      }
+     os << "End Array constraints" << endl;
+  }
+
+
 
 }

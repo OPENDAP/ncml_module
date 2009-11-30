@@ -56,6 +56,8 @@
 // For extra debug spew for now.
 #define DEBUG_NCML_PARSER_INTERNALS 1
 
+using namespace agg_util;
+
 namespace ncml_module {
 
   // From the DAP 2 guide....
@@ -476,7 +478,7 @@ NCMLParser::addChildDatasetToCurrentDataset(NetcdfElement* dataset)
   // This will add as strong ref to dataset from agg (child) and a weak to agg from dataset (parent)
   agg->addChildDataset(dataset);
 
-  // Force the dataset to create an internal response object for the request time we're processing
+  // Force the dataset to create an internal response object for the request type we're processing
   dataset->createResponseObject(_responseType);
 }
 
@@ -488,7 +490,7 @@ NCMLParser::parsingDataRequest() const
 }
 
 void
-NCMLParser::loadLocation(const std::string& location, DDSLoader::ResponseType responseType, BESDapResponse* response)
+NCMLParser::loadLocation(const std::string& location, agg_util::DDSLoader::ResponseType responseType, BESDapResponse* response)
 {
   VALID_PTR(response);
   _loader.loadInto(location, responseType, response);

@@ -15,6 +15,10 @@ xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/d
         <dimension name="day" size="4"/>
         <dimension name="station" size="5"/>
     </Array>
+    <Array name="day">
+        <String/>
+        <dimension name="day" size="4"/>
+    </Array>
 
     <dataBLOB href=""/>
 </Dataset>

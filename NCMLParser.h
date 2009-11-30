@@ -45,6 +45,12 @@
 #include "XMLHelpers.h"
 
 //FDecls
+
+namespace agg_util
+{
+  class DDSLoader;
+};
+
 namespace libdap
 {
   class BaseType;
@@ -59,7 +65,6 @@ class BESDDSResponse;
 namespace ncml_module
 {
   class AggregationElement;
-  class DDSLoader;
   class DimensionElement;
   class NCMLElement;
   class NetcdfElement;
@@ -133,7 +138,7 @@ public:
    * @param loader helper for loading a location referred to in the ncml.
       *
    */
-  NCMLParser(DDSLoader& loader);
+  NCMLParser(agg_util::DDSLoader& loader);
 
   virtual ~NCMLParser();
 
@@ -155,7 +160,7 @@ public:
    *  @return a new response object with the transformed DDS in it.  The caller assumes ownership of the returned object.
    *  It will be of type BESDDSResponse or BESDataDDSResponse depending on the request being processed.
   */
-  auto_ptr<BESDapResponse> parse(const string& ncmlFilename, DDSLoader::ResponseType type);
+  auto_ptr<BESDapResponse> parse(const string& ncmlFilename, agg_util::DDSLoader::ResponseType type);
 
   /** @brief Same as parse, but the response object to parse into is passed down by the caller
    * rather than created.
@@ -164,7 +169,7 @@ public:
    * @param responseType the type of response.  Must match response.
    * @param response the premade response object.  The caller owns this memory.
    */
-  void parseInto(const string& ncmlFilename, DDSLoader::ResponseType responseType, BESDapResponse* response);
+  void parseInto(const string& ncmlFilename, agg_util::DDSLoader::ResponseType responseType, BESDapResponse* response);
 
   bool parsing() const { return !_filename.empty(); }
 
@@ -239,7 +244,7 @@ private: //methods
   */
   bool withinVariable() const { return withinNetcdf() && _pVar; }
 
-  DDSLoader& getDDSLoader() const { return _loader; }
+  agg_util::DDSLoader& getDDSLoader() const { return _loader; }
 
   /** @return the currently being parsed dataset (the NetcdfElement itself)
    * or NULL if we're outside all netcdf elements.
@@ -306,7 +311,7 @@ private: //methods
   /** @brief Load the given location into
    * the given response, making sure to use the given responseType.
    */
-  void loadLocation(const std::string& location, DDSLoader::ResponseType responseType, BESDapResponse* response);
+  void loadLocation(const std::string& location, agg_util::DDSLoader::ResponseType responseType, BESDapResponse* response);
 
   /** Return the variable with name in the current _pVar container.
    * If null, that means look at the top level DDS.
@@ -538,10 +543,10 @@ private: // data rep
   string _filename;
 
   // Handed in at creation, this is a helper to load a given DDS.  It is assumed valid for the life of this.
-  DDSLoader& _loader;
+  agg_util::DDSLoader& _loader;
 
   // The type of response in _response
-  DDSLoader::ResponseType _responseType;
+  agg_util::DDSLoader::ResponseType _responseType;
 
   // The response object containing the DDS (or DataDDS) for the root dataset we are processing, or null if not processing.
   // Type is based on _responseType.   We do not own this memory!  It is a temp while we parse and is handed in.

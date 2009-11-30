@@ -9,4 +9,6 @@ Attributes {
     /TestArray {
         String HDF5_OBJ_FULLPATH "/TestArray";
     }
+    file {
+    }
 }

@@ -40,12 +40,6 @@
 	<values separator=",">Station_A,Station_B,Station_C,Station_D,Station_E</values>
       </variable>
 
-      <!-- This one is not in first, so will get unioned in -->
-      <variable name="W" type="int" shape="station">
-	<attribute name="Desc" type="string" value="An extra variables that will be merged into the output."/>
-	<values>-1 -2 -3 -4 -5</values>
-      </variable>
-
     </netcdf>
 
   </aggregation>

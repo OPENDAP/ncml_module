@@ -39,7 +39,6 @@ AT_ASSERT_PARSE_ERROR([invalid_attrs/error_netcdf_invalid_1.ncml])
 AT_ASSERT_PARSE_ERROR([invalid_attrs/error_netcdf_invalid_2.ncml])
 AT_ASSERT_PARSE_ERROR([invalid_attrs/error_netcdf_invalid_3.ncml])
 AT_ASSERT_PARSE_ERROR([invalid_attrs/error_netcdf_invalid_4.ncml])
-AT_ASSERT_PARSE_ERROR([invalid_attrs/error_netcdf_invalid_5.ncml])
 
 dnl Tests for variableAgg
 AT_ASSERT_PARSE_ERROR([invalid_attrs/error_variableAgg_attrs.ncml])

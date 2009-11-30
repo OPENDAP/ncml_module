@@ -58,7 +58,7 @@ class BESResponseObject;
 
   @author mjohnson <m.johnson@opendap.org>
  */
-namespace ncml_module
+namespace agg_util
 {
 
 class DDSLoader
@@ -86,8 +86,7 @@ private:
   BESResponseObject* _origResponse;
 
 private:
-  DDSLoader(const DDSLoader&); // disallow
-  DDSLoader& operator=(const DDSLoader&); // disallow
+
 
 public:
 
@@ -103,12 +102,23 @@ public:
    */
   DDSLoader(BESDataHandlerInterface &dhi);
 
+
+  DDSLoader(const DDSLoader& proto);
+  DDSLoader& operator=(const DDSLoader&);
+
   /**
    * @brief Dtor restores the state of dhi
    * Restores the state of the dhi to what it was when object if it is still hijacked (i.e. exception on load())
    * Destroys the BESDDSResponse if non-null, which is also the case on failed load() call.
    */
   virtual ~DDSLoader();
+
+  /**
+   * Return a reference to the dhi we are using.  A little dangerous
+   * to bare this rep, so be careful in its usage!
+   * @return
+   */
+  BESDataHandlerInterface& getDHI() const { return _dhi; }
 
   /**
    * @brief Load and return a new DDX or DataDDS structure for the local dataset referred to by location.

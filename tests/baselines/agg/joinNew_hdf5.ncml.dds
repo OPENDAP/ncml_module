@@ -1,3 +1,4 @@
 Dataset {
     Float32 /TestArray[file = 2][1][5];
+    String file[file = 2];
 } joinNew_hdf5.ncml;

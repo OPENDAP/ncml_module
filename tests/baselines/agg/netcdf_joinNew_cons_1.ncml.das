@@ -27,4 +27,6 @@ Attributes {
     time {
         String units "hours from base_time";
     }
+    source {
+    }
 }

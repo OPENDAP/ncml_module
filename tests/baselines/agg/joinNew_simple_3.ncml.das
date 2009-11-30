@@ -7,4 +7,6 @@ Attributes {
     }
     W_expected {
     }
+    day {
+    }
 }

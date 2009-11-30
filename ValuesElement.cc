@@ -665,7 +665,7 @@ namespace ncml_module
 
     setGotValuesOnOurVariableElement(p);
 
-    // Next, find out the underlying type and use the classis template calls.
+    // Next, find out the underlying type and use the class's template calls.
     libdap::BaseType* pTemplate = pArray->var();
     VALID_PTR(pTemplate);
     switch (pTemplate->type())

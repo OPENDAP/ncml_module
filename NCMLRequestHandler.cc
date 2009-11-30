@@ -55,7 +55,7 @@
 #include "NCMLResponseNames.h"
 #include "SimpleLocationParser.h"
 
-
+using namespace agg_util;
 using namespace ncml_module;
 
 

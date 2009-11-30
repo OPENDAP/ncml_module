@@ -29,6 +29,20 @@
 #ifndef __NCML_MODULE_NCML_UTIL_H__
 #define __NCML_MODULE_NCML_UTIL_H__
 
+/** static class NCMLUtil overview
+ *
+ * This is a repository for generic, reusable functions that many locations
+ * in the module might need.
+ *
+ * The class design is meant to try and minimize outside dependencies
+ * beyond libdap, but already we have some BES dependencies.
+ *
+ * @TODO Refactor out the purely libdap util functions into a
+ * LibdapUtil class so that this class can be reused within
+ * the agg_util module without introducing BES or ncml_module
+ * dependencies.
+ */
+
 namespace libdap
 {
   // FDecls
@@ -147,7 +161,6 @@ namespace ncml_module
      * and not as a field separator!
      */
     static libdap::BaseType* getVariableNoRecurse(const libdap::Constructor& varContainer, const std::string& name);
-
 
   };
 }

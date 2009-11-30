@@ -1,23 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- Acceptance test for the case of a Array joinNew aggregation with the new outer dimension map vector explicitly  -->
+<!-- Acceptance test for the case of a Array joinNew aggregation with the new outer dimension map vector explicitly 
+     An explicitly defined map is the only way to get metadata into it!  
+-->
 
 <netcdf title="JoinNew on Array with Explicit Map">
-  
+
   <!-- joinNew and form new outer dimension "day" -->
   <aggregation type="joinNew" dimName="day">
     <variableAgg name="V"/>
 
     <netcdf title="Slice 1">
       <dimension name="sensors" length="3"/>
-      <variable name="V" type="int" shape="length">
+      <variable name="V" type="int" shape="sensors">
 	<values>1 2 3</values>
       </variable>
     </netcdf>
 
     <netcdf title="Slice 2">
       <dimension name="sensors" length="3"/>
-      <variable name="V" type="int" shape="length">
+      <variable name="V" type="int" shape="sensors">
 	<values>4 5 6</values>
       </variable>
     </netcdf>

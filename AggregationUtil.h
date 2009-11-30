@@ -30,6 +30,7 @@
 #define __AGG_UTIL__AGGREGATION_UTIL_H__
 
 #include <AttrTable.h>
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -38,6 +39,11 @@ namespace libdap
   class Array;
   class BaseType;
   class DDS;
+};
+
+namespace agg_util
+{
+  class Dimension;
 };
 
 namespace agg_util
@@ -108,6 +114,18 @@ namespace agg_util
     static libdap::BaseType* findVariableAtDDSTopLevel(const libdap::DDS& dds, const string& name);
 
     /**
+     * Template wrapper for findVariableAtDDSTopLevel() which
+     * does the find but only return non-NULL if the found
+     * BaseType* can be dynamically cast to template type LibdapType.
+     * @param dds the dds to search
+     * @param name the name of the variable to find
+     * @return the pointer to the found object if it's dynamically castable
+     *         to LibdapType*, else NULL.
+     * @see findVariableAtDDSTopLevel()
+     */
+    template <class LibdapType> static LibdapType* findTypedVariableAtDDSTopLevel(const libdap::DDS& dds, const string& name);
+
+    /**
      *  Basic joinNew aggregation into pJoinedArray on the array of inputs fromVars.
      *
      *  If all the Arrays in fromVars are rank D, then the joined Array will be rank D+1
@@ -168,6 +186,13 @@ namespace agg_util
           const std::vector<libdap::DDS*>& datasetsInOrder);
 
     /**
+      * @return whether this is a 1D Array whose dimension name is the same as its variable name.
+      * We consider this to define a "coordinate variable" in the sense of an NCML dataset
+      * and will use it as a Grid map vector.
+    */
+    static bool couldBeCoordinateVariable(libdap::BaseType* pBT);
+
+    /**
      * Copy the simple type data Vector for each Array in varArrays into pAggArray, sequentially,
      * effectively appending all the row major data in each entry in varArray into the row major order
      * of pAggArray.
@@ -192,6 +217,13 @@ namespace agg_util
         const std::vector<libdap::Array*>& varArrays,
         bool reserveStorage=true,
         bool clearDataAfterUse=false);
+
+    /**
+     * Stream out the current constraints for all the dimensions in the Array.
+     * @param os  the output stream
+     * @param fromArray the array whose dimensions to print.
+     */
+    static void printConstraints(std::ostream& os, const libdap::Array& fromArray);
   };
 
 }

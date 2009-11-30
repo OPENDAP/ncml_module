@@ -27,6 +27,7 @@
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
 #include "NCMLUtil.h"
+#include "Array.h"
 #include "BESDapResponse.h"
 #include "BESDataDDSResponse.h"
 #include "BESDDSResponse.h"

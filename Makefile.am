@@ -21,6 +21,7 @@ BES_SRCS:=
 BES_HDRS:=
 
 NCML_SRCS = \
+		AggMemberDataset.cc \
 		AggregationElement.cc \
 		AggregationUtil.cc \
 		AttributeElement.cc \
@@ -28,6 +29,7 @@ NCML_SRCS = \
 		Dimension.cc \
 		DimensionElement.cc \
 		ExplicitElement.cc \
+		GridAggregateOnOuterDimension.cc \
 		MyBaseTypeFactory.cc \
 		NCMLBaseArray.cc \
 		NCMLCommonTypes.cc \
@@ -53,6 +55,7 @@ NCML_SRCS = \
 		XMLHelpers.cc 
 
 NCML_HDRS = \
+		AggMemberDataset.h \
 		AggregationElement.h \
 		AggregationUtil.h \
 		AttributeElement.h \
@@ -60,6 +63,7 @@ NCML_HDRS = \
 		Dimension.h \
 		DimensionElement.h \
 		ExplicitElement.h \
+		GridAggregateOnOuterDimension.h \
 		MyBaseTypeFactory.h \
 		NCMLArray.h \
 		NCMLBaseArray.h \

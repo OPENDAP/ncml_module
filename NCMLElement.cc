@@ -169,6 +169,12 @@ namespace ncml_module
     _parser = p;
   }
 
+  int
+  NCMLElement::line() const
+  {
+    return _parser->getParseLineNumber();
+  }
+
   void
   NCMLElement::handleContent(const string& content)
   {

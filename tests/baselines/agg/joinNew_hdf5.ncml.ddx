@@ -27,6 +27,10 @@ xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/d
         <dimension size="1"/>
         <dimension size="5"/>
     </Array>
+    <Array name="file">
+        <String/>
+        <dimension name="file" size="2"/>
+    </Array>
 
     <dataBLOB href=""/>
 </Dataset>

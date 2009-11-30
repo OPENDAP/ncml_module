@@ -146,7 +146,6 @@ namespace ncml_module
     /** Copy just the variables introduced in this class */
     void copyLocalRepFrom(const NCMLBaseArray& proto);
 
-
     /** Destroy the data local to this class */
     void destroy() throw();
 

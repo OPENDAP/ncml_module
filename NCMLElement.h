@@ -123,6 +123,9 @@ namespace ncml_module
 
     void setParser(NCMLParser* p);
 
+    /** Return the current parse line number.  Shorthand */
+    int line() const;
+
     /** Return the type of the element, which should be:
      * the same as ConcreteClassName::getTypeName() */
     virtual const std::string& getTypeName() const = 0;
