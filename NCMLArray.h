@@ -40,6 +40,7 @@
 #include "Shape.h"
 #include <sstream>
 #include <string>
+#include <typeinfo>
 #include <vector>
 
 using libdap::Array;
