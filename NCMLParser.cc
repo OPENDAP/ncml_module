@@ -72,6 +72,72 @@ const string NCMLParser::STRUCTURE_TYPE("Structure");
 // Just cuz I hate magic -1.  Used in _currentParseLine
 static const int NO_CURRENT_PARSE_LINE_NUMBER = -1;
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+//  Helper class.
+AttrTableLazyPtr::AttrTableLazyPtr(const NCMLParser& parser, AttrTable* pAT/*=0*/)
+: _parser(parser)
+, _pAttrTable(pAT)
+, _loaded(pAT)
+{
+}
+
+AttrTableLazyPtr::~AttrTableLazyPtr()
+{
+  _pAttrTable = 0;
+  _loaded = false;
+}
+
+AttrTable*
+AttrTableLazyPtr::get() const
+{
+  if (!_loaded)
+    {
+      const_cast<AttrTableLazyPtr*>(this)->loadAndSetAttrTable();
+    }
+  return _pAttrTable;
+}
+
+void
+AttrTableLazyPtr::set(AttrTable* pAT)
+{
+  _pAttrTable = pAT;
+  if (pAT)
+    {
+      _loaded = true;
+    }
+  else
+    {
+      _loaded = false;
+    }
+}
+
+void
+AttrTableLazyPtr::invalidate()
+{
+  // force it to load next get().
+  _pAttrTable = 0;
+  _loaded = false;
+}
+
+void
+AttrTableLazyPtr::loadAndSetAttrTable()
+{
+  set(0);
+  NetcdfElement* pDataset = _parser.getCurrentDataset();
+  if (pDataset)
+    {
+      // The lazy load actually occurs in here
+      DDS* pDDS = pDataset->getDDS();
+      if (pDDS)
+        {
+          set( &(pDDS->get_attr_table()) );
+          _loaded = true;
+        }
+    }
+}
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////
 ////// Public
 
@@ -83,7 +149,7 @@ NCMLParser::NCMLParser(DDSLoader& loader)
 , _rootDataset(0)
 , _currentDataset(0)
 , _pVar(0)
-, _pCurrentTable(0)
+, _pCurrentTable(*this,0)
 , _elementStack()
 , _scope()
 , _namespaceStack()
@@ -143,6 +209,24 @@ NCMLParser::parseInto(const string& ncmlFilename, DDSLoader::ResponseType respon
 
   // we're done with it.
   _response = 0;
+}
+
+bool
+NCMLParser::parsing() const
+{
+  return !_filename.empty();
+}
+
+int
+NCMLParser::getParseLineNumber() const
+{
+  return _currentParseLine;
+}
+
+const XMLNamespaceStack&
+NCMLParser::getXMLNamespaceStack() const
+{
+  return _namespaceStack;
 }
 
 void
@@ -359,6 +443,12 @@ NCMLParser::isScopeCompositeVariable() const
 }
 
 bool
+NCMLParser::isScopeVariable() const
+{
+  return (isScopeSimpleVariable() || isScopeCompositeVariable());
+}
+
+bool
 NCMLParser::isScopeGlobal() const
 {
   return withinNetcdf() && _scope.empty();
@@ -378,6 +468,36 @@ NCMLParser::isScopeAggregation() const
 {
   // see if the last thing parsed was <netcdf>
   return (!_elementStack.empty() && dynamic_cast<AggregationElement*>(_elementStack.back()));
+}
+
+bool
+NCMLParser::withinNetcdf() const
+{
+  return _currentDataset != 0;
+}
+
+bool
+NCMLParser::withinVariable() const
+{
+  return withinNetcdf() && _pVar;
+}
+
+agg_util::DDSLoader&
+NCMLParser::getDDSLoader() const
+{
+  return _loader;
+}
+
+NetcdfElement*
+NCMLParser::getCurrentDataset() const
+{
+  return _currentDataset;
+}
+
+NetcdfElement*
+NCMLParser::getRootDataset() const
+{
+  return _rootDataset;
 }
 
 DDS*
@@ -408,7 +528,7 @@ NCMLParser::pushCurrentDataset(NetcdfElement* dataset)
       addChildDatasetToCurrentDataset(dataset);
     }
 
-  // Will set the current attrtable as well.
+  // Also invalidates the AttrTable so it gets cached again.
   setCurrentDataset(dataset);
 
   // TODO: What do we do with the scope stack for a nested dataset?!
@@ -448,19 +568,26 @@ NCMLParser::setCurrentDataset(NetcdfElement* dataset)
     {
     // Make sure it's state is ready to go with operations before making it current
      NCML_ASSERT(dataset->isValid());
-
-     // Make the dataset current, and set the table as current.
-     // Force the attribute table to be the global one for the DDS.
      _currentDataset = dataset;
-     NCML_ASSERT_MSG(dataset->getDDS(), "Logic error!  NCMLParser::pushCurrentDataset() can't find a DDS for the dataset!");
-     setCurrentAttrTable(&(dataset->getDDS()->get_attr_table()));
-     VALID_PTR(getGlobalAttrTable()); // make sure it worked
+     // We don't set the current attr table, rather it is lazy eval
+     // from getCurrentAttrTable() only if called.  This call tells it to do that.
+     _pCurrentTable.invalidate();
+
+     // UNLESS it's the root dataset, which we want to force to load
+     // since a passthrough file will generate an empty metadata set otherwise
+     // since the table is never requested.
+     if (_currentDataset == _rootDataset)
+       {
+         // Force it to cache so we actually laod the metadata for the root set.
+         // Chidl sets are aggregations so we don't load those unless needed.
+         _pCurrentTable.set(_pCurrentTable.get());
+       }
     }
   else
     {
       BESDEBUG("ncml", "NCMLParser::setCurrentDataset(): setting to NULL..." << endl);
       _currentDataset = 0;
-      setCurrentAttrTable(0);
+      _pCurrentTable.invalidate();
     }
 }
 
@@ -501,7 +628,7 @@ NCMLParser::resetParseState()
 {
   _filename = "";
   _pVar = 0;
-  _pCurrentTable = 0;
+  _pCurrentTable.set(0);
 
   _scope.clear();
 
@@ -655,22 +782,28 @@ NCMLParser::deleteVariableAtCurrentScope(const string& name)
     }
 }
 
+BaseType*
+NCMLParser::getCurrentVariable() const
+{
+  return _pVar;
+}
+
 void
 NCMLParser::setCurrentVariable(BaseType* pVar)
 {
    _pVar = pVar;
    if (pVar) // got a variable
      {
-        _pCurrentTable = &(pVar->get_attr_table());
+       setCurrentAttrTable( &(pVar->get_attr_table()) );
      }
    else if (getDDSForCurrentDataset()) // null pvar but we have a dds, use global table
      {
        DDS* dds = getDDSForCurrentDataset();
-       _pCurrentTable = &(dds->get_attr_table());
+       setCurrentAttrTable( &(dds->get_attr_table()) );
      }
    else // just clear it out, no context
      {
-       _pCurrentTable = 0;
+       setCurrentAttrTable(0);
      }
 }
 
@@ -699,19 +832,32 @@ NCMLParser::typeCheckDAPVariable(const BaseType& var, const string& expectedType
 }
 
 AttrTable*
-NCMLParser::getGlobalAttrTable()
+NCMLParser::getCurrentAttrTable() const
 {
-  return &(getDDSForCurrentDataset()->get_attr_table());
+  // will load the DDS of current dataset if required.
+  return _pCurrentTable.get();
 }
 
 void
-NCMLParser::setCurrentAttrTable(AttrTable* table)
+NCMLParser::setCurrentAttrTable(AttrTable* pAT)
 {
-  _pCurrentTable = table;
+  _pCurrentTable.set(pAT);
+}
+
+AttrTable*
+NCMLParser::getGlobalAttrTable() const
+{
+  AttrTable* pAT = 0;
+  DDS* pDDS = getDDSForCurrentDataset();
+  if (pDDS)
+    {
+      pAT = &(pDDS->get_attr_table());
+    }
+  return pAT;
 }
 
 bool
-NCMLParser::attributeExistsAtCurrentScope(const string& name)
+NCMLParser::attributeExistsAtCurrentScope(const string& name) const
 {
   // Lookup the given attribute in the current table.
   AttrTable::Attr_iter attr;
@@ -722,10 +868,11 @@ NCMLParser::attributeExistsAtCurrentScope(const string& name)
 bool
 NCMLParser::findAttribute(const string& name, AttrTable::Attr_iter& attr) const
 {
-  if (_pCurrentTable)
+  AttrTable* pAT = getCurrentAttrTable();
+  if (pAT)
     {
-      attr = _pCurrentTable->simple_find(name);
-      return (attr != _pCurrentTable->attr_end());
+      attr = pAT->simple_find(name);
+      return (attr != pAT->attr_end());
     }
   else
     {
@@ -801,7 +948,7 @@ NCMLParser::tokenizeValuesForDAPType(vector<string>& tokens, const string& value
       // Not supposed to have values, just push empty string....
       BESDEBUG("ncml", "Warning: tokenizeValuesForDAPType() got container type, we should not have values!" << endl);
       tokens.push_back("");
-     numTokens = 1;
+      numTokens = 1;
     }
   else if (dapType == Attr_string)
     {

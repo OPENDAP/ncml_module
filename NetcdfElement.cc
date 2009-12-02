@@ -243,6 +243,7 @@ namespace ncml_module
     // lazy eval loading the dds
     if (!_loaded)
       {
+        BESDEBUG("ncml", "Lazy loading DDX for location=" << location() << endl);
         const_cast<NetcdfElement*>(this)->loadLocation();
       }
 

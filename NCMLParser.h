@@ -91,9 +91,11 @@ using namespace std;
  *
  *  o We use the SaxParser interface callbacks to handle calls from a SAX parser which we create on parse() call.
  *
- *  o We maintain a pointer to the currently active AttrTable as we get other SAX parser calls.  As we enter/exit the lexical scope of
- *  attribute containers or Constructor variables we keep track of this on a scope stack which allows us to know the fully qualified name
- *  of the current scope as well as the type of the innermost scope for error checking.
+ *  o We maintain a lazy-evaluated pointer to the currently active AttrTable via getCurrentAttrTable().
+ *    in other words, we only load the DDS of a dataset if we actually require changes to it.
+ *    As we enter/exit the lexical scope of
+ *    attribute containers or Constructor variables we keep track of this on a scope stack which allows us to know
+ *    the fully qualified name of the current scope as well as the type of the innermost scope for error checking.
  *
  *  o As we process NcML elements we modify the DDS as needed.  The elements are all subclasses of NCMLElement
  *      and are factoried up in onStartElement for polymorphic dispatch.  A stack of these is kept for calling
@@ -115,12 +117,56 @@ using namespace std;
 namespace ncml_module
 {
 
+  // FDecls
+  class NCMLParser;
+
+// Helper class to lazy load the AttrTable for a DDS so we don't load for aggregations
+// that do not actually use it.
+class AttrTableLazyPtr
+{
+private: // disallow these.
+    AttrTableLazyPtr(const AttrTableLazyPtr&);
+    AttrTableLazyPtr& operator=(const AttrTableLazyPtr&);
+public:
+    /**
+     * Create a lazy loading AttrTable.
+     * @param parser the parser whose current dataset should be used to load.
+     * @param pAT Initial value for the ptr.  No loading ininitally occurs if pAT isn't null.
+     * @return
+     */
+  AttrTableLazyPtr(const NCMLParser& parser, AttrTable* pAT=0);
+  ~AttrTableLazyPtr();
+
+  /** Get the table, loading it from the current dataset in _parser
+   * if !_loaded yet (hasn't been set() ).
+   * @return the ptr to the current table, or NULL if no valid current dataset.
+   */
+  AttrTable* get() const;
+
+  /** Once set is called, _loaded it true unless pAT is null. */
+  void set(AttrTable* pAT);
+
+  /** Dirty the cache so the next get() goes and gets the AttrTable
+   * for the current dataset, whatever that is.
+   */
+  void invalidate();
+
+private:
+
+  void loadAndSetAttrTable();
+
+  const NCMLParser& _parser;
+  mutable AttrTable* _pAttrTable;
+  mutable bool _loaded;
+};
+
 class NCMLParser : public SaxParser
 {
 public: // Friends
   // We allow the various NCMLElement concrete classes to be friends so we can separate out the functionality
   // into several files, one for each NcML element type.
   friend class AggregationElement;
+  friend class AttrTableLazyPtr;
   friend class AttributeElement;
   friend class DimensionElement;
   friend class ExplicitElement;
@@ -171,13 +217,14 @@ public:
    */
   void parseInto(const string& ncmlFilename, agg_util::DDSLoader::ResponseType responseType, BESDapResponse* response);
 
-  bool parsing() const { return !_filename.empty(); }
+  /** Are we currently parsing? */
+  bool parsing() const;
 
   /** Get the line of the NCML file the parser is currently parsing */
-  int getParseLineNumber() const { return _currentParseLine; }
+  int getParseLineNumber() const;
 
   /** If using namespaces, get the current stack of namespaces. Might be empty. */
-  const XMLNamespaceStack& getXMLNamespaceStack() const { return _namespaceStack; }
+  const XMLNamespaceStack& getXMLNamespaceStack() const;
 
   ////////////////////////////////////////////////////////////////////////////////
   // Interface SaxParser:  Wrapped calls from the libxml C SAX parser
@@ -222,7 +269,7 @@ private: //methods
   bool isScopeCompositeVariable() const;
 
   /** Is the innermost scope a variable of some sort? */
-  bool isScopeVariable() const { return (isScopeSimpleVariable() || isScopeCompositeVariable()); }
+  bool isScopeVariable() const;
 
   /** Is the innermost scope the global attribute table of the DDS? */
   bool isScopeGlobal() const;
@@ -236,20 +283,20 @@ private: //methods
   /**  Are we inside the scope of a location element <netcdf> at this point of the parse?
    * Note that this means anywhere in the the scope stack, not the innermost (local) scope
   */
-  bool withinNetcdf() const { return _currentDataset != 0; }
+  bool withinNetcdf() const;
 
   /** Returns whether there is a variable element on the scope stack SOMEWHERE.
    *  Note we could be nested down within multiple variables or attribute containers,
    *  but this will be true if anywhere in current scope we're nested within a variable.
   */
-  bool withinVariable() const { return withinNetcdf() && _pVar; }
+  bool withinVariable() const;
 
-  agg_util::DDSLoader& getDDSLoader() const { return _loader; }
+  agg_util::DDSLoader& getDDSLoader() const;
 
   /** @return the currently being parsed dataset (the NetcdfElement itself)
    * or NULL if we're outside all netcdf elements.
    */
-  NetcdfElement* getCurrentDataset() const { return _currentDataset; }
+  NetcdfElement* getCurrentDataset() const;
 
   /**
    *  Set the current dataset as dataset.
@@ -266,7 +313,7 @@ private: //methods
   void setCurrentDataset(NetcdfElement* dataset);
 
   /** @return the root (top level) NetcdfElement, or NULL if we're not that far into a parse yet */
-  NetcdfElement* getRootDataset() const { return _rootDataset; }
+  NetcdfElement* getRootDataset() const;
 
   /** Helper to get the dds from getCurrentDataset, or null.
    */
@@ -365,7 +412,7 @@ private: //methods
  /** Get the current variable container we are in.  If NULL, we are
   * within the top level DDS scope and not a cosntructor variable.
   */
- BaseType* getCurrentVariable() const { return _pVar; }
+ BaseType* getCurrentVariable() const;
 
  /**
   *  Set the current scope to the variable pVar and update the _pCurrentTable to reflect this variables attributetable.
@@ -381,22 +428,34 @@ private: //methods
   */
  static bool typeCheckDAPVariable(const BaseType& var, const string& expectedType);
 
-  /** Gets the current attribute table for the scope we are currently at. */
-  AttrTable* getCurrentAttrTable() const { return _pCurrentTable; }
+  /**
+   * Gets the current attribute table for the scope we are currently at,
+   * or NULL if none.  Lazy evaluates, only loading the DDS if this is called.
+   * If we are in the scope of an attribute container, it is returned.
+   * If not, but we are in the scope of a variable, the variable's AttrTable is returned.
+   * Otherwise, return the global attr table for the current dataset we are in.
+   * NULL is returned if we haven't yet entered a current dataset.
+   */
+ AttrTable* getCurrentAttrTable() const;
 
-  /** Set the current attribute table for the scope */
-  void setCurrentAttrTable(AttrTable* table);
+ /** Set the current attribute table for the scope to be pAT.
+  * The next getCurrentAttrTable will return pAt.
+  * NULL is valid as well.
+  * @param pAT the table whose scope we want to be in
+  */
+ void setCurrentAttrTable(AttrTable* pAT);
 
   /**
    *  Pulls global table out of the current DDS, or null if no current DDS.
+   *  Lazy loads the DDS for the current dataset.
    */
-  AttrTable* getGlobalAttrTable();
+  AttrTable* getGlobalAttrTable() const;
 
   /**
    * @return if the attribute with name already exists in the current scope.
    * @param name name of the attribute
   */
-  bool attributeExistsAtCurrentScope(const string& name);
+  bool attributeExistsAtCurrentScope(const string& name) const;
 
   /** Find an attribute with name in the current scope (_pCurrentTable) _without_ recursing.
     * If found, attr will point to it, else pTable->attr_end().
@@ -567,11 +626,10 @@ private: // data rep
   // pointer to currently processed variable, or NULL if none (ie we're at global level).
   BaseType* _pVar;
 
-  // the current attribute table for the scope we are in.  Global table if not within a variable,
-  // table for the variable if we are in a variable.
-  // Also, if we have a nested attribute table (ie attribute table contains a container) this will be
-  // the table for the scope at the current parse point.
-  AttrTable* _pCurrentTable;
+  // Only grabs the actual ptr (by loading the DDS from the current dataset)
+  // when getCurrentAttrTable() is called so we don't explicitly load every
+  // DDS, only those which we want to modify.
+  AttrTableLazyPtr _pCurrentTable;
 
   // A stack of NcML elements we push as we begin and pop as we end.
   // The memory is owned by this, so we must clear this in dtor and

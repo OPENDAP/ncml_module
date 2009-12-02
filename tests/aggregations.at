@@ -133,6 +133,10 @@ AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([agg/joinNew_grid.ncml],[[ dsp_band_1
 dnl AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([agg/joinNew_grid.ncml],[[ dsp_band_1[1][512][0:1023] ]], [agg/joinNew_grid_hslab_1])
 dnl AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([agg/joinNew_grid.ncml],[[ dsp_band_1[2][512][0:1023] ]], [agg/joinNew_grid_hslab_2])
 dnl AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([agg/joinNew_grid.ncml],[[ dsp_band_1[3][512][0:1023] ]], [agg/joinNew_grid_hslab_3])
+AT_RUN_BES_AND_COMPARE([agg/joinNew_grid.ncml],[dods],[agg/joinNew_grid_hslab_1],[[ dsp_band_1[1][512][0:1023] ]])
+AT_RUN_BES_AND_COMPARE([agg/joinNew_grid.ncml],[dods],[agg/joinNew_grid_hslab_2],[[ dsp_band_1[2][512][0:1023] ]])
+AT_RUN_BES_AND_COMPARE([agg/joinNew_grid.ncml],[dods],[agg/joinNew_grid_hslab_3],[[ dsp_band_1[3][512][0:1023] ]])
+
 
 dnl Testing that we can use a stride on the new dimension.
 dnl getdap of the dods was compared with a handmade version
@@ -140,7 +144,8 @@ dnl from the original dataset getdaps (these are checked in
 dnl also with a "handmade" extension for checking if needed).
 AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([agg/joinNew_grid.ncml],[[ dsp_band_1[0:2:3][512][0:1023] ]], [agg/joinNew_grid_stride_evens])
 dnl TODO FIX ME Next one same issue with failure on metadata being from wrong spot...
-dnl AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([agg/joinNew_grid.ncml],[[ dsp_band_1[1:2:3][512][0:1023] ]], [agg/joinNew_grid_stride_odds])
+dnl AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([agg/joinNew_grid.ncml],[[ dsp_band_1[1:2:3][512][0:1023] ]],0 [agg/joinNew_grid_stride_odds])
+AT_RUN_BES_AND_COMPARE([agg/joinNew_grid.ncml],[dods],[agg/joinNew_grid_stride_odds],[[ dsp_band_1[1:2:3][512][0:1023] ]])
 
 dnl Test a projection of a map.  Internally this doesn't load any of the grid array's....
 AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([agg/joinNew_grid.ncml],[[ dsp_band_1.lat[0:63] ]], [agg/joinNew_grid_proj_lat])
