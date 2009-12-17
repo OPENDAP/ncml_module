@@ -170,7 +170,7 @@ namespace ncml_module
 
     /** Return the raw pointer (or NULL) to our contained aggregation.
      * Only guaranteed valid for the life of this object.  */
-    AggregationElement* getChildAggregation() const { return _aggregation.get(); }
+    AggregationElement* getChildAggregation() const;
 
     /** Return the next enclosing dataset for this, or NULL if we're the root.
      * Basically traverse upwards through any aggregation parent to get containing datset.

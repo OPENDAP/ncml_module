@@ -419,6 +419,12 @@ namespace ncml_module
     _parentAgg = parent;
   }
 
+  AggregationElement*
+  NetcdfElement::getChildAggregation() const
+  {
+    return _aggregation.get();
+  }
+
 
 #if 0 // not sure we need this yet...
   template <typename T>

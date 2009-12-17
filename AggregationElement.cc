@@ -27,6 +27,10 @@
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
 
+#include "config.h"
+#include <memory>
+#include <sstream>
+
 #include "AggregationElement.h"
 #include "AggregationUtil.h"
 #include <Array.h> // libdap
@@ -35,13 +39,12 @@
 #include "DimensionElement.h"
 #include "Grid.h" // libdap
 #include "GridAggregateOnOuterDimension.h"
-#include <memory>
 #include "MyBaseTypeFactory.h"
 #include "NCMLBaseArray.h"
 #include "NCMLDebug.h"
 #include "NCMLParser.h"
 #include "NetcdfElement.h"
-#include <sstream>
+#include "ScanElement.h"
 
 using agg_util::AggregationUtil;
 using agg_util::AggMemberDataset;
@@ -61,6 +64,7 @@ namespace ncml_module
     , _recheckEvery("")
     , _parent(0)
     , _datasets()
+    , _scanners()
     , _aggVars()
   {
   }
@@ -72,6 +76,7 @@ namespace ncml_module
     , _recheckEvery(proto._recheckEvery)
     , _parent(proto._parent) // my parent is the same too... is this safe without a true weak reference?
     , _datasets() // deep copy below
+    , _scanners() // deep copy below
     , _aggVars(proto._aggVars)
   {
     // Deep copy all the datasets and add them to me...
@@ -82,13 +87,26 @@ namespace ncml_module
             "WARNING: AggregationElement copy ctor is deep copying all contained datasets!  This might be memory and time intensive!");
       }
 
+    // Clone the actual members
     _datasets.reserve(proto._datasets.size());
-    for (unsigned int i=0; i<proto._datasets.size(); ++i)
+    for (vector<NetcdfElement*>::const_iterator it = proto._datasets.begin();
+         it != proto._datasets.end();
+         ++it)
       {
-         NetcdfElement* elt = proto._datasets[i];
+         const NetcdfElement* elt = (*it);
          addChildDataset(elt->clone());
       }
     NCML_ASSERT(_datasets.size() == proto._datasets.size());
+
+    _scanners.reserve(proto._scanners.size());
+    for (vector<ScanElement*>::const_iterator it = proto._scanners.begin();
+         it != proto._scanners.end();
+         ++it)
+      {
+        const ScanElement* elt = (*it);
+        addScanElement(elt->clone());
+      }
+    NCML_ASSERT(_scanners.size() == proto._scanners.size());
   }
 
   AggregationElement::~AggregationElement()
@@ -104,6 +122,14 @@ namespace ncml_module
       {
         NetcdfElement* elt = _datasets.back();
         _datasets.pop_back();
+        elt->unref(); // Will be deleted if the last strong reference
+      }
+
+    // And the scan elements
+    while (!_scanners.empty())
+      {
+        ScanElement* elt = _scanners.back();
+        _scanners.pop_back();
         elt->unref(); // Will be deleted if the last strong reference
       }
   }
@@ -287,6 +313,14 @@ namespace ncml_module
   }
 
   void
+  AggregationElement::addScanElement(ScanElement* pScanner)
+  {
+    VALID_PTR(pScanner);
+    _scanners.push_back(pScanner);
+    pScanner->ref(); // strong ref
+  }
+
+  void
   AggregationElement::processParentDatasetComplete()
   {
     BESDEBUG("ncml", "AggregationElement::processParentDatasetComplete() called..." << endl);
@@ -331,6 +365,9 @@ namespace ncml_module
   void
   AggregationElement::processJoinNew()
   {
+    // This will run any child <scan> elements to prepare them.
+    processAnyScanElements();
+
     BESDEBUG("ncml", "AggregationElement: beginning joinNew on the following aggVars=" +
         printAggregationVariables() << endl);
 
@@ -341,6 +378,13 @@ namespace ncml_module
     // For now we will explicitly create the new dimension for lookups.
     unsigned int newDimSize = _datasets.size(); // ASSUMES we find an aggVar in EVERY dataset!
     getParentDataset()->addDimension(new DimensionElement(agg_util::Dimension(_dimName, newDimSize)));
+
+
+    // We need at least one dataset, so warn.
+    if (_datasets.empty())
+      {
+        THROW_NCML_PARSE_ERROR(line(), "In joinNew aggregation we cannot have zero datasets specified!");
+      }
 
     // This is where the output variables go
     DDS* pAggDDS = getParentDataset()->getDDS();
@@ -403,6 +447,10 @@ namespace ncml_module
   {
     THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
         "Unimplemented aggregation type: joinExisting");
+
+    // TODO make sure we warn of the slowness if scan is used
+    // since every file needs to be opened until we make a caching daemon
+    // as in the design doc...
   }
 
   /**
@@ -487,6 +535,8 @@ namespace ncml_module
 
     vector<AggMemberDataset> memberDatasets;
     collectAggMemberDatasets(memberDatasets);
+
+    // TODO Make sure this works with the scan elements as well.
 
     auto_ptr<GridAggregateOnOuterDimension> pAggGrid(new GridAggregateOnOuterDimension(
             gridTemplate,
@@ -789,6 +839,44 @@ namespace ncml_module
       {
         const string& location = (*it)->location();
         rMemberDatasets.push_back( AggMemberDataset(location) );
+      }
+  }
+
+  void
+  AggregationElement::processAnyScanElements()
+  {
+    if (_scanners.size() > 0)
+      {
+        BESDEBUG("ncml", "Started to process " << _scanners.size() << " scan elements..." << endl);
+      }
+
+    vector<ScanElement*>::iterator it;
+    vector<ScanElement*>::iterator endIt = _scanners.end();
+    vector<NetcdfElement*> scannedDatasets;
+    for (it = _scanners.begin(); it != endIt; ++it)
+      {
+         BESDEBUG("ncml", "Processing scan element = " << (*it)->toString() << " ..." << endl);
+
+         // Run the scanner to get the scanned datasets.
+         // These will be sorted, so maintain order.
+         (*it)->getDatasetList(scannedDatasets);
+
+         // Add the datasets using the parser call to
+         // set the data up correctly,
+         // then unref() and remove them from the temp array
+         vector<NetcdfElement*>::iterator datasetIt;
+         vector<NetcdfElement*>::iterator datasetEndIt = scannedDatasets.end();
+         for (datasetIt = scannedDatasets.begin();
+             datasetIt != datasetEndIt;
+             ++datasetIt)
+           {
+             // this will ref() it and make sure we can load it.
+             _parser->addChildDatasetToCurrentDataset(*datasetIt);
+             // so we unref() it afterwards because we're dumping the temp array
+             (*datasetIt)->unref();
+           }
+         // we're done with it and they're all unref().
+         scannedDatasets.clear();
       }
   }
 

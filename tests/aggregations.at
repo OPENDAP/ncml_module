@@ -137,7 +137,6 @@ AT_RUN_BES_AND_COMPARE([agg/joinNew_grid.ncml],[dods],[agg/joinNew_grid_hslab_1]
 AT_RUN_BES_AND_COMPARE([agg/joinNew_grid.ncml],[dods],[agg/joinNew_grid_hslab_2],[[ dsp_band_1[2][512][0:1023] ]])
 AT_RUN_BES_AND_COMPARE([agg/joinNew_grid.ncml],[dods],[agg/joinNew_grid_hslab_3],[[ dsp_band_1[3][512][0:1023] ]])
 
-
 dnl Testing that we can use a stride on the new dimension.
 dnl getdap of the dods was compared with a handmade version
 dnl from the original dataset getdaps (these are checked in
@@ -149,4 +148,18 @@ AT_RUN_BES_AND_COMPARE([agg/joinNew_grid.ncml],[dods],[agg/joinNew_grid_stride_o
 
 dnl Test a projection of a map.  Internally this doesn't load any of the grid array's....
 AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([agg/joinNew_grid.ncml],[[ dsp_band_1.lat[0:63] ]], [agg/joinNew_grid_proj_lat])
+
+dnl Test the scan element for joinNew.  Since we expect the same aggregation as joinNew_grid.ncml to be
+dnl created by joinNew_scan.ncml, we simply use the old baselines but change the filename internally by hand.
+AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([agg/joinNew_scan.ncml],[[ dsp_band_1[0][512][0:1023] ]], [agg/joinNew_scan_hslab_0])
+AT_RUN_BES_AND_COMPARE([agg/joinNew_scan.ncml],[dods],[agg/joinNew_scan_hslab_1],[[ dsp_band_1[1][512][0:1023] ]])
+AT_RUN_BES_AND_COMPARE([agg/joinNew_scan.ncml],[dods],[agg/joinNew_scan_hslab_2],[[ dsp_band_1[2][512][0:1023] ]])
+AT_RUN_BES_AND_COMPARE([agg/joinNew_scan.ncml],[dods],[agg/joinNew_scan_hslab_3],[[ dsp_band_1[3][512][0:1023] ]])
+
+dnl Test some errors on improper <scan> use
+dnl Make sure parse error if scan is not a child of aggregation only
+AT_ASSERT_PARSE_ERROR([agg/joinNew_scan_error.ncml])
+
+dnl Make sure error if the path is wrong (missing dir) 
+AT_ASSERT_PARSE_ERROR([agg/joinNew_scan_dir_error.ncml])
 

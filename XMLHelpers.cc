@@ -67,9 +67,9 @@ namespace ncml_module
 
   /////////////////////////////// XMLAttribute Impl ///////////////////////////////
   XMLAttribute::XMLAttribute(const string& localNameA,
+      const string& valueA,
       const string& prefixA,
-      const string& nsURIA,
-      const string& valueA)
+      const string& nsURIA)
   : localname(localNameA)
   , prefix(prefixA)
   , nsURI(nsURIA)

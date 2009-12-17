@@ -56,6 +56,7 @@ namespace ncml_module
 {
   class NetcdfElement;
   class NCMLParser;
+  class ScanElement;
 
   class AggregationElement : public NCMLElement
   {
@@ -113,6 +114,14 @@ namespace ncml_module
     AggVarIter beginAggVarIter() const;
     AggVarIter endAggVarIter() const;
 
+    /** Add a child ScanElement to the Aggregation
+     * to be used to to add to the list of child datasets.
+     * This will be a strong (ref()'d) reference.
+     * @param pScanner the element to which to maintain a strong ref
+     *                  and use in the processing.
+     */
+    void addScanElement(ScanElement* pScanner);
+
     /**
      * Called when the enclosing dataset is closing for the aggregation to handle
      * any post processing that it needs to, in particular adding any map vectors to Grid's.
@@ -148,6 +157,11 @@ namespace ncml_module
      */
     void collectAggMemberDatasets(vector<AggMemberDataset>& rMemberDatasets) const;
 
+    /** If there are any <scan> elements, process them in
+     * order to add the scanned datasets.
+     */
+    void processAnyScanElements();
+
     /**
      * Perform the union aggregation on the child dataset dimensions tables into
      * getParentDataset()'s dimension table.
@@ -156,8 +170,6 @@ namespace ncml_module
      * match the one that is in the union.
      */
     void mergeDimensions(bool checkDimensionMismatch=true);
-
-    static vector<string> getValidAttributes();
 
     /** Called from processParentDatasetComplete() if we're a joinNew. */
     void processParentDatasetCompleteForJoinNew();
@@ -241,6 +253,9 @@ namespace ncml_module
      */
     auto_ptr<libdap::Array> createCoordinateVariableForNewDimensionUsingLocation(const agg_util::Dimension& dim) const;
 
+    // Return the list of valid attribute names.
+    static vector<string> getValidAttributes();
+
   private: // Data rep
 
     string _type; // required oneof { union | joinNew | joinExisting | forecastModelRunCollection | forecastModelSingleRunCollection }
@@ -250,9 +265,12 @@ namespace ncml_module
     // Our containing NetcdfElement, which must exist.  This needs to be a weak reference to avoid ref loop....
     NetcdfElement* _parent;
 
-    // The vector of loaded, parsed datasets, as NetcdfElement*.  We assume a STRONG reference to these
+    // The vector of explicit, ordered NetcdfElement*.  We assume a STRONG reference to these
     // if they are in this container and we must deref() them on dtor.
     vector<NetcdfElement*> _datasets;
+
+    // The vector of scan elements
+    vector<ScanElement*> _scanners;
 
     // A vector containing the names of the variables to be aggregated in this aggregation.
     // Not used for union.

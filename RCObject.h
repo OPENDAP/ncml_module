@@ -197,7 +197,7 @@ private:
    *
    * For example,
    *
-   * RCPtr obj = RCPtr(new RCObject());
+   * RCPtr<RCObject> obj = RCPtr<RCObject>(new RCObject());
    * // count is now 1.
    * // make a call to add to container that might throw exception.
    * // we assume the container will up the ref() itself on a successful addition.
@@ -250,7 +250,7 @@ private:
           // We just dropped an old reference, so unref() is not null.
           if (oldObj)
             {
-            oldObj->unref();
+              oldObj->unref();
             }
         }
       return *this;
@@ -273,6 +273,28 @@ private:
     T*
     get() const
     {
+      return _obj;
+    }
+
+    /**
+     * If not null, ref() the object and then return it.
+     *
+     * Useful for adding a reference to a
+     * container, e.g.:
+     *
+     * RCPtr<T> myObj;
+     * vector<T> myVecOfObj;
+     * myVecOfObj.push_back(myObj.refAndGet());
+     *
+     * @return
+     */
+    T*
+    refAndGet() const
+    {
+      if (_obj)
+        {
+          _obj->ref();
+        }
       return _obj;
     }
 

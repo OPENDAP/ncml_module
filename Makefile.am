@@ -28,6 +28,7 @@ NCML_SRCS = \
 		DDSLoader.cc \
 		Dimension.cc \
 		DimensionElement.cc \
+		DirectoryUtil.cc \
 		ExplicitElement.cc \
 		GridAggregateOnOuterDimension.cc \
 		MyBaseTypeFactory.cc \
@@ -46,6 +47,7 @@ NCML_SRCS = \
 		RenamedArrayWrapper.cc \
 		SaxParserWrapper.cc \
 		SaxParser.cc \
+		ScanElement.cc \
 		ScopeStack.cc \
 		Shape.cc \
 		SimpleLocationParser.cc \
@@ -62,6 +64,7 @@ NCML_HDRS = \
 		DDSLoader.h \
 		Dimension.h \
 		DimensionElement.h \
+		DirectoryUtil.h \
 		ExplicitElement.h \
 		GridAggregateOnOuterDimension.h \
 		MyBaseTypeFactory.h \
@@ -83,6 +86,7 @@ NCML_HDRS = \
 		RenamedArrayWrapper.h \
 		SaxParserWrapper.h \
 		SaxParser.h \
+		ScanElement.h \
 		Shape.h \
 		ScopeStack.h \
 		SimpleLocationParser.h \

@@ -39,6 +39,7 @@
 #include "NetcdfElement.h"
 #include "ReadMetadataElement.h"
 #include "RemoveElement.h"
+#include "ScanElement.h"
 #include "ValuesElement.h"
 #include "VariableAggElement.h"
 #include "VariableElement.h"
@@ -117,6 +118,7 @@ namespace ncml_module
     addPrototype(new DimensionElement());
     addPrototype(new AggregationElement());
     addPrototype(new VariableAggElement());
+    addPrototype(new ScanElement());
   }
 
 

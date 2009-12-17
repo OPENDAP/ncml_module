@@ -173,6 +173,7 @@ public: // Friends
   friend class NetcdfElement;
   friend class ReadMetadataElement;
   friend class RemoveElement;
+  friend class ScanElement;
   friend class ValuesElement;
   friend class VariableAggElement;
   friend class VariableElement;
