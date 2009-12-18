@@ -48,6 +48,9 @@
 #include <iostream>
 #include <sstream>
 
+// libdap
+#include "Error.h"
+
 
 using agg_util::FileInfo;
 using agg_util::DirectoryUtil;
@@ -104,6 +107,7 @@ namespace ncml_module
     _subdirs = attrs.getValueForLocalNameOrDefault("subdirs", "true");
     _olderThan = attrs.getValueForLocalNameOrDefault("olderThan", "");
     _dateFormatMark = attrs.getValueForLocalNameOrDefault("dateFormatMark", "");
+    _enhance = attrs.getValueForLocalNameOrDefault("enhance", "");
 
     // default is to print errors and throw which we want.
     validateAttributes(attrs, _sValidAttrs);
@@ -145,7 +149,7 @@ namespace ncml_module
   ScanElement::toString() const
   {
     return "<" + _sTypeName + " " +
-        "location=\"" + _location + "\"" + // always print this one even in empty.
+        "location=\"" + _location + "\" " + // always print this one even in empty.
         printAttributeIfNotEmpty("suffix", _suffix) +
         printAttributeIfNotEmpty("regExp", _regExp) +
         printAttributeIfNotEmpty("subdirs", _subdirs) +
@@ -175,6 +179,25 @@ namespace ncml_module
       {
         BESDEBUG("ncml", "Scan will filter against suffix=\"" << _suffix << "\"" << endl);
         scanner.setFilterSuffix(_suffix);
+      }
+
+    if (!_regExp.empty())
+      {
+        BESDEBUG("ncml", "Scan will filter against the regExp=\"" << _regExp << "\"" << endl);
+
+        // If there's a problem compiling it, we'll know now.
+        // So catch it and wrap it as a parse error, which tecnically it is.
+        try
+        {
+          scanner.setFilterRegExp(_regExp);
+        }
+        catch (libdap::Error& err)
+        {
+          THROW_NCML_PARSE_ERROR(line(),
+              "There was a problem compiling the regExp=\"" + _regExp +
+              "\"  : "
+              + err.get_error_message());
+        }
       }
 
     vector<FileInfo> files;
@@ -245,16 +268,13 @@ namespace ncml_module
     attrs.push_back("subdirs");
     attrs.push_back("olderThan");
     attrs.push_back("dateFormatMark");
+    attrs.push_back("enhance"); // it's in the schema, but we don't support it
     return attrs;
   }
 
   void
   ScanElement::throwOnUnhandledAttributes()
   {
-    if (!_regExp.empty())
-      {
-        THROW_NCML_PARSE_ERROR(line(), "ScanElement: Sorry, regExp attribute is not yet supported.");
-      }
     if (!_olderThan.empty())
       {
         THROW_NCML_PARSE_ERROR(line(), "ScanElement: Sorry, olderThan attribute is not yet supported.");
@@ -262,6 +282,10 @@ namespace ncml_module
     if (!_dateFormatMark.empty())
       {
         THROW_NCML_PARSE_ERROR(line(), "ScanElement: Sorry, dateFormatMark attribute is not yet supported.");
+      }
+    if (!_enhance.empty())
+      {
+        THROW_NCML_PARSE_ERROR(line(), "ScanElement: Sorry, enhance attribute is not yet supported.");
       }
   }
 }

@@ -97,7 +97,7 @@ namespace ncml_module
     string _subdirs;
     string _olderThan;
     string _dateFormatMark;
-    // string _enhance; // we're not implementing this one now.
+    string _enhance; // we're not implementing this one now.
   };
 
 }

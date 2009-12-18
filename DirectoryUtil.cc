@@ -37,6 +37,10 @@
 #include <sys/stat.h>
 #include <dirent.h>
 
+// libdap
+#include "GNURegex.h"
+
+// bes
 #include "BESDebug.h"
 #include "BESForbiddenError.h"
 #include "BESInternalError.h"
@@ -148,6 +152,7 @@ namespace agg_util
   DirectoryUtil::DirectoryUtil()
   : _rootDir("/")
   , _suffix("") // we start with no filter
+  , _pRegExp(0)
   {
     // this can throw, but the class is completely constructed by this point.
     setRootDir("/");
@@ -155,6 +160,7 @@ namespace agg_util
 
   DirectoryUtil::~DirectoryUtil()
   {
+    clearRegExp();
   }
 
   /** get the current root dir */
@@ -197,6 +203,22 @@ namespace agg_util
   DirectoryUtil::setFilterSuffix(const std::string& suffix)
   {
     _suffix = suffix;
+  }
+
+  void
+  DirectoryUtil::setFilterRegExp(const std::string& regexp)
+  {
+    clearRegExp();  // avoid leaks
+    if (!regexp.empty())
+      {
+        _pRegExp = new libdap::Regex(regexp.c_str());
+      }
+  }
+
+  void
+  DirectoryUtil::clearRegExp()
+  {
+    delete _pRegExp; _pRegExp = 0;
   }
 
   void
@@ -247,9 +269,11 @@ namespace agg_util
           }
         else if (pRegularFiles && S_ISREG(statBuf.st_mode))
           {
-            if (_suffix.empty() || matchesSuffix(entryName, _suffix))
+            FileInfo theFile(path, entryName, false);
+            // match against the relative passed in path, not root full path
+            if (matchesAllFilters(theFile.getFullPath()))
               {
-                pRegularFiles->push_back(FileInfo(path, entryName, false));
+                pRegularFiles->push_back(theFile);
               }
           }
       }
@@ -356,6 +380,27 @@ namespace agg_util
           throw BESInternalError(msg, __FILE__, __LINE__);
         }
       }
+  }
+
+  bool
+  DirectoryUtil::matchesAllFilters(const std::string& path) const
+  {
+    bool matches = true;
+    // Do the suffix first since it's fast
+    if (!_suffix.empty() && !matchesSuffix(path, _suffix))
+      {
+        matches = false;
+      }
+
+    // Suffix matches and we have a regexp, check that
+    if (matches && _pRegExp)
+      {
+        // match the full string, -1 on fail, num chars matching otherwise
+        int numCharsMatching = _pRegExp->match(path.c_str(), path.size(), 0);
+        matches = (numCharsMatching > 0); // TODO do we want to match the size()?
+      }
+
+    return matches;
   }
 
   bool

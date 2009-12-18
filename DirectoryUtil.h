@@ -33,6 +33,11 @@
 #include <string>
 #include <vector>
 
+namespace libdap
+{
+  class Regex; // GNU regular expression lib wrapper
+};
+
 namespace agg_util
 {
   /** Class to hold info on files as we get them. */
@@ -96,6 +101,27 @@ namespace agg_util
       * @param suffix  suffix string to filter returned files against
       */
      void setFilterSuffix(const std::string& suffix);
+
+     /**
+      * Set a (GNU style) regular expression to be used to match
+      * against the full filename (relative path under root)
+      * and filter only those that match in the listings.
+      * setFilterRegExp("") is the same as clearRegExp().
+      *
+      * @note If the filter suffix has been set as well, then BOTH
+      * of these must match for a file to be in the listing.
+      *
+      * @param regexp  the regular expression to use.
+      *
+      * @throw this will throw libdap::Error if there's
+      *         a problem with compiling the regexp.
+      */
+     void setFilterRegExp(const std::string& regexp);
+
+     /**
+      * Remove any filter using a regular expression.
+      */
+     void clearRegExp();
 
      /**
       * Get a listing of all the regular files and directories in the given path,
@@ -172,6 +198,14 @@ namespace agg_util
       */
      void throwErrorForOpendirFail(const std::string& fullPath);
 
+     /**
+      * If there is a suffix filter, the path must match it.
+      * If there is a regexp filter, the path must ALSO match it.
+      * @param path  the path to a file to match against.
+      * @return
+      */
+     bool matchesAllFilters(const std::string& path) const;
+
    private:
 
      // The search rootdir with no trailing slash
@@ -180,6 +214,10 @@ namespace agg_util
 
      // if !empty(), files returned will end in this suffix.
      std::string _suffix;
+
+     // If a regular expression is specified, this will be
+     // non-null and used to match each filename.
+     libdap::Regex* _pRegExp;
 
      // Name to use in BESDEBUG channel for this class.
      static const std::string _sDebugChannel;

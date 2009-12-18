@@ -160,6 +160,19 @@ dnl Test some errors on improper <scan> use
 dnl Make sure parse error if scan is not a child of aggregation only
 AT_ASSERT_PARSE_ERROR([agg/joinNew_scan_error.ncml])
 
-dnl Make sure error if the path is wrong (missing dir) 
+dnl Make sure error if the path location is spelled wrong (missing dir) 
 AT_ASSERT_PARSE_ERROR([agg/joinNew_scan_dir_error.ncml])
 
+dnl Test the scan with a regular expression that matches the same set of files
+AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([agg/joinNew_scan_regexp_1.ncml],[[ dsp_band_1[0][512][0:1023] ]], [agg/joinNew_scan_regexp_hslab_0])
+AT_RUN_BES_AND_COMPARE([agg/joinNew_scan_regexp_1.ncml],[dods],[agg/joinNew_scan_regexp_hslab_1],[[ dsp_band_1[1][512][0:1023] ]])
+AT_RUN_BES_AND_COMPARE([agg/joinNew_scan_regexp_1.ncml],[dods],[agg/joinNew_scan_regexp_hslab_2],[[ dsp_band_1[2][512][0:1023] ]])
+AT_RUN_BES_AND_COMPARE([agg/joinNew_scan_regexp_1.ncml],[dods],[agg/joinNew_scan_regexp_hslab_3],[[ dsp_band_1[3][512][0:1023] ]])
+
+AT_RUN_BES_AND_COMPARE([agg/joinNew_scan_regexp_2.ncml],[dods],[agg/joinNew_scan_regexp_2_hslab_0],[[ dsp_band_1[0][512][0:1023] ]])
+AT_RUN_BES_AND_COMPARE([agg/joinNew_scan_regexp_2.ncml],[dods],[agg/joinNew_scan_regexp_2_hslab_1],[[ dsp_band_1[1][512][0:1023] ]])
+AT_RUN_BES_AND_COMPARE([agg/joinNew_scan_regexp_2.ncml],[dods],[agg/joinNew_scan_regexp_2_hslab_2],[[ dsp_band_1[2][512][0:1023] ]])
+AT_RUN_BES_AND_COMPARE([agg/joinNew_scan_regexp_2.ncml],[dods],[agg/joinNew_scan_regexp_2_hslab_3],[[ dsp_band_1[3][512][0:1023] ]])
+
+dnl Make sure a malformed regexp throws a parse error with the regerror msg in it.
+AT_ASSERT_PARSE_ERROR([agg/joinNew_scan_regexp_error_1.ncml])
