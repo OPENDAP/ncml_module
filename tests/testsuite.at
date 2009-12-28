@@ -5,6 +5,7 @@ m4_define([bescmd_template],[$abs_srcdir/template.bescmd.in])
 m4_define([bes_conf_path],[$abs_builddir/bes.conf])
 m4_define([datadir], [/data/ncml])
 m4_define([baselines_path],[${abs_srcdir}/baselines])
+m4_define([full_data_path],[${abs_srcdir}/../data/ncml])
 
 AT_INIT([ncml autotest testsuite])
 

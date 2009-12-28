@@ -33,6 +33,8 @@
 #include <string>
 #include <vector>
 
+#include <time.h> // for time_t
+
 namespace libdap
 {
   class Regex; // GNU regular expression lib wrapper
@@ -45,13 +47,17 @@ namespace agg_util
   {
   public:
     /** strips any trailing "/" on path.  path.empty() assumed root "/" */
-    FileInfo(const std::string& path, const std::string& basename, bool isDir);
+    FileInfo(const std::string& path, const std::string& basename, bool isDir, time_t modTime);
     ~FileInfo();
 
     /** does not include trailing "/" */
     const std::string& path() const;
     const std::string& basename() const;
     bool isDir() const;
+    time_t modTime() const;
+
+    /** Get a human readable string for the modTime() */
+    std::string getModTimeAsString() const;
 
     /** Get the path and basename as path + "/" + basename
      * We cache this after first call to allow
@@ -73,7 +79,7 @@ namespace agg_util
     std::string _basename; // just the basename
     mutable std::string _fullPath; // cache of the full pathname, path + "/" + basename
     bool _isDir; // true if a directory, else a file.
-    // TODO add modification times, etc. in as well.
+    time_t _modTime; // last modification time
   };
 
   /** Helper classes for using dirent.h, dir.h, stat.h, etc. to make
@@ -122,6 +128,13 @@ namespace agg_util
       * Remove any filter using a regular expression.
       */
      void clearRegExp();
+
+     /** Set a filter on the modification time of the
+      * files to be returned in a listing.  Any returned file
+      * will have a modification date older than newestModTime.
+      * @param newestModTime the cutoff modification time for inclusion of files.
+      */
+     void setFilterModTimeOlderThan(time_t newestModTime);
 
      /**
       * Get a listing of all the regular files and directories in the given path,
@@ -204,7 +217,7 @@ namespace agg_util
       * @param path  the path to a file to match against.
       * @return
       */
-     bool matchesAllFilters(const std::string& path) const;
+     bool matchesAllFilters(const std::string& path, time_t modTime) const;
 
    private:
 
@@ -218,6 +231,13 @@ namespace agg_util
      // If a regular expression is specified, this will be
      // non-null and used to match each filename.
      libdap::Regex* _pRegExp;
+
+     // True if there was a newest modtime filter set.
+     bool _filteringModTimes;
+
+     // If _filteringModTimes, this will contain the
+     // newest modtime of files we want to include.
+     time_t _newestModTime;
 
      // Name to use in BESDEBUG channel for this class.
      static const std::string _sDebugChannel;

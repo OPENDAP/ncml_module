@@ -51,6 +51,7 @@ NCML_SRCS = \
 		ScopeStack.cc \
 		Shape.cc \
 		SimpleLocationParser.cc \
+		SimpleTimeParser.cc \
 		ValuesElement.cc \
 		VariableAggElement.cc \
 		VariableElement.cc \
@@ -90,6 +91,7 @@ NCML_HDRS = \
 		Shape.h \
 		ScopeStack.h \
 		SimpleLocationParser.h \
+		SimpleTimeParser.h \
 		ValuesElement.h \
 		VariableAggElement.h \
 		VariableElement.h \

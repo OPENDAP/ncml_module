@@ -97,11 +97,12 @@ namespace agg_util
   };
 
   /////////////////////// class FileInfo ////////////////////////////////
-  FileInfo::FileInfo(const std::string& path, const std::string& basename, bool isDir)
+  FileInfo::FileInfo(const std::string& path, const std::string& basename, bool isDir, time_t modTime)
   : _path(path)
   , _basename(basename)
   , _fullPath("") // start empty, cached later
   , _isDir(isDir)
+  , _modTime(modTime)
   {
     DirectoryUtil::removeTrailingSlashes(_path);
     DirectoryUtil::removePrecedingSlashes(_basename);
@@ -129,6 +130,23 @@ namespace agg_util
     return _isDir;
   }
 
+  time_t
+  FileInfo::modTime() const
+  {
+    return _modTime;
+  }
+
+  std::string
+  FileInfo::getModTimeAsString() const
+  {
+    // we'll just use UTC for the output...
+    struct tm* pTM = gmtime(&_modTime);
+    char buf[128];
+    // this should be "Year-Month-Day Hour:Minute:Second"
+    strftime(buf, 128, "%F %T", pTM);
+    return string(buf);
+  }
+
   const std::string&
   FileInfo::getFullPath() const
   {
@@ -142,7 +160,10 @@ namespace agg_util
   std::string
   FileInfo::toString() const
   {
-    return "{FileInfo fullPath=" + getFullPath() + " isDir=" + ((isDir())?("true"):("false")) + "}";
+    return "{FileInfo fullPath=" + getFullPath() +
+        " isDir=" + ((isDir())?("true"):("false")) +
+        " modTime=\"" + getModTimeAsString() + "\""
+        " }";
   }
 
   /////////////////////// class DirectoryUtil ////////////////////////////////
@@ -153,6 +174,8 @@ namespace agg_util
   : _rootDir("/")
   , _suffix("") // we start with no filter
   , _pRegExp(0)
+  , _filteringModTimes(false)
+  , _newestModTime(0L)
   {
     // this can throw, but the class is completely constructed by this point.
     setRootDir("/");
@@ -222,6 +245,13 @@ namespace agg_util
   }
 
   void
+  DirectoryUtil::setFilterModTimeOlderThan(time_t newestModTime)
+  {
+    _newestModTime = newestModTime;
+    _filteringModTimes = true;
+  }
+
+  void
   DirectoryUtil::getListingForPath(const std::string& path,
          std::vector<FileInfo>* pRegularFiles,
          std::vector<FileInfo>* pDirectories)
@@ -265,13 +295,13 @@ namespace agg_util
         // for loading later.
         if (pDirectories && S_ISDIR(statBuf.st_mode))
           {
-            pDirectories->push_back(FileInfo(path, entryName, true));
+            pDirectories->push_back(FileInfo(path, entryName, true, statBuf.st_mtime ));
           }
         else if (pRegularFiles && S_ISREG(statBuf.st_mode))
           {
-            FileInfo theFile(path, entryName, false);
+            FileInfo theFile(path, entryName, false, statBuf.st_mtime);
             // match against the relative passed in path, not root full path
-            if (matchesAllFilters(theFile.getFullPath()))
+            if (matchesAllFilters(theFile.getFullPath(), statBuf.st_mtime ))
               {
                 pRegularFiles->push_back(theFile);
               }
@@ -383,7 +413,7 @@ namespace agg_util
   }
 
   bool
-  DirectoryUtil::matchesAllFilters(const std::string& path) const
+  DirectoryUtil::matchesAllFilters(const std::string& path, time_t modTime) const
   {
     bool matches = true;
     // Do the suffix first since it's fast
@@ -398,6 +428,11 @@ namespace agg_util
         // match the full string, -1 on fail, num chars matching otherwise
         int numCharsMatching = _pRegExp->match(path.c_str(), path.size(), 0);
         matches = (numCharsMatching > 0); // TODO do we want to match the size()?
+      }
+
+    if (matches && _filteringModTimes)
+      {
+        matches = (modTime < _newestModTime);
       }
 
     return matches;

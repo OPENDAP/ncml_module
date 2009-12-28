@@ -36,8 +36,10 @@
 #include "NCMLParser.h"
 #include "NetcdfElement.h"
 #include "RCObject.h"
+#include "SimpleTimeParser.h"
 #include "XMLHelpers.h"
 
+#include <sys/time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
@@ -164,6 +166,29 @@ namespace ncml_module
     return (_subdirs == "true");
   }
 
+  long
+  ScanElement::getOlderThanAsSeconds() const
+  {
+    if (_olderThan.empty())
+      {
+        return 0L;
+      }
+
+    long secs = 0;
+    bool success = agg_util::SimpleTimeParser::parseIntoSeconds(secs, _olderThan);
+    if (!success)
+      {
+        THROW_NCML_PARSE_ERROR(line(),
+            "Couldn't parse the olderThan attribute!  Expect a string of the form: "
+            "\"%d %units\" where %d is a number and %units is a time unit string such as "
+            " \"hours\" or \"s\".");
+      }
+    else
+      {
+        return secs;
+      }
+  }
+
   void
   ScanElement::getDatasetList(vector<NetcdfElement*>& datasets) const
   {
@@ -174,35 +199,10 @@ namespace ncml_module
     BESDEBUG("ncml", "Scan will be relative to the BES root data path = " <<
         scanner.getRootDir() << endl);
 
-    // If we have a suffix, set the filter.
-    if (!_suffix.empty())
-      {
-        BESDEBUG("ncml", "Scan will filter against suffix=\"" << _suffix << "\"" << endl);
-        scanner.setFilterSuffix(_suffix);
-      }
-
-    if (!_regExp.empty())
-      {
-        BESDEBUG("ncml", "Scan will filter against the regExp=\"" << _regExp << "\"" << endl);
-
-        // If there's a problem compiling it, we'll know now.
-        // So catch it and wrap it as a parse error, which tecnically it is.
-        try
-        {
-          scanner.setFilterRegExp(_regExp);
-        }
-        catch (libdap::Error& err)
-        {
-          THROW_NCML_PARSE_ERROR(line(),
-              "There was a problem compiling the regExp=\"" + _regExp +
-              "\"  : "
-              + err.get_error_message());
-        }
-      }
+    setupFilters(scanner);
 
     vector<FileInfo> files;
     //vector<FileInfo> dirs;
-
     try // catch BES errors to give more context,,,,
     {
       // Call the right version depending on setting of subtree recursion.
@@ -258,6 +258,49 @@ namespace ncml_module
       }
   }
 
+  void
+  ScanElement::setupFilters(agg_util::DirectoryUtil& scanner) const
+  {
+    // If we have a suffix, set the filter.
+    if (!_suffix.empty())
+      {
+        BESDEBUG("ncml", "Scan will filter against suffix=\"" << _suffix << "\"" << endl);
+          scanner.setFilterSuffix(_suffix);
+      }
+
+    if (!_regExp.empty())
+      {
+        BESDEBUG("ncml", "Scan will filter against the regExp=\"" << _regExp << "\"" << endl);
+
+        // If there's a problem compiling it, we'll know now.
+        // So catch it and wrap it as a parse error, which tecnically it is.
+        try
+        {
+          scanner.setFilterRegExp(_regExp);
+        }
+        catch (libdap::Error& err)
+        {
+          THROW_NCML_PARSE_ERROR(line(),
+              "There was a problem compiling the regExp=\"" + _regExp +
+              "\"  : "
+              + err.get_error_message());
+        }
+      }
+
+    if (!_olderThan.empty())
+      {
+        long secs = getOlderThanAsSeconds();
+        struct timeval tvNow;
+        gettimeofday(&tvNow, 0);
+        long cutoffTime = tvNow.tv_sec - secs;
+        scanner.setFilterModTimeOlderThan(static_cast<time_t>(cutoffTime));
+        BESDEBUG("ncml", "Setting scan filter modification time using duration: "
+            << secs << " from the olderThan attribute=\"" << _olderThan << "\""
+            " The cutoff modification time based on now is: " <<
+            getTimeAsString(cutoffTime) << endl);
+      }
+  }
+
   vector<string>
   ScanElement::getValidAttributes()
   {
@@ -268,17 +311,13 @@ namespace ncml_module
     attrs.push_back("subdirs");
     attrs.push_back("olderThan");
     attrs.push_back("dateFormatMark");
-    attrs.push_back("enhance"); // it's in the schema, but we don't support it
+    attrs.push_back("enhance"); // it's in the schema, but we don't plan to support it
     return attrs;
   }
 
   void
   ScanElement::throwOnUnhandledAttributes()
   {
-    if (!_olderThan.empty())
-      {
-        THROW_NCML_PARSE_ERROR(line(), "ScanElement: Sorry, olderThan attribute is not yet supported.");
-      }
     if (!_dateFormatMark.empty())
       {
         THROW_NCML_PARSE_ERROR(line(), "ScanElement: Sorry, dateFormatMark attribute is not yet supported.");
@@ -288,4 +327,15 @@ namespace ncml_module
         THROW_NCML_PARSE_ERROR(line(), "ScanElement: Sorry, enhance attribute is not yet supported.");
       }
   }
+
+  std::string
+  ScanElement::getTimeAsString(time_t theTime)
+  {
+    struct tm* pTM = gmtime(&theTime);
+    char buf[128];
+    // this should be "Year-Month-Day Hour:Minute:Second"
+    strftime(buf, 128, "%F %T", pTM);
+    return string(buf);
+  }
+
 }

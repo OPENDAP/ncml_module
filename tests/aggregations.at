@@ -176,3 +176,17 @@ AT_RUN_BES_AND_COMPARE([agg/joinNew_scan_regexp_2.ncml],[dods],[agg/joinNew_scan
 
 dnl Make sure a malformed regexp throws a parse error with the regerror msg in it.
 AT_ASSERT_PARSE_ERROR([agg/joinNew_scan_regexp_error_1.ncml])
+
+dnl Tests scan@olderThan attribute for excluding new files
+dnl First test a simple parse error if the value can't be parsed into a time.
+AT_ASSERT_PARSE_ERROR([agg/joinNew_scan_olderThan_error_1.ncml])
+
+dnl Next, we'll touch the first three grid files to make their mod time now,
+dnl then do the scan and make sure we just get the data from the final grid...
+dnl AT_CHECK([besstandalone -c bes_conf_path -i ./test.bescmd], [], [stdout], [ignore])
+AT_SETUP([Invoking touch on first three grid files for scan@olderThan test...])
+AT_CHECK([touch full_data_path/agg/grids/f97182070958.hdf],[ignore],[ignore],[ignore])
+AT_CHECK([touch full_data_path/agg/grids/f97182183448.hdf],[ignore],[ignore],[ignore])
+AT_CHECK([touch full_data_path/agg/grids/f97183065853.hdf],[ignore],[ignore],[ignore])
+AT_CLEANUP
+AT_RUN_BES_AND_COMPARE([agg/joinNew_scan_olderThan.ncml],[dods],[agg/joinNew_scan_olderThan_hslab],[[ dsp_band_1[0][512][0:1023] ]])

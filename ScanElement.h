@@ -32,6 +32,11 @@
 #include "NCMLElement.h"
 #include "AggMemberDataset.h"
 
+namespace agg_util
+{
+  class DirectoryUtil;
+};
+
 namespace ncml_module
 {
   // FDecls
@@ -69,6 +74,13 @@ namespace ncml_module
     /** is the subdirs attribute true? */
     bool shouldScanSubdirs() const;
 
+    /** Get the olderThan attribute in seconds.
+     * Returns 0 for the empty attribute
+     * and -1 if there's an error parsing the attribute.
+     * @return
+     */
+    long getOlderThanAsSeconds() const;
+
     /**
      * Actually perform the filesystem scan based
      * on the specified attributes (suffix, subdirs, etc).
@@ -85,10 +97,16 @@ namespace ncml_module
 
   private: // internal methods
 
+    /** Set the filters on scanner from the attributes we have set. */
+    void setupFilters(agg_util::DirectoryUtil& scanner) const;
+
     static vector<string> getValidAttributes();
 
     /** throw a parse error for non-empty attributes we don't handle yet */
     void throwOnUnhandledAttributes();
+
+    /** Get a humanreadable string expressing the given time theTime */
+    static std::string getTimeAsString(time_t theTime);
 
   private: // data rep
     string _location;
