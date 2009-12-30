@@ -130,6 +130,11 @@ bes-conf: bes-ncml-data.sh
 	    ./bes-ncml-data.sh $$bes_prefix/etc/bes/bes.conf $$bes_prefix/lib/bes ; \
 	fi)
 
+C4_DIR=./cccc
+.PHONY: cccc
+cccc:	
+	cccc --outdir=$(C4_DIR) $(libncml_module_la_SOURCES)
+
 ###########################################################################
 #
 # Build linux RPMs
