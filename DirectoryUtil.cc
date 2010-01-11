@@ -491,10 +491,12 @@ namespace agg_util
   {
     bool found;
     string rootDir;
-    rootDir = TheBESKeys::TheKeys()->get_key("BES.Catalog.catalog.RootDirectory", found);
+    TheBESKeys::TheKeys()->get_value("BES.Catalog.catalog.RootDirectory",
+				     rootDir, found);
     if (!found)
       {
-        rootDir = TheBESKeys::TheKeys()->get_key("BES.Data.RootDirectory", found);
+        TheBESKeys::TheKeys()->get_value("BES.Data.RootDirectory",
+					 rootDir, found);
       }
     if (!found)
       {
