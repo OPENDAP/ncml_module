@@ -11,7 +11,6 @@ ACLOCAL_AMFLAGS = -I conf
 
 lib_besdir=$(libdir)/bes
 lib_bes_LTLIBRARIES = libncml_module.la
-dist_bin_SCRIPTS = bes-ncml-data.sh
 
 SUBDIRS = tests
 #TESTS = tests/testsuite
@@ -104,31 +103,25 @@ libncml_module_la_LIBADD = $(BES_DAP_LIBS)
 
 EXTRA_PROGRAMS = 
 
-EXTRA_DIST = COPYRIGHT COPYING bes-ncml-data.sh.in ncml_module.spec data OSX_Resources
+EXTRA_DIST = COPYRIGHT COPYING ncml.conf.in ncml_module.spec data OSX_Resources
 
-CLEANFILES = *~ bes-ncml-data.sh
+CLEANFILES = *~ ncml.conf
 
 sample_datadir = $(datadir)/hyrax/data/ncml
 sample_data_DATA = data/ncml/fnoc1_improved.ncml data/ncml/fnoc1.nc data/ncml/sample_virtual_dataset.ncml
 
-do_subst = sed -e 's,[@]sysconfdir[@],$(sysconfdir),g' \
-		   	   -e 's,[@]libdir[@],$(libdir),g' \
-		   	   -e 's,[@]datadir[@],$(datadir),g'
+install-data-local: ncml.conf
+	@currdate=`date +"%y%m%d%H%M"`; \
+	test -d $(DESTDIR)$(sysconfdir)/bes || $(MKDIR_P) $(DESTDIR)$(sysconfdir)/bes; \
+	test -d $(DESTDIR)$(sysconfdir)/bes/modules || $(MKDIR_P) $(DESTDIR)$(sysconfdir)/bes/modules; \
+	test -f $(DESTDIR)$(sysconfdir)/bes/modules/ncml.conf && mv -f $(DESTDIR)$(sysconfdir)/bes/modules/ncml.conf $(DESTDIR)$(sysconfdir)/bes/modules/ncml.conf.$$currdate; \
+	$(INSTALL_DATA) ncml.conf $(DESTDIR)$(sysconfdir)/bes/modules/ncml.conf
 
-bes-ncml-data.sh: bes-ncml-data.sh.in config.status
-	$(do_subst) < $(srcdir)/bes-ncml-data.sh.in > bes-ncml-data.sh
-	chmod +x bes-ncml-data.sh
+uninstall-local:
+	rm -f $(DESTDIR)$(sysconfdir)/bes/modules/ncml.conf
 
-# This makes sure that the handler modifies the bes which configure found
-# even when distcheck is run.
-bes-conf: bes-ncml-data.sh
-	(bes_prefix=`bes-config --prefix` ; \
-	if test "$$bes_prefix" = "/usr" ; \
-	 then \
-	    ./bes-ncml-data.sh /etc/bes/bes.conf /usr/lib/bes ;\
-	else \
-	    ./bes-ncml-data.sh $$bes_prefix/etc/bes/bes.conf $$bes_prefix/lib/bes ; \
-	fi)
+ncml.conf: ncml.conf.in config.status
+	sed -e "s%[@]bes_modules_dir[@]%${lib_besdir}%" $< > ncml.conf
 
 C4_DIR=./cccc
 .PHONY: cccc
