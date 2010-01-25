@@ -19,7 +19,7 @@ Welcome to the OPeNDAP NcML Data Handler Module for Hyrax!
 
 This module can be added to a Hyrax installation to extend its data
 serving capability to NcML 2.2 files (see
-http://www.unidata.ucar.edu/software/ne	tcdf/ncml/) which provide a way
+http://www.unidata.ucar.edu/software/netcdf/ncml/) which provide a way
 to add metadata to existing datasets.
    
 For information on how to build and install the NcML Data Module,
