@@ -2,8 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 # Configure script for OPeNDAP NCML data handler
 
-AC_PREREQ(2.61)
-AC_INIT(ncml_module, 0.9.2, opendap-tech@opendap.org)
+AC_PREREQ(2.63)
+AC_INIT(ncml_module, 0.9.3, opendap-tech@opendap.org)
 AC_CONFIG_AUX_DIR([conf])
 AC_CONFIG_MACRO_DIR([conf])
 
@@ -82,6 +82,11 @@ AC_SUBST([READLINK_F])
 
 OPENDAP_DEBUG_OPTION
 
+dnl The ncml_module files...
 AC_CONFIG_FILES([Makefile tests/Makefile tests/atlocal])
 
+dnl The icu dependency
+AC_CONFIG_SUBDIRS([icu/source])
+
 AC_OUTPUT
+

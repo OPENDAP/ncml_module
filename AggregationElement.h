@@ -128,6 +128,22 @@ namespace ncml_module
      */
     void processParentDatasetComplete();
 
+    /** If a child scan contains a dateFormatMark, then
+       * we want to add a "_CoordinateAxisType" of "Time"
+       * By setting this to a non empty() string,
+       * a new attribute _CoordinateAxisType will be
+       * added to aggregation variable in a joinNew
+       * or joinExisting aggregation.
+       * @param cat  the desired value for _CoordinateAxisType, or
+       *             "" if no attribute addition is desired.
+       */
+    void setAggregationVariableCoordinateAxisType(const std::string& cat);
+
+    /** Return the value set by setAggregationVariableCoordinateAxisType()
+     * or "" if none was set.
+     */
+    const std::string& getAggregationVariableCoordinateAxisType() const;
+
   private: // methods
 
     void processUnion();
@@ -253,6 +269,9 @@ namespace ncml_module
      */
     auto_ptr<libdap::Array> createCoordinateVariableForNewDimensionUsingLocation(const agg_util::Dimension& dim) const;
 
+    /** Add the attribute _CoordinateAxisType with value cat to the array pCV. */
+    static void addCoordinateAxisType(libdap::Array& rCV, const std::string& cat);
+
     // Return the list of valid attribute names.
     static vector<string> getValidAttributes();
 
@@ -275,6 +294,11 @@ namespace ncml_module
     // A vector containing the names of the variables to be aggregated in this aggregation.
     // Not used for union.
     vector<string> _aggVars;
+
+    // If set, we want to create a new attribute _CoordinateAxisType
+    // with this value on each aggVar.
+    std::string _coordinateAxisType;
+
   };
 
 }

@@ -9,11 +9,37 @@ AUTOMAKE_OPTIONS = foreign check-news
 
 ACLOCAL_AMFLAGS = -I conf
 
+####################################################################
+# ICU subproject support (http://site.icu-project.org/)
+# We now include an ICU distribution (slightly modified for bug fixes)
+# which is compiled prior to the ncml_module so we can use
+# it within the module.
+# Please also see: icu/source/configure.gnu 
+# to see how we configure and build ICU for our purposes.
+
+ICU_SRCDIR=$(abs_srcdir)/icu/source
+
+# We point into the build tree for icu since they
+# will not be installed during 'make'
+# Hence the LOCAL in the name.  We might
+# install icu earlier in the build process later
+# and want to point to isntalled libs
+ICU_LOCAL_HDR_COMMON = -I$(ICU_SRCDIR)/common
+ICU_LOCAL_HDR_I18N = -I$(ICU_SRCDIR)/i18n
+ICU_LOCAL_HDRS= $(ICU_LOCAL_HDR_COMMON) $(ICU_LOCAL_HDR_I18N)
+ICU_LOCAL_LIB = $(ICU_SRCDIR)/lib
+
+# we build them with a _hyrax suffix to not get decys already installed.
+ICU_STATIC_LIBS= -lsicui18n_hyrax -lsicuuc_hyrax -lsicudata_hyrax
+
+# End ICU subproject vars
+######################################################################
+
+
 lib_besdir=$(libdir)/bes
 lib_bes_LTLIBRARIES = libncml_module.la
 
-SUBDIRS = tests
-#TESTS = tests/testsuite
+SUBDIRS = icu/source . tests
 
 BES_SRCS:=
 
@@ -97,9 +123,10 @@ NCML_HDRS = \
 		XMLHelpers.h
 
 libncml_module_la_SOURCES = $(NCML_SRCS) $(BES_SRCS) $(NCML_HDRS) $(BES_HDRS)
-libncml_module_la_CPPFLAGS = $(BES_CPPFLAGS)
+libncml_module_la_CPPFLAGS = $(BES_CPPFLAGS)  $(ICU_LOCAL_HDRS)
 libncml_module_la_LDFLAGS = -avoid-version -module 
-libncml_module_la_LIBADD = $(BES_DAP_LIBS)
+# libncml_module_la_LDADD =  
+libncml_module_la_LIBADD =  -L$(ICU_LOCAL_LIB) $(ICU_STATIC_LIBS) $(BES_DAP_LIBS)
 
 EXTRA_PROGRAMS = 
 

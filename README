@@ -25,8 +25,10 @@ to add metadata to existing datasets.
 For information on how to build and install the NcML Data Module,
 please see the INSTALL file.
 
-More detailed and/or up-to-date documentation for this module can be
-found at: http://docs.opendap.org/index.php/BES_-_Modules_-_NcML_Module
+More detailed and up-to-date documentation for this module can be
+found at: 
+
+http://docs.opendap.org/index.php/BES_-_Modules_-_NcML_Module
 
 Note that adding metadata to HDF or NetCDF datasets may involve a
 little more care due to deviations from the DAP2 spec in those
@@ -47,6 +49,7 @@ more details.
   * Example NcML
   * HDF4 DAS Compatibility Issue
   * NetCDF DAS Compatibility Issue
+  * International Components for Unicode
   * Copyright
 
 ----------------------------------------------------------------------
@@ -253,10 +256,39 @@ and ask for the DAS response.  This will show the attribute hierarchy
 that the NcML Module is expecting.
 
 ----------------------------------------------------------------------
+* International Components for Unicode (ICU)
+
+We use code in the International Components for Unicode from:
+
+http://site.icu-project.org/
+
+in portions of the ncml_module.
+
+We include the distribution of ICU in ncml_module/icu and
+automatically compile it with the ncml_module so that the user does
+not need to download and install it themselves.
+
+We use special library names and install our build into a subdir
+(hyrax_icu) of the given install directory (prefix) so that users with
+their own ICU development environment will not be affected by our
+build.
+
+Please see the file ncml_module/icu/README_OPENDAP.txt for our
+specific modifications, which were minor bug fixes in configure and
+make and not source or data changes.
+
+
+----------------------------------------------------------------------
 * Copyright
 
-This software is copyrighted under the GNU Lesser GPL.  Please see the
-files COPYING and COPYRIGHT that came with this distribution.
+This software is copyrighted under the GNU Lesser GPL.  
+
+Our re-distribution of the International Components for Unicode (ICU)
+is licensed under an IBM open source license located in
+ncml_module/icu/license.html.
+
+Please also see the files COPYING and COPYRIGHT that came with this
+distribution for more information.
 
 
 

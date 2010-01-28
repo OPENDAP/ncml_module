@@ -26,6 +26,11 @@ BUILDING THE SOFTWARE
    repository, please follow the instructions in BUILDING FROM THE SVN
    REPOSITORY before continuing.
 
+   NOTE: As part of the build process, the ncml_module will build and
+   install a modified distribution of International Components for
+   Unicode (ICU).  This was designed to not affect other ICU
+   installations on the machine.
+
 1) Type `./configure' at the system prompt. On some systems you may
    have to type `sh configure.' 
 
@@ -36,18 +41,34 @@ BUILDING THE SOFTWARE
    BES to "/usr" and not "/usr/local".  If you are not sure, the BES
    will tell you its install dir when you run it with "besctl start".
 
-2) Type `make' to build the handler.
+   NOTE: ICU will install into ${prefix}/hyrax_icu to avoid collisions
+   with other ICU installations that may be in ${prefix} already.
 
-3*) (*Optional): You can perform a 'make check' to test the module,
-    but note that this REQUIRES that you have all of the netcdf, hdf4,
-    and hdf5 handlers already installed and working in Hyrax!  The
-    testsuite uses netcdf, hdf4 and hdf5 datasets for testing.  Please
-    see the BUILD REQUIREMENTS section under TESTSUITE if you wish to
-    run the tests and do not have these handlers installed.
-    Otherwise, you may skip this step.
+2) Type `make' to build the handler.  
 
-4) Install the handler into the BES by running `make install'. 
+   NOTE: Since the module requires ICU, note that the ICU libraries
+   will be built prior to the actual ncml_module. Patience is a
+   virtue!
 
+3*) (*Optional): You can perform a 'make check' to test the ICU build
+    and the ncml_module build, but note that this REQUIRES that you
+    have all of the netcdf, hdf4, and hdf5 handlers already installed
+    and working in Hyrax!  The testsuite uses netcdf, hdf4 and hdf5
+    datasets for testing.  Please see the BUILD REQUIREMENTS section
+    under TESTSUITE if you wish to run the tests and do not have these
+    handlers installed.  Otherwise, you may skip this step.
+
+    NOTE: Since we include ICU, the ICU tests will be run BEFORE the
+    actual ncml_module tests.  The user may also do 'cd tests; make
+    check' if they desire JUST the ncml_module tests (which will also
+    test our use of ICU).
+
+4) Install the handler into the BES by running `make install'.
+
+   NOTE: this will also install our built copies of the ICU libraries
+   into ${prefix}/hyrax_icu
+
+***** TODO Has this changed with the new BES conf changes?
 5) Type 'make bes-conf' to run the bes-ncml-data.sh script which inserts
    the handler in the bes.conf file and adds test data to
    $prefix/share/hyrax/data.  It also associates .ncml files with the
@@ -100,7 +121,7 @@ BUILD REQUIREMENTS
     o To build from a fresh SVN checkout, you'll need:
 
       	 o automake 1.11
-      	 o autoconf 2.62
+      	 o autoconf 2.63
 	 o libtool 2.2.6
 
       Earlier versions may work, but
@@ -241,8 +262,7 @@ DEBUGGING AIDS
 ---------------------------------------------------------------------------
 NOTES
 
-  o The NcML Module was built to work with Hyrax 1.6 server.
-
-
+  o The NcML Module was built to work with Hyrax 1.6 server and will
+  not work on earlier versions of Hyrax.
 
 

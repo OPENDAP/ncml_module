@@ -41,6 +41,7 @@ namespace ncml_module
 {
   // FDecls
   class NetcdfElement;
+  class AggregationElement;
 
   /**
    * Implementation of the <scan> element used to scan directories
@@ -71,6 +72,18 @@ namespace ncml_module
     virtual void handleEnd();
     virtual string toString() const;
 
+    /** Get the aggregation of which I am a child */
+    AggregationElement* getParent() const;
+
+    /**
+     * Set the parent of this element.
+     * This should ONLY be called by the
+     * AggregationElement when this is added
+     * to it.
+     * @param pParent  the weak ref to the parent.
+     */
+    void setParent(AggregationElement* pParent);
+
     /** is the subdirs attribute true? */
     bool shouldScanSubdirs() const;
 
@@ -100,6 +113,24 @@ namespace ncml_module
     /** Set the filters on scanner from the attributes we have set. */
     void setupFilters(agg_util::DirectoryUtil& scanner) const;
 
+    /** Create the SimpleDateFormat's _pDateFormat and _pISO8601
+     * for subsequent use.
+     * @param dateFormatMark the dateFormatMark to use to create _pDateFormat.
+     */
+    void initSimpleDateFormats(const std::string& dateFormatMark);
+
+    /** delete _pDateFormat and _pISO8601 if needed. */
+    void deleteDateFormats() throw();
+
+    /** Apply the dateFormatMark and DateFormatters to the given
+     * filename to extract the time.  Return this time as an
+     * ISO 8601 formatted string.
+     * @param filename the basename (no path) of the file to which to apply
+     *                  the dateFormatMark
+     * @return and ISO 8601  formatted string with the extracted time.
+     */
+    std::string extractTimeFromFilename(const std::string& filename) const;
+
     static vector<string> getValidAttributes();
 
     /** throw a parse error for non-empty attributes we don't handle yet */
@@ -116,6 +147,15 @@ namespace ncml_module
     string _olderThan;
     string _dateFormatMark;
     string _enhance; // we're not implementing this one now.
+
+    // Back pointer to our parent
+    AggregationElement* _pParent;
+
+    // We use an opaque ptr (pimpl idiom) to push the
+    // decl of the ICU classes to the .cc
+    // to get config.h information as well as hide the icu headers.
+    struct DateFormatters;
+    DateFormatters* _pDateFormatters;
   };
 
 }

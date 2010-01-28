@@ -201,7 +201,7 @@ namespace agg_util
   void
   DirectoryUtil::setRootDir(const std::string& origRootDir,
       bool allowRelativePaths/*=false*/,
-      bool allowSymLinks/*=false*/)
+      bool /*allowSymLinks=false*/)
   {
     if (!allowRelativePaths && hasRelativePath(origRootDir))
       {

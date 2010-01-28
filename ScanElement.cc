@@ -30,6 +30,16 @@
 
 #include "ScanElement.h"
 
+#include <algorithm> // std::sort
+#include <cstring>
+#include <cerrno>
+#include <dirent.h>
+#include <iostream>
+#include <sstream>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #include "AggregationElement.h"
 #include "DirectoryUtil.h" // agg_util
 #include "NCMLDebug.h"
@@ -39,20 +49,11 @@
 #include "SimpleTimeParser.h"
 #include "XMLHelpers.h"
 
-#include <sys/time.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <dirent.h>
+#include "Error.h" // libdap
 
-#include <algorithm> // std::sort
-#include <cstring>
-#include <cerrno>
-#include <iostream>
-#include <sstream>
-
-// libdap
-#include "Error.h"
-
+// ICU includes for the SimpleDateFormat used in this file only
+#include "unicode/smpdtfmt.h" // class SimpleDateFormat
+#include "unicode/timezone.h" // class TimeZone
 
 using agg_util::FileInfo;
 using agg_util::DirectoryUtil;
@@ -62,6 +63,34 @@ namespace ncml_module
   const string ScanElement::_sTypeName = "scan";
   const vector<string> ScanElement::_sValidAttrs = getValidAttributes();
 
+  // The rep for the opaque pointer in the header.
+  struct ScanElement::DateFormatters
+  {
+    DateFormatters() : _pDateFormat(0), _pISO8601(0), _markPos(0), _sdfLen(0) {}
+    ~DateFormatters()
+    {
+      SAFE_DELETE(_pDateFormat);
+      SAFE_DELETE(_pISO8601);
+    }
+
+    // If we have a _dateFormatMark, we'll create a single
+    // instance of the icu SimpleDateFormat in order
+    // to process each file.
+    SimpleDateFormat* _pDateFormat;
+    // We also will create a single instance of a format
+    // for ISO 8601 times for output into the coordinate
+    SimpleDateFormat* _pISO8601;
+
+    // The position of the # mark in the date format string
+    // We match the preceding characters with the filename.
+    size_t _markPos;
+
+    // The length of the pattern we actually use for the
+    // simple date format.  Thus the SDF pattern is
+    // the portion of the string from _markPos+1 to _sdfLen.
+    size_t _sdfLen;
+  };
+
   ScanElement::ScanElement()
   : NCMLElement(0)
   , _location("")
@@ -70,6 +99,8 @@ namespace ncml_module
   , _subdirs("")
   , _olderThan("")
   , _dateFormatMark("")
+  , _pParent(0)
+  , _pDateFormatters(0)
   {
   }
 
@@ -81,11 +112,31 @@ namespace ncml_module
   , _subdirs(proto._subdirs)
   , _olderThan(proto._olderThan)
   , _dateFormatMark(proto._dateFormatMark)
+  , _pParent(proto._pParent) // weak ref so this is fair...
+  , _pDateFormatters(0)
   {
+    if (!_dateFormatMark.empty())
+      {
+        initSimpleDateFormats(_dateFormatMark);
+      }
   }
 
   ScanElement::~ScanElement()
   {
+    deleteDateFormats();
+    _pParent = 0;
+  }
+
+  AggregationElement*
+  ScanElement::getParent() const
+  {
+    return _pParent;
+  }
+
+  void
+  ScanElement::setParent(AggregationElement* pParent)
+  {
+    _pParent = pParent;
   }
 
   const string&
@@ -116,6 +167,12 @@ namespace ncml_module
 
     // Until we implement them, we'll throw parse errors for those not yet implemented.
     throwOnUnhandledAttributes();
+
+    // Create the SimpleDateFormat's if we have a _dateFormatMark
+    if (!_dateFormatMark.empty())
+      {
+        initSimpleDateFormats(_dateFormatMark);
+      }
   }
 
   void
@@ -223,13 +280,15 @@ namespace ncml_module
       oss << " Perhaps a path is incorrect?" << endl;
       THROW_NCML_PARSE_ERROR(line(), oss.str());
     }
-    // Let the others percolate...  Internal errors
+    // Let the others percolate up...  Internal errors
     // and Forbidden are pretty clear and likely not a typo
     // in the NCML like NotFound could be.
 
     // Sort the filenames here (based on full path) since FileInfo::less uses that.
     // Multiple scan elements sequentially or explicit data impose their own partial ordering,
     std::sort(files.begin(), files.end());
+
+    // TODO If there was a dateFormatMark, we need to use the UTC ISO 8601 date to sort them, not filename!
 
     BESDEBUG("ncml", "Scan " << toString() << " returned matching regular files (sorted on fullPath): " << endl);
     DirectoryUtil::printFileInfoList(files);
@@ -250,11 +309,29 @@ namespace ncml_module
         // The path to the file, relative to the BES root as needed.
         attrs.addAttribute(XMLAttribute("location", it->getFullPath()));
 
+        // If there's a dateFormatMark, pull out the coordVal
+        // and add it to the attrs map.
+        if (!_dateFormatMark.empty())
+          {
+            string timeCoord = extractTimeFromFilename(it->basename());
+            BESDEBUG("ncml", "Got an ISO 8601 time from dateFormatMark: " <<
+                timeCoord << endl);
+            attrs.addAttribute(XMLAttribute("coordValue", timeCoord));
+          }
+
         // Make the dataset using the parser so it's in the parser memory pool.
         RCPtr<NCMLElement> dataset = _parser->_elementFactory.makeElement("netcdf", attrs, *_parser);
 
         // Up the ref count (since it's in an RCPtr) and add to the result vector
         datasets.push_back(static_cast<NetcdfElement*>(dataset.refAndGet()));
+      }
+
+    // Also, if there's a dateFormatMark, we want to specify that a new
+    // _CoordinateAxisType attribute be added with value "Time" (according to NcML page)
+    if (!_dateFormatMark.empty())
+      {
+        VALID_PTR(getParent());
+        getParent()->setAggregationVariableCoordinateAxisType("Time");
       }
   }
 
@@ -301,6 +378,130 @@ namespace ncml_module
       }
   }
 
+  // SimpleDateFormat to produce ISO 8601
+  static const string ISO_8601_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+
+  void
+  ScanElement::initSimpleDateFormats(const std::string& dateFormatMark)
+  {
+    // Make sure no accidental leaks
+    deleteDateFormats();
+    _pDateFormatters = new DateFormatters;
+    VALID_PTR(_pDateFormatters);
+
+    _pDateFormatters->_markPos = dateFormatMark.find_last_of("#");
+    if (_pDateFormatters->_markPos == string::npos)
+      {
+        THROW_NCML_PARSE_ERROR(line(),
+            "The scan@dateFormatMark attribute did not contain"
+            " a marking # character before the date format!"
+            " dateFormatMark=\"" + dateFormatMark + "\"");
+      }
+
+    // Get just the portion that is the SDF string
+    string dateFormat = dateFormatMark.substr(_pDateFormatters->_markPos+1, string::npos);
+    BESDEBUG("ncml", "Using a date format of: " << dateFormat << endl);
+    UnicodeString usDateFormat(dateFormat.c_str());
+
+    // Cache the length of the pattern for later substr calcs.
+    _pDateFormatters->_sdfLen = dateFormat.size();
+
+    // Try to make the formatter from the user given string
+    UErrorCode success = U_ZERO_ERROR;
+    _pDateFormatters->_pDateFormat = new SimpleDateFormat(usDateFormat, success);
+    if (U_FAILURE(success))
+      {
+        THROW_NCML_PARSE_ERROR(line(),
+            "Scan element failed to parse the SimpleDateFormat pattern: "
+            + dateFormat);
+      }
+    VALID_PTR(_pDateFormatters->_pDateFormat);
+    // Set it to the GMT timezone since we expect UTC times by default.
+    _pDateFormatters->_pDateFormat->setTimeZone(*(TimeZone::getGMT()));
+
+    // Also create an ISO 8601 formatter for creating the coordValue's
+    // from the parsed UDate's.
+    _pDateFormatters->_pISO8601 = new SimpleDateFormat(success);
+    if (U_FAILURE(success))
+      {
+        THROW_NCML_PARSE_ERROR(line(),
+            "Scan element failed to create the ISO 8601 SimpleDateFormat"
+            " using the pattern " + ISO_8601_FORMAT);
+      }
+    VALID_PTR(_pDateFormatters->_pISO8601);
+    // We want to output UTC, so GMT as well.
+    _pDateFormatters->_pISO8601->setTimeZone(*(TimeZone::getGMT()));
+    _pDateFormatters->_pISO8601->applyPattern(ISO_8601_FORMAT.c_str());
+  }
+
+  std::string
+  ScanElement::extractTimeFromFilename(const std::string& filename) const
+  {
+    VALID_PTR(_pDateFormatters);
+    VALID_PTR(_pDateFormatters->_pDateFormat);
+    VALID_PTR(_pDateFormatters->_pISO8601);
+
+    // The date format mark docs don't say they match the opening string
+    // before the # mark, but we'll double check them just to make sure
+    // we're not getting an error.
+    for (size_t pos = 0; pos < _pDateFormatters->_markPos; ++pos)
+      {
+        if (filename[pos] != _dateFormatMark[pos])
+          {
+            THROW_NCML_PARSE_ERROR(line(),
+                "While applying the dateFormatMark = "
+                "\"" + _dateFormatMark + "\""
+                " to the filename = "
+                "\"" + filename + "\""
+                " we failed to match the prefix before the # mark. "
+                " Please make sure to filter the filename with a regExp"
+                " if required to only get files that will match this prefix.");
+          }
+      }
+
+    // OK, we're copacetic, so strip off the SimpleDateFormat portion of the filename
+    string sdfPortion = filename.substr(
+       _pDateFormatters->_markPos,
+       _pDateFormatters->_sdfLen);
+
+    string sdfPattern;
+    UnicodeString usPattern;
+    _pDateFormatters->_pDateFormat->toPattern(usPattern);
+    usPattern.toUTF8String(sdfPattern);
+    BESDEBUG("ncml", "Scan is now matching the date portion of the filename " <<
+        sdfPortion <<
+        " to the SimpleDateFormat="
+        "\"" << sdfPattern << "\"" <<
+        endl);
+
+    UErrorCode status = U_ZERO_ERROR;
+    UDate theDate = _pDateFormatters->_pDateFormat->parse(sdfPortion.c_str(), status);
+    if (U_FAILURE(status))
+      {
+        THROW_NCML_PARSE_ERROR(line(),
+           "SimpleDateFormat could not parse the pattern="
+           "\"" + sdfPattern + "\""
+           " on the filename portion=" +
+           "\"" + sdfPortion + "\""
+           " of the filename=" +
+           "\"" + filename + "\""
+           " Either the pattern was invalid or the filename did not match.");
+      }
+
+    UnicodeString usISODate;
+    _pDateFormatters->_pISO8601->format(theDate, usISODate);
+
+    string result;
+    usISODate.toUTF8String(result);
+    return result;
+  }
+
+  void
+  ScanElement::deleteDateFormats() throw()
+  {
+    SAFE_DELETE(_pDateFormatters);
+  }
+
   vector<string>
   ScanElement::getValidAttributes()
   {
@@ -318,10 +519,6 @@ namespace ncml_module
   void
   ScanElement::throwOnUnhandledAttributes()
   {
-    if (!_dateFormatMark.empty())
-      {
-        THROW_NCML_PARSE_ERROR(line(), "ScanElement: Sorry, dateFormatMark attribute is not yet supported.");
-      }
     if (!_enhance.empty())
       {
         THROW_NCML_PARSE_ERROR(line(), "ScanElement: Sorry, enhance attribute is not yet supported.");

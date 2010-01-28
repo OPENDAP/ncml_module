@@ -1,6 +1,6 @@
 Summary:         NCML module for the OPeNDAP Data server
 Name:            ncml_module
-Version:         0.9.2
+Version:         0.9.3
 Release:         1
 License:         LGPLv2+
 Group:           System Environment/Daemons 

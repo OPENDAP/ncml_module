@@ -31,6 +31,7 @@
 #include <memory>
 #include <sstream>
 
+#include "AttrTable.h" // libdap
 #include "AggregationElement.h"
 #include "AggregationUtil.h"
 #include <Array.h> // libdap
@@ -318,6 +319,7 @@ namespace ncml_module
     VALID_PTR(pScanner);
     _scanners.push_back(pScanner);
     pScanner->ref(); // strong ref
+    pScanner->setParent(this); // weak ref.
   }
 
   void
@@ -599,6 +601,11 @@ namespace ncml_module
       }
 
     // OK, either pCV is valid or we've unwound out by this point.
+    // If a coordinate axis type was specified, we need to add it now.
+    if (!_coordinateAxisType.empty())
+      {
+        addCoordinateAxisType(*pCV, _coordinateAxisType);
+      }
 
     // For each aggVar:
     //    If it's a Grid, add the coordinate variable as a new map vector.
@@ -618,6 +625,17 @@ namespace ncml_module
       }
   }
 
+  void
+  AggregationElement::setAggregationVariableCoordinateAxisType(const std::string& cat)
+  {
+    _coordinateAxisType = cat;
+  }
+
+  const std::string&
+  AggregationElement::getAggregationVariableCoordinateAxisType() const
+  {
+    return _coordinateAxisType;
+  }
 
   libdap::Array*
   AggregationElement::findMatchingCoordinateVariable(
@@ -928,6 +946,27 @@ namespace ncml_module
               }
           }
       }
+  }
+
+  static const string COORDINATE_AXIS_TYPE_ATTR("_CoordinateAxisType");
+  void
+  AggregationElement::addCoordinateAxisType(libdap::Array& rCV, const std::string& cat)
+  {
+    AttrTable& rAT = rCV.get_attr_table();
+    AttrTable::Attr_iter foundIt = rAT.simple_find(COORDINATE_AXIS_TYPE_ATTR);
+    // preexists, then delete it and we'll replace with the new
+    if (foundIt != rAT.attr_end())
+      {
+        rAT.del_attr(COORDINATE_AXIS_TYPE_ATTR);
+      }
+
+    BESDEBUG("ncml", "Adding attribute to the aggregation variable " << rCV.name() <<
+        " Attr is " << COORDINATE_AXIS_TYPE_ATTR <<
+        " = " << cat <<
+        endl);
+
+    // Either way, now we can add it.
+    rAT.append_attr(COORDINATE_AXIS_TYPE_ATTR, "String", cat);
   }
 
   vector<string>
