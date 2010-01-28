@@ -14,7 +14,7 @@ xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/d
             <value>H5_GLOBAL</value>
         </Attribute>
         <Attribute name="Desc" type="String">
-            <value>&quot;I am a test data from hdfview                                                                                                  &quot;</value>
+            <value>I am a test data from hdfview                                                                                                  </value>
         </Attribute>
     </Attribute>
 
