@@ -72,6 +72,13 @@ fi
 AC_PATH_PROGS(U_MAKE, gmake gnumake, make)
 AC_SUBST(U_MAKE)
 
+# CHANGE: Attempt to fix bug with newer automakes.  
+# This is fixed in newer ICU versions.
+# See: https://bugzilla.redhat.com/show_bug.cgi?id=539167
+AC_LANG_PUSH([C++])
+AC_LINK_IFELSE([AC_LANG_PROGRAM()])
+AC_LANG_POP([C++])
+
 
 AC_ARG_WITH(cross-build,
 	[  --with-cross-build=dir specify an absolute path to the build directory of an ICU built for the current platform [default=no cross dir]],
