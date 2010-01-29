@@ -8,7 +8,7 @@ http://www.unidata.ucar.edu/software/netcdf/ncml/v2.2/Aggregation.html -->
     <scan location="data/ncml/agg/dated" 
 	  suffix=".nc" 
 	  subdirs="false"
-	  regExp="CG.*"
+	  regExp="^.*/CG[^/]*"
 	  dateFormatMark="CG#yyyyDDD_HHmmss"
 	  />
   </aggregation> 

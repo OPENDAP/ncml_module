@@ -280,25 +280,31 @@ namespace ncml_module
       oss << " Perhaps a path is incorrect?" << endl;
       THROW_NCML_PARSE_ERROR(line(), oss.str());
     }
-    // Let the others percolate up...  Internal errors
+
+    // Let the other exceptions percolate up...  Internal errors
     // and Forbidden are pretty clear and likely not a typo
     // in the NCML like NotFound could be.
 
-    // Sort the filenames here (based on full path) since FileInfo::less uses that.
-    // Multiple scan elements sequentially or explicit data impose their own partial ordering,
-    std::sort(files.begin(), files.end());
+    BESDEBUG("ncml", "Scan " << toString() << " returned matching regular files: " << endl);
+    if (files.empty())
+      {
+        BESDEBUG("ncml", "WARNING: No matching files found!" << endl);
+      }
+    else
+      {
+        DirectoryUtil::printFileInfoList(files);
+      }
 
-    // TODO If there was a dateFormatMark, we need to use the UTC ISO 8601 date to sort them, not filename!
 
-    BESDEBUG("ncml", "Scan " << toString() << " returned matching regular files (sorted on fullPath): " << endl);
-    DirectoryUtil::printFileInfoList(files);
-    //BESDEBUG("ncml", "Scan of location=" << _location << " returned directories: " << endl);
-    //DirectoryUtil::printFileInfoList(dirs);
-
-    // Turn the file list into NetcdfElements
+    // Adapt the file list into a temp vector of NetcdfElements
     // created from the parser's factory so they
     // get added to its memory pool
+    // We use a temp vector since we need to sort the datasets
+    // before appending them to the output dataset vector.
     XMLAttributeMap attrs;
+    vector<NetcdfElement*> scannedDatasets;
+    scannedDatasets.reserve(files.size());
+    // Now add them...
     for (vector<FileInfo>::const_iterator it = files.begin();
         it != files.end();
         ++it)
@@ -310,7 +316,8 @@ namespace ncml_module
         attrs.addAttribute(XMLAttribute("location", it->getFullPath()));
 
         // If there's a dateFormatMark, pull out the coordVal
-        // and add it to the attrs map.
+        // and add it to the attrs map since we want to use that and
+        // not the location for the new map vector.
         if (!_dateFormatMark.empty())
           {
             string timeCoord = extractTimeFromFilename(it->basename());
@@ -321,18 +328,46 @@ namespace ncml_module
 
         // Make the dataset using the parser so it's in the parser memory pool.
         RCPtr<NCMLElement> dataset = _parser->_elementFactory.makeElement("netcdf", attrs, *_parser);
+        VALID_PTR(dataset.get());
 
         // Up the ref count (since it's in an RCPtr) and add to the result vector
-        datasets.push_back(static_cast<NetcdfElement*>(dataset.refAndGet()));
+        scannedDatasets.push_back(static_cast<NetcdfElement*>(dataset.refAndGet()));
+      }
+
+    // We have the scanned datasets in scannedDatasets vector now, so sort
+    // on location() or coordValue() depending on whether we have a dateFormatMark...
+    if (_dateFormatMark.empty()) // sort by location()
+      {
+        BESDEBUG("ncml", "Sorting scanned datasets by location()..." << endl);
+        std::sort(scannedDatasets.begin(),
+                  scannedDatasets.end(),
+                  NetcdfElement::isLocationLexicographicallyLessThan);
+      }
+    else // sort by coordValue()
+      {
+        BESDEBUG("ncml", "Sorting scanned datasets by coordValue() since we got a dateFormatMark"
+            " and the coordValue are ISO 8601 dates..." << endl);
+        std::sort(scannedDatasets.begin(),
+                  scannedDatasets.end(),
+                  NetcdfElement::isCoordValueLexicographicallyLessThan);
       }
 
     // Also, if there's a dateFormatMark, we want to specify that a new
-    // _CoordinateAxisType attribute be added with value "Time" (according to NcML page)
+    // _CoordinateAxisType attribute be added with value "Time" (according to NcML Aggregations page)
     if (!_dateFormatMark.empty())
       {
         VALID_PTR(getParent());
         getParent()->setAggregationVariableCoordinateAxisType("Time");
       }
+
+    // Now we can append the sorted local vector of datasets to the output.
+    // We need not worry about reference counts since the scannedDatasets
+    // has them red'd already and won't deref when it goes out of scope.
+    // We are merely transferring them to the ouput, so the
+    // refcount is still correct as is.
+    BESDEBUG("ncml", "Adding the sorted scanned datasets to the current aggregation list..." << endl);
+    datasets.reserve(datasets.size() + scannedDatasets.size());
+    datasets.insert(datasets.end(), scannedDatasets.begin(), scannedDatasets.end());
   }
 
   void
@@ -441,25 +476,8 @@ namespace ncml_module
     VALID_PTR(_pDateFormatters->_pDateFormat);
     VALID_PTR(_pDateFormatters->_pISO8601);
 
-    // The date format mark docs don't say they match the opening string
-    // before the # mark, but we'll double check them just to make sure
-    // we're not getting an error.
-    for (size_t pos = 0; pos < _pDateFormatters->_markPos; ++pos)
-      {
-        if (filename[pos] != _dateFormatMark[pos])
-          {
-            THROW_NCML_PARSE_ERROR(line(),
-                "While applying the dateFormatMark = "
-                "\"" + _dateFormatMark + "\""
-                " to the filename = "
-                "\"" + filename + "\""
-                " we failed to match the prefix before the # mark. "
-                " Please make sure to filter the filename with a regExp"
-                " if required to only get files that will match this prefix.");
-          }
-      }
-
-    // OK, we're copacetic, so strip off the SimpleDateFormat portion of the filename
+    // Skip the first set of chars before the # mark (we don't care that
+    // they match, just the quantity).
     string sdfPortion = filename.substr(
        _pDateFormatters->_markPos,
        _pDateFormatters->_sdfLen);

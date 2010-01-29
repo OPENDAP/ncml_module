@@ -27,6 +27,8 @@
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
 
+#include "config.h"
+
 #include <BESDapResponse.h>
 
 #include "AggregationElement.h"
@@ -35,6 +37,8 @@
 #include "NCMLDebug.h"
 #include "NCMLParser.h"
 #include "NCMLUtil.h"
+
+#include <assert.h>
 #include <sstream>
 
 using namespace std;
@@ -480,6 +484,29 @@ namespace ncml_module
         val = num;
         return true;
       }
+  }
+
+  bool
+  NetcdfElement::isLocationLexicographicallyLessThan(const NetcdfElement* pLHS, const NetcdfElement* pRHS)
+  {
+    // args should never be null, but let's catch the error in dev if we goof.
+    // I don't want to use VALID_PTR here to avoid exception overhead in an internal
+    // sort function.
+    assert(pLHS);
+    assert(pRHS);
+    return (pLHS->location().compare(pRHS->location()) < 0);
+  }
+
+
+  bool
+  NetcdfElement::isCoordValueLexicographicallyLessThan(const NetcdfElement* pLHS, const NetcdfElement* pRHS)
+  {
+    // args should never be null, but let's catch the error in dev if we goof.
+    // I don't want to use VALID_PTR here to avoid exception overhead in an internal
+        // sort function.
+    assert(pLHS);
+    assert(pRHS);
+    return (pLHS->coordValue().compare(pRHS->coordValue()) < 0);
   }
 
 

@@ -208,6 +208,28 @@ namespace ncml_module
      */
     bool getCoordValueAsDouble(double& val) const;
 
+    /**
+     * Compare the location fields of the two arguments and return true
+     * if lhs.location() < rhs.location() in a lexicographic string sense.
+     * Used for std::sort on vector<NetcdfElement*>
+     * @see isCoordValueLexicographicallyLessThan()
+     * @param pLHS the lefthandside of the less than must not be null!
+     * @param pRHS the righthandside of the less than must not be null!
+     * @return if pLHS->location() < pRHS->location() lexicographically.
+     */
+    static bool isLocationLexicographicallyLessThan(const NetcdfElement* pLHS, const NetcdfElement* pRHS);
+
+    /**
+      * Compare the coordvalue fields of the two arguments and return true
+      * if lhs.coordValue() < rhs.coordValue() in a lexicographic string sense.
+      * Used for std::sort on vector<NetcdfElement*>
+      * @see isLocationLexicographicallyLessThan()
+      * @param pLHS the lefthandside of the less than  Must not be null!
+      * @param pRHS the righthandside of the less than  Must not be null!
+      * @return if pLHS->coordValue() < pRHS->coordValue() lexicographically.
+    */
+    static bool isCoordValueLexicographicallyLessThan(const NetcdfElement* pLHS, const NetcdfElement* pRHS);
+
   private:
 
     /** Ask the parser to load our location into our response object. */
