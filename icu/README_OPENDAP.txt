@@ -41,6 +41,14 @@ O icu/source/configure.in:
      and use of -fvisibility with gcc was turned off. This was done to
      remove overwhelming ld warnings about differing visibilities
      between static libraries. 
+
+  o A known bug in the stable ICU 4.2.1 means that newer automakes fail to
+     configure link checks properly so the g++ namespace check fails.
+     We add the workaround as listed in:
+
+      https://bugzilla.redhat.com/show_bug.cgi?id=539167 
+
+     in order to fix this.
  
 O We do not use icu/source/runConfigureICU or the distributed
    icu/source/configure script but instead use recursive autoconf to
