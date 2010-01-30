@@ -10,8 +10,9 @@ Note that the ncml_module build does not use any copy of ICU already
 installed on the machine (at this time), but builds its own special
 copies with a different name than the normal ICU libraries and
 installs them in a special subdir (currently hyrax_icu) of the
-configure --prefix to avoid collisions with existing ICU development
-installs already in the install directory.
+configure prefix (either explicitly specified with --prefix or
+defaulted).  This allows us to avoid collisions with existing ICU
+development installs already in the install directory.
 
 If a file has been modified, the original has been left with a ".orig"
 suffix, for example "configure.in.orig" is the configure.in from the
@@ -31,6 +32,12 @@ Thanks!
 
 ---------------------------------------------
 Specific Changes:
+
+O icu/source/icudefs.mk.in: Modified to append the dir "hyrax_icu" to
+   the normal $prefix value passed into to configure (either via
+   --prefix=foo or the default, usually /usr/local).  This change
+   avoids accidentally installing our build of ICU over an existing
+   ICU development environment on the machine
 
 O icu/source/configure.in:
 

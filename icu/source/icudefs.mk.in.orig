@@ -17,8 +17,7 @@ SHELL = @SHELL@
 
 # Standard directories
 
-# HYRAX CHANGE: Want to install to a subdir location not not overwrite
-prefix = @prefix@/hyrax_icu
+prefix = @prefix@
 exec_prefix = @exec_prefix@
 
 bindir = @bindir@
