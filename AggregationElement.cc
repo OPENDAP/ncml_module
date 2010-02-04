@@ -538,8 +538,6 @@ namespace ncml_module
     vector<AggMemberDataset> memberDatasets;
     collectAggMemberDatasets(memberDatasets);
 
-    // TODO Make sure this works with the scan elements as well.
-
     auto_ptr<GridAggregateOnOuterDimension> pAggGrid(new GridAggregateOnOuterDimension(
             gridTemplate,
             dim,
@@ -556,14 +554,14 @@ namespace ncml_module
     // We're done.  Just add it for now...
     // The processParentDatasetCompleteForJoinNew() will
     // Make sure the correct new map vector gets added
-    // And if it's a data response we will have to factor out the constraints
-    // and pass them down in the GridAggregateOuterDimension
   }
 
   void
   AggregationElement::processParentDatasetCompleteForJoinNew()
   {
-    DDS* pParentDDS = getParentDataset()->getDDS();
+    NetcdfElement* pParentDataset = getParentDataset();
+    VALID_PTR(pParentDataset);
+    DDS* pParentDDS = pParentDataset->getDDS();
     VALID_PTR(pParentDDS);
 
     const DimensionElement* pDim = getParentDataset()->getDimensionInLocalScope(_dimName);
@@ -571,33 +569,35 @@ namespace ncml_module
         " didn't find a DimensionElement with the joinNew dimName=" + _dimName );
     const agg_util::Dimension& dim = pDim->getDimension();
 
-    // See if the author specified a valid coordinate variable.
-    // We could throw a parse exception through here if the found
-    // map var doesn't match our expectations...
-    Array* pCV = findMatchingCoordinateVariable(*pParentDDS,
-                                                dim, // this dimension
-                                                true); // throw on invalid
+    // See if there's an explicit or placeholder c.v. for this dimension name
+    BaseType* pBT = NCMLUtil::getVariableNoRecurse(*pParentDDS, dim.name);
+    Array* pCV = 0; // this will be a ptr to the actual (new or existing) c.v. in the *pParentDDS.
 
-    if (!pCV) // Name is free, so we need to create it
+    // If name totally unused, we need to create a new c.v. and add it.
+    if (!pBT)
       {
-        // Do the magic top-level call that figures out how to do it
-        // Keep in auto_ptr since our add_var below will copy it.
-        auto_ptr<libdap::Array> pNewCV = createCoordinateVariableForNewDimension(dim);
-
-        // Make sure it did it
-        NCML_ASSERT_MSG(pNewCV.get(), "AgregationElement::createCoordinateVariableForNewDimension() failed to create a coordinate variable!");
-
-        // Add it to the DDS, which will make a copy
-        // (TODO change this when we add noncopy add_var to DDS)
-        pParentDDS->add_var(pNewCV.get());
-
-        // Grab the copy back out and set to our expected result.
-        pCV = static_cast<Array*>( NCMLUtil::getVariableNoRecurse(
-                                        *(pParentDDS),
-                                        dim.name) );
-
-        NCML_ASSERT_MSG(pCV, "Logic Error: tried to add a new coordinate variable while processing joinNew"
-            " but we couldn't locate it!");
+        pCV = createAndAddCoordinateVariableForNewDimension(*pParentDDS, dim);
+        NCML_ASSERT_MSG(pCV, "processParentDatasetCompleteForJoinNew(): "
+            "failed to create a new coordinate variable for dim=" + dim.name);
+      }
+    else // name exists: either it's explicit or deferred.
+      {
+        // See if the var we found with the dimension name is
+        // in the deferred variable list for the parent dataset:
+        VariableElement* pVarElt = pParentDataset->findVariableElementForLibdapVar(pBT);
+        // If not, then we expect explicit values so just validate it's a proper c.v. for
+        // the aggregation (the dim) and set pCV to it if so.
+        if (!pVarElt)
+          {
+            // will throw if not valid since we send true.
+            pCV = ensureVariableIsProperNewCoordinateVariable(pBT, dim, true);
+            VALID_PTR(pCV);
+          }
+        else // it was deferred, need to do some special work...
+          {
+            pCV = processDeferredCoordinateVariable(pBT, dim);
+            VALID_PTR(pCV);
+          }
       }
 
     // OK, either pCV is valid or we've unwound out by this point.
@@ -638,19 +638,12 @@ namespace ncml_module
   }
 
   libdap::Array*
-  AggregationElement::findMatchingCoordinateVariable(
-      const DDS& dds,
+  AggregationElement::ensureVariableIsProperNewCoordinateVariable(libdap::BaseType* pBT,
       const agg_util::Dimension& dim,
-      bool throwOnInvalidCV/*=true*/) const
+       bool throwOnInvalidCV) const
   {
+    VALID_PTR(pBT);
     Array* pArrRet = 0;
-    BaseType* pBT = NCMLUtil::getVariableNoRecurse(dds, dim.name);
-
-    // Name doesn't exist, just NULL.  We'll have to create it.
-    if (!pBT)
-      {
-        return 0;
-      }
 
     // If 1D array with name == dim....
     if (AggregationUtil::couldBeCoordinateVariable(pBT))
@@ -677,23 +670,102 @@ namespace ncml_module
           }
       }
 
-     else // Name exists, but not a coordinate variable, then exception or return null.
-       {
-         BESDEBUG("ncml",
-             "AggregationElement::findMatchingCoordinateVariableAndThrowIfInvalid: "
-             "Found a variable matching dimension name=" << dim.name <<
-             " but it was not a coordinate variable" << endl);
-         if (throwOnInvalidCV)
-           {
-             THROW_NCML_PARSE_ERROR(line(),
-                 "AggregationElement::findMatchingCoordinateVariableAndThrowIfInvalid(): "
-                 "We found a variable with the joinNew dimName=" + dim.name +
-                 " but it is not a proper coordinate variable for the dimension.");
-           }
-       }
-      // Return valid Array or null on failures.
-      return pArrRet;
-    }
+    else // Name exists, but not a coordinate variable, then exception or return null.
+      {
+        std::ostringstream msg;
+        msg << "joinNew aggregation found a variable matching new outer dimension name=" << dim.name <<
+            " but it was not a coordinate variable.  "
+            " It must be a 1D array whose dimension name is the same as its name. ";
+        BESDEBUG("ncml", "AggregationElement::ensureVariableIsProperNewCoordinateVariable: " +
+            msg.str() << endl);
+        if (throwOnInvalidCV)
+          {
+            THROW_NCML_PARSE_ERROR(line(),
+                msg.str())
+          }
+      }
+    // Return valid Array or null on failures.
+    return pArrRet;
+  }
+
+  libdap::Array*
+  AggregationElement::findMatchingCoordinateVariable(
+      const DDS& dds,
+      const agg_util::Dimension& dim,
+      bool throwOnInvalidCV/*=true*/) const
+  {
+    BaseType* pBT = NCMLUtil::getVariableNoRecurse(dds, dim.name);
+
+    // Name doesn't exist, just NULL.  We'll have to create it from scratch
+    if (!pBT)
+      {
+        return 0;
+      }
+
+    return ensureVariableIsProperNewCoordinateVariable(pBT, dim, throwOnInvalidCV);
+  }
+
+  /**
+      *  We will:
+     *    o Create the actual data for the coordinate variable as if there were
+     *      no deferred variable at all
+     *    o Ensure the type of placeholder elt and new var elts are the same or throw
+     *    o Copy the metadata (AttrTable) in pBT into the new one
+     *    o Remove pBT from the DDS since by definition it will be a scalar and not an Array type.
+     *    o Add the newly created one to the dataset
+     *    o Inform the dataset that the variables values are now valid.  This will REMOVE the entry
+     *       since the object will be going away!!
+     *    o Lookup the object ACTUALLY in the DDS and return it.
+  */
+  libdap::Array*
+  AggregationElement::processDeferredCoordinateVariable(libdap::BaseType* pBT, const agg_util::Dimension& dim)
+  {
+    static const string funcName("AggregationElement::processDeferredCoordinateVariable():");
+    VALID_PTR(pBT);
+
+    BESDEBUG("ncml", "Processing the placeholder coordinate variable (no values) for the "
+        "current aggregation to add placeholder metadata to the generated values..." << endl);
+
+    // Generate the c.v. as if we had no placeholder since pBT will be a scalar (shape cannot
+    // be defined on it by ncml spec defn).
+    // @OPTIMIZE try to refactor this to avoid unnecessary copies.
+    auto_ptr<Array> pNewArrCV = createCoordinateVariableForNewDimension(dim);
+    NCML_ASSERT_MSG(pNewArrCV.get(), funcName + " createCoordinateVariableForNewDimension()"
+        " returned null.  Out of memory perhaps?");
+
+    // Make sure the types of the placeholder scalar and created array match or the author goofed
+    BaseType* pNewEltProto = pNewArrCV->var();
+    VALID_PTR(pNewEltProto);
+    if (pBT->type() != pNewEltProto->type())
+      {
+        THROW_NCML_PARSE_ERROR(line(),
+           " We expected the type of the placeholder coordinate variable to be the same "
+           " as that created by the aggregation.  Expected type=" + pNewEltProto->type_name() +
+           " but placeholder has type=" + pBT->type_name() +
+           "  Please make sure these match in the input file!");
+      }
+
+    // Let the validation know that we got values for the original value and to remove the entry
+    // since we're about to delete the pointer to pBT!
+    getParentDataset()->setVariableGotValues(pBT, true);
+
+    // Copy the entire AttrTable tree (recursively) from the placeholder into the new variable
+    pNewArrCV->get_attr_table() = pBT->get_attr_table();
+
+    // Delete the placeholder
+    DDS* pDDS = getParentDataset()->getDDS();
+    VALID_PTR(pDDS);
+    pDDS->del_var(pBT->name());
+
+    // Add the new one, which will copy it (argh! we need to fix this in libdap!)
+    // OPTIMIZE  use non copy add when available.
+    pDDS->add_var(pNewArrCV.get()); // use raw ptr for the copy.
+
+    // Pull out the copy we just added and hand it back
+    Array* pArrCV = static_cast<Array*>(NCMLUtil::getVariableNoRecurse(*pDDS, dim.name));
+    VALID_PTR(pArrCV);
+    return pArrCV;
+  }
 
   auto_ptr<libdap::Array>
   AggregationElement::createCoordinateVariableForNewDimension(const agg_util::Dimension& dim) const
@@ -709,6 +781,28 @@ namespace ncml_module
       {
         return createCoordinateVariableForNewDimensionUsingLocation(dim);
       }
+  }
+
+  libdap::Array*
+  AggregationElement::createAndAddCoordinateVariableForNewDimension(DDS& dds, const agg_util::Dimension& dim)
+  {
+    auto_ptr<libdap::Array> pNewCV = createCoordinateVariableForNewDimension(dim);
+
+    // Make sure it did it
+    NCML_ASSERT_MSG(pNewCV.get(), "AgregationElement::createCoordinateVariableForNewDimension() failed to create a coordinate variable!");
+
+    // Add it to the DDS, which will make a copy
+    // (TODO change this when we add noncopy add_var to DDS)
+    dds.add_var(pNewCV.get());
+
+    // Grab the copy back out and set to our expected result.
+    Array* pCV = static_cast<Array*>( NCMLUtil::getVariableNoRecurse(
+          dds,
+          dim.name) );
+
+    NCML_ASSERT_MSG(pCV, "Logic Error: tried to add a new coordinate variable while processing joinNew"
+        " but we couldn't locate it!");
+    return pCV;
   }
 
   auto_ptr<libdap::Array>

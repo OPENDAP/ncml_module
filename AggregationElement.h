@@ -190,6 +190,20 @@ namespace ncml_module
     /** Called from processParentDatasetComplete() if we're a joinNew. */
     void processParentDatasetCompleteForJoinNew();
 
+    /** Make sure the variable in pBT is a valid coordinate variable for the dimension dim
+     * and return it as an Array* if so.  Else throw or return null.
+     * A valid c.v. will:
+     *          o Be an Array with name dim.name with 1 dimension whose name is also dim.name
+     *          o Have a length() that matches dim.size
+     * @param pBT  the variable to validate as a dim c.v.
+     * @param dim  the dimension information to check for
+     * @return pBT cast as an Array* if it is valid, else NULL.
+     */
+    libdap::Array* ensureVariableIsProperNewCoordinateVariable(
+        libdap::BaseType* pBT,
+        const agg_util::Dimension& dim,
+        bool throwIfInvalid) const;
+
     /**
      * Search the given dds for a coordinate variable (CV) matching
      * dim and return it.
@@ -219,6 +233,30 @@ namespace ncml_module
         bool throwOnInvalidCV=true) const;
 
     /**
+     *  Called when we find an existing variable with the same name as the dim.name
+     *  and the variable has NOT had values set on it yet (deferred).
+     *
+     *  We will:
+     *    o Create the actual data for the coordinate variable as if there were
+     *      no deferred variable at all
+     *    o Ensure the type of placeholder elt and new var elts are the same or throw
+     *    o Copy the metadata (AttrTable) in pBT into the new one
+     *    o Remove pBT from the DDS since by definition it will be a scalar and not an Array type.
+     *    o Add the newly created one to the dataset
+     *    o Inform the dataset that the variables values are now valid.  This will REMOVE the entry
+     *       since the object will be going away!!
+     *    o Lookup the object ACTUALLY in the DDS and return it.
+     *
+     *  We throw if the element type of pBT is not the same as the automatic created array
+     *  (which will be String or double as per ncml spec at this point).
+     *
+     * @param pBT  the variable to add values to
+     * @param dim  the dimension information to add to pBT
+     * @return  pBT cast to an Array if all goes well, else null.
+     */
+    libdap::Array* processDeferredCoordinateVariable(libdap::BaseType* pBT, const agg_util::Dimension& dim);
+
+    /**
      * Use the list of datasets to create a new coordinate variable for the given dimension.
      * The coordinate variable will have the same name as the dimension, with its shape
      * as the dimension as well.
@@ -239,6 +277,21 @@ namespace ncml_module
      *         values of the proper type.  (Either string or double now).
      */
     auto_ptr<libdap::Array> createCoordinateVariableForNewDimension(const agg_util::Dimension& dim) const;
+
+    /**
+     * Add functionality for createCoordinateVariableForNewDimension():
+     * We call that function to make the proper new c.v.
+     * and then add the variable to the current parent dataset's
+     * DDS.
+     * Since this copies the new var, we lookup the actual array in the DDS and return a
+     * pointer to the actual one in the DDS.
+     * NULL could be returned if an error, though most (or all)
+     * error conditions will throw.
+     * @param dds   the dds to add to (our parent dds)
+     * @param dim  the dimension info for the new variable (including it's name!)
+     * @return the new c.v. contained within dds or null if error.
+     * */
+    libdap::Array* createAndAddCoordinateVariableForNewDimension(libdap::DDS& dds, const agg_util::Dimension& dim);
 
     /**
      * Scans the child datasets and fills a new coordinate variable Array with the netcdf@coordValue from each.

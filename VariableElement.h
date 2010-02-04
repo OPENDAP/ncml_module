@@ -98,15 +98,15 @@ namespace ncml_module
     }
 
     /** @return whether this variable was created and added as a new variable in this parse */
-    bool isNewVariable() const { return _isNewNCMLVariable; }
+    bool isNewVariable() const;
 
     /** @return whether we got a values element set to us yet, used to make sure new
      * variables get values once and only once.
      */
-    bool checkGotValues() const { return _gotValues; }
+    bool checkGotValues() const;
 
     /** Called once we set the values from ValuesElement so we are aware. */
-    void setGotValues() { _gotValues = true; }
+    void setGotValues();
 
   private:
 
@@ -258,9 +258,14 @@ namespace ncml_module
 
     // Ephemeral state below
 
-    vector<string> _shapeTokens; // tokenized version of _shape for dimensions
-    bool _isNewNCMLVariable; // true if this variable was created new in the NcML file and isn't existing
-    bool _gotValues; // true once we get a valid <values> element with values in it.  Used for parse error checking
+    // tokenized version of _shape for dimensions
+    vector<string> _shapeTokens;
+
+    // if not null, this element created this var and it exists in the dds of the containing dataset
+    libdap::BaseType* _pNewlyCreatedVar;
+
+    // true once we get a valid <values> element with values in it.  Used for parse error checking
+    bool _gotValues;
   };
 
 }

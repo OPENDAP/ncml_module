@@ -4,7 +4,7 @@
      for the case of explicitly listed numeric-valued
      netcdf@coordValue attributes. -->
 
-<netcdf title="joinNew Aggregation with numeric coordVal's">
+<netcdf title="joinNew Aggregation with numeric coordVal's should create a new map with thos values as float64.">
   
   <aggregation type="joinNew" dimName="source">
     

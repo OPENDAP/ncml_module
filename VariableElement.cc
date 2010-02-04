@@ -40,6 +40,7 @@
 #include "NCMLDebug.h"
 #include "NCMLParser.h"
 #include "NCMLUtil.h"
+#include "NetcdfElement.h"
 #include "RenamedArrayWrapper.h"
 #include <sstream>
 
@@ -60,7 +61,7 @@ namespace ncml_module
   , _shape("")
   , _orgName("")
   , _shapeTokens()
-  , _isNewNCMLVariable(false)
+  , _pNewlyCreatedVar(0)
   , _gotValues(false)
   {
   }
@@ -73,8 +74,8 @@ namespace ncml_module
     _shape = proto._shape;
     _orgName = proto._orgName;
     _shapeTokens = proto._shapeTokens;
-    _isNewNCMLVariable = proto._isNewNCMLVariable;
-    _gotValues = proto._gotValues;
+    _pNewlyCreatedVar = 0; // not safe to copy the proto one, so pretend we didn't.
+    _gotValues = false; // to be consistent with previosu line
   }
 
   VariableElement::~VariableElement()
@@ -144,6 +145,24 @@ namespace ncml_module
                 ">";
   }
 
+  bool
+  VariableElement::isNewVariable() const
+  {
+    return _pNewlyCreatedVar;
+  }
+
+  bool
+  VariableElement::checkGotValues() const
+  {
+     return _gotValues;
+  }
+
+  void
+  VariableElement::setGotValues()
+  {
+    _gotValues = true;
+  }
+
 
   ////////////////// NON PUBLIC IMPLEMENTATION
 
@@ -200,14 +219,29 @@ namespace ncml_module
             "Scope=" + p.getTypedScopeString());
       }
 
-    // It's a parse error to make a new variable and not set its values.  Otherwise, we end up
-    // with internal errors on read() later....
-    if (_isNewNCMLVariable && !_gotValues)
+    // We need to defer the setting of values until the dataset
+    // is closed since that's when a joinNew aggregation new map will have all its
+    // values to set, not before.
+    // But we need to allow the user to specify
+    // the metadata for the variable PRIOR to this happening, without specifying
+    // values.  We need to catch the case of values not being set later...
+    // To handle this, we push new variables WITHOUT values onto a request queue
+    // in the containing dataset which will validate that they have gotten their values
+    // set at the point where the containing dataset is closed, but after the aggregations
+    // have run.
+    if (isNewVariable() && !checkGotValues())
       {
-        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
-            "Newly created variable=" + toString() +
-            " did not have values specified via autogeneration or a variables element.  Values must be set!" +
-            " Scope=" + p.getScopeString() );
+        BESDEBUG("ncml", "WARNING: at parse line: " << _parser->getParseLineNumber() <<
+            " the newly created variable=" << toString() <<
+            " did not have its values set!  We will assume this is a placeholder variable"
+            " for an aggregation (such as the new outer dimension of a joinNew) and will"
+            " defer checking that required values are set until the point when this "
+            " netcdf element is closed..."
+            " Scope=" << p.getScopeString() <<
+            endl);
+        BESDEBUG("ncml", "Adding new variable name=" << _pNewlyCreatedVar->name() <<
+            " to the validation watch list for the closing of this netcdf." << endl);
+        _parser->getCurrentDataset()->addVariableToValidateOnClose(_pNewlyCreatedVar, this);
       }
 
     NCML_ASSERT_MSG(p.getCurrentVariable(), "Error: VariableElement::handleEnd(): Expected non-null parser.getCurrentVariable()!");
@@ -362,7 +396,10 @@ namespace ncml_module
     // Tokenize the _shape string
     NCMLUtil::tokenize(_shape, _shapeTokens, NCMLUtil::WHITESPACE);
 
-    // If it's a structure, go off and do that...
+    // Add new variables of the given type...
+    // On exit, each of these leave _parser->getCurrentVariable() with
+    // the new variable that exists within the current dataset's DDS
+    // at the current containing scope.
     if (_type == p.STRUCTURE_TYPE)
       {
         processNewStructure(p);
@@ -381,7 +418,9 @@ namespace ncml_module
       }
 
     // Keep track that it's new so we can error if we get values for non-new.
-    _isNewNCMLVariable = true;
+    // All the process new will have entered it into the dataset as scope, so
+    // getCurrentVariable() on the parser is the actual one in the dataset always.
+    _pNewlyCreatedVar = _parser->getCurrentVariable();
   }
 
   void
@@ -538,6 +577,7 @@ namespace ncml_module
 
     // Make it be the scope for any incoming new attributes.
     enterScope(p, pActualVar);
+
   }
 
   void

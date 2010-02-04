@@ -36,6 +36,7 @@ using namespace std;
 
 namespace libdap
 {
+  class BaseType;
   class DDS;
 }
 
@@ -46,6 +47,7 @@ namespace ncml_module
   class AggregationElement;
   class DimensionElement;
   class NCMLParser;
+  class VariableElement;
 
   /**
    * @brief Concrete class for NcML <netcdf> element
@@ -208,6 +210,42 @@ namespace ncml_module
      */
     bool getCoordValueAsDouble(double& val) const;
 
+    /** Add the pNewvar created by pVE to this dataset's list of
+     * variables to validate for having values set upon closing
+     * (handleEnd() of this element).  All new variables are
+     * required to have values at the time the dataset is closed
+     * or a parse error is thrown at that time.
+     *
+     * @param pNewVar  the new variable to watch, used as a key to find pVE later
+     * @param pVE the variable element that created the pNewVar, which contains whether
+     *            the value of pNewVar has been set yet (since there's no direct way
+     *            in BaseType to do that now).  pVE->ref() will be called to keep pVE
+     *            around sicne it will go out of scope after this call.
+     *            On the ~NetcdfElement, pVE->unref() will be called to undo this.
+     */
+    void addVariableToValidateOnClose(libdap::BaseType* pNewVar, VariableElement* pVE);
+
+
+    /**
+     * Lookup the VariableElement* associated with pVarToValidate via a previous
+     * addVariableToValidateOnClose() and call pVE->setGotValues() on the
+     * associated element so that it will be considered valid at handleEnd()
+     * of this element.  Should be called when the values are set on pVarToValidate.
+     * @param pVarToValidate  the variable which has had its deferred values set
+     *                        to be used as a key to lookup the associated VariableElement
+     *                        that created it.
+     * @param removeEntry  if the entry is found, remove it from the list as well as setting gotvalues.
+     */
+    void setVariableGotValues(libdap::BaseType* pVarToValidate, bool removeEntry);
+
+    /** If a VariableElement has been associated with a new var to validate,
+      * return it.  If not, return null.
+      * @param pNewVar  the libdap variable (key) to look up
+      * @return the associated VariableElement for pNewVar, else null if not set with
+      *        addVariableToValidate.
+      */
+    VariableElement* findVariableElementForLibdapVar(libdap::BaseType* pNewVar);
+
     /**
      * Compare the location fields of the two arguments and return true
      * if lhs.location() < rhs.location() in a lexicographic string sense.
@@ -283,6 +321,125 @@ namespace ncml_module
     // and unref() them in the dtor.
     // We won't have that many, so a vector is more efficient than a map for this.
     std::vector< DimensionElement* > _dimensions;
+
+    /**
+     * Private inner class for keeping track of new variables created within
+     * the context of this dataset for which we do not get <values>
+     * set up front.  This should really only happen in the case of
+     * a "placeholder" array variable that acts as a coordinate variable
+     * for a joinNew aggregation where the author desires setting the
+     * metadata for the new dimension's map vector.
+     *
+     * Callers will access this via methods in NetcdfElement.
+     *
+     * If a new VariableElement is created and refers to a new
+     * variable but which has not had its value set by the handleEnd()
+     * of the VariableElement, it will be placed into an instance of this class
+     * (a member variable of this).  The ref count of the element
+     * will be increased on addition and will be decremented
+     * when the VVV is destroyed (along
+     * with the containing NetcdfElement).
+     *
+     * The AggregationElement processParentDatasetComplete() should
+     * inform this NetcdfElement once it sets the values on an entry
+     * in the VVV and the VVV instance will be updated to reflect
+     * that entry as having been validated.
+     *
+     * VVV.validate() will be called in NetcdfElement::handleEnd()
+     * AFTER the aggregations have had their processParentDatasetComplete()
+     * called. If any entries in the VVV have NOT had their values set
+     * by this point, the validate will throw a parse error explaining
+     * the issue to maintain integrity of the libdap variables
+     * (and avoid cryptic internal errors much later down the line).
+     */
+    class VariableValueValidator
+    {
+    public:
+      VariableValueValidator(NetcdfElement* pParent);
+
+      /**
+       * Will decrement the ref count of all contained
+       * VariableElement's
+       * @return
+       */
+      ~VariableValueValidator();
+
+      /** Add a validation entry for the given VariableElement and the actual variable that
+       * it has created and added to the DDS.  pVE->ref() will be called to make sure
+       * the element stays around after the parser has deref() it.
+       * @param pNewVar the actual libdap variable that was created and is
+       * currently in the DDS of this dataset (in _response).  Should not be null.
+       * @param pVE  the VariableElement that created it.  pVE->checkGotValues() will
+       * determine whether the entry has been validated.  pVE->ref() will be called to
+       * up the ref count.  Should not be null.
+       */
+      void addVariableToValidate(libdap::BaseType* pNewVar, VariableElement* pVE);
+
+      /** Remove an entry previously added under the key pVarToRemove with
+       * addVariableToValidate.  Will unref() the VariableElement portion.
+       * @param pVarToRemove
+       */
+      void removeVariableToValidate(libdap::BaseType* pVarToRemove);
+
+      /** Lookup the VariableElement pVE associated with the given pVarToValidate
+       * and call pVE->setGotValues() on it to validate it.
+       * @param pVarToValidate a non-null variable that was entered with addVariableToValidate
+       * @exception An internal error is thrown if pVarToValidate was not already added.
+       */
+      void setVariableGotValues(libdap::BaseType* pVarToValidate);
+
+      /** Make sure all the entries has had their values set else throw a
+       * parse error explaining which variable has not so the author
+       * can fix the error.  On success return true.
+       * @return whether all contained variables have values.
+       */
+      bool validate();
+
+      /** If a VariableElement has been associated with a new var to validate,
+       * return it.  If not, return null.
+       * @param pNewVar  the libdap variable (key) to look up
+       * @return the associated VariableElement for pNewVar, else null if not set with
+       *        addVariableToValidate.
+       */
+      VariableElement* findVariableElementForLibdapVar(libdap::BaseType* pNewVar);
+
+    private:
+      // disallow implicit copies
+      VariableValueValidator(const VariableValueValidator&);
+      VariableValueValidator& operator=(const VariableValueValidator&);
+
+    public:
+
+      class VVVEntry
+      {
+      public:
+        VVVEntry() : _pNewVar(0), _pVarElt(0) { }
+        VVVEntry(libdap::BaseType* pBT, VariableElement* pVE) : _pNewVar(pBT), _pVarElt(pVE) { }
+        void clear() { _pNewVar=0; _pVarElt=0; }
+        libdap::BaseType* _pNewVar;
+        VariableElement* _pVarElt;
+      };
+
+
+      /********************* helper functions *******************/
+
+      /** Lookup the entry given the BaseType* it was added with and return
+       * its address within _entries, else NULL if not found.
+       * @param pVarToFind  the variable to lookup the entry for
+       * @return the associated entry else NULL if not found.
+       */
+    private:
+      VariableValueValidator::VVVEntry* findEntryByLibdapVar(libdap::BaseType* pVarToFind);
+
+
+      // We don't expect too many entries, so a simple vector is the best way to go,
+      // avoid overhead of maps, etc.
+      vector<VVVEntry> _entries;
+      NetcdfElement* _pParent;
+    };
+
+    // The actual instance we will poke from methods in NetcdfElement
+    VariableValueValidator _variableValidator;
   };
 
 }
