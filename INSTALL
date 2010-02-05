@@ -1,13 +1,15 @@
 
 $Id: INSTALL $
 
-Updated for version 0.9.2 [SVN TRUNK] (8 Oct 2009)
+Updated for version 1.0.0 (5 Feb 2010)
 
-Installation instructions for the OPeNDAP Hyrax server NcML Data Handling Module.
-
+---------------------------------------------------------------------------
+Installation instructions for the OPeNDAP NcML Data Handling Module 
+for Hyrax Server 1.6
 
 ---------------------------------------------------------------------------
 
+INTRO
 BUILDING THE SOFTWARE
 BUILDING FROM THE SVN REPOSITORY
 BUILD REQUIREMENTS
@@ -17,18 +19,38 @@ CONFIGURATION NOTES
 DEBUGGING AIDS
 NOTES
      
+
+---------------------------------------------------------------------------
+INTRO
+
+The NcML Module 1.0.0 is a new module for Hyrax 1.6.  What does this
+mean?  All those zeros means that there may be issues on some
+operating systems we have not yet tested on, in particular in our
+inclusion of the ICU 4.2.1 distribution as a subproject.  
+
+If you encounter any build problems after making sure you have
+followed the BUILD REQUIREMENTS section, please send e-mail with as
+much information about your operating system and the problem as you
+can to <support@opendap.org>.
+
+Thanks!
+
 ---------------------------------------------------------------------------
 
 BUILDING THE SOFTWARE
 
 0) Please read the BUILD REQUIREMENTS and NOTES sections of this file
-   before reporting problems.  If you are building from the SVN
-   repository, please follow the instructions in BUILDING FROM THE SVN
-   REPOSITORY before continuing.
+   before reporting problems.  This module is designed to work with
+   Hyrax 1.6 and will not work with older versions!  Make sure you
+   have a working installation of Hyrax 1.6 before beginning this
+   installation!
+
+   If you are building from the SVN repository, please also follow the
+   instructions in BUILDING FROM THE SVN REPOSITORY before continuing.
 
    NOTE: As part of the build process, the ncml_module will build and
    install a modified distribution of International Components for
-   Unicode (ICU).  This was designed to not affect other ICU
+   Unicode (ICU).  This build was designed to not affect other ICU
    installations on the machine.
 
 1) Type `./configure' at the system prompt. On some systems you may
@@ -37,9 +59,11 @@ BUILDING THE SOFTWARE
    The default location for the install is "/usr/local".  If your BES
    is installed in a different location, please use --prefix to change
    the prefix to the BES install location.  (For this document $prefix
-   will refer to this directory).  NOTE: the CentOS RPM's install the
-   BES to "/usr" and not "/usr/local".  If you are not sure, the BES
-   will tell you its install dir when you run it with "besctl start".
+   will refer to this directory). 
+
+   NOTE: the CentOS RPM's install the BES to "/usr" and not
+   "/usr/local".  If you are not sure, the BES will tell you its
+   install dir when you run it with "besctl start".
 
    NOTE: ICU will install into ${prefix}/hyrax_icu to avoid collisions
    with other ICU installations that may be in ${prefix} already.
@@ -53,37 +77,39 @@ BUILDING THE SOFTWARE
 3*) (*Optional): You can perform a 'make check' to test the ICU build
     and the ncml_module build, but note that this REQUIRES that you
     have all of the netcdf, hdf4, and hdf5 handlers already installed
-    and working in Hyrax!  The testsuite uses netcdf, hdf4 and hdf5
-    datasets for testing.  Please see the BUILD REQUIREMENTS section
-    under TESTSUITE if you wish to run the tests and do not have these
-    handlers installed.  Otherwise, you may skip this step.
+    and working in Hyrax 1.6!  The testsuite uses netcdf, hdf4 and
+    hdf5 datasets for testing.  Please see the BUILD REQUIREMENTS
+    section under TESTSUITE if you wish to run the tests and do not
+    have these handlers installed.  Otherwise, you may skip this step.
 
-    NOTE: Since we include ICU, the ICU tests will be run BEFORE the
-    actual ncml_module tests.  The user may also do 'cd tests; make
-    check' if they desire JUST the ncml_module tests (which will also
-    test our use of ICU).
+    NOTE: Since we include ICU, the extensive ICU tests will be run
+    BEFORE the actual ncml_module tests.  The user may also do 'cd
+    tests && make check' if they desire JUST the ncml_module tests
+    (which will also test our use of ICU).
 
-4) Install the handler into the BES by running `make install'.
+4) Install the module into the BES by running `make install'.
 
-   NOTE: this will also install our built copies of the ICU libraries
-   into ${prefix}/hyrax_icu
+   The install will also add the new ncml.conf file to the
+   $prefix/etc/bes/modules directory. The BES configuration file
+   bes.conf will automatically load any module configuration files in
+   that directory. The ncml.conf file contains ncml_module specific
+   configurations for use with the BES Framework. This includes some
+   parameters that used to be in the bes.conf file, such as the
+   TypeMatch parameter for finding your files based on their suffix.
 
-***** TODO Has this changed with the new BES conf changes?
-5) Type 'make bes-conf' to run the bes-ncml-data.sh script which inserts
-   the handler in the bes.conf file and adds test data to
-   $prefix/share/hyrax/data.  It also associates .ncml files with the
-   handler.  Please see the CONFIGURATION NOTES section below for
-   information on precisely what it does if you have a problem.
+   The install will also install our local build of ICU into
+   ${prefix}/hyrax_icu.
 
-6) For many installations, you must arrange for your operating system to find
-   the shared libraries installed by default in $prefix/lib. Do this by
-   either setting an environment variable such as LD_LIBRARY_PATH or by
-   editing /etc/ld.so.conf. Different operating systems handle this in
-   different ways.
+   
+5) For many installations, you must arrange for your operating system
+   to find the shared libraries installed by default in
+   $prefix/lib. Do this by either setting an environment variable such
+   as LD_LIBRARY_PATH or by editing /etc/ld.so.conf. Different
+   operating systems handle this in different ways.
 
-7) Restart Hyrax (BOTH the BES and OLFS) to load the module.  
+6) Restart Hyrax (BOTH the BES and OLFS) to load the module!!
 
-8*) (*Optional): Look at test data!
+7*) (*Optional): Look at test data!
      
     First, check the installed sample_virtual_dataset.ncml which does
     not require any other handlers installed to test.  By default it's
@@ -120,22 +146,23 @@ BUILD REQUIREMENTS
   
     o To build from a fresh SVN checkout, you'll need:
 
-      	 o automake 1.11
       	 o autoconf 2.63
+      	 o automake 1.11
 	 o libtool 2.2.6
 
-      Earlier versions may work, but
-      may cause problems, particularly with the 'distcheck' target for
-      make. Given those requirements, use 'autoreconf --force --install
-      --verbose' and then build as described above.
+      Earlier versions may work, but may cause problems, particularly
+      with the 'distcheck' target for make. Given those requirements,
+      use 'autoreconf --force --install --verbose' and then build as
+      described above.
 
-      If you have an Intel Mac and you are experiencing configuration
-      issues then you might need to download the latest and greatest
-      autoconf, automake, and libtool using the DarwinPorts
-      tool. We've tried using other download tools, like fink, and
-      building from source these packages, but only DarwinPorts seems
-      to resolve the issues. We continue to watch this issue and hope
-      to get it resolved soon.
+      You may check the versions being used by the build with, e.g.:
+
+      `which automake` --version
+
+      at a command prompt if you have any build issues to be sure you
+      are finding correct versions. (Substitute automake for the
+      other gnu tools)
+      
 
     o You should have gcc/g++ 3.3.x or greater. You'll also need to
       get the stdc++ library that matches the compiler (whatever
@@ -150,18 +177,17 @@ BUILD REQUIREMENTS
       either building from source or using the libdap and libdap-devel
       RPM packages.  These are available at
       http://www.opendap.org/download/hyrax.html.  NOTE: libdap
-      requires libxml2 2.6.16 and libcurl 7.10.6 as well.  
+      requires libxml2 2.6.16 and libcurl 7.10.6 as well.
       	  
-    o You'll need version 3.7.2 or greater of the BES software
+    o You'll need version 3.8.0 or greater of the BES software
       installed before building the handler.  This is part of Hyrax
-      1.5.2.  Build, install, and test it BEFORE you build this
-      handler. 
+      1.6.  Build, install, and test it BEFORE you build this handler.
       
       For Linux, you can get the bes and bes-devel RPM packages from
       http://www.opendap.org/download/hyrax.html.
 
-    o You'll also need the OLFS for Hyrax 1.5.2 though it is not
-    needed to build and install the software, only for the final test.
+    o You'll also need the OLFS for Hyrax 1.6 though it is not needed
+    to build and install the software, only for the final test.
 
     o The NcML Module itself uses libxml2 2.6.16 which should be
       satisfied since libdap requires it as well.
@@ -174,35 +200,26 @@ BUILD REQUIREMENTS
        o perl: If you don't have a valid `readlink -f` command (Max OS
        	 X, e.g.)  then configure uses perl instead.
 
-       o The current version of the netCDF Data Handling Module for
+       o The current version of the NetCDF Data Handling Module for
        	 Hyrax and its dependency: libnetcdf 3.x (or greater).  The
        	 handler itself is found at
        	 http://www.opendap.org/download/hyrax.html.
 
 	 o Mac Users: Mac users can get netcdf in DarwinPorts
 
-	 o Note, if you install from an RPM, you need to run
-	 "bes-nc-data.sh" to tell the BES to load the netCDF module.
-
        o The current version of the HDF4 Data Handling Module for
        	 Hyrax and its dependencies: libjpeg, zlib and slib usually.
        	 The handler is found at
        	 http://www.opendap.org/download/hyrax.html.
-
-	 o Note: if you install from an RPM, you need to run
-	 "bes-hdf4-data.sh" to tell the BES to load the HDF4 module.
 
        o The current version of the HDF5 Data Handling Module for
        	 Hyrax and its dependencies.
        	 The handler is found at
        	 http://www.opendap.org/download/hyrax.html.
 
-	 o Note: if you install from an RPM, you need to run
-	 "bes-hdf5-data.sh" to tell the BES to load the HDF5 module.
-
        o The new testsuite now also uses Autotest, which is part of
-       Autoconf.  This should work fine if you have autoconf installed
-       (a prereq) but please let us know if it does not!
+         Autoconf.  This should work fine if you have autoconf
+         installed (a prereq) but please let us know if it does not!
 
     o In order to view the test NcML file fnoc1_improved.ncml, you will
       need:
@@ -215,24 +232,10 @@ BUILD REQUIREMENTS
 CONFIGURATION NOTES
 
   o The NcML Data Handler is a module dynamically loaded into the BES.
-  This is specified in the bes.conf file, which lives in
-  $prefix/etc/bes/bes.conf (or perhaps /etc/bes/bes.conf if you used
-  an RPM).  First, it adds the 'ncml' module to the BES.modules list
-  and specifies the location of the shared library:
-
-  	BES.modules=dap,dapcmd,ncml
-    	BES.module.ncml=/usr/local/lib/bes/libncml_module.so
-
-  Then it associates ".ncml" extensions (compressed as well) with the
-  "ncml" module by a appending a regular expression to the TypeMatch
-  key:
-
-        BES.Catalog.catalog.TypeMatch=ncml:.*.ncml(.bz2|.gz|.Z)?$;
-
-  o If you are trying to do the 'make check' or see the test data
-  (fnoc1_improved.ncml), you should also see an entry for the "nc"
-  module and/or the "hdf4" module.  If not, make sure you run the
-  scripts (see REQUIREMENTS->TESTSUITE below).
+    The BES uses the ncml.conf configuration file installed in
+    $prefix/etc/bes/modules to configure itself.  Right now the module
+    has no specific runtime configuration options, but this is where
+    they will be found in the future.
 
 ---------------------------------------------------------------------------
 DEBUGGING AIDS
@@ -253,16 +256,21 @@ DEBUGGING AIDS
      report if there's an internal error reported.  If you see an
      internal error, please report it!
 
+     We also have more verbose output in the "ncml:2" channel, and
+     information on our memory pool operation is in the "ncml:memory"
+     channel.  These can be added with -d
+     "cerr,ncml,ncml:2,ncml:memory".
+
    o You can create a debuggable version of the handler with:
      
      ./configure --enable-developer CXXFLAGS="-g3 -O0 -W -Wall -Wcast-align -fno-defer-pop"
 
-     at configure time.
+     in addition to the other options at configure time.
 
 ---------------------------------------------------------------------------
 NOTES
 
   o The NcML Module was built to work with Hyrax 1.6 server and will
-  not work on earlier versions of Hyrax.
+  not work on earlier versions of Hyrax!
 
 

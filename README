@@ -1,34 +1,28 @@
 
 $Id: README $
 
-Updated for version 0.9.1 (20 August 2009)
+[ Updated for version 1.0.0 (5 February 2010) ]
 
--------------------------------------------------------------------------
-NOTE: THIS HANDLER IS NOT YET FULLY PUBLICLY RELEASED!  
+----------------------------------------------------------------------
 
-Please do not use in a live server until (Version 1.0.0 or higher).
-Thank you.  
+** Welcome to the OPeNDAP NcML Module for Hyrax! **
 
-[Update 20 Aug 2009: Version 0.9.0 has been through a security audit
-and code review and can be used live for adding just attribute
-metadata. v0.9.1 is still in alpha, however, and has not been audited
-at this time.]
--------------------------------------------------------------------------
+This module can be added to a Hyrax 1.6 installation to extend its
+data serving capability to NcML 2.2 files (see
+http://www.unidata.ucar.edu/software/netcdf/ncml/).  NcML provides a
+syntax for adding metadata and variables to existing datasets of any
+type also being locally served by a Hyrax 1.6 server.  NcML also
+specifies several ways of aggregating existing datasets.  This module
+currently implements a subset of NcML 2.2 functionality and also
+extends it in some ways.
 
-Welcome to the OPeNDAP NcML Data Handler Module for Hyrax!
-
-This module can be added to a Hyrax installation to extend its data
-serving capability to NcML 2.2 files (see
-http://www.unidata.ucar.edu/software/netcdf/ncml/) which provide a way
-to add metadata to existing datasets.
-   
-For information on how to build and install the NcML Data Module,
-please see the INSTALL file.
-
-More detailed and up-to-date documentation for this module can be
-found at: 
+This README only gives a general overview of the module.  Much more
+detailed and up-to-date documentation for this module can be found at:
 
 http://docs.opendap.org/index.php/BES_-_Modules_-_NcML_Module
+
+For information on how to build and install the NcML Data Module,
+please see the INSTALL file.
 
 Note that adding metadata to HDF or NetCDF datasets may involve a
 little more care due to deviations from the DAP2 spec in those
@@ -55,143 +49,71 @@ more details.
 ----------------------------------------------------------------------
 * Installation Overview
 
-The NcML Module requires a working Hyrax installation.  It is a module
-that is dynamically loaded into the Hyrax BES (Back End Server) to
-allow it to handle NcML files.  
+The NcML Module requires a working Hyrax 1.6 installation.  It is a
+module that is dynamically loaded into the Hyrax BES (Back End Server)
+to allow it to handle NcML files.
 
 Please see the file INSTALL for full build and install instructions as
-well as requirements.
+well as requirements.  NOTE: After installation, you MUST restart
+Hyrax by restarting the BES and OLFS so the NcML Module is loaded.
 
-Once installed, the BES configuration file (bes.conf) needs to be
-modified to tell it to load the module and where it was installed.  A
-configuration helper script (bes-ncml-data.sh) is installed with the
-module to automate this process.  The script is used on the command
-line (> prompt) as follows:
-
-   > bes-ncml-data.sh [<bes.conf file to modify> [<bes modules dir>]]
-
-If you are doing a source installation, the `bes-conf' make target
-runs the script while trying to select paths cleverly, and should be
-called using:
-
-   > make bes-conf
-
-After installation, you MUST restart Hyrax by restarting the BES and
-OLFS so the NcML Module is loaded.
-
-Test data is provided to see if the installation was successful
-(fnoc1_improved.ncml), but it requires the netCDF data handler to be
-installed since it adds metadata to a netCDF dataset (fnoc1.nc).  When
-testing this, if you see a "Unable to add container, type of data must
-be specified" error, the BES probably has not been configured to use
-netCDF data.  Make sure you have installed the handler properly and
-that the BES can load netcdf data.
+Example test data is installed to see if the installation was
+successful (fnoc1_improved.ncml), but it requires the NetCDF Module to
+be installed since it adds metadata to a netCDF dataset (fnoc1.nc).
+When testing this, if you see a "Unable to add container, type of data
+must be specified" error, the BES probably has not been configured to
+use netCDF data.  Make sure you have installed the handler properly
+and that the BES can load netcdf data.  We also provide other example
+files, some of which use the HDF4 and HDF5 Modules.
 
 ----------------------------------------------------------------------
 * Functionality
 
 This version of the NcML Module implements a subset of NcML
-functionality.  This section gives a broad overview.  For more
-detaiuled information, please see the online documentation at:
-http://docs.opendap.org/index.php/BES_-_Modules_-_NcML_Module 
+functionality.  This section gives a broad overview of functionality.
+For more detailed and complete information, please see the online
+documentation at:
 
-This module can:
+http://docs.opendap.org/index.php/BES_-_Modules_-_NcML_Module
 
-     * Add metadata only to files being served locally (not remotely)
+This version of the NcML module can:
+
+     * Add metadata (attributes) to files being served locally (not
+       remotely).
      
-     * Add metadata to only one dataset (one <netcdf> node).  
+     * Add, modify, and remove metadata of both NcML types and also
+       all DAP2 types.
 
-     * Add, modify, and remove metadata (attributes) 
+     * Remove and rename existing variables in a wrapped dataset.
 
-     * Remove and rename existing variables in a wrapped dataset 
+     * Add new variables and data: scalars of basic type, Structures,
+       and arrays (N-dimensional) of basic NcML or DAP2 types.
 
-     * Create a purely virtual dataset (no wrapped dataset) 
-
-     * Add new variables: scalars of basic type, Structures, and
-       arrays (N-dimensional) of basic types
+     * Create a purely virtual dataset (no wrapped dataset).
 
      * Specify <dimension> elements for named lookup of variable@shape
 
-In particular, this version of the NcML module can only handle a
-subset of the NcML schema.  First, it is restricted to a subset of the
-elements: <netcdf>, <explicit>, <readMetadata>, <attribute>,
-<variable>, <remove>, <dimension> and <values>.
+     * Allows specification of attributes with special DAP type =
+       "OtherXML" which allow arbitrary XML metadata to appear in a
+       DDX response.
 
-We give an outline of how each element is handled below.
+     * Allows the creation of two NcML aggregations: "union" and
+       "joinNew".
 
-** The <attribute> Element
+     * Aggregations may be specified with an explicit list of <netcdf>
+       elements or a <scan> element may be used
 
-The <attribute> element can be used to add new metadata, rename old
-metadata, or to change the values of old metadata.  Its basic usage
-follows the NcML 2.2 schema closely with the addition that attribute
-containers may also be specified by using type="Structure" for an
-attribute type.  Please see the online docs for more info.
-
-** The <dimension> Element
-
-The <dimension> element must come at the top of a new <netcdf> block
-(before its use by any variable elements below).  Its scope is the
-netcdf element it is contained within.  Currently, we only allow the
-dimension@name and dimension@length attributes to be specified.  An
-element such as:
-
-	<dimension name="lat" length="360"/>
-
-specifies a mnemonic for the length 360 which can be used later in a
-variable@shape to refer to the integer size 360 by name.  Shared
-dimensions and other attributes of dimension are not currently
-supported and will produce a parse error if used.
-
-** The <variable> Element
-
-The <variable> element can be used to provide the lexical scope for an
-<attribute> element.  For example:
-
-<variable name="u">
-  <attribute name="Metadata" type="string">This is metadata!</attribute>
-</variable>
-
-assumes that a variable named "u" exists (of any type) and the
-attribute "Metadata" will refer to the metadata for that variable.
-These can be nested.
-
-<variable> can also be used to add new variables.  These can be
-scalars (shape=""), multidimensional arrays (shape specifies
-dimensions), or Structure's (which can contain other new variables).
-The values for a variable are specified using the <values> element.
-The author can specify uniform data using the values@start and
-values@increment attributes, or can specify the full list of values.
-
-** The <remove> Element
-
-The <remove/> element can be used to remove both attributes and
-variables.  remove@type specifies which item is to be removed.  It is
-used at the scope of the item to remove.
-
-** The <values> Element
-
-Values may be specified for a NEW variable only (i.e. local to the
-NcML file and not existing in a wrapped dataset).  It is a parse error
-to attempt to change the values of a wrapped variable.
-
-The values may be specified as a separated list in the characters
-content of the values element.  values@separator may be used to
-specify the token separator (this is very useful for arrays of
-strings!).  
-
-For numeric types, INSTEAD of characters content, the author may use
-values@start and values@increment to specify autogenerated, uniformly
-distributed values.
 
 ** Future Plans
 
 We plan to add more features and NcML functionality:
 
-   *** The next major release will add support for NcML aggregation.
+   *** More NcML Aggregations: joinExisting and FMRC (Forecast Model Run
+       Collection).
 
-   *** We also plan to allow the netcdf@location to refer to remote
-       data as well as local.  This would be an install and/or compile
-       time option so that it may be turned off for security reasons.
+   *** We plan to allow the netcdf@location to refer to remote data as
+       well as local.  This would be an install and/or compile time
+       option so that it may be turned off for security reasons.
 
 ----------------------------------------------------------------------
 * NcML Additions
@@ -214,18 +136,23 @@ Additionally, DAP2 atomic types (such as UInt32, URL) can also be used
 in addition to the NcML types.  The NcML types are mapped onto the
 closest DAP2 type internally.  
 
+The special "OtherXML" attribute type can be used for specifying an
+arbitrary subtree of XML as metadata --- this will be injected into
+the DDX response at the scope it is defined.  All parent namespaces
+will be pulled into the subtree (See the Wiki for more information).
+
 ----------------------------------------------------------------------
 * Example NcML
 
-Example NcML files used by the test-suite can be found in the data
-directory of a src distribution.
+Numerous example NcML files (both valid and error cases) used by the
+testsuite can be found in the "data" directory of a src distribution.
 
 ----------------------------------------------------------------------
 * HDF4 DAS Compatibility Issue
 
-There is a bug in the Hyrax HDF4 Module such that the DAS produced is
-incorrect.  If an NcML file is used to "wrap" an HDF4 dataset, the
-correct DAP2 DAS response will be generated.  
+There is a bug in the Hyrax HDF4 Module such that the DAS produced
+does not conform to the DAP2 RFC.  If an NcML file is used to "wrap"
+an HDF4 dataset, the correct DAP2 DAS response will be generated.
 
 This is important for those writing NcML for HDF4 data since the
 lexical scope for attributes relies on the correct DAS form --- to
@@ -236,17 +163,17 @@ the NcML handler expects to see in the NcML file.
 ----------------------------------------------------------------------
 * NetCDF DAS Compatibility Issue
 
-Similarly there is a problem with the DAS created by the NetCDF Module
-in the case of Grid (at least).  A NetCDF dataset with shared
-dimensions will generate a DAP 2 Grid for the data with map vectors
-for these dimensions.  Attributes (metadata) specified on these map
-vectors is placed into the dataset attribute container instead of
-within the Grid attribute contrainer, however, which is a deviation
-from the DAP 2 specification.  The NcML handler uses the (correctly
-created) DDX to generate the DAS, so the output of an NcML dataset
-with a Grid in it will have the map vector attributes within the Grid
-container.  This is DIFFERENT from the original DAS response for the
-dataset, however.  
+Similarly to HDF4, there is a problem with the DAS created by the
+NetCDF Module in the case of Grid (at least).  A NetCDF dataset with
+shared dimensions will generate a DAP 2 Grid for the data with map
+vectors for these dimensions.  Attributes (metadata) specified on
+these map vectors is placed into the dataset attribute container
+instead of within the Grid attribute contrainer, however, which is a
+deviation from the DAP 2 specification.  The NcML handler uses the
+(correctly created) DDX to generate the DAS, so the output of an NcML
+dataset with a Grid in it will have the map vector attributes within
+the Grid container.  This is DIFFERENT from the original DAS response
+for the dataset, however.
 
 To specify or change attributes on map vectors, the
 NcML author needs to use the DDX lexical scoping to specify the
@@ -264,19 +191,20 @@ http://site.icu-project.org/
 
 in portions of the ncml_module.
 
-We include the distribution of ICU in ncml_module/icu and
-automatically compile it with the ncml_module so that the user does
-not need to download and install it themselves.
+To avoid adding user dependencies, we include a (slightly modified)
+distribution of ICU in ncml_module/icu and automatically compile it
+with the ncml_module so that the user does not need to download and
+install it themselves.
 
 We use special library names and install our build into a subdir
-(hyrax_icu) of the given install directory (prefix) so that users with
-their own ICU development environment will not be affected by our
+("hyrax_icu") of the given install directory (prefix) so that users
+with their own ICU development environment will not be affected by our
 build.
 
 Please see the file ncml_module/icu/README_OPENDAP.txt for our
 specific modifications, which were minor bug fixes in configure and
-make and not source or data changes.
-
+make and changes to avoid overwriting existing installations of ICU.
+We did not modify any source or data code.
 
 ----------------------------------------------------------------------
 * Copyright
@@ -290,6 +218,10 @@ ncml_module/icu/license.html.
 Please also see the files COPYING and COPYRIGHT that came with this
 distribution for more information.
 
+----------------------------------------------------------------------
+* Author: Michael Johnson <m.johnson@opendap.org>
+
+Please send bug reports and build problems to <support@opendap.org>!
 
 
 
