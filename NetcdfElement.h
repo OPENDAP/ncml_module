@@ -322,8 +322,9 @@ namespace ncml_module
     // We won't have that many, so a vector is more efficient than a map for this.
     std::vector< DimensionElement* > _dimensions;
 
+  public: // inner classes can't be private?
     /**
-     * Private inner class for keeping track of new variables created within
+     * Inner class for keeping track of new variables created within
      * the context of this dataset for which we do not get <values>
      * set up front.  This should really only happen in the case of
      * a "placeholder" array variable that acts as a coordinate variable
@@ -436,8 +437,9 @@ namespace ncml_module
       // avoid overhead of maps, etc.
       vector<VVVEntry> _entries;
       NetcdfElement* _pParent;
-    };
+    }; // class VariableValueValidator
 
+  private:
     // The actual instance we will poke from methods in NetcdfElement
     VariableValueValidator _variableValidator;
   };
