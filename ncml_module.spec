@@ -1,6 +1,6 @@
 Summary:         NCML module for the OPeNDAP Data server
 Name:            ncml_module
-Version:         0.9.3
+Version:         1.0.0
 Release:         1
 License:         LGPLv2+
 Group:           System Environment/Daemons 
@@ -9,12 +9,12 @@ URL:             http://www.opendap.org/
 
 BuildRoot:       %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires:   libdap-devel >= 3.10.0
-BuildRequires:   bes-devel >= 3.7.2
+BuildRequires:   bes-devel >= 3.8.0
 
 %description
 This is the NcML module for our data server.  It parses NcML files to
-add metadata to other local datasets on the local Hyrax server. It
-returns DAP2 responses.
+add metadata to other local datasets on the local Hyrax server.  It also 
+allows authors to create joinNew and union aggregations of other datasets.
 
 %prep 
 %setup -q

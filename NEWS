@@ -2,6 +2,40 @@
 $Id: NEWS $
 
 -----------------------------------------------------------------------
+Version 1.0.0 (5 Feb 2010)
+
+  * Aggregations: 
+    
+    * Added initial support for two NcML 2.2 aggregations: "union" and
+      "joinNew".  (Support for "joinExisting and "fmrc" aggregations
+      are planned to be added in future releases of the module).  This
+      includes the ability to scan directories for files in the
+      aggregation using suffixes, regular expressions, and also to
+      parse SimpleDateFormat patterns in a filename into ISO 8601 date
+      coordinates.
+
+    * A subproject dependency on International Components for Unicode
+     (ICU) version 4.2.1 was added to the module for allowing
+     SimpleDateFormat parses in the scan@dateFormatMark attribute.
+     This subproject will be installed in a "hyrax_icu" subdir of the
+     given configure prefix location for the install.  We do not
+     overwrite or use any existing ICU installations on the machine.
+
+  * OtherXML and XML Namespaces
+
+    * Added support for attributes of special DAP type "OtherXML" to
+      the module.  This extension to NcML 2.2 allows authors to
+      specify arbitrary XML trees as an attribute which will be
+      embedded into the DDX response.  This allows injection of
+      XML-based metadata to existing datasets for further processing.
+
+    * Added initial support for handling XML namespaces.
+      Additionally, "OtherXML" subtrees will now have any existing
+      namespaces defined within ancestor NcML elements added into
+      their root element to allow the subtree to be encapsulated with
+      all defined namespaces in scope.
+ 
+-----------------------------------------------------------------------
 Version 0.9.1 (20 Aug 2009)
 
  * Added functionality to remove and rename variables in an existing
