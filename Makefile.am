@@ -134,8 +134,23 @@ EXTRA_DIST = COPYRIGHT COPYING ncml.conf.in ncml_module.spec data OSX_Resources
 
 CLEANFILES = *~ ncml.conf
 
+# Sample data primaries for install
 sample_datadir = $(datadir)/hyrax/data/ncml
-sample_data_DATA = data/ncml/fnoc1_improved.ncml data/ncml/fnoc1.nc data/ncml/sample_virtual_dataset.ncml
+sample_data_DATA = data/ncml/fnoc1_improved.ncml data/ncml/fnoc1.nc data/ncml/sample_virtual_dataset.ncml 
+
+# Subdir of data for aggregation samples
+sample_data_aggdir = $(datadir)/hyrax/data/ncml/agg
+sample_data_agg_DATA = data/ncml/agg/joinNew_grid.ncml data/ncml/agg/joinNew_scan.ncml data/ncml/agg/joinNew_scan_dfm.ncml
+
+# Two subdirs of agg for the actual aggregation members
+sample_data_agg_gridsdir = $(datadir)/hyrax/data/ncml/agg/grids
+sample_data_agg_grids_DATA = data/ncml/agg/grids/*
+sample_data_agg_dateddir = $(datadir)/hyrax/data/ncml/agg/dated
+sample_data_agg_dated_DATA = data/ncml/agg/dated/*
+
+
+# How do I make this install into subdirs?
+#	  data/ncml/agg/dated/*.nc
 
 install-data-local: ncml.conf
 	@currdate=`date +"%y%m%d%H%M"`; \
