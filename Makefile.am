@@ -148,10 +148,6 @@ sample_data_agg_grids_DATA = data/ncml/agg/grids/*
 sample_data_agg_dateddir = $(datadir)/hyrax/data/ncml/agg/dated
 sample_data_agg_dated_DATA = data/ncml/agg/dated/*
 
-
-# How do I make this install into subdirs?
-#	  data/ncml/agg/dated/*.nc
-
 install-data-local: ncml.conf
 	@currdate=`date +"%y%m%d%H%M"`; \
 	test -d $(DESTDIR)$(sysconfdir)/bes || $(MKDIR_P) $(DESTDIR)$(sysconfdir)/bes; \

@@ -43,7 +43,8 @@ AC_CHECK_LIBDAP([3.10.0],
  [ AC_MSG_ERROR([Cannot find libdap])
 ])
   
-AC_CHECK_BES([3.8.0],
+# Up this to 3.8.0 when branch for Hyrax 1.6 is reintegrated
+AC_CHECK_BES([3.7.2],
 [
 ],
 [ AC_MSG_ERROR([Could not find bes library and headers])
