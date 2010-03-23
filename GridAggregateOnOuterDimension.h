@@ -213,4 +213,4 @@ namespace agg_util
 
 }
 
-#endif __AGG_UTIL__GRID_AGGREGATE_ON_OUTER_DIMENSION_H__
+#endif // __AGG_UTIL__GRID_AGGREGATE_ON_OUTER_DIMENSION_H__
