@@ -6,7 +6,7 @@
 # modules to load, includes data modules and command modules            #
 #-----------------------------------------------------------------------#
 
-BES.modules=ncml
+BES.modules+=ncml
 BES.module.ncml=@bes_modules_dir@/libncml_module.so
 
 #-----------------------------------------------------------------------#
