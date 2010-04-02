@@ -49,6 +49,17 @@ AC_CHECK_BES([3.8.0],
 [ AC_MSG_ERROR([Could not find bes library and headers])
 ])
 
+dnl Look for the minimum version of the icu libs and headers
+dnl This sets: ICU_CPPFLAGS with -Iicu-include-path and ICU_LIBS with 
+dnl -Licu-lib-path -licu-lib-1 ... 
+dnl Note: it also handles --with-icu-prefix=path_to_icu_install
+dnl in case there are multiple icu development environments on the machine
+AC_CHECK_ICU([3.6],
+[
+],
+[ AC_MSG_ERROR([Could not find compatible icu (International Components for Unicode) library and headers!])
+])
+
 # Test for a readlink bug, see
 # <http://lists.gnu.org/archive/html/bug-coreutils/2008-02/msg00126.html>.
 # We use perl to replace 'readlink -f' if it doesn't exist...
@@ -86,7 +97,7 @@ dnl The ncml_module files...
 AC_CONFIG_FILES([Makefile tests/Makefile tests/atlocal])
 
 dnl The icu dependency
-AC_CONFIG_SUBDIRS([icu/source])
+dnl AC_CONFIG_SUBDIRS([icu/source])
 
 AC_OUTPUT
 

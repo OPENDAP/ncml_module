@@ -52,8 +52,8 @@
 #include "Error.h" // libdap
 
 // ICU includes for the SimpleDateFormat used in this file only
-#include "unicode/smpdtfmt.h" // class SimpleDateFormat
-#include "unicode/timezone.h" // class TimeZone
+#include <unicode/smpdtfmt.h> // class SimpleDateFormat
+#include <unicode/timezone.h> // class TimeZone
 
 using agg_util::FileInfo;
 using agg_util::DirectoryUtil;
@@ -416,6 +416,32 @@ namespace ncml_module
   // SimpleDateFormat to produce ISO 8601
   static const string ISO_8601_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
 
+  /** File local helper to convert UnicodeString to std::string for ICU versions prior to 4.2
+   * Fill in toString from the UnicodeString using UnicodeString::extract().
+   * @return success  if true, toString is valid.
+   */
+  static bool convertUnicodeStringToStdString(std::string& toString, const UnicodeString& fromUniString)
+  {
+    // This call exists in 4.2 but not 4.0 or 3.6
+    // TODO use this call if we up our minimum ICU version
+    // fromUniString.toUTF8String(toString);
+
+    toString = ""; // empty it in case of error
+    vector<char> buffer; // std::string element[0] isn't guaranteed contiguous like vectors, so we need a temp...
+    buffer.resize(fromUniString.length() + 1); // +1 for NULL terminator
+    UErrorCode errorCode = U_ZERO_ERROR;
+    int32_t patternLen = fromUniString.extract(&buffer[0], buffer.size(), 0, errorCode);
+    if (patternLen >= buffer.size() || U_FAILURE(errorCode))
+      {
+        return false;
+      }
+    else
+      {
+        toString = std::string(&buffer[0]);
+        return true;
+      }
+  }
+
   void
   ScanElement::initSimpleDateFormats(const std::string& dateFormatMark)
   {
@@ -482,10 +508,14 @@ namespace ncml_module
        _pDateFormatters->_markPos,
        _pDateFormatters->_sdfLen);
 
-    string sdfPattern;
     UnicodeString usPattern;
     _pDateFormatters->_pDateFormat->toPattern(usPattern);
-    usPattern.toUTF8String(sdfPattern);
+    string sdfPattern;
+    bool conversionSuccess = convertUnicodeStringToStdString(sdfPattern, usPattern);
+    NCML_ASSERT_MSG(conversionSuccess,
+        "ScanElement::extractTimeFromFilename: couldn't convert the UnicodeString date pattern to a std::string!");
+
+
     BESDEBUG("ncml", "Scan is now matching the date portion of the filename " <<
         sdfPortion <<
         " to the SimpleDateFormat="
@@ -508,9 +538,11 @@ namespace ncml_module
 
     UnicodeString usISODate;
     _pDateFormatters->_pISO8601->format(theDate, usISODate);
-
     string result;
-    usISODate.toUTF8String(result);
+    conversionSuccess = convertUnicodeStringToStdString(result, usISODate);
+    NCML_ASSERT_MSG(conversionSuccess,
+        "ScanElement::extractTimeFromFilename: failed to convert the UnicodeString ISO date to a std::string!");
+    // usISODate.toUTF8String(result);
     return result;
   }
 

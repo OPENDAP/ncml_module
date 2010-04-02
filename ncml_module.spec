@@ -10,6 +10,7 @@ URL:             http://www.opendap.org/
 BuildRoot:       %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires:   libdap-devel >= 3.10.0
 BuildRequires:   bes-devel >= 3.8.0
+BuildRequires:   libicu-devel >= 3.8.0
 
 %description
 This is the NcML module for our data server.  It parses NcML files to
