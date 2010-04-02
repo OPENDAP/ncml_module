@@ -1,7 +1,7 @@
 
 $Id: README $
 
-[ Updated for version 1.0.0 (5 February 2010) ]
+[ Updated for version 1.0.0 (2 April 2010) ]
 
 ----------------------------------------------------------------------
 
@@ -185,35 +185,15 @@ that the NcML Module is expecting.
 ----------------------------------------------------------------------
 * International Components for Unicode (ICU)
 
-We use code in the International Components for Unicode from:
+We use the International Components for Unicode library for some
+processing in the module.  Distributions can be found at:
 
 http://site.icu-project.org/
-
-in portions of the ncml_module.
-
-To avoid adding user dependencies, we include a (slightly modified)
-distribution of ICU in ncml_module/icu and automatically compile it
-with the ncml_module so that the user does not need to download and
-install it themselves.
-
-We use special library names and install our build into a subdir
-("hyrax_icu") of the given install directory (prefix) so that users
-with their own ICU development environment will not be affected by our
-build.
-
-Please see the file ncml_module/icu/README_OPENDAP.txt for our
-specific modifications, which were minor bug fixes in configure and
-make and changes to avoid overwriting existing installations of ICU.
-We did not modify any source or data code.
 
 ----------------------------------------------------------------------
 * Copyright
 
 This software is copyrighted under the GNU Lesser GPL.  
-
-Our re-distribution of the International Components for Unicode (ICU)
-is licensed under an IBM open source license located in
-ncml_module/icu/license.html.
 
 Please also see the files COPYING and COPYRIGHT that came with this
 distribution for more information.

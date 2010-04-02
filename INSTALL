@@ -1,7 +1,7 @@
 
 $Id: INSTALL $
 
-Updated for version 1.0.0 (5 Feb 2010)
+Updated for version 1.0.0 (2 April 2010)
 
 ---------------------------------------------------------------------------
 Installation instructions for the OPeNDAP NcML Data Handling Module 
@@ -23,10 +23,9 @@ NOTES
 ---------------------------------------------------------------------------
 INTRO
 
-The NcML Module 1.0.0 is a new module for Hyrax 1.6.  What does this
-mean?  All those zeros means that there may be issues on some
-operating systems we have not yet tested on, in particular in our
-inclusion of the ICU 4.2.1 distribution as a subproject.  
+The NcML Module 1.0.0 is a new module for Hyrax 1.6.  All those zeros
+means that there may be issues on some operating systems on which we
+have not yet tested.
 
 If you encounter any build problems after making sure you have
 followed the BUILD REQUIREMENTS section, please send e-mail with as
@@ -40,52 +39,68 @@ Thanks!
 BUILDING THE SOFTWARE
 
 0) Please read the BUILD REQUIREMENTS and NOTES sections of this file
-   before reporting problems.  This module is designed to work with
-   Hyrax 1.6 and will not work with older versions!  Make sure you
-   have a working installation of Hyrax 1.6 before beginning this
-   installation!
+   (below) before reporting problems.  
+
+   This module is designed to work with Hyrax 1.6 and will not work
+   with older versions!  Make sure you have a working installation of
+   Hyrax 1.6 before beginning this installation!
+
+   You will also need 3.6 or higher of the ICU (International
+   Components for Unicode) libs and headers.  See BUILD_REQUIREMENTS
+   for more information.
 
    If you are building from the SVN repository, please also follow the
    instructions in BUILDING FROM THE SVN REPOSITORY before continuing.
 
-   NOTE: As part of the build process, the ncml_module will build and
-   install a modified distribution of International Components for
-   Unicode (ICU).  This build was designed to not affect other ICU
-   installations on the machine.
 
 1) Type `./configure' at the system prompt. On some systems you may
    have to type `sh configure.' 
 
    The default location for the install is "/usr/local".  If your BES
-   is installed in a different location, please use --prefix to change
-   the prefix to the BES install location.  (For this document $prefix
-   will refer to this directory). 
+   is installed in a different location, please use the configure
+   option "--prefix=$prefix" to change the prefix to the BES install
+   location, where $prefix is where the Hyrax BES is installed.  (For
+   this document $prefix will refer to this directory).
 
    NOTE: the CentOS RPM's install the BES to "/usr" and not
    "/usr/local".  If you are not sure, the BES will tell you its
    install dir when you run it with "besctl start".
 
-   NOTE: ICU will install into ${prefix}/hyrax_icu to avoid collisions
-   with other ICU installations that may be in ${prefix} already.
+   ** NON-STANDARD ICU LOCATION ** 
+
+   If your ICU library and headers are installed in a non-standard
+   (not /usr/local or /usr) location, the configure script optionally
+   takes the argument "--with-icu-prefix=the_prefix_where_icu_is" to
+   point at the installation.  It will then look for icu-config
+   executable in the specified prefix location and use that version
+   for the build.
+
+   If you use this approach, note that you will likely need to also
+   set an environment variable for finding the library at run-time,
+   for example:
+
+	bash$ export LD_LIBRARY_PATH=/the/icu/path/prefix/lib:${LD_LIBRARY_PATH}
+
+   On Mac OS X, you need to set DYLD_LIBRARY_PATH instead:
+   
+	bash$ export DYLD_LIBRARY_PATH=/the/icu/path/prefix/lib:${DYLD_LIBRARY_PATH}
+   
+   These will need to be done in the shell you run the Hyrax server
+   from or in the login file for the account running the server
+   (presumably root).
+
 
 2) Type `make' to build the handler.  
 
-   NOTE: Since the module requires ICU, note that the ICU libraries
-   will be built prior to the actual ncml_module. Patience is a
-   virtue!
 
-3*) (*Optional): You can perform a 'make check' to test the ICU build
-    and the ncml_module build, but note that this REQUIRES that you
-    have all of the netcdf, hdf4, and hdf5 handlers already installed
-    and working in Hyrax 1.6!  The testsuite uses netcdf, hdf4 and
-    hdf5 datasets for testing.  Please see the BUILD REQUIREMENTS
-    section under TESTSUITE if you wish to run the tests and do not
-    have these handlers installed.  Otherwise, you may skip this step.
+3*) (*Optional): You can perform a 'make check' to test the build,
+    but note that this REQUIRES that you have all of the netcdf, hdf4,
+    and hdf5 handlers already installed and working in Hyrax 1.6!  The
+    testsuite uses netcdf, hdf4 and hdf5 datasets for testing.  Please
+    see the BUILD REQUIREMENTS section under TESTSUITE if you wish to
+    run the tests and do not have these handlers installed.
+    Otherwise, you may skip this step.
 
-    NOTE: Since we include ICU, the extensive ICU tests will be run
-    BEFORE the actual ncml_module tests.  The user may also do 'cd
-    tests && make check' if they desire JUST the ncml_module tests
-    (which will also test our use of ICU).
 
 4) Install the module into the BES by running `make install'.
 
@@ -97,17 +112,17 @@ BUILDING THE SOFTWARE
    parameters that used to be in the bes.conf file, such as the
    TypeMatch parameter for finding your files based on their suffix.
 
-   The install will also install our local build of ICU into
-   ${prefix}/hyrax_icu.
-
    
 5) For many installations, you must arrange for your operating system
    to find the shared libraries installed by default in
    $prefix/lib. Do this by either setting an environment variable such
-   as LD_LIBRARY_PATH or by editing /etc/ld.so.conf. Different
-   operating systems handle this in different ways.
+   as LD_LIBRARY_PATH, DYLD_LIBRARY_PATH, or by editing
+   /etc/ld.so.conf. Different operating systems handle this in
+   different ways.
 
-6) Restart Hyrax (BOTH the BES and OLFS) to load the module!!
+
+6) Restart Hyrax (BOTH the BES and OLFS) to load the module!
+
 
 7*) (*Optional): Look at test data!
      
@@ -123,7 +138,7 @@ BUILDING THE SOFTWARE
 
     If you see an error like "Unable to add container, type of data
     must be specified", then your BES probably is not configured to
-    server netcdf data properly.  Set it up to serve netcdf data, test
+    serve netcdf data properly.  Set it up to serve netcdf data, test
     it, clear the cache, and try again.
 
 
@@ -191,6 +206,37 @@ BUILD REQUIREMENTS
 
     o The NcML Module itself uses libxml2 2.6.16 which should be
       satisfied since libdap requires it as well.
+      
+    o ICU 3.6 (or higher): You will need the ICU (International
+      Components for Unicode) libraries and headers version 3.6 or
+      higher (we have successfully compiled up to the stable 4.2.1
+      release).  ICU is commonly found in most Linux package managers
+      like yum, or you may compile and install from src.
+
+      If using Linux RPM's, you will need the following two RPM's:
+
+            libicu 
+      	    libicu-devel
+
+      Otherwise, the source distributions may be found at:
+      
+            http://site.icu-project.org/download
+
+      We have successfully tested with 3.6 --> 4.2.1 of the ICU
+      distributions.  Follow the directions in the distribution for
+      installing ICU carefully since it is not standard GNU.  For
+      example, you will need to start by running the script
+      "runConfigureICU machineType" instead of configure directly.
+      The machineType is the OS you are on, you can read the
+      runConfigureICU script to see those available.  The download
+      site has more information for some platforms as well.
+
+      If the ICU headers and libs are installed in the default
+      /usr/local (or for RPM's in /usr), configure should find them.
+      Otherwise, configure can be explicitly pointed at the
+      distribution dir with the "--with-icu-prefix=prefix" arg.
+      Please see the non-standard ICU install note in the configure
+      step of the installation for more information.
 
 
   o TESTSUITE: (for 'make check')
