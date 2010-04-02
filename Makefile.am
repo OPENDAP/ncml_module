@@ -15,7 +15,6 @@ lib_bes_LTLIBRARIES = libncml_module.la
 SUBDIRS = . tests
 
 BES_SRCS:=
-
 BES_HDRS:=
 
 NCML_SRCS = \
@@ -117,9 +116,16 @@ sample_data_agg_DATA = data/ncml/agg/joinNew_grid.ncml data/ncml/agg/joinNew_sca
 
 # Two subdirs of agg for the actual aggregation members
 sample_data_agg_gridsdir = $(datadir)/hyrax/data/ncml/agg/grids
-sample_data_agg_grids_DATA = data/ncml/agg/grids/*
+sample_data_agg_grids_DATA = 	data/ncml/agg/grids/f97182070958.hdf \
+				data/ncml/agg/grids/f97182183448.hdf \
+				data/ncml/agg/grids/f97183065853.hdf \
+				data/ncml/agg/grids/f97183182355.hdf 
+
 sample_data_agg_dateddir = $(datadir)/hyrax/data/ncml/agg/dated
-sample_data_agg_dated_DATA = data/ncml/agg/dated/*
+sample_data_agg_dated_DATA = 	data/ncml/agg/dated/CG2006158_120000h_usfc.nc \
+				data/ncml/agg/dated/CG2006158_130000h_usfc.nc \
+				data/ncml/agg/dated/CG2006158_140000h_usfc.nc \
+				data/ncml/agg/dated/CG2006158_150000h_usfc.nc 
 
 install-data-local: ncml.conf
 	@currdate=`date +"%y%m%d%H%M"`; \
