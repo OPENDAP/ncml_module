@@ -30,8 +30,4 @@ dnl set CPPFLAGS since that's what we really wanted here (include path), not CFL
 dnl ICU_LIBS should have -L and -l entries.
 ICU_CPPFLAGS=$ICU_CFLAGS
 AC_SUBST(ICU_CPPFLAGS)
-
-AC_MSG_NOTICE([ICU_CPPFLAGS=$ICU_CPPFLAGS])
-AC_MSG_NOTICE([ICU_LIBS=$ICU_LIBS])
-
 ])

@@ -54,8 +54,12 @@ dnl This sets: ICU_CPPFLAGS with -Iicu-include-path and ICU_LIBS with
 dnl -Licu-lib-path -licu-lib-1 ... 
 dnl Note: it also handles --with-icu-prefix=path_to_icu_install
 dnl in case there are multiple icu development environments on the machine
+dnl NOTE: LD_LIBRARY_PATH or DYLD_LIBRARY_PATH may need to be set for this
+dnl to work, however.
 AC_CHECK_ICU([3.6],
 [
+AC_MSG_NOTICE([ICU_CPPFLAGS=$ICU_CPPFLAGS])
+AC_MSG_NOTICE([ICU_LIBS=$ICU_LIBS])
 ],
 [ AC_MSG_ERROR([Could not find compatible icu (International Components for Unicode) library and headers!])
 ])
@@ -95,9 +99,5 @@ OPENDAP_DEBUG_OPTION
 
 dnl The ncml_module files...
 AC_CONFIG_FILES([Makefile tests/Makefile tests/atlocal])
-
-dnl The icu dependency
-dnl AC_CONFIG_SUBDIRS([icu/source])
-
 AC_OUTPUT
 
