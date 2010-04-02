@@ -10,7 +10,7 @@ URL:             http://www.opendap.org/
 BuildRoot:       %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires:   libdap-devel >= 3.10.0
 BuildRequires:   bes-devel >= 3.8.0
-BuildRequires:   libicu-devel >= 3.6.0
+BuildRequires:   libicu-devel >= 3.6
 
 %description
 This is the NcML module for our data server.  It parses NcML files to
@@ -40,10 +40,11 @@ rm -rf $RPM_BUILD_ROOT
 %postun -p /sbin/ldconfig
 
 %files
-%defattr(-,root,root,-)
-%{_bindir}/bes-ncml-data.sh
+%dir %{_sysconfdir}/bes/
+%dir %{_sysconfdir}/bes/modules
+%config(noreplace) %{_sysconfdir}/bes/modules/ncml.conf
 %{_libdir}/bes/libncml_module.so
 %{_datadir}/hyrax/
-%doc COPYING COPYRIGHT NEWS README 
+%doc COPYING COPYRIGHT NEWS README
 
 %changelog
