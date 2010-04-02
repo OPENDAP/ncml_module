@@ -161,7 +161,7 @@ BUILD REQUIREMENTS
   
     o To build from a fresh SVN checkout, you'll need:
 
-      	 o autoconf 2.63
+      	 o autoconf 2.62
       	 o automake 1.11
 	 o libtool 2.2.6
 
@@ -223,12 +223,13 @@ BUILD REQUIREMENTS
             http://site.icu-project.org/download
 
       We have successfully tested with 3.6 --> 4.2.1 of the ICU
-      distributions.  Follow the directions in the distribution for
-      installing ICU carefully since it is not standard GNU.  For
-      example, you will need to start by running the script
-      "runConfigureICU machineType" instead of configure directly.
-      The machineType is the OS you are on, you can read the
-      runConfigureICU script to see those available.  The download
+      distributions, so if you have a newer one that is fine (Note:
+      you'll need autoconf 2.63 for 4.2.1).  Follow the directions in
+      the distribution for installing ICU carefully since it is not
+      standard GNU.  For example, you will need to start by running
+      the script "runConfigureICU machineType" instead of configure
+      directly.  The machineType is the OS you are on, you can read
+      the runConfigureICU script to see those available.  The download
       site has more information for some platforms as well.
 
       If the ICU headers and libs are installed in the default
