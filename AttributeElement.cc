@@ -268,7 +268,16 @@ namespace ncml_module
          pAT = pCurrentTable->simple_find_container(_name);
          if (!pAT) // doesn't already exist
            {
-             // So create a new one
+             // So create a new one if the name is free (ie no variable...)
+             if (p.getVariableInCurrentVariableContainer(_name))
+               {
+                 THROW_NCML_PARSE_ERROR(line(),
+                     "Cannot create a new attribute container with name=" + _name +
+                     " at current scope since a variable with that name already exists.  Scope=" +
+                     p.getScopeString());
+               }
+
+             // If it is free, go ahead and add it.
              pAT = pCurrentTable->append_container(_name);
              BESDEBUG("ncml", "Attribute container was not found, creating new one name=" << _name << " at scope=" << p.getScopeString() << endl);
            }
@@ -368,12 +377,12 @@ namespace ncml_module
       }
 
     // If the name we're renaming to already exists, we'll assume that's an error as well, since the user probably
-    // wants to know that.
-    if (p.attributeExistsAtCurrentScope(_name))
+    // wants to know this
+    if (p.isNameAlreadyUsedAtCurrentScope(_name))
       {
         THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
                                "Failed to change name of existing attribute orgName=" + _orgName +
-                               " because an attribute with the new name=" + _name +
+                               " because an attribute or variable with the new name=" + _name +
                                " already exists at the current scope=" + p.getScopeString());
       }
 
@@ -424,17 +433,17 @@ namespace ncml_module
     AttrTable* pAT = pTable->simple_find_container(_orgName);
     if (!pAT)
       {
-        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+        THROW_NCML_PARSE_ERROR(line(),
             "renameAttributeContainer: Failed to find attribute container with orgName=" + _orgName +
             " at scope=" + p.getScopeString());
       }
 
-    if (p.attributeExistsAtCurrentScope(_name))
+    if (p.isNameAlreadyUsedAtCurrentScope(_name))
       {
         THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
             "Renaming attribute container with orgName=" + _orgName +
             " to new name=" + _name +
-            " failed since an attribute already exists with that name at scope=" + p.getScopeString());
+            " failed since an attribute or variable already exists with that name at scope=" + p.getScopeString());
       }
 
     BESDEBUG("ncml", "Renaming attribute container orgName=" << _orgName << " to name=" << _name << " at scope="

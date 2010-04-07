@@ -431,7 +431,7 @@ namespace ncml_module
     buffer.resize(fromUniString.length() + 1); // +1 for NULL terminator
     UErrorCode errorCode = U_ZERO_ERROR;
     int32_t patternLen = fromUniString.extract(&buffer[0], buffer.size(), 0, errorCode);
-    if (patternLen >= buffer.size() || U_FAILURE(errorCode))
+    if (patternLen >= static_cast<int32_t>(buffer.size()) || U_FAILURE(errorCode))
       {
         return false;
       }

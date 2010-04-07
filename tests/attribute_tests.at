@@ -71,6 +71,9 @@ AT_CHECK_ALL_DAP_RESPONSES([attribute_with_dot.ncml])
 dnl From a bug where the same named attribute with dots in it (a URL as the NAME) was asserting.
 AT_CHECK_ALL_DAP_RESPONSES([bugs/attr_name_is_url_bug.ncml])
 
+dnl Test that name collision with a variable is a parse error
+AT_ASSERT_PARSE_ERROR([attr_new_attr_conflicts_var.ncml])
+
 dnl Check that making invalid values for a given type produces an error!
 AT_RUN_BES_AND_MATCH([types/byte_bounds.ncml],["ddx"],["ParseError:.*Invalid Value"])
 AT_RUN_BES_AND_MATCH([types/byte_invalid.ncml],["ddx"],["ParseError:.*Invalid Value"])
