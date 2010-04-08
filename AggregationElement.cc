@@ -413,7 +413,7 @@ namespace ncml_module
             THROW_NCML_PARSE_ERROR(line(),
                 "In a joinNew aggregation, we could not find the aggregation variable=" +
                 varName + " "
-                "so we cannot continute the aggregation.");
+                "so we cannot continue the aggregation.");
           }
         if (pAggVarTemplate->type() == dods_array_c)
           {

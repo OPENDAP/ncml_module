@@ -45,7 +45,7 @@ m4_define([AT_RUN_BES_AND_COMPARE],
 AT_SETUP([Comparing $2 response for $1 to baseline baselines_path/$3])
 AT_KEYWORDS([$2])
 AT_MAKE_BESCMD_FILE([$1], [$2], [$4])
-AT_CHECK([besstandalone -c $abs_builddir/bes.conf -i ./test.bescmd], [], [stdout], [ignore])
+AT_CHECK([besstandalone -c bes_conf_path -i ./test.bescmd], [], [stdout], [ignore])
 AT_CHECK([diff -w -b -B baselines_path/$3.$2 stdout], [], [ignore], [], [])
 AT_CLEANUP
 ])
@@ -72,7 +72,7 @@ m4_define([AT_RUN_BES_AND_COMPARE_DODS_GETDAP],
 AT_SETUP([Comparing dods response for $1 to getdap (ascii) baseline baselines_path/$2])
 AT_KEYWORDS([dods])
 AT_MAKE_BESCMD_FILE([$1], [dods], [$3])
-AT_CHECK([besstandalone -c $abs_builddir/bes.conf -i ./test.bescmd], [], [stdout], [ignore])
+AT_CHECK([besstandalone -c bes_conf_path -i ./test.bescmd], [], [stdout], [ignore])
 AT_CHECK([getdap stdout > stdout.getdap], [], [ignore], [ignore])
 AT_CHECK([diff -w -b -B baselines_path/$2.dods.getdap stdout.getdap], [], [ignore], [], [])
 AT_CLEANUP
@@ -90,7 +90,7 @@ m4_define([AT_RUN_BES_AND_MATCH],
 AT_SETUP([$2 response for $1: seeking match to $3])
 AT_KEYWORDS([$2])
 AT_MAKE_BESCMD_FILE([$1], [$2], [$4])
-AT_CHECK([besstandalone -c $abs_builddir/bes.conf -i ./test.bescmd], [], [stdout], [ignore])
+AT_CHECK([besstandalone -c bes_conf_path -i ./test.bescmd], [], [stdout], [ignore])
 AT_CHECK([grep $3 stdout], [], [ignore], [], [])
 AT_CLEANUP
 ])
