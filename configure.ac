@@ -37,16 +37,10 @@ AC_CHECK_FUNCS([strchr isdigit])
 dnl Checks for specific libraries
 AC_CHECK_LIBDAP([3.10.0],
  [
-  LIBS="$LIBS $DAP_LIBS"
-  CPPFLAGS="$CPPFLAGS $DAP_CFLAGS"
+dnl  LIBS="$LIBS $DAP_LIBS"
+dnl  CPPFLAGS="$CPPFLAGS $DAP_CFLAGS"
  ],
  [ AC_MSG_ERROR([Cannot find libdap])
-])
-  
-AC_CHECK_BES([3.8.0],
-[
-],
-[ AC_MSG_ERROR([Could not find bes library and headers])
 ])
 
 dnl Look for the minimum version of the icu libs and headers
@@ -63,6 +57,14 @@ AC_MSG_NOTICE([ICU_LIBS=$ICU_LIBS])
 ],
 [ AC_MSG_ERROR([Could not find compatible icu (International Components for Unicode) library and headers!])
 ])
+
+  
+AC_CHECK_BES([3.8.0],
+[
+],
+[ AC_MSG_ERROR([Could not find bes library and headers])
+])
+
 
 # Test for a readlink bug, see
 # <http://lists.gnu.org/archive/html/bug-coreutils/2008-02/msg00126.html>.
