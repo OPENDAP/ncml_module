@@ -1,3 +1,74 @@
+2010-04-08  Michael Johnson <m.johnson@opendap.org>
+
+	Changed the order of the -I and -L commands for BES, libdap, and ICU to make ICU last to avoid getting /usr/local includes prior to the --prefix locations in compile and link.
+
+2010-04-08  Michael Johnson <m.johnson@opendap.org>
+
+	Changed order of BES_DAPLIBS and ICU_LIBS to try and avoid finding old BES and DAP libs in /usr/local/lib (since ICU add -L/usr/local/lib if it's installed tehre).
+
+2010-04-08  Michael Johnson <m.johnson@opendap.org>
+
+	AggregationElement.cc: typo
+	configure.ac: changed bug email to support@opendap.org not opendap-tech
+	testsuite.at: put back the bes.conf macro
+	joinNew_scan_olderThan.ncml: dropped the "older than" time to minutes rather than hour for fresh installs to pass.
+
+2010-04-07  Michael Johnson <m.johnson@opendap.org>
+
+	Removed bes_conf_path macro repalcement for invocation of besstandalone to test potential issue with newer autoconf.
+
+2010-04-07  Michael Johnson <m.johnson@opendap.org>
+
+	Bug fixes for #1514.  Name collisions were being checked only for new attributes or variables, not both.  The namespaces are actually the same, so we need to make sure the FQN is entirely free when making new attributes and variables.
+
+2010-04-02  Michael Johnson <m.johnson@opendap.org>
+
+	Dropped autoconf min version to 2.62 (which the top-level shrew configure.ac requires) instead of 2.63 now that icu is not a subproject that requires it.
+
+2010-04-02  Michael Johnson <m.johnson@opendap.org>
+
+	Changes to reflect ICU as an external dependency not internal.
+
+2010-04-02  Michael Johnson <m.johnson@opendap.org>
+
+	ncml_module.spec: %files section needed update for the new way bes handles conf files...  now installs ncml.conf as required.
+
+2010-04-02  Michael Johnson <m.johnson@opendap.org>
+
+	Wrong min version of icu lib
+
+2010-04-02  Michael Johnson <m.johnson@opendap.org>
+
+	Fixed distcheck data install problem (doesn't like * character for distcheck oddly)
+
+2010-04-02  Michael Johnson <m.johnson@opendap.org>
+
+	Cleaned out commented portions of old icu subproject
+
+2010-04-02  Michael Johnson <m.johnson@opendap.org>
+
+	Initial changes to remove icu as a subproject and find it as an external dependency.  NOT FULLY TESTED and docs not updated.  Checkin required for testing.
+
+2010-04-01  Michael Johnson <m.johnson@opendap.org>
+
+	Changed baselines to match changes to libdap for ticket #1512.  Strings used to contain XML entities as escapes, now they use \\octal escaped chars.
+
+2010-03-29  Patrick West <pwest@ucar.edu>
+
+	+= used for BES.modules
+	M    ncml.conf.in
+
+2010-03-23  James Gallagher <jgallagher@opendap.org>
+
+	Added comment character between #endif and __AGG_UTIL__GRID_AGGREGATE_ON_OUTER_DIMENSION_H__.
+
+2010-02-18  Michael Johnson <m.johnson@opendap.org>
+
+	Branch for release.
+
+;; Local Variables:
+;; coding: utf-8
+;; End:
 2010-02-05  Michael Johnson <m.johnson@opendap.org>
 
 	Added a couple of examples for joinNew on grids to the installed data.
