@@ -234,6 +234,11 @@ AT_CHECK_ALL_DAP_RESPONSES([agg/joinNew_grid_pre_metadata.ncml])
 dnl Also, if the coordValue is numeric, the map can be a placeholder of type double
 AT_CHECK_ALL_DAP_RESPONSES([agg/joinNew_grid_meta_2.ncml])
 
+dnl Tests adding metadata to all parts of a Grid: the Grid itself
+dnl the array, the existing maps, and the new map.
+dnl Originally was causing bug for Ticket #1530 as well.
+AT_CHECK_ALL_DAP_RESPONSES([agg/joinNew_grid_meta_everywhere.ncml])
+
 dnl --------------------------------------------------
 dnl ----- joinNew Grid Metadata Rejection Tests
 
