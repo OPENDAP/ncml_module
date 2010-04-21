@@ -2,8 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 # Configure script for OPeNDAP NCML data handler
 
-AC_PREREQ(2.63)
-AC_INIT(ncml_module, 1.0.0, opendap-tech@opendap.org)
+AC_PREREQ(2.62)
+AC_INIT(ncml_module, 1.0.1, support@opendap.org)
 AC_CONFIG_AUX_DIR([conf])
 AC_CONFIG_MACRO_DIR([conf])
 
@@ -37,11 +37,27 @@ AC_CHECK_FUNCS([strchr isdigit])
 dnl Checks for specific libraries
 AC_CHECK_LIBDAP([3.10.0],
  [
-  LIBS="$LIBS $DAP_LIBS"
-  CPPFLAGS="$CPPFLAGS $DAP_CFLAGS"
+dnl  LIBS="$LIBS $DAP_LIBS"
+dnl  CPPFLAGS="$CPPFLAGS $DAP_CFLAGS"
  ],
  [ AC_MSG_ERROR([Cannot find libdap])
 ])
+
+dnl Look for the minimum version of the icu libs and headers
+dnl This sets: ICU_CPPFLAGS with -Iicu-include-path and ICU_LIBS with 
+dnl -Licu-lib-path -licu-lib-1 ... 
+dnl Note: it also handles --with-icu-prefix=path_to_icu_install
+dnl in case there are multiple icu development environments on the machine
+dnl NOTE: LD_LIBRARY_PATH or DYLD_LIBRARY_PATH may need to be set for this
+dnl to work, however.
+AC_CHECK_ICU([3.6],
+[
+AC_MSG_NOTICE([ICU_CPPFLAGS=$ICU_CPPFLAGS])
+AC_MSG_NOTICE([ICU_LIBS=$ICU_LIBS])
+],
+[ AC_MSG_ERROR([Could not find compatible icu (International Components for Unicode) library and headers!])
+])
+
   
 # Up this to 3.8.0 when branch for Hyrax 1.6 is reintegrated
 AC_CHECK_BES([3.7.2],
@@ -49,6 +65,7 @@ AC_CHECK_BES([3.7.2],
 ],
 [ AC_MSG_ERROR([Could not find bes library and headers])
 ])
+
 
 # Test for a readlink bug, see
 # <http://lists.gnu.org/archive/html/bug-coreutils/2008-02/msg00126.html>.
@@ -85,9 +102,5 @@ OPENDAP_DEBUG_OPTION
 
 dnl The ncml_module files...
 AC_CONFIG_FILES([Makefile tests/Makefile tests/atlocal])
-
-dnl The icu dependency
-AC_CONFIG_SUBDIRS([icu/source])
-
 AC_OUTPUT
 

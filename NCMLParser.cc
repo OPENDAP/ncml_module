@@ -654,7 +654,12 @@ NCMLParser::resetParseState()
   _pOtherXMLParser = 0;
 }
 
-
+bool
+NCMLParser::isNameAlreadyUsedAtCurrentScope(const std::string& name)
+{
+  return ( getVariableInCurrentVariableContainer(name) ||
+           attributeExistsAtCurrentScope(name) );
+}
 
 BaseType*
 NCMLParser::getVariableInCurrentVariableContainer(const string& name)
@@ -710,14 +715,13 @@ NCMLParser::getVariableInDDS(const string& varName)
 void
 NCMLParser::addCopyOfVariableAtCurrentScope(BaseType& varTemplate)
 {
-  // make sure we can do it...
-  BaseType* pExisting = getVariableInCurrentVariableContainer(varTemplate.name());
-  if (pExisting)
+  // make sure the name is free
+  if (isNameAlreadyUsedAtCurrentScope(varTemplate.name()))
     {
-      // at this point, it's an internal error.  the caller should have checked.
-      THROW_NCML_INTERNAL_ERROR("NCMLParser::addNewVariableAtCurrentScope:"
-          " Cannot add variable since one with the same name exists at current scope."
-          " Name= " + varTemplate.name());
+      THROW_NCML_PARSE_ERROR(getParseLineNumber(),
+              "NCMLParser::addNewVariableAtCurrentScope:"
+              " Cannot add variable since a variable or attribute of the same name exists at current scope."
+              " Name= " + varTemplate.name());
     }
 
   // Also an internal error if the caller tries it.

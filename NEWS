@@ -2,6 +2,18 @@
 $Id: NEWS $
 
 -----------------------------------------------------------------------
+Version 1.0.1 (8 Apr 2010)
+ 
+  * Removed International Components for Unicode sub-distribution.  It
+    is now an external dependency that the user must install from RPM
+    (Linux) or from source prior to building or installing the
+    ncml_module.
+
+  * Bug fix for attributes and variables of the same fully qualified
+    name being created, which is illegal in DAP2.  Now a parse error
+    not unknown exception if attempted.
+
+-----------------------------------------------------------------------
 Version 1.0.0 (5 Feb 2010)
 
   * Aggregations: 

@@ -46,19 +46,19 @@ xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/d
             <value>Cloudiness Monthly Mean at Surface</value>
         </Attribute>
         <Attribute name="dataset" type="String">
-            <value>COADS 1-degree Equatorial Enhanced&#x0a;AI</value>
+            <value>COADS 1-degree Equatorial Enhanced\\012AI</value>
         </Attribute>
         <Attribute name="var_desc" type="String">
-            <value>Cloudiness&#x0a;C</value>
+            <value>Cloudiness\\012C</value>
         </Attribute>
         <Attribute name="level_desc" type="String">
-            <value>Surface&#x0a;0</value>
+            <value>Surface\\0120</value>
         </Attribute>
         <Attribute name="statistic" type="String">
-            <value>Mean&#x0a;M</value>
+            <value>Mean\\012M</value>
         </Attribute>
         <Attribute name="parent_stat" type="String">
-            <value>Individual Obs&#x0a;I</value>
+            <value>Individual Obs\\012I</value>
         </Attribute>
         <Attribute name="add_offset" type="Float32">
             <value>3276.500000</value>

@@ -9,40 +9,12 @@ AUTOMAKE_OPTIONS = foreign check-news
 
 ACLOCAL_AMFLAGS = -I conf
 
-####################################################################
-# ICU subproject support (http://site.icu-project.org/)
-# We now include an ICU distribution (slightly modified for bug fixes)
-# which is compiled prior to the ncml_module so we can use
-# it within the module.
-# Please also see: icu/source/configure.gnu 
-# to see how we configure and build ICU for our purposes.
-
-ICU_SRCDIR=$(abs_srcdir)/icu/source
-
-# We point into the build tree for icu since they
-# will not be installed during 'make'
-# Hence the LOCAL in the name.  We might
-# install icu earlier in the build process later
-# and want to point to isntalled libs
-ICU_LOCAL_HDR_COMMON = -I$(ICU_SRCDIR)/common
-ICU_LOCAL_HDR_I18N = -I$(ICU_SRCDIR)/i18n
-ICU_LOCAL_HDRS= $(ICU_LOCAL_HDR_COMMON) $(ICU_LOCAL_HDR_I18N)
-ICU_LOCAL_LIB = $(ICU_SRCDIR)/lib
-
-# we build them with a _hyrax suffix to not get decys already installed.
-ICU_STATIC_LIBS= -lsicui18n_hyrax -lsicuuc_hyrax -lsicudata_hyrax
-
-# End ICU subproject vars
-######################################################################
-
-
 lib_besdir=$(libdir)/bes
 lib_bes_LTLIBRARIES = libncml_module.la
 
-SUBDIRS = icu/source . tests
+SUBDIRS = . tests
 
 BES_SRCS:=
-
 BES_HDRS:=
 
 NCML_SRCS = \
@@ -122,11 +94,11 @@ NCML_HDRS = \
 		VariableElement.h \
 		XMLHelpers.h
 
+# ICU_CPPFLAGS and ICU_LIBS set from configure.ac check for ICU
 libncml_module_la_SOURCES = $(NCML_SRCS) $(BES_SRCS) $(NCML_HDRS) $(BES_HDRS)
-libncml_module_la_CPPFLAGS = $(BES_CPPFLAGS)  $(ICU_LOCAL_HDRS)
+libncml_module_la_CPPFLAGS = $(BES_CPPFLAGS)  $(DAP_CFLAGS) $(ICU_CPPFLAGS)
 libncml_module_la_LDFLAGS = -avoid-version -module 
-# libncml_module_la_LDADD =  
-libncml_module_la_LIBADD =  -L$(ICU_LOCAL_LIB) $(ICU_STATIC_LIBS) $(BES_DAP_LIBS)
+libncml_module_la_LIBADD =  $(BES_DAP_LIBS)  $(DAP_LIBS) $(ICU_LIBS) 
 
 EXTRA_PROGRAMS = 
 
@@ -144,9 +116,16 @@ sample_data_agg_DATA = data/ncml/agg/joinNew_grid.ncml data/ncml/agg/joinNew_sca
 
 # Two subdirs of agg for the actual aggregation members
 sample_data_agg_gridsdir = $(datadir)/hyrax/data/ncml/agg/grids
-sample_data_agg_grids_DATA = data/ncml/agg/grids/*
+sample_data_agg_grids_DATA = 	data/ncml/agg/grids/f97182070958.hdf \
+				data/ncml/agg/grids/f97182183448.hdf \
+				data/ncml/agg/grids/f97183065853.hdf \
+				data/ncml/agg/grids/f97183182355.hdf 
+
 sample_data_agg_dateddir = $(datadir)/hyrax/data/ncml/agg/dated
-sample_data_agg_dated_DATA = data/ncml/agg/dated/*
+sample_data_agg_dated_DATA = 	data/ncml/agg/dated/CG2006158_120000h_usfc.nc \
+				data/ncml/agg/dated/CG2006158_130000h_usfc.nc \
+				data/ncml/agg/dated/CG2006158_140000h_usfc.nc \
+				data/ncml/agg/dated/CG2006158_150000h_usfc.nc 
 
 install-data-local: ncml.conf
 	@currdate=`date +"%y%m%d%H%M"`; \
@@ -161,6 +140,11 @@ uninstall-local:
 ncml.conf: ncml.conf.in config.status
 	sed -e "s%[@]bes_modules_dir[@]%${lib_besdir}%" $< > ncml.conf
 
+# Not nearly as clean as it could be, but this removes .svn directories
+# in subdirs.
+dist-hook:
+	rm -rf `find $(distdir) -name .svn`
+
 C4_DIR=./cccc
 .PHONY: cccc
 cccc:	
@@ -171,10 +155,10 @@ cccc:
 # Build linux RPMs
 
 srpm: dist
-	rpmbuild -ts --clean @PACKAGE@-@PACKAGE_VERSION@.tar.gz
+	rpmbuild -ts --clean $(RPM_OPTIONS) @PACKAGE@-@PACKAGE_VERSION@.tar.gz
 
 rpm: dist
-	rpmbuild -tb --clean @PACKAGE@-@PACKAGE_VERSION@.tar.gz
+	rpmbuild -tb --clean $(RPM_OPTIONS) @PACKAGE@-@PACKAGE_VERSION@.tar.gz
 
 ###########################################################################
 

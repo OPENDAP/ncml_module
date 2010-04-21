@@ -361,6 +361,9 @@ private: //methods
    */
   void loadLocation(const std::string& location, agg_util::DDSLoader::ResponseType responseType, BESDapResponse* response);
 
+  /** Is the given name already used by a variable or attribute at the current scope?  */
+  bool isNameAlreadyUsedAtCurrentScope(const std::string& name);
+
   /** Return the variable with name in the current _pVar container.
    * If null, that means look at the top level DDS.
    * Does NOT recurse or handle field separator dot notation!
