@@ -493,6 +493,7 @@ namespace ncml_module
     else if (p.isScopeAttributeContainer())
       {
         p.exitScope();
+        VALID_PTR(p.getCurrentAttrTable());
         p.setCurrentAttrTable(p.getCurrentAttrTable()->get_parent());
         // This better be valid or something is really broken!
         NCML_ASSERT_MSG(p.getCurrentAttrTable(), "ERROR: Null p.getCurrentAttrTable() unexpected while leaving scope of attribute container!");
