@@ -83,20 +83,20 @@ xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/d
     </Attribute>
 
     <Grid name="CGusfc">
-        <Attribute name="_FillValue" type="Float32">
-            <value>-1.000000033e+32</value>
-        </Attribute>
-        <Attribute name="missing_value" type="Float32">
-            <value>-1.000000033e+32</value>
-        </Attribute>
-        <Attribute name="numberOfObservations" type="Int32">
-            <value>303</value>
-        </Attribute>
-        <Attribute name="actual_range" type="Float32">
-            <value>-0.2876400054</value>
-            <value>0.2763200104</value>
-        </Attribute>
         <Array name="CGusfc">
+            <Attribute name="_FillValue" type="Float32">
+                <value>-1.000000033e+32</value>
+            </Attribute>
+            <Attribute name="missing_value" type="Float32">
+                <value>-1.000000033e+32</value>
+            </Attribute>
+            <Attribute name="numberOfObservations" type="Int32">
+                <value>303</value>
+            </Attribute>
+            <Attribute name="actual_range" type="Float32">
+                <value>-0.2876400054</value>
+                <value>0.2763200104</value>
+            </Attribute>
             <Float32/>
             <dimension name="fileTime" size="4"/>
             <dimension name="time" size="1"/>
