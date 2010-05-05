@@ -25,51 +25,51 @@ xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/d
     </Attribute>
 
     <Grid name="cldc">
-        <Attribute name="valid_range" type="Float32">
-            <value>0.000000000</value>
-            <value>8.000000000</value>
-        </Attribute>
-        <Attribute name="actual_range" type="Float32">
-            <value>0.000000000</value>
-            <value>8.000000000</value>
-        </Attribute>
-        <Attribute name="units" type="String">
-            <value>okta</value>
-        </Attribute>
-        <Attribute name="precision" type="Int16">
-            <value>1</value>
-        </Attribute>
-        <Attribute name="missing_value" type="Int16">
-            <value>32766</value>
-        </Attribute>
-        <Attribute name="_FillValue" type="Int16">
-            <value>32766</value>
-        </Attribute>
-        <Attribute name="long_name" type="String">
-            <value>Cloudiness Monthly Mean at Surface</value>
-        </Attribute>
-        <Attribute name="dataset" type="String">
-            <value>COADS 1-degree Equatorial Enhanced\\012AI</value>
-        </Attribute>
-        <Attribute name="var_desc" type="String">
-            <value>Cloudiness\\012C</value>
-        </Attribute>
-        <Attribute name="level_desc" type="String">
-            <value>Surface\\0120</value>
-        </Attribute>
-        <Attribute name="statistic" type="String">
-            <value>Mean\\012M</value>
-        </Attribute>
-        <Attribute name="parent_stat" type="String">
-            <value>Individual Obs\\012I</value>
-        </Attribute>
-        <Attribute name="add_offset" type="Float32">
-            <value>3276.500000</value>
-        </Attribute>
-        <Attribute name="scale_factor" type="Float32">
-            <value>0.1000000015</value>
-        </Attribute>
         <Array name="cldc">
+            <Attribute name="valid_range" type="Float32">
+                <value>0.000000000</value>
+                <value>8.000000000</value>
+            </Attribute>
+            <Attribute name="actual_range" type="Float32">
+                <value>0.000000000</value>
+                <value>8.000000000</value>
+            </Attribute>
+            <Attribute name="units" type="String">
+                <value>okta</value>
+            </Attribute>
+            <Attribute name="precision" type="Int16">
+                <value>1</value>
+            </Attribute>
+            <Attribute name="missing_value" type="Int16">
+                <value>32766</value>
+            </Attribute>
+            <Attribute name="_FillValue" type="Int16">
+                <value>32766</value>
+            </Attribute>
+            <Attribute name="long_name" type="String">
+                <value>Cloudiness Monthly Mean at Surface</value>
+            </Attribute>
+            <Attribute name="dataset" type="String">
+                <value>COADS 1-degree Equatorial Enhanced\\012AI</value>
+            </Attribute>
+            <Attribute name="var_desc" type="String">
+                <value>Cloudiness\\012C</value>
+            </Attribute>
+            <Attribute name="level_desc" type="String">
+                <value>Surface\\0120</value>
+            </Attribute>
+            <Attribute name="statistic" type="String">
+                <value>Mean\\012M</value>
+            </Attribute>
+            <Attribute name="parent_stat" type="String">
+                <value>Individual Obs\\012I</value>
+            </Attribute>
+            <Attribute name="add_offset" type="Float32">
+                <value>3276.500000</value>
+            </Attribute>
+            <Attribute name="scale_factor" type="Float32">
+                <value>0.1000000015</value>
+            </Attribute>
             <Int16/>
             <dimension name="time" size="456"/>
             <dimension name="lat" size="21"/>
@@ -125,51 +125,51 @@ xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/d
         </Map>
     </Grid>
     <Grid name="lflx">
-        <Attribute name="valid_range" type="Float32">
-            <value>-1000.000000</value>
-            <value>1000.000000</value>
-        </Attribute>
-        <Attribute name="actual_range" type="Float32">
-            <value>-88.70000458</value>
-            <value>236.1000061</value>
-        </Attribute>
-        <Attribute name="units" type="String">
-            <value>grams/kg m/s</value>
-        </Attribute>
-        <Attribute name="precision" type="Int16">
-            <value>1</value>
-        </Attribute>
-        <Attribute name="missing_value" type="Int16">
-            <value>32766</value>
-        </Attribute>
-        <Attribute name="_FillValue" type="Int16">
-            <value>32766</value>
-        </Attribute>
-        <Attribute name="long_name" type="String">
-            <value>Latent Heat Parameter Monthly Mean at Surface</value>
-        </Attribute>
-        <Attribute name="dataset" type="String">
-            <value>COADS 1-degree Equatorial Enhanced\\012AI</value>
-        </Attribute>
-        <Attribute name="var_desc" type="String">
-            <value>Latent Heat Parameter\\012G</value>
-        </Attribute>
-        <Attribute name="level_desc" type="String">
-            <value>Surface\\0120</value>
-        </Attribute>
-        <Attribute name="statistic" type="String">
-            <value>Mean\\012M</value>
-        </Attribute>
-        <Attribute name="parent_stat" type="String">
-            <value>Individual Obs\\012I</value>
-        </Attribute>
-        <Attribute name="add_offset" type="Float32">
-            <value>2276.500000</value>
-        </Attribute>
-        <Attribute name="scale_factor" type="Float32">
-            <value>0.1000000015</value>
-        </Attribute>
         <Array name="lflx">
+            <Attribute name="valid_range" type="Float32">
+                <value>-1000.000000</value>
+                <value>1000.000000</value>
+            </Attribute>
+            <Attribute name="actual_range" type="Float32">
+                <value>-88.70000458</value>
+                <value>236.1000061</value>
+            </Attribute>
+            <Attribute name="units" type="String">
+                <value>grams/kg m/s</value>
+            </Attribute>
+            <Attribute name="precision" type="Int16">
+                <value>1</value>
+            </Attribute>
+            <Attribute name="missing_value" type="Int16">
+                <value>32766</value>
+            </Attribute>
+            <Attribute name="_FillValue" type="Int16">
+                <value>32766</value>
+            </Attribute>
+            <Attribute name="long_name" type="String">
+                <value>Latent Heat Parameter Monthly Mean at Surface</value>
+            </Attribute>
+            <Attribute name="dataset" type="String">
+                <value>COADS 1-degree Equatorial Enhanced\\012AI</value>
+            </Attribute>
+            <Attribute name="var_desc" type="String">
+                <value>Latent Heat Parameter\\012G</value>
+            </Attribute>
+            <Attribute name="level_desc" type="String">
+                <value>Surface\\0120</value>
+            </Attribute>
+            <Attribute name="statistic" type="String">
+                <value>Mean\\012M</value>
+            </Attribute>
+            <Attribute name="parent_stat" type="String">
+                <value>Individual Obs\\012I</value>
+            </Attribute>
+            <Attribute name="add_offset" type="Float32">
+                <value>2276.500000</value>
+            </Attribute>
+            <Attribute name="scale_factor" type="Float32">
+                <value>0.1000000015</value>
+            </Attribute>
             <Int16/>
             <dimension name="time" size="456"/>
             <dimension name="lat" size="21"/>

@@ -18,14 +18,14 @@ Attributes {
         String time_coverage_end "2006-06-07T12:00:00Z";
     }
     CGusfc {
-        Float32 _FillValue -1.000000033e+32;
-        Float32 missing_value -1.000000033e+32;
-        Int32 numberOfObservations 303;
-        Float32 actual_range -0.2876400054, 0.2763200104;
         fileTime {
             String _CoordinateAxisType "Time";
         }
         CGusfc {
+            Float32 _FillValue -1.000000033e+32;
+            Float32 missing_value -1.000000033e+32;
+            Int32 numberOfObservations 303;
+            Float32 actual_range -0.2876400054, 0.2763200104;
         }
         time {
             String long_name "End Time";

@@ -728,11 +728,13 @@ xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/d
             <value>-4</value>
         </Attribute>
         <Array name="lat">
-            <Attribute name="name" type="String">
-                <value>lat</value>
-            </Attribute>
-            <Attribute name="long_name" type="String">
-                <value>latitude</value>
+            <Attribute name="dim_0" type="Container">
+                <Attribute name="name" type="String">
+                    <value>lat</value>
+                </Attribute>
+                <Attribute name="long_name" type="String">
+                    <value>latitude</value>
+                </Attribute>
             </Attribute>
             <Float64/>
             <dimension size="64"/>

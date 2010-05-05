@@ -2,8 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 # Configure script for OPeNDAP NCML data handler
 
-AC_PREREQ(2.62)
-AC_INIT(ncml_module, 1.0.1, support@opendap.org)
+AC_PREREQ(2.61)
+AC_INIT(ncml_module, 1.0.2, support@opendap.org)
 AC_CONFIG_AUX_DIR([conf])
 AC_CONFIG_MACRO_DIR([conf])
 
@@ -35,7 +35,7 @@ AC_SEARCH_LIBS([isdigit], [cctype])
 AC_CHECK_FUNCS([strchr isdigit])
 
 dnl Checks for specific libraries
-AC_CHECK_LIBDAP([3.10.0],
+AC_CHECK_LIBDAP([3.10.2],
  [
 dnl  LIBS="$LIBS $DAP_LIBS"
 dnl  CPPFLAGS="$CPPFLAGS $DAP_CFLAGS"
@@ -59,8 +59,7 @@ AC_MSG_NOTICE([ICU_LIBS=$ICU_LIBS])
 ])
 
   
-# Up this to 3.8.0 when branch for Hyrax 1.6 is reintegrated
-AC_CHECK_BES([3.7.2],
+AC_CHECK_BES([3.8.3],
 [
 ],
 [ AC_MSG_ERROR([Could not find bes library and headers])

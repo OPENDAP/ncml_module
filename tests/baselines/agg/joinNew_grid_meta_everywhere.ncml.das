@@ -121,16 +121,39 @@ Attributes {
             String Info "Filename with timestamp";
         }
         dsp_band_1 {
+            Byte dsp_PixelType 1;
+            Byte dsp_PixelSize 2;
+            UInt16 dsp_Flag 0;
+            UInt16 dsp_nBits 16;
+            Int32 dsp_LineSize 0;
+            String dsp_cal_name "Temperature";
+            UInt16 dsp_cal_eqnNumber 2;
+            UInt16 dsp_cal_CoeffsLength 8;
+            Float32 dsp_cal_coeffs 0.125, -4;
+            Float32 scale_factor 0.125;
+            Float32 add_off -4;
+            dim_0 {
+                String name "lat";
+                String long_name "latitude";
+            }
+            dim_1 {
+                String name "lon";
+                String long_name "longitude";
+            }
             String units "Temp (packed)";
         }
         lat {
-            String name "lat";
-            String long_name "latitude";
+            dim_0 {
+                String name "lat";
+                String long_name "latitude";
+            }
             String units "degrees_north";
         }
         lon {
-            String name "lon";
-            String long_name "longitude";
+            dim_1 {
+                String name "lon";
+                String long_name "longitude";
+            }
             String units "degrees_east";
         }
     }

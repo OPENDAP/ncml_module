@@ -1,3 +1,70 @@
+2010-05-04  Michael Johnson <m.johnson@opendap.org>
+
+	Checked and updated baselines for failing tests.  Ticket #1542.
+
+2010-04-30  Michael Johnson <m.johnson@opendap.org>
+
+	Some fixes for #1542... updated baseline for new HDF4 outputs.  Still some failing tests die to potential bugs in hdf4 handler attribute on grids.
+
+2010-04-22  Patrick West <pwest@ucar.edu>
+
+	Fixed issue with dap-config --version with b at end (for beta)
+	M    conf/libdap.m4
+
+2010-04-21  Michael Johnson <m.johnson@opendap.org>
+
+	A couple new data files used in making documentation.  No tests for them, but they may be useful.
+
+2010-04-16  Michael Johnson <m.johnson@opendap.org>
+
+	Tests for a case that caused #1530.  Used as a test case for adding metadata to a joinNew aggregated Grid as well.
+
+2010-04-16  James Gallagher <jgallagher@opendap.org>
+
+	Added RPM_OPTIONS to the rpm targets.
+
+2010-04-15  James Gallagher <jgallagher@opendap.org>
+
+	Added a dist-hook target that removes .svn dirs from the dist tar.
+
+	M    dap-server/Makefile.am
+	M    fileout_netcdf/Makefile.am
+	M    freeform_handler/Makefile.am
+	M    hdf4_handler/Makefile.am
+	M    hdf5_handler/Makefile.am
+	M    ncml_module/Makefile.am
+	M    netcdf_handler/Makefile.am
+
+2010-04-15  James Gallagher <jgallagher@opendap.org>
+
+	Added Requires: lines to the .spec files for all the modules we build rpms for.
+
+2010-04-08  Michael Johnson <m.johnson@opendap.org>
+
+	Upped the version to 1.0.1 to reflect ICU made external and several bug fixes.
+
+2010-04-08  Michael Johnson <m.johnson@opendap.org>
+
+	Changed the order of the -I and -L commands for BES, libdap, and ICU to make ICU last to avoid getting /usr/local includes prior to the --prefix locations in compile and link.
+
+2010-04-08  Michael Johnson <m.johnson@opendap.org>
+
+	Changed order of BES_DAPLIBS and ICU_LIBS to try and avoid finding old BES and DAP libs in /usr/local/lib (since ICU add -L/usr/local/lib if it's installed tehre).
+
+2010-04-08  Michael Johnson <m.johnson@opendap.org>
+
+	AggregationElement.cc: typo
+	configure.ac: changed bug email to support@opendap.org not opendap-tech
+	testsuite.at: put back the bes.conf macro
+	joinNew_scan_olderThan.ncml: dropped the "older than" time to minutes rather than hour for fresh installs to pass.
+
+2010-04-07  Michael Johnson <m.johnson@opendap.org>
+
+	Removed bes_conf_path macro repalcement for invocation of besstandalone to test potential issue with newer autoconf.
+
+;; Local Variables:
+;; coding: utf-8
+;; End:
 2010-04-08  Michael Johnson <m.johnson@opendap.org>
 
 	Changed the order of the -I and -L commands for BES, libdap, and ICU to make ICU last to avoid getting /usr/local includes prior to the --prefix locations in compile and link.

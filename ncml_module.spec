@@ -1,18 +1,18 @@
 Summary:         NCML module for the OPeNDAP Data server
 Name:            ncml_module
-Version:         1.0.1
+Version:         1.0.2
 Release:         1
 License:         LGPLv2+
 Group:           System Environment/Daemons 
 Source0:         http://www.opendap.org/pub/source/%{name}-%{version}.tar.gz
 URL:             http://www.opendap.org/
-Requires:        libdap >= 3.10.0
-Requires:        bes >= 3.8.0
+Requires:        libdap >= 3.10.2
+Requires:        bes >= 3.8.3
 Requires:        libicu >= 3.6
 
 BuildRoot:       %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires:   libdap-devel >= 3.10.0
-BuildRequires:   bes-devel >= 3.8.0
+BuildRequires:   libdap-devel >= 3.10.2
+BuildRequires:   bes-devel >= 3.8.3
 BuildRequires:   libicu-devel >= 3.6
 
 %description
