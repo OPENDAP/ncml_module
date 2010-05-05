@@ -35,7 +35,7 @@ AC_SEARCH_LIBS([isdigit], [cctype])
 AC_CHECK_FUNCS([strchr isdigit])
 
 dnl Checks for specific libraries
-AC_CHECK_LIBDAP([3.10.0],
+AC_CHECK_LIBDAP([3.10.2],
  [
 dnl  LIBS="$LIBS $DAP_LIBS"
 dnl  CPPFLAGS="$CPPFLAGS $DAP_CFLAGS"
@@ -59,7 +59,7 @@ AC_MSG_NOTICE([ICU_LIBS=$ICU_LIBS])
 ])
 
   
-AC_CHECK_BES([3.8.0],
+AC_CHECK_BES([3.8.3],
 [
 ],
 [ AC_MSG_ERROR([Could not find bes library and headers])
