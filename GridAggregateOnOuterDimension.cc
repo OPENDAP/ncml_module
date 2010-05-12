@@ -258,7 +258,6 @@ GridAggregateOnOuterDimension::cleanup() throw()
   _datasetDescs.clear(); // force the dtors on datasets to clear their memory
 }
 
-// TODO Copy the prototype's constraints into the subgrid's before loading!
 void
 GridAggregateOnOuterDimension::addDatasetGridArrayDataToAggArray(
     Array* pAggArray,
@@ -301,7 +300,7 @@ GridAggregateOnOuterDimension::addDatasetGridArrayDataToAggArray(
   Array* pDatasetArray = static_cast<Array*>(pDatasetGrid->array_var());
   NCML_ASSERT_MSG(pDatasetArray, "In aggregation member dataset, failed to get the array! "
         "Dataset location = " + dataset.getLocation());
-  transferConstraints(pDatasetArray, protoSubArray, false);
+  agg_util::AggregationUtil::transferArrayConstraints(pDatasetArray, protoSubArray, false, true, "ncml:2");
 
   // Force it to read...
   pDatasetGrid->set_send_p(true);
@@ -433,55 +432,6 @@ GridAggregateOnOuterDimension::copyProtoMapsIntoThisGrid()
 }
 
 void
-GridAggregateOnOuterDimension::transferConstraints(Array* pToArray, const Array& fromArrayConst, bool skipFirstDim)
-{
-  VALID_PTR(pToArray);
-  Array& fromArray = const_cast<Array&>(fromArrayConst);
-
-  // Make sure there's no constraints on output.  Shouldn't be, but...
-  pToArray->reset_constraint();
-
-  if (PRINT_CONSTRAINTS)
-    {
-      BESDEBUG("ncml:2", "Printing constraints on fromArray name= " << fromArray.name() <<
-          " before transfer..." << endl);
-      printConstraints(fromArray);
-    }
-
-  // Only real way to the constraints is with the iterator,
-  // so we'll iterator on the fromArray and move
-  // to toarray iterator in sync.
-  Array::Dim_iter fromArrIt = fromArray.dim_begin();
-  Array::Dim_iter fromArrEndIt = fromArray.dim_end();
-  Array::Dim_iter toArrIt = pToArray->dim_begin();
-  for (;
-      fromArrIt != fromArrEndIt;
-      ++fromArrIt)
-    {
-      if (skipFirstDim && (fromArrIt == fromArray.dim_begin()) )
-        {
-          continue;
-        }
-
-      NCML_ASSERT_MSG(fromArrIt->name == toArrIt->name,
-          "GridAggregateOnOuterDimension::transferConstraints: "
-          "Expected the dimensions to have the same name but they did not.");
-      pToArray->add_constraint(
-          toArrIt,
-          fromArrIt->start,
-          fromArrIt->stride,
-          fromArrIt->stop );
-      ++toArrIt;
-    }
-
-  if (PRINT_CONSTRAINTS)
-    {
-      BESDEBUG("ncml:2", "Printing constrains on pToArray after transfer..." << endl);
-      printConstraints(*pToArray);
-    }
-}
-
-void
 GridAggregateOnOuterDimension::transferConstraintsToSubGrid(Grid* pSubGrid)
 {
   VALID_PTR(pSubGrid);
@@ -503,7 +453,7 @@ GridAggregateOnOuterDimension::transferConstraintsToSubGridMaps(Grid* pSubGrid)
         }
       Array* subGridMap = static_cast<Array*>(*subGridMapIt);
       Array* superGridMap = static_cast<Array*>(*it);
-      transferConstraints(subGridMap, *superGridMap, false); // the dims match, no skip
+      agg_util::AggregationUtil::transferArrayConstraints(subGridMap, *superGridMap, false, true, "ncml:2"); // the dims match, no skip
       ++subGridMapIt; // keep in sync
     }
 }
@@ -519,7 +469,7 @@ GridAggregateOnOuterDimension::transferConstraintsToSubGridArray(Grid* pSubGrid)
   VALID_PTR(pThisArray);
 
   // transfer, skipping first dim which is the new one.
-  transferConstraints(pSubGridArray, *pThisArray, true);
+  agg_util::AggregationUtil::transferArrayConstraints(pSubGridArray, *pThisArray, true, true, "ncml:2");
 }
 
 void

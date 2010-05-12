@@ -164,18 +164,6 @@ namespace agg_util
     void readAndAggregateGrids();
 
     /**
-     * Copy the constraints from the from Array into the pToArray
-     * in Dim_iter order.
-     * if skipFirstDim, the first dimension of fromArray will be skipped,
-     * for the case of copying from the aggregated array to a subset array.
-     * @param pToArray array to put constraints into
-     * @param fromArray array to take constraints from
-     * @param skipFirstDim whether the first dim of fromArray is aggregated and
-     *                  should be skipped.
-     */
-    void transferConstraints(Array* pToArray, const Array& fromArray, bool skipFirstDim);
-
-    /**
      * For the data array and all maps, transfer the constraints
      * from the super grid (ie this) to all the grids in the
      * given prototype subgrid.

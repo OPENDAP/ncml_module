@@ -462,6 +462,64 @@ namespace agg_util
      os << "End Array constraints" << endl;
   }
 
+  void
+  AggregationUtil::printConstraintsToDebugChannel(const std::string& debugChannel, const libdap::Array& fromArray)
+  {
+	  ostringstream oss;
+	  BESDEBUG(debugChannel, "Printing onstraints for Array: " << fromArray.name() << ": " << oss.str() << endl);
+	  AggregationUtil::printConstraints(oss, fromArray);
+  }
+
+  void
+  AggregationUtil::transferArrayConstraints(Array* pToArray, const Array& fromArrayConst, bool skipFirstDim,
+		  bool printDebug /* = false */,
+		  const std::string& debugChannel /* = "agg_util" */)
+  {
+    VALID_PTR(pToArray);
+    Array& fromArray = const_cast<Array&>(fromArrayConst);
+
+    // Make sure there's no constraints on output.  Shouldn't be, but...
+    pToArray->reset_constraint();
+
+    if (printDebug)
+      {
+        BESDEBUG(debugChannel, "Printing constraints on fromArray name= " << fromArray.name() <<
+            " before transfer..." << endl);
+        printConstraintsToDebugChannel(debugChannel, fromArray);
+      }
+
+    // Only real way to the constraints is with the iterator,
+    // so we'll iterator on the fromArray and move
+    // to toarray iterator in sync.
+    Array::Dim_iter fromArrIt = fromArray.dim_begin();
+    Array::Dim_iter fromArrEndIt = fromArray.dim_end();
+    Array::Dim_iter toArrIt = pToArray->dim_begin();
+    for (;
+        fromArrIt != fromArrEndIt;
+        ++fromArrIt)
+      {
+        if (skipFirstDim && (fromArrIt == fromArray.dim_begin()) )
+          {
+            continue;
+          }
+
+        NCML_ASSERT_MSG(fromArrIt->name == toArrIt->name,
+            "GAggregationUtil::transferArrayConstraints: "
+            "Expected the dimensions to have the same name but they did not.");
+        pToArray->add_constraint(
+            toArrIt,
+            fromArrIt->start,
+            fromArrIt->stride,
+            fromArrIt->stop );
+        ++toArrIt;
+      }
+
+    if (printDebug)
+      {
+        BESDEBUG(debugChannel, "Printing constrains on pToArray after transfer..." << endl);
+        printConstraintsToDebugChannel(debugChannel, *pToArray);
+      }
+  }
 
 
 }

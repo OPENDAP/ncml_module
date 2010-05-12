@@ -224,6 +224,30 @@ namespace agg_util
      * @param fromArray the array whose dimensions to print.
      */
     static void printConstraints(std::ostream& os, const libdap::Array& fromArray);
+
+    /** Output using BESDEBUG to the debugChannel channel.
+     * Prints the constraints on the dimensions of fromArray.
+     * @param debugChannel name of the output channel
+     * @param fromArray  the Array whose constraints should be printed to the debugChannel
+     */
+    static void printConstraintsToDebugChannel(const std::string& debugChannel, const libdap::Array& fromArray);
+
+    /**
+        * Copy the constraints from the from Array into the pToArray
+        * in Dim_iter order.
+        * if skipFirstDim, the first dimension of fromArray will be skipped,
+        * for the case of copying from the aggregated array to a subset array.
+        * @param pToArray array to put constraints into
+        * @param fromArray array to take constraints from
+        * @param skipFirstDim whether the first dim of fromArray is aggregated and
+        *                  should be skipped.
+        */
+    static void transferArrayConstraints(
+    		libdap::Array* pToArray,
+    		const libdap::Array& fromArray,
+    		bool skipFirstDim,
+    		bool printDebug = false,
+    		const std::string& debugChannel = "agg_util");
   };
 
 }
