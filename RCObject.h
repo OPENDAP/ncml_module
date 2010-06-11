@@ -26,13 +26,16 @@
 //
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
-#ifndef __NCML_MODULE__REF_COUNTED_OBJECT_H__
-#define __NCML_MODULE__REF_COUNTED_OBJECT_H__
+#ifndef __AGG_UTIL__REF_COUNTED_OBJECT_H__
+#define __AGG_UTIL__REF_COUNTED_OBJECT_H__
+
+#include "RCObjectInterface.h" // interface super
 
 #include <set>
 #include <string>
+#include <vector>
 
-namespace ncml_module
+namespace agg_util
 {
   class RCOBjectPool;
   class RCObject;
@@ -72,12 +75,20 @@ public:
       */
     void add(RCObject* pObj);
 
+    /** Remove the object from the pool, but don't delete it
+     * @param pObj object to remove from the auto delete pool. */
+    void remove(RCObject* pObj)
+    {
+      release(pObj, false);
+    }
+
     /**
      * Tell the pool that the object's count is 0 and it can be released to be
-     * deleted or potentially reused again later.  This method is protected
-     * since we don't want users calling this, but only subclasses and our friend the RCObject itself.
+     * deleted or potentially reused again later.  Users should not call this.
+     * @param pObj the object to remove from the pool.
+     * @param shouldDelete whether this call should call delete on pObj, or just remove it.
      */
-    void release(RCObject* pObj);
+    void release(RCObject* pObj, bool shouldDelete=true);
 
 protected:
     /** Call delete on all objects remaining in _liveObjects and clear it out.
@@ -91,7 +102,7 @@ private:
     // Lookups are log(N) and entries unique, as required.
     // All entries in this list will be delete'd in the dtor.
     RCObjectSet _liveObjects;
-  };
+  }; // class RCObjectPool
 
   /**
    * @brief A base class for a simple reference counted object.
@@ -110,7 +121,7 @@ private:
    * A new RCObject has a count of 0, and will only be destroyed automatically
    * if the count goes from 1 back to 0, so the caller is in charge of it unless the first
    * ref() call.  Be careful storing these in std::auto_ptr!  Instead, use a
-   * RCObjectRef(new RCObject()) in place of auto_ptr for hanging onto
+   * RCPtr(new RCObject()) in place of auto_ptr for hanging onto
    * an RCOBject* in a local variable before possible early exit.
    *
    * @see RCPtr which can be used as a temporary
@@ -122,11 +133,10 @@ private:
    *
    * @note This class influenced by Scott Meyers and Open Inventor ref counting stuff.
    *
-   * @note I'd almost rather use boost::shared_ptr and boost::weak_ptr
+   * @note I'd much rather use boost::shared_ptr and boost::weak_ptr
    * for this stuff since they can be used in STL containers and
-   * are thread-safe, but adding a boost dependency for just shared_ptr
-   * seems a bit like overkill now.  If we add boost in the future,
-   * consider changing this over!!
+   * are thread-safe, but adding a boost dependency for just shared_ptr seems like overkill now.
+   * NOTE: shared_ptr is now in C++ TR1, implemented by gcc 4.x.  Can we assume it?
    *
    * @TODO Consider adding a pointer to an abstract MemoryPool or what have you
    * so that a Factory can implement the interface and these objects can be stored
@@ -135,6 +145,7 @@ private:
    * unwind or programmer ref counting error.
    */
   class RCObject
+    : public virtual RCObjectInterface // abstract interface
   {
     friend class RCObjectPool;
   private:
@@ -155,22 +166,30 @@ private:
 
     /** Increase the reference count by one.
      * const since we do not consider the ref count part of the semantic constness of the rep */
-    int ref() const;
+    virtual int ref() const;
 
     /** Decrease the reference count by one.  If it goes from 1 to 0,
      * delete this and this is no longer valid.
-     * @return the new ref count.  If it is 0, the called knows the
+     * @return the new ref count.  If it is 0, the caller knows the
      * object was deleted.
      *
      * It is illegal to unref() an object with a count of 0.  We don't
-     * throw to allow use in dtors, so the caller is to not do it!
+     * throw to allow use in dtors, so the caller is assumed not to do it!
      *
      * const since the reference count is not part of the semantic constness of the rep
      */
-    int unref() const throw();
+    virtual int unref() const throw();
 
     /** Get the current reference count */
-    int getRefCount() const;
+    virtual int getRefCount() const;
+
+    /** If the object is in an auto-delete pool,
+     * remove it from the pool and force it to only delete
+     * when it's ref count goes to 0.
+     * Useful when we desire a particular object stay around
+     * outside of the pool's lifetime.
+     */
+    virtual void removeFromPool() const;
 
     /** Just prints the count and address  */
     virtual std::string toString() const;
@@ -189,11 +208,12 @@ private:
     // If not null, the object is from the given pool and should be release()'d to the
     // pool when count hits 0, not deleted.  If null, it can be deleted.
     RCObjectPool* _pool;
-  };
+  }; // class RCObject
 
   /** @brief A reference to an RCObject which automatically ref() and deref() on creation and destruction.
    *
    * Use this for temporary references to an RCObject* instead of std::auto_ptr to avoid leaks or double deletion.
+   * It is templated to allow RCObject subclass specific pointers.
    *
    * For example,
    *
@@ -204,19 +224,21 @@ private:
    * addToContainer(obj.get());
    * // if previous line exceptions, ~RCPtr will unref() it back to 0, causing it to delete.
    * // if we get here, the object is safely in the container and has been ref() to 2,
-   * // so ~RCPtr correctly drops it back to 0.
+   * // so ~RCPtr correctly drops it back to 1.
    *
-   * @note We don't do weak references, so make sure to not generate reference loops with back pointers!!
-   * Back pointers should be raw pointers (until/unless we add weak references) and ref() should only
-   * be called when it's a strong (ownership) reference!
+   * @note We don't have a class for weak references,
+   * so make sure to not generate reference loops with back pointers (circular ref graphs)
+   * Back pointers should be raw pointers (until/unless we add weak references)
+   * and ref() should _only_ be called when it's a strong reference!
+   * (ie one that shares ownership).
    */
   template <class T>
   class RCPtr
   {
   public:
     RCPtr(T* pRef = 0)
+    : _obj(pRef)
     {
-      _obj = pRef;
       init();
     }
 
@@ -240,14 +262,9 @@ private:
     {
       if (rhs._obj != _obj)
         {
-         // keep it around for a deref
           RCObject* oldObj = _obj;
-
-          // Grab the rhs object and up the ref.
           _obj = rhs._obj;
           init();
-
-          // We just dropped an old reference, so unref() is not null.
           if (oldObj)
             {
               oldObj->unref();
@@ -313,4 +330,4 @@ private:
 
 }
 
-#endif /* __NCML_MODULE__REF_COUNTED_OBJECT_H__ */
+#endif /* __AGG_UTIL__REF_COUNTED_OBJECT_H__ */

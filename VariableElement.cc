@@ -55,7 +55,8 @@ namespace ncml_module
   const vector<string> VariableElement::_sValidAttributes = getValidAttributes();
 
   VariableElement::VariableElement()
-  : NCMLElement(0)
+  : RCObjectInterface()
+  , NCMLElement(0)
   , _name("")
   , _type("")
   , _shape("")
@@ -67,7 +68,8 @@ namespace ncml_module
   }
 
   VariableElement::VariableElement(const VariableElement& proto)
-  : NCMLElement(proto)
+  : RCObjectInterface()
+  , NCMLElement(proto)
   {
     _name = proto._name;
     _type = proto._type;

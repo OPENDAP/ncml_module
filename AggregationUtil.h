@@ -63,13 +63,18 @@ namespace agg_util
 
   public:
 
+    // Typedefs
+    typedef std::vector<const libdap::DDS*> ConstDDSList;
+
     /**
      * Perform an NCML-type union aggregation on the datasets in datasetsInOrder into pOutputUnion.
      * The first named instance of a variable or attribute in a forward iteration of datasetsInOrder
      * ends up in pOutputUnion.  Not that named containers are considered as a unit, so we do not recurse into
      * their children.
      */
-    static void performUnionAggregation(libdap::DDS* pOutputUnion, const std::vector<libdap::DDS*>& datasetsInOrder);
+    static void performUnionAggregation(
+        libdap::DDS* pOutputUnion,
+        const ConstDDSList& datasetsInOrder);
 
     /**
      * Merge any attributes in tableToMerge whose names do not already exist within *pOut into pOut.
@@ -90,7 +95,7 @@ namespace agg_util
      * add a _clone_ of it to pOutputUnion if a variable with the same name does not exist in
      * pOutputUnion yet.
      */
-    static void unionAllVariablesInto(libdap::DDS* pOutputUnion, const std::vector<libdap::DDS*>& datasetsInOrder);
+    static void unionAllVariablesInto(libdap::DDS* pOutputUnion, const ConstDDSList& datasetsInOrder);
 
     /**
      * For each variable in fromDDS top level, union it into pOutputUnion if a variable with the same name isn't already there
@@ -183,7 +188,7 @@ namespace agg_util
     static unsigned int collectVariableArraysInOrder(
           std::vector<libdap::Array*>& varArrays,
           const std::string& collectVarName,
-          const std::vector<libdap::DDS*>& datasetsInOrder);
+          const ConstDDSList& datasetsInOrder);
 
     /**
       * @return whether this is a 1D Array whose dimension name is the same as its variable name.
@@ -248,7 +253,56 @@ namespace agg_util
     		bool skipFirstDim,
     		bool printDebug = false,
     		const std::string& debugChannel = "agg_util");
+
   };
+
+
+  /**
+   * For each ptr element pElt in vecToClear, delete pElt and remove it
+   * from vecToClear.
+   * On exit, vecToClear.empty() and all ptrs it used to contain have been delete'd.
+   * @param vecToClear
+   */
+  template <typename T>
+  void clearVectorAndDeletePointers(std::vector<T*>& vecToClear)
+  {
+    while (!vecToClear.empty())
+      {
+        T* pElt = vecToClear.back();
+        delete pElt;
+        vecToClear.pop_back();
+      }
+  }
+
+  /** Assumes T has unref() */
+  template <class T>
+  void clearAndUnrefAllElements(std::vector<T*>& vecToClear)
+   {
+     while (!vecToClear.empty())
+       {
+         T* pElt = vecToClear.back();
+         pElt->unref();
+         vecToClear.pop_back();
+       }
+   }
+
+  /** Assumes T has ref() */
+  template <class T>
+  void appendVectorOfRCObject(std::vector<T*>& intoVec,
+       const std::vector<T*>& fromVec)
+  {
+    class std::vector<T*>::const_iterator it;
+    class std::vector<T*>::const_iterator endIt = fromVec.end();
+    for (it = fromVec.begin(); it != endIt; ++it)
+       {
+         T* pElt = *it;
+         if (pElt)
+           {
+             pElt->ref();
+           }
+         intoVec.push_back(pElt);
+       }
+   }
 
 }
 

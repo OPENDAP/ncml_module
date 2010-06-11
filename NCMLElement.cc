@@ -138,9 +138,6 @@ namespace ncml_module
     newElt->setParser(&parser);
     newElt->setAttributes(attrs);
 
-    // Add the object to our pool to delete it when the factory dtor is called
-    // if the ref count never hits 0.
-    _pool.add(newElt.get());
     return newElt; //relinquish
   }
 
@@ -148,12 +145,14 @@ namespace ncml_module
 
 
   NCMLElement::NCMLElement(NCMLParser* p)
-  : _parser(p)
+  : RCObject()
+  , _parser(p)
   {
   }
 
   NCMLElement::NCMLElement(const NCMLElement& proto)
-  : RCObject(proto)
+  : RCObjectInterface()
+  , RCObject(proto)
   , _parser(proto._parser)
   {
   }

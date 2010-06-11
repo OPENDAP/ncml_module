@@ -29,9 +29,9 @@
 #ifndef __AGG_UTIL__AGG_MEMBER_DATASET_H__
 #define __AGG_UTIL__AGG_MEMBER_DATASET_H__
 
+#include "RCObject.h"
 #include <string>
-
-class BESDataDDSResponse;
+#include <vector>
 
 namespace libdap
 {
@@ -39,65 +39,60 @@ namespace libdap
   class DDS;
 };
 
-namespace agg_util
-{
-  class DDSLoader;
-};
-
 using libdap::DataDDS;
 using libdap::DDS;
-using std::string;
-
 
 namespace agg_util
 {
   /**
-   * Helper class for storing data about member datasets
-   * of an aggregation so that their data response can be
-   * loaded only if it's in the request.
+   * Abstract helper superclass for allowing lazy access to the DataDDS
+   * for an aggregation. This is used during a read() if the dataset
+   * is needed in an aggregation.
    *
-   * NOTE: This relies on the DDSLoader from the NCMLParser
-   * which is rehijacked to load datasets.
-   * TODO Investigate a cleaner way to load these datasets
-   * than continuing the chain of DHI hijacking...
-   */
-  class AggMemberDataset
+   * Note: This inherits from RCObject so is a ref-counted object to avoid
+   * making excessive copies of it and especially of any contained DDS.
+   *
+   * Currently, there are two concrete subclasses:
+   *
+   * o AggMemberDatasetUsingLocationRef: to load an external location
+   *            into a DataDDS as needed
+   *            (laxy eval so not loaded unless in the output of read() )
+   *
+   * o AggMemberDatasetDDSWrapper: to hold a pre-loaded DataDDS for the
+   *            case of virtual or pre-loaded datasets
+   *            (data declared in NcML file, nested aggregations, e.g.)
+   *            In this case, getLocation() is presumed empty().
+  */
+  class AggMemberDataset : public RCObject
   {
-  private: // disallow
-
   public:
-    AggMemberDataset(const string& location="");
+    AggMemberDataset(const std::string& location);
     virtual ~AggMemberDataset();
 
     AggMemberDataset& operator=(const AggMemberDataset& rhs);
     AggMemberDataset(const AggMemberDataset& proto);
 
-    const string& getLocation() const { return _location; }
-
-    /** Load the given location as a data response so that we have a valid DataDDS
-     * for streaming data from */
-    void loadDataDDS(DDSLoader& loader);
-
-    /** Get the DDS for the location.
-     * Make sure to call loadDDS first!
-     * @return the DDS or null if not loaded.
-     *  */
-    libdap::DataDDS* getDataDDS() const;
+    /** The location to which the AggMemberDataset refers
+     * Note: this could be "" for some subclasses
+     * if they are virtual or nested */
+    const std::string& getLocation() const { return _location; }
 
     /**
-     * Delete any loaded DataDDS to tighten up memory usage.
-     * ON EXIT: (getDataDDS() == 0)
+     * Return the DataDDS for the location, loading it in
+     * if it hasn't yet been loaded.
+     * Can return NULL if there's a problem.
+     * (Not const due to lazy eval)
+     * @return the DataDDS ptr containing the loaded dataset or NULL.
      */
-    void clearDataDDS();
-
-  private: // helpers
-    void cleanup() throw();
+    virtual const libdap::DataDDS* getDataDDS() = 0;
 
   private: // data rep
-    string _location;
-    BESDataDDSResponse* _pDataResponse; // holds our loaded DDS
+    std::string _location; // non-empty location from which to load DataDDS
   };
 
-}
+  // List is ref-counted ptrs to AggMemberDataset concrete subclasses.
+  typedef std::vector< RCPtr<AggMemberDataset> > AMDList;
+
+}; // namespace agg_util
 
 #endif /* __AGG_UTIL__AGG_MEMBER_DATASET_H__ */

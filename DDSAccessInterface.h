@@ -3,7 +3,7 @@
 // to allow NcML files to be used to be used as a wrapper to add
 // AIS to existing datasets of any format.
 //
-// Copyright (c) 2009 OPeNDAP, Inc.
+// Copyright (c) 2010 OPeNDAP, Inc.
 // Author: Michael Johnson  <m.johnson@opendap.org>
 //
 // For more information, please also see the main website: http://opendap.org/
@@ -26,47 +26,50 @@
 //
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
-#include "AggMemberDataset.h"
+#ifndef __AGG_UTIL__DDS_ACCESS_INTERFACE_H__
+#define __AGG_UTIL__DDS_ACCESS_INTERFACE_H__
 
-#include "BESDataDDSResponse.h" // bes
-#include "DataDDS.h"
-#include "DDS.h" // libdap
-#include "DDSLoader.h" // agg_util
-#include "NCMLDebug.h" // ncml_module
-#include "NCMLUtil.h" // ncml_module
+#include "RCObjectInterface.h"
+
+namespace libdap
+{
+  class DDS;
+};
 
 namespace agg_util
 {
-
-  AggMemberDataset::AggMemberDataset(const std::string& location)
-  : RCObject(0)
-  , _location(location)
+  /**
+   * Interface class for any object that can contains a DDS.
+   * Useful for avoiding module back-dependencies
+   * since we do not want agg_util dependencies back to
+   * ncml_module, e.g.
+   */
+  class DDSAccessInterface
   {
-    // no rep yet
-  }
+  public:
 
-  AggMemberDataset::AggMemberDataset(const AggMemberDataset& proto)
-  : RCObjectInterface()
-  , RCObject(proto)
+    virtual ~DDSAccessInterface() = 0;
+
+    /**
+     * Accessor for a contained DDS.
+     * The returned object is to be considered an alias,
+     * and should NOT be deleted or stored outside the lifetime of this!
+     * If the object doesn't have a valid DDS currently, NULL is returned.
+     * @return alias to the DDS that the object is containing, or NULL if none.
+    */
+    virtual const libdap::DDS* getDDS() const = 0;
+  };
+
+  /** Mixture interface for when we a
+   * reference-counted DDS container */
+  class DDSAccessRCInterface
+    : public virtual RCObjectInterface
+    , public virtual DDSAccessInterface
   {
-    // no rep yet
-  }
-
-  AggMemberDataset::~AggMemberDataset()
-  {
-    _location = "";
-  }
-
-  AggMemberDataset&
-  AggMemberDataset::operator=(const AggMemberDataset& rhs)
-  {
-    if (&rhs == this)
-      {
-        return *this;
-      }
-    _location = rhs._location;
-    return *this;
-  }
-
+  public:
+      virtual ~DDSAccessRCInterface() = 0;
+  };
 
 }
+
+#endif /* __AGG_UTIL__DDS_ACCESS_INTERFACE_H__ */

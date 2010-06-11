@@ -51,7 +51,8 @@ namespace ncml_module
   }
 
   AttributeElement::AttributeElement(const AttributeElement& proto)
-  : NCMLElement(proto)
+  : RCObjectInterface()
+  , NCMLElement(proto)
   {
     _name = proto._name;
     _type = proto._type;

@@ -34,8 +34,9 @@
 
 #include "AggMemberDataset.h" // agg_util
 #include "Dimension.h" // agg_util
-#include "Grid.h" // libdap
 #include "DDSLoader.h" // agg_util
+
+#include <Grid.h> // libdap
 
 namespace libdap
 {
@@ -90,7 +91,7 @@ namespace agg_util
      */
     GridAggregateOnOuterDimension(const Grid& proto,
         const Dimension& newDim,
-        const vector<AggMemberDataset>& memberDatasets,
+        const AMDList& memberDatasets,
         const DDSLoader& loaderProto);
 
     GridAggregateOnOuterDimension(const GridAggregateOnOuterDimension& proto);
@@ -192,7 +193,7 @@ namespace agg_util
 
     // Entries contain information on loading the individual datasets
     // in a lazy evaluation as need if they are in the output.
-    vector<AggMemberDataset> _datasetDescs;
+    AMDList _datasetDescs;
 
     // A template for the unaggregated (sub) Grids.
     // It will be used to validate other datasets as they are loaded.

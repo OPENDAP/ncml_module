@@ -52,18 +52,20 @@ using libdap::Vector;
 namespace agg_util
 {
   void
-  AggregationUtil::performUnionAggregation(DDS* pOutputUnion, const vector<DDS*>& datasetsInOrder)
+  AggregationUtil::performUnionAggregation(DDS* pOutputUnion, const ConstDDSList& datasetsInOrder)
   {
     VALID_PTR(pOutputUnion);
-    vector<DDS*>::const_iterator endIt = datasetsInOrder.end();
-    vector<DDS*>::const_iterator it;
+    vector<const DDS*>::const_iterator endIt = datasetsInOrder.end();
+    vector<const DDS*>::const_iterator it;
     for (it = datasetsInOrder.begin(); it != endIt; ++it)
       {
-        DDS* pDDS = *it;
+        const DDS* pDDS = *it;
         VALID_PTR(pDDS);
 
         // Merge in the global attribute tables
-        unionAttrTablesInto(&(pOutputUnion->get_attr_table()), pDDS->get_attr_table());
+        unionAttrTablesInto(&(pOutputUnion->get_attr_table()),
+            // TODO there really should be const version of this in libdap::DDS
+            const_cast<DDS*>(pDDS)->get_attr_table());
 
         // Merge in the variables, which carry their tables along with them since the AttrTable is
         // within the variable's "namespace", or lexical scope.
@@ -123,10 +125,10 @@ namespace agg_util
   }
 
   void
-  AggregationUtil::unionAllVariablesInto(libdap::DDS* pOutputUnion, const std::vector<libdap::DDS*>& datasetsInOrder)
+  AggregationUtil::unionAllVariablesInto(libdap::DDS* pOutputUnion, const ConstDDSList& datasetsInOrder)
   {
-    vector<DDS*>::const_iterator endIt = datasetsInOrder.end();
-    vector<DDS*>::const_iterator it;
+    ConstDDSList::const_iterator endIt = datasetsInOrder.end();
+    ConstDDSList::const_iterator it;
     for (it = datasetsInOrder.begin(); it != endIt; ++it)
       {
         unionAllVariablesInto(pOutputUnion, *(*it) );
@@ -334,11 +336,14 @@ namespace agg_util
   }
 
   unsigned int
-  AggregationUtil::collectVariableArraysInOrder(std::vector<Array*>& varArrays, const std::string& collectVarName, const vector<DDS*>& datasetsInOrder)
+  AggregationUtil::collectVariableArraysInOrder(
+      std::vector<Array*>& varArrays,
+      const std::string& collectVarName,
+      const ConstDDSList& datasetsInOrder)
   {
     unsigned int count = 0;
-    vector<DDS*>::const_iterator endIt = datasetsInOrder.end();
-    vector<DDS*>::const_iterator it;
+    ConstDDSList::const_iterator endIt = datasetsInOrder.end();
+    ConstDDSList::const_iterator it;
     for (it = datasetsInOrder.begin(); it != endIt; ++it)
       {
         DDS* pDDS = const_cast<DDS*>(*it);
@@ -463,17 +468,22 @@ namespace agg_util
   }
 
   void
-  AggregationUtil::printConstraintsToDebugChannel(const std::string& debugChannel, const libdap::Array& fromArray)
+  AggregationUtil::printConstraintsToDebugChannel(
+      const std::string& debugChannel,
+      const libdap::Array& fromArray)
   {
-	  ostringstream oss;
-	  BESDEBUG(debugChannel, "Printing onstraints for Array: " << fromArray.name() << ": " << oss.str() << endl);
-	  AggregationUtil::printConstraints(oss, fromArray);
+    ostringstream oss;
+    BESDEBUG(debugChannel, "Printing constraints for Array: " << fromArray.name() << ": " << oss.str() << endl);
+    AggregationUtil::printConstraints(oss, fromArray);
+    BESDEBUG(debugChannel, oss.str() << endl);
   }
 
   void
-  AggregationUtil::transferArrayConstraints(Array* pToArray, const Array& fromArrayConst, bool skipFirstDim,
-		  bool printDebug /* = false */,
-		  const std::string& debugChannel /* = "agg_util" */)
+  AggregationUtil::transferArrayConstraints(Array* pToArray,
+      const Array& fromArrayConst,
+      bool skipFirstDim,
+      bool printDebug /* = false */,
+      const std::string& debugChannel /* = "agg_util" */)
   {
     VALID_PTR(pToArray);
     Array& fromArray = const_cast<Array&>(fromArrayConst);
@@ -483,8 +493,10 @@ namespace agg_util
 
     if (printDebug)
       {
-        BESDEBUG(debugChannel, "Printing constraints on fromArray name= " << fromArray.name() <<
-            " before transfer..." << endl);
+        BESDEBUG(debugChannel, "Printing constraints on fromArray name= " <<
+            fromArray.name() <<
+            " before transfer..." <<
+            endl);
         printConstraintsToDebugChannel(debugChannel, fromArray);
       }
 
@@ -521,5 +533,4 @@ namespace agg_util
       }
   }
 
-
-}
+} // namespace agg_util

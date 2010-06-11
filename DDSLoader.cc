@@ -96,6 +96,7 @@ DDSLoader::operator=(const DDSLoader& rhs)
   // Normally we don't want to copy these
   // but I got forced into it.
   _dhi.make_copy(rhs._dhi);
+  return *this;
 }
 
 

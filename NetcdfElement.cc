@@ -75,7 +75,10 @@ namespace ncml_module
   }
 
   NetcdfElement::NetcdfElement(const NetcdfElement& proto)
-  : NCMLElement(0)
+  : RCObjectInterface()
+  , DDSAccessInterface()
+  , DDSAccessRCInterface()
+  , NCMLElement(proto)
   , _location(proto._location)
   , _id(proto._id)
   , _title(proto._title)
@@ -251,14 +254,20 @@ namespace ncml_module
       ">";
   }
 
-  libdap::DDS*
+  const libdap::DDS*
   NetcdfElement::getDDS() const
+  {
+    return const_cast<NetcdfElement*>(this)->getDDS();
+  }
+
+  libdap::DDS*
+  NetcdfElement::getDDS()
   {
     // lazy eval loading the dds
     if (!_loaded)
       {
         BESDEBUG("ncml", "Lazy loading DDX for location=" << location() << endl);
-        const_cast<NetcdfElement*>(this)->loadLocation();
+        loadLocation();
       }
 
     if (_response)

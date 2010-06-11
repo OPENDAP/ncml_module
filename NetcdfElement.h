@@ -29,6 +29,7 @@
 #ifndef __NCML_MODULE__NETCDF_ELEMENT_H__
 #define __NCML_MODULE__NETCDF_ELEMENT_H__
 
+#include "DDSAccessInterface.h"
 #include "DDSLoader.h"
 #include "NCMLElement.h"
 
@@ -60,7 +61,9 @@ namespace ncml_module
    * in particular that the response object is either passed in to us (root)
    * or loaded brandy new if we're the child of an aggregation.
    */
-  class NetcdfElement : public NCMLElement
+  class NetcdfElement
+    : public NCMLElement // superclass
+    , public virtual agg_util::DDSAccessRCInterface // interface
   {
   private:
     NetcdfElement& operator=(const NetcdfElement& rhs); //disallow
@@ -94,9 +97,16 @@ namespace ncml_module
     bool isValid() const;
 
     /**
-     * Return the DDS for this dataset.
+     * Return the DDS for this dataset, loading
+     * it in if needed.  (semantically const
+     * although the loaded DDS is cached).
      */
-    virtual libdap::DDS* getDDS() const;
+    virtual const libdap::DDS* getDDS() const;
+
+    /** Non-const version to allow changes to the DDS.
+     * Do NOT delete the return value!
+     * */
+    virtual libdap::DDS* getDDS();
 
     bool getProcessedMetadataDirective() const
     {

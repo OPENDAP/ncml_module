@@ -58,7 +58,8 @@ namespace ncml_module
   const vector<string> ValuesElement::_sValidAttributes = getValidAttributes();
 
   ValuesElement::ValuesElement()
-  : NCMLElement(0)
+  : RCObjectInterface()
+  , NCMLElement(0)
   , _start("")
   , _increment("")
   , _separator("")
@@ -69,7 +70,8 @@ namespace ncml_module
   }
 
   ValuesElement::ValuesElement(const ValuesElement& proto)
-  : NCMLElement(proto)
+  : RCObjectInterface()
+  , NCMLElement(proto)
   {
     _start = proto._start;
     _increment = proto._increment;

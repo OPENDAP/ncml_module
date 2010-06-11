@@ -44,7 +44,8 @@ namespace ncml_module
   }
 
   ExplicitElement::ExplicitElement(const ExplicitElement& /* proto */)
-  : NCMLElement(0)
+  : RCObjectInterface()
+  , NCMLElement(0)
   {
   }
 

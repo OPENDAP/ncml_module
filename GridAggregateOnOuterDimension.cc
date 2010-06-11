@@ -57,7 +57,10 @@ GridAggregateOnOuterDimension::duplicate(const GridAggregateOnOuterDimension& rh
 {
   _loader = DDSLoader(rhs._loader.getDHI());
   _newDim = rhs._newDim;
-  _datasetDescs = rhs._datasetDescs;
+
+  NCML_ASSERT(_datasetDescs.empty());
+  _datasetDescs = rhs._datasetDescs; // full copy of vector, obj's are ref counted.
+
   _pSubGridProto = ( (rhs._pSubGridProto) ?
                     (static_cast<Grid*>(rhs._pSubGridProto->ptr_duplicate())) :
                     (0) );
@@ -66,7 +69,7 @@ GridAggregateOnOuterDimension::duplicate(const GridAggregateOnOuterDimension& rh
 GridAggregateOnOuterDimension::GridAggregateOnOuterDimension(
     const Grid& proto,
     const Dimension& newDim,
-    const vector<AggMemberDataset>& memberDatasets,
+    const AMDList& memberDatasets,
     const DDSLoader& loaderProto)
 : Grid(proto) // this should give us map vectors and the member array rank (without new dim).
 , _loader(loaderProto.getDHI()) // create a new loader with the given dhi... is this safely in scope?
@@ -186,7 +189,7 @@ GridAggregateOnOuterDimension::readAndAggregateGrids()
       " stop=" << outerDim.stop << endl);
 
   // Be extra sure we have enough datasets for the given request
-  if (outerDim.size != _datasetDescs.size())
+  if (static_cast<unsigned int>(outerDim.size) != _datasetDescs.size())
     {
       // Not sure whose fault it was, but tell the author
       ostringstream oss;
@@ -214,9 +217,9 @@ GridAggregateOnOuterDimension::readAndAggregateGrids()
       i <= outerDim.stop && i < outerDim.size;
       i += outerDim.stride)
     {
-      AggMemberDataset& dataset = _datasetDescs[i];
+      AggMemberDataset& dataset = *(_datasetDescs[i]);
 
-      // This call can throw on any kind of eerror
+      // This call can throw on any kind of error
       addDatasetGridArrayDataToAggArray(pAggArray,
           nextElementIndex,
           *pProtoArray,
@@ -255,7 +258,6 @@ void
 GridAggregateOnOuterDimension::cleanup() throw()
 {
   SAFE_DELETE(_pSubGridProto);
-  _datasetDescs.clear(); // force the dtors on datasets to clear their memory
 }
 
 void
@@ -266,8 +268,7 @@ GridAggregateOnOuterDimension::addDatasetGridArrayDataToAggArray(
     const string& gridName,
     AggMemberDataset& dataset)
 {
-  dataset.loadDataDDS(_loader);
-  DataDDS* pDataDDS = dataset.getDataDDS();
+  const DataDDS* pDataDDS = dataset.getDataDDS();
   NCML_ASSERT_MSG(pDataDDS, "GridAggregateOnOuterDimension::read(): Got a null DataDDS "
       "while loading dataset = " + dataset.getLocation() );
 

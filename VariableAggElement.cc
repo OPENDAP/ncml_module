@@ -38,13 +38,15 @@ namespace ncml_module
   const vector<string> VariableAggElement::_sValidAttributes = getValidAttributes();
 
   VariableAggElement::VariableAggElement()
-  : NCMLElement(0)
+  : RCObjectInterface()
+  , NCMLElement(0)
   , _name("")
   {
   }
 
   VariableAggElement::VariableAggElement(const VariableAggElement& proto)
-  : NCMLElement(proto)
+  : RCObjectInterface()
+  , NCMLElement(proto)
   , _name(proto._name)
   {
   }

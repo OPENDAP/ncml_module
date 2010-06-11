@@ -54,7 +54,8 @@ namespace ncml_module
   }
 
   DimensionElement::DimensionElement(const DimensionElement& proto)
-  : NCMLElement(proto)
+  : RCObjectInterface()
+  , NCMLElement(proto)
   , _length(proto._length)
   , _orgName(proto._orgName)
   , _isUnlimited(proto._isUnlimited)

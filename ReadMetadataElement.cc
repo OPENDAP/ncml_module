@@ -39,12 +39,14 @@ namespace ncml_module
   const vector<string> ReadMetadataElement::_sValidAttributes = vector<string>();
 
   ReadMetadataElement::ReadMetadataElement()
-  :NCMLElement(0)
+  : RCObjectInterface()
+  , NCMLElement(0)
   {
   }
 
   ReadMetadataElement::ReadMetadataElement(const ReadMetadataElement& proto)
-  : NCMLElement(proto)
+  : RCObjectInterface()
+  , NCMLElement(proto)
   {
   }
 

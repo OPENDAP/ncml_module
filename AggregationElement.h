@@ -150,31 +150,86 @@ namespace ncml_module
     void processJoinNew();
     void processJoinExisting();
 
-    void processAggVarJoinNewForArray(DDS& aggDDS, const string& varName);
+    /** Helper called from processJoinNew iteration for each aggVar */
+    void processJoinNewOnAggVar(
+        const std::string& varName,
+        DDS* pAggDDS,
+        DDS* pTemplateDDS);
 
     /**
-     * Add an aggregated Grid subclass to aggDDS, using gridTemplate
-     * (the aggregation variable pulled from the template (first) dataset)
+     * Create and add a new ArrayAggregateOnOuterDimension
+     * instance to the given aggDDS which will lazy-evaluate
+     * to produce the given aggregation during a read()
+     * and serialization of the containing aggDDS.
+     *
+     * Note: memberDatasets will be copied and _does not need
+     * to exist after this call_ (hence const).
+     * Since the contained RCPtr<AggMemberDataset>'s will be copied,
+     * the contained objects will be ref()'d and exist within
+     * the newly constructed object and any copies of it.
+     *
+     * @param aggDDS the DDS we are aggregating the var into
+     * @param arrayTemplate the template for the sub Array's members
+     *                      (no new outer dim in it yet)
+     * @param dim description of the new outer dimension
+     * @param memberDatasets the list of dataset wrappers to
+     *                       be copied in the construction of
+     *                       the new aggregated variable.
+    */
+    void processAggVarJoinNewForArray(DDS& aggDDS,
+        const Array& arrayTemplate,
+        const agg_util::Dimension& dim,
+        const agg_util::AMDList& memberDatasets );
+
+    /**
+     * Create and add a new aggregated Grid subclass
+     * GridAggregateOnOuterDimension to aggDDS, using gridTemplate,
+     * the aggregation variable pulled from the template (first) dataset
      * to define the shape of the aggregation members.
-     * @param aggDDS
-     * @param gridTemplate
-     */
-    void processAggVarJoinNewForGrid(DDS& aggDDS, const Grid& gridTemplate);
+     *
+     * Note: memberDatasets will be copied and _does not need
+     * to exist after this call_ (hence const).
+     * Since the contained RCPtr<AggMemberDataset>'s will be copied,
+     * the contained objects will be ref()'d and exist within
+     * the newly constructed object and any copies of it.
+     *
+     * @param aggDDS         the DDS we are aggregating the var into
+     * @param gridTemplate   the template for the grid's members
+     *                       (no new outer dim in it yet)
+     * @param dim description of the new outer dimension
+     * @param memberDatasets the list of dataset wrappers to
+     *                       be copied in the construction of
+     *                       the new aggregated variable.
+     * @param aggDDS         the DDS we are aggregating the var into
+     * @param dim            description of the new outer dimension
+     * @param memberDatasets the list of dataset wrappers to
+     *                       be copied in the construction of
+     *                       the new aggregated variable.
+    */
+    void processAggVarJoinNewForGrid(DDS& aggDDS,
+        const Grid& gridTemplate,
+        const agg_util::Dimension& dim,
+        const agg_util::AMDList& memberDatasets );
 
     /** Helper to pull out the DDS's for the child datasets and shove them into
      *  a vector<DDS*> for processing.
      *  On exit, datasets[i] contains _datasets[i]->getDDS().
      */
-    void collectDatasetsInOrder(vector<DDS*>& ddsList) const;
+    void collectDatasetsInOrder(vector<const DDS*>& ddsList) const;
 
-    /** Create a vector of AggMemberDataset from the child datasets for
-     * lazy loading afterwards.
-     * @param rMemberDatasets place to put the datasets
+    /**
+     * Fill the argument list _rMemberDatasets_ with shared references to
+     * AggMemberDataset concrete subclasses (i.e. RCPtr<AggMemberDataset>)
+     * The added datasets will be appended to the end of rMemberDatasets
+     * in the order they are specified in the actual aggregation.
+     *
+     * @param rMemberDatasets place to put the new dataset classes.
      */
-    void collectAggMemberDatasets(vector<AggMemberDataset>& rMemberDatasets) const;
+    void collectAggMemberDatasets(agg_util::AMDList& rMemberDatasets) const;
 
-    /** If there are any <scan> elements, process them in
-     * order to add the scanned datasets.
+    /**
+     * If there are any contained <scan> elements, process them in
+     * order to add the scanned datasets into our list.
      */
     void processAnyScanElements();
 

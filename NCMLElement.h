@@ -37,6 +37,9 @@
 
 using std::string;
 using std::vector;
+using agg_util::RCPtr;
+using agg_util::RCObject;
+using agg_util::RCObjectPool;
 
 namespace ncml_module
 {
@@ -58,7 +61,7 @@ namespace ncml_module
    *  around longer than just the SAX parser stack and need to keep track of
    *  whether other objects need to hang onto strong references to them.
    */
-  class NCMLElement : public RCObject
+  class NCMLElement : public agg_util::RCObject
   {
   public:
 
@@ -105,12 +108,11 @@ namespace ncml_module
       ProtoList::iterator findPrototype(const std::string& elementTypeName);
 
       ProtoList _protos;
-      RCObjectPool _pool; // container for all created objects, will be flushed when dtor is called in case of leaks.
     };
 
   protected:
     // Abstract: Only subclasses can create these
-    NCMLElement(NCMLParser* p);
+    explicit NCMLElement(NCMLParser* p);
 
     NCMLElement(const NCMLElement& proto);
 

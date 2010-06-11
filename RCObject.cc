@@ -27,13 +27,17 @@
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
 #include "RCObject.h"
-#include "BESDebug.h"
-#include <sstream>
 
-namespace ncml_module
+#include "BESDebug.h"
+#include "NCMLDebug.h"
+#include <sstream>
+#include <vector>
+
+namespace agg_util
 {
   RCObject::RCObject(RCObjectPool* pool/*=0*/)
-  : _count(0)
+  : RCObjectInterface()
+  , _count(0)
   , _pool(pool)
   {
     if (_pool)
@@ -43,7 +47,8 @@ namespace ncml_module
   }
 
   RCObject::RCObject(const RCObject& proto)
-  : _count(0) // new objects have no count, forget what the proto has!
+  : RCObjectInterface()
+  , _count(0) // new objects have no count, forget what the proto has!
   , _pool(proto._pool)
   {
     if (_pool)
@@ -90,6 +95,18 @@ namespace ncml_module
  RCObject::getRefCount() const
  {
    return _count;
+ }
+
+ void
+ RCObject::removeFromPool() const
+ {
+   if (_pool)
+     {
+       // remove will not delete it
+       // and will clear _pool
+       _pool->remove(const_cast<RCObject*>(this));
+       NCML_ASSERT(!_pool);
+     }
  }
 
  string
@@ -139,17 +156,28 @@ namespace ncml_module
  }
 
  void
- RCObjectPool::release(RCObject* pObj)
+ RCObjectPool::release(RCObject* pObj, bool shouldDelete/*=true*/)
  {
    if (contains(pObj))
      {
        _liveObjects.erase(pObj);
        pObj->_pool = 0;
 
-       // Delete it for now...  If we decide to subclass and implement a real pool,
-       // we'll want to push this onto a vector for reuse.
-       BESDEBUG("ncml:memory", "RCObjectPool::release(): Calling delete on released object=" << pObj->printRCObject() << endl);
-       delete pObj;
+       if (shouldDelete)
+         {
+           // Delete it for now...  If we decide to subclass and implement a real pool,
+           // we'll want to push this onto a vector for reuse.
+           BESDEBUG("ncml:memory", "RCObjectPool::release(): Calling delete on released object=" <<
+               pObj->printRCObject() <<
+               endl);
+           delete pObj;
+         }
+       else
+         {
+           BESDEBUG("ncml:memory", "RCObjectPool::release(): Removing object, but not deleting it: "
+               << pObj->printRCObject()
+               << endl);
+         }
      }
    else
      {
@@ -173,4 +201,5 @@ namespace ncml_module
    BESDEBUG("ncml:memory", "RCObjectPool::deleteAllObjects() complete!" << endl);
  }
 
-} // namespace ncml_module
+
+} // namespace agg_util

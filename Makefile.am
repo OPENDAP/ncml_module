@@ -19,9 +19,13 @@ BES_HDRS:=
 
 NCML_SRCS = \
 		AggMemberDataset.cc \
+		AggMemberDatasetDDSWrapper.cc \
+		AggMemberDatasetUsingLocationRef.cc \
 		AggregationElement.cc \
 		AggregationUtil.cc \
+		ArrayAggregateOnOuterDimension.cc \
 		AttributeElement.cc \
+		DDSAccessInterface.cc \
 		DDSLoader.cc \
 		Dimension.cc \
 		DimensionElement.cc \
@@ -39,6 +43,7 @@ NCML_SRCS = \
 		NetcdfElement.cc \
 		OtherXMLParser.cc \
 		RCObject.cc \
+		RCObjectInterface.cc \
 		ReadMetadataElement.cc \
 		RemoveElement.cc \
 		RenamedArrayWrapper.cc \
@@ -56,9 +61,13 @@ NCML_SRCS = \
 
 NCML_HDRS = \
 		AggMemberDataset.h \
+		AggMemberDatasetDDSWrapper.h \
+		AggMemberDatasetUsingLocationRef.h \
 		AggregationElement.h \
 		AggregationUtil.h \
+		ArrayAggregateOnOuterDimension.h \
 		AttributeElement.h \
+		DDSAccessInterface.h \
 		DDSLoader.h \
 		Dimension.h \
 		DimensionElement.h \
@@ -79,6 +88,7 @@ NCML_HDRS = \
 		NetcdfElement.h \
 		OtherXMLParser.h \
 		RCObject.h \
+		RCObjectInterface.h \
 		ReadMetadataElement.h \
 		RemoveElement.h \
 		RenamedArrayWrapper.h \
@@ -96,7 +106,7 @@ NCML_HDRS = \
 
 # ICU_CPPFLAGS and ICU_LIBS set from configure.ac check for ICU
 libncml_module_la_SOURCES = $(NCML_SRCS) $(BES_SRCS) $(NCML_HDRS) $(BES_HDRS)
-libncml_module_la_CPPFLAGS = $(BES_CPPFLAGS)  $(DAP_CFLAGS) $(ICU_CPPFLAGS)
+libncml_module_la_CPPFLAGS = $(BES_CPPFLAGS)  $(DAP_CFLAGS) $(ICU_CPPFLAGS) -Werror
 libncml_module_la_LDFLAGS = -avoid-version -module 
 libncml_module_la_LIBADD =  $(BES_DAP_LIBS)  $(DAP_LIBS) $(ICU_LIBS) 
 

@@ -3,7 +3,7 @@
 // to allow NcML files to be used to be used as a wrapper to add
 // AIS to existing datasets of any format.
 //
-// Copyright (c) 2009 OPeNDAP, Inc.
+// Copyright (c) 2010 OPeNDAP, Inc.
 // Author: Michael Johnson  <m.johnson@opendap.org>
 //
 // For more information, please also see the main website: http://opendap.org/
@@ -26,47 +26,12 @@
 //
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
-#include "AggMemberDataset.h"
 
-#include "BESDataDDSResponse.h" // bes
-#include "DataDDS.h"
-#include "DDS.h" // libdap
-#include "DDSLoader.h" // agg_util
-#include "NCMLDebug.h" // ncml_module
-#include "NCMLUtil.h" // ncml_module
+#include "RCObjectInterface.h"
 
 namespace agg_util
 {
-
-  AggMemberDataset::AggMemberDataset(const std::string& location)
-  : RCObject(0)
-  , _location(location)
+  RCObjectInterface::~RCObjectInterface()
   {
-    // no rep yet
   }
-
-  AggMemberDataset::AggMemberDataset(const AggMemberDataset& proto)
-  : RCObjectInterface()
-  , RCObject(proto)
-  {
-    // no rep yet
-  }
-
-  AggMemberDataset::~AggMemberDataset()
-  {
-    _location = "";
-  }
-
-  AggMemberDataset&
-  AggMemberDataset::operator=(const AggMemberDataset& rhs)
-  {
-    if (&rhs == this)
-      {
-        return *this;
-      }
-    _location = rhs._location;
-    return *this;
-  }
-
-
-}
+};

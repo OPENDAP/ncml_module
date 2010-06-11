@@ -92,7 +92,8 @@ namespace ncml_module
   };
 
   ScanElement::ScanElement()
-  : NCMLElement(0)
+  : RCObjectInterface()
+  , NCMLElement(0)
   , _location("")
   , _suffix("")
   , _regExp("")
@@ -105,7 +106,8 @@ namespace ncml_module
   }
 
   ScanElement::ScanElement(const ScanElement& proto)
-  : NCMLElement(0)
+  : RCObjectInterface()
+  , NCMLElement(0)
   , _location(proto._location)
   , _suffix(proto._suffix)
   , _regExp(proto._regExp)

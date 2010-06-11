@@ -38,14 +38,16 @@ namespace ncml_module
   const vector<string> RemoveElement::_sValidAttributes = getValidAttributes();
 
   RemoveElement::RemoveElement()
-  : NCMLElement(0)
+  : RCObjectInterface()
+  , NCMLElement(0)
   , _name("")
   , _type("")
   {
   }
 
   RemoveElement::RemoveElement(const RemoveElement& proto)
-  : NCMLElement(proto)
+  : RCObjectInterface()
+  , NCMLElement(proto)
   {
     _name = proto._name;
     _type = proto._type;
