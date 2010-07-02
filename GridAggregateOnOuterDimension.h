@@ -29,13 +29,14 @@
 #ifndef __AGG_UTIL__GRID_AGGREGATE_ON_OUTER_DIMENSION_H__
 #define __AGG_UTIL__GRID_AGGREGATE_ON_OUTER_DIMENSION_H__
 
+#include <memory>
 #include <string>
 #include <vector>
 
+#include "AggregationUtil.h" // agg_util
 #include "AggMemberDataset.h" // agg_util
 #include "Dimension.h" // agg_util
 #include "DDSLoader.h" // agg_util
-
 #include <Grid.h> // libdap
 
 namespace libdap
@@ -107,6 +108,13 @@ namespace agg_util
     virtual void set_in_selection(bool state);
 
     /**
+     * Accessor for the dataset description list that describes
+     * this aggregation.
+     * @return a reference to the AggMemberDataset list.
+     */
+    const AMDList& getDatasetList() const;
+
+    /**
      * Read in only those datasets that are in the constrained output
      * making sure to apply the internal dimension constraints to the
      * member datasets properly before reading them!
@@ -114,6 +122,7 @@ namespace agg_util
      * @return success.
      */
     virtual bool read();
+
 
   private: // helpers
 
@@ -123,14 +132,12 @@ namespace agg_util
     /** Delete any heap memory */
     void cleanup() throw();
 
-    /** Given the parts to create the Grid from,
-     * add the new dimension to the Array so that our shape is correct.
-     * NOTE: We do NOT add the new map here yet since it may be given
-     * explicitly in the aggregation, so we let the aggregation do it.
-     * TODO: Consider adding a placeholder map here that we can remove
-     * and replace in the case that it does get replaced later.
+    /**
+      * Helper for constructor to create replace our data array
+      * with an ArrayAggregateOnOuterDimension based on memberDatasets.
+      * @param memberDatasets the dataset description for this agg.
      */
-    void createRep();
+    void createRep(const AMDList& memberDatasets);
 
     /** Helper function to load and stream the given dataset's data into the pAggArray.
      * Also will validate that shapes match the prototype, etc etc.
@@ -141,11 +148,12 @@ namespace agg_util
      * @param dataset the dataset to load, stream and close.
      * TODO this might be able to refactor all the way into AggregationUtil static class.
      */
-    void addDatasetGridArrayDataToAggArray(Array* pAggArray,
-         unsigned int atIndex,
-         const Array& protoSubArray,
-         const string& gridName,
-         AggMemberDataset& dataset);
+    void addDatasetGridArrayDataToAggArray(
+        Array& oOutputArray,
+        unsigned int atIndex,
+        const Array& protoSubArray,
+        const string& gridName,
+        AggMemberDataset& dataset);
 
     /**
      * Transfer the constraints to the prototype and read it in.
@@ -156,13 +164,6 @@ namespace agg_util
      * this Grid's maps.
      * */
     void copyProtoMapsIntoThisGrid();
-
-    /**
-     * For all the datasets requested in the outer dimension,
-     * load them in and stream their data into this
-     * object's array portion.
-     */
-    void readAndAggregateGrids();
 
     /**
      * For the data array and all maps, transfer the constraints
@@ -191,13 +192,9 @@ namespace agg_util
     // The new outer dimension description
     Dimension _newDim;
 
-    // Entries contain information on loading the individual datasets
-    // in a lazy evaluation as need if they are in the output.
-    AMDList _datasetDescs;
-
     // A template for the unaggregated (sub) Grids.
     // It will be used to validate other datasets as they are loaded.
-    Grid* _pSubGridProto;
+    std::auto_ptr<Grid> _pSubGridProto;
   };
 
 }

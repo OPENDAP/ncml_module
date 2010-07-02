@@ -27,30 +27,31 @@
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
 #include "config.h"
-#include "NCMLParser.h"
+#include "NCMLParser.h"  // ncml_module
 
-#include "AggregationElement.h"
+#include "AggregationElement.h"  // ncml_module
+#include "AggregationUtil.h" // agg_util
 #include <BESConstraintFuncs.h>
 #include <BESDataDDSResponse.h>
 #include <BESDDSResponse.h>
 #include <BESDebug.h>
-#include "DDSLoader.h"
-#include "DimensionElement.h"
-#include <AttrTable.h>
-#include <BaseType.h>
-#include <DAS.h>
-#include <DDS.h>
+#include "DDSLoader.h" // ncml_module
+#include "DimensionElement.h"  // ncml_module
+#include <AttrTable.h> // libdap
+#include <BaseType.h> // libdap
+#include <DAS.h> // libdap
+#include <DDS.h> // libdap
 #include <mime_util.h>
-#include <Structure.h>
+#include <Structure.h> // libdap
 #include <map>
 #include <memory>
-#include "NCMLDebug.h"
-#include "NCMLElement.h"
-#include "NCMLUtil.h"
-#include "NetcdfElement.h"
-#include "OtherXMLParser.h"
-#include <parser.h> // for the type checking...
-#include "SaxParserWrapper.h"
+#include "NCMLDebug.h" // ncml_module
+#include "NCMLElement.h"  // ncml_module
+#include "NCMLUtil.h"  // ncml_module
+#include "NetcdfElement.h"  // ncml_module
+#include "OtherXMLParser.h" // ncml_module
+#include <parser.h> // libdap  for the type checking...
+#include "SaxParserWrapper.h"  // ncml_module
 #include <sstream>
 
 // For extra debug spew for now.
@@ -685,7 +686,7 @@ NCMLParser::getVariableInContainer(const string& varName, BaseType* pContainer)
       }
     else
       {
-        return NCMLUtil::getVariableNoRecurse(*pCtor, varName);
+        return agg_util::AggregationUtil::getVariableNoRecurse(*pCtor, varName);
       }
   }
   else
@@ -704,7 +705,7 @@ NCMLParser::getVariableInDDS(const string& varName)
   DDS* pDDS = getDDSForCurrentDataset();
   if (pDDS)
     {
-      return NCMLUtil::getVariableNoRecurse(*pDDS, varName);
+      return agg_util::AggregationUtil::getVariableNoRecurse(*pDDS, varName);
     }
   else
     {

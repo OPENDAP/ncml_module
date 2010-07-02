@@ -29,28 +29,209 @@
 #include "AggregationUtil.h"
 
 // agg_util includes
+#include "AggMemberDataset.h"
+#include "AggregationException.h"
 #include "Dimension.h"
 
 // libdap includes
 #include <Array.h> // libdap
 #include <AttrTable.h>
 #include <BaseType.h>
+#include <DataDDS.h>
 #include <DDS.h>
+#include <Grid.h>
 
 // Outside includes (MINIMIZE THESE!)
 #include "NCMLDebug.h" // This the ONLY dependency on NCML Module I want in this class since the macros there are general it's ok...
 
-
-using std::string;
-using std::vector;
 using libdap::Array;
 using libdap::AttrTable;
 using libdap::BaseType;
+using libdap::Constructor;
+using libdap::DataDDS;
 using libdap::DDS;
+using libdap::Grid;
 using libdap::Vector;
+using std::string;
+using std::vector;
 
 namespace agg_util
 {
+  /* virtual */
+  ArrayGetterInterface::~ArrayGetterInterface()
+  {
+  }
+
+  TopLevelArrayGetter::TopLevelArrayGetter()
+  : ArrayGetterInterface()
+  {
+  }
+
+  /* virtual */
+  TopLevelArrayGetter::~TopLevelArrayGetter()
+  {
+  }
+
+  /* virtual */
+  TopLevelArrayGetter*
+  TopLevelArrayGetter::clone() const
+  {
+    return new TopLevelArrayGetter(*this);
+  }
+
+  /* virtual */
+  libdap::Array*
+  TopLevelArrayGetter::readAndGetArray(
+      const std::string& name,
+      const libdap::DataDDS& dds,
+      const libdap::Array* const pConstraintTemplate,
+      const std::string& debugChannel
+      ) const
+  {
+    // First, look up the BaseType
+    BaseType* pBT = AggregationUtil::getVariableNoRecurse(dds, name);
+
+    // Next, if it's not there, throw exception.
+    if (!pBT)
+      {
+        throw AggregationException("TopLevelArrayGetter: "
+            "Did not find a variable named \"" +
+            name + "\" at the top-level of the DDS!");
+      }
+
+    // Next, make sure it's an Array before we cast it
+    // Prefer using the enum type for speed rather than RTTI
+    if (pBT->type() != libdap::dods_array_c)
+      {
+        throw AggregationException("TopLevelArrayGetter: "
+            "The top-level DDS variable named \"" +
+            name +
+            "\" was not of the expected type!"
+            " Expected:Array  Found:" + pBT->type_name());
+      }
+
+    libdap::Array* pDatasetArray = static_cast<libdap::Array*>(pBT);
+
+    // If given, copy the constraints over to the found Array
+    if (pConstraintTemplate)
+      {
+        agg_util::AggregationUtil::transferArrayConstraints
+        (
+            pDatasetArray, // into this dataset array to be read
+            *pConstraintTemplate, // from this template
+            false, // same rank Array's in template and loaded, don't skip first dim
+            !(debugChannel.empty()), // printDebug
+            debugChannel
+        );
+      }
+
+    // Force a read() perhaps with constraints
+    pDatasetArray->set_send_p(true);
+    pDatasetArray->set_in_selection(true);
+    pDatasetArray->read();
+
+    return pDatasetArray;
+  }
+
+  TopLevelGridDataArrayGetter::TopLevelGridDataArrayGetter()
+  : ArrayGetterInterface()
+  {
+  }
+
+  /* virtual */
+  TopLevelGridDataArrayGetter::~TopLevelGridDataArrayGetter()
+  {
+  }
+
+  /* virtual */
+  TopLevelGridDataArrayGetter*
+  TopLevelGridDataArrayGetter::clone() const
+  {
+    return new TopLevelGridDataArrayGetter(*this);
+  }
+
+  /* virtual */
+  libdap::Array*
+  TopLevelGridDataArrayGetter::readAndGetArray(
+         const std::string& name,
+         const libdap::DataDDS& dds,
+         const libdap::Array* const pConstraintTemplate,
+         const std::string& debugChannel
+         ) const
+  {
+    // First, look up the BaseType
+    BaseType* pBT = AggregationUtil::getVariableNoRecurse(dds, name);
+
+    // Next, if it's not there, throw exception.
+    if (!pBT)
+      {
+        throw AggregationException("TopLevelGridArrayGetter: "
+            "Did not find a variable named \"" +
+            name + "\" at the top-level of the DDS!");
+      }
+
+    // Next, make sure it's a Grid before we cast it
+    // Prefer using the enum type for speed rather than RTTI
+    if (pBT->type() != libdap::dods_grid_c)
+      {
+      throw AggregationException("TopLevelGridArrayGetter: "
+                 "The top-level DDS variable named \"" +
+                 name +
+                 "\" was not of the expected type!"
+                 " Expected:Grid  Found:" + pBT->type_name());
+      }
+
+    // Grab the array and return it.
+    Grid* pDataGrid = static_cast<Grid*>(pBT);
+    Array* pDataArray =
+        static_cast<Array*>(
+            pDataGrid->array_var()
+            );
+    if (!pDataArray)
+      {
+        throw AggregationException("TopLevelGridArrayGetter: "
+            "The data Array var for variable name=\"" +
+            name +
+            "\" was unexpectedly null!");
+      }
+
+    // If given, copy the constraints over to the found Array
+    if (pConstraintTemplate)
+      {
+        agg_util::AggregationUtil::transferArrayConstraints
+        (
+            pDataArray, // into this data array to be read
+            *pConstraintTemplate, // from this template
+            false, // same rank Array's in template and loaded, don't skip first dim
+            !(debugChannel.empty()), // printDebug
+            debugChannel
+        );
+      }
+
+    // Force the read() on the Grid level since some handlers
+    // cannot handle a read on a subobject unless read() is called
+    // on the parent object.  We have given the constraints to the
+    // data Array already.
+    // TODO make an option on whether to load the Grid's map
+    // vectors or not!  I think for these cases we do not want them ever!
+    pDataGrid->set_send_p(true);
+    pDataGrid->set_in_selection(true);
+    pDataGrid->read();
+
+    // Also make sure the Array was read and if not call it as well.
+    if (!pDataArray->read_p())
+      {
+        pDataArray->set_send_p(true);
+        pDataArray->set_in_selection(true);
+        pDataArray->read();
+      }
+
+    return pDataArray;
+  }
+
+  /*********************************************************************************************************
+   * AggregationUtil Impl
+   */
   void
   AggregationUtil::performUnionAggregation(DDS* pOutputUnion, const ConstDDSList& datasetsInOrder)
   {
@@ -491,6 +672,15 @@ namespace agg_util
     // Make sure there's no constraints on output.  Shouldn't be, but...
     pToArray->reset_constraint();
 
+    // Ensure the dimensionalities will work out.
+    unsigned int skipDelta = ((skipFirstDim)?(1):(0));
+    if (pToArray->dimensions() + skipDelta !=
+        const_cast<Array&>(fromArrayConst).dimensions())
+      {
+        throw AggregationException("AggregationUtil::transferArrayConstraints: "
+            "Mismatched dimensionalities!");
+      }
+
     if (printDebug)
       {
         BESDEBUG(debugChannel, "Printing constraints on fromArray name= " <<
@@ -532,5 +722,109 @@ namespace agg_util
         printConstraintsToDebugChannel(debugChannel, *pToArray);
       }
   }
+
+  BaseType*
+  AggregationUtil::getVariableNoRecurse(const libdap::DDS& ddsConst, const std::string& name)
+  {
+    BaseType* ret = 0;
+    DDS& dds = const_cast<DDS&>(ddsConst); // semantically const
+    DDS::Vars_iter endIt = dds.var_end();
+    DDS::Vars_iter it;
+    for (it = dds.var_begin(); it != endIt; ++it)
+      {
+        BaseType* var = *it;
+        if (var && var->name() == name)
+          {
+            ret = var;
+            break;
+          }
+      }
+    return ret;
+  }
+
+  // Ugh cut and pasted from the other...
+  // TODO REFACTOR DDS and Constructor really need a common abstract interface,
+  // like IVariableContainer that declares the iterators and associated methods.
+  BaseType*
+  AggregationUtil::getVariableNoRecurse(const libdap::Constructor& varContainerConst, const std::string& name)
+  {
+    BaseType* ret = 0;
+    Constructor& varContainer = const_cast<Constructor&>(varContainerConst); // semantically const
+    Constructor::Vars_iter endIt = varContainer.var_end();
+    Constructor::Vars_iter it;
+    for (it = varContainer.var_begin(); it != endIt; ++it)
+      {
+        BaseType* var = *it;
+        if (var && var->name() == name)
+          {
+            ret = var;
+            break;
+          }
+      }
+    return ret;
+  }
+
+  void
+  AggregationUtil::addDatasetArrayDataToAggregationOutputArray(
+      libdap::Array& oOutputArray,
+      unsigned int atIndex,
+      const Array& constrainedTemplateArray,
+      const std::string& varName,
+      AggMemberDataset& dataset,
+      const ArrayGetterInterface& arrayGetter,
+      const std::string& debugChannel
+      )
+  {
+    const libdap::DataDDS* pDataDDS = dataset.getDataDDS();
+    NCML_ASSERT_MSG(pDataDDS, "GridAggregateOnOuterDimension::read(): Got a null DataDDS "
+        "while loading dataset = " + dataset.getLocation() );
+
+    // Grab the Array from the DataDDS with the getter
+    Array* pDatasetArray = arrayGetter.readAndGetArray(
+        varName,
+        *pDataDDS,
+        &constrainedTemplateArray,
+        debugChannel);
+    NCML_ASSERT_MSG(pDatasetArray, "In aggregation member dataset, failed to get the array! "
+          "Dataset location = " + dataset.getLocation());
+
+    // Make sure that the data was read in or I dunno what went on.
+    if (!pDatasetArray->read_p())
+      {
+        THROW_NCML_INTERNAL_ERROR("GridAggregateOnOuterDimension::addDatasetGridArrayDataToAggArray: the Grid's array pDatasetArray was not read_p()!");
+      }
+
+    // Make sure it matches the prototype or somthing went wrong
+    if (!AggregationUtil::doTypesMatch(constrainedTemplateArray, *pDatasetArray))
+      {
+        THROW_NCML_PARSE_ERROR(-1,
+          "Invalid aggregation! "
+            "GridAggregateOnOuterDimension::read(): "
+            "We found the Grid name=" + varName +
+            " but it was not of the same type as the prototype Grid!");
+      }
+
+    // Make sure the subshapes match! (true means check dimension names too... debate this)
+    if (!AggregationUtil::doShapesMatch(constrainedTemplateArray, *pDatasetArray, true))
+      {
+        THROW_NCML_PARSE_ERROR(-1,
+            "Invalid aggregation! "
+            "GridAggregateOnOuterDimension::read(): "
+            "We found the Grid name=" + varName +
+            " but it was not of the same shape as the prototype Grid!");
+      }
+
+    // OK, once we're here, make sure the length matches the proto
+    if (constrainedTemplateArray.length() != pDatasetArray->length())
+      {
+        THROW_NCML_INTERNAL_ERROR("GridAggregateOnOuterDimension::addDatasetGridArrayDataToAggArray() "
+            " The prototype array and the loaded dataset array length()'s were not equal, even "
+            "though their shapes matched. Logic problem.");
+      }
+
+    // FINALLY, we get to stream the data!
+    oOutputArray.set_value_slice_from_row_major_vector(*pDatasetArray, atIndex);
+  }
+
 
 } // namespace agg_util

@@ -22,6 +22,7 @@ NCML_SRCS = \
 		AggMemberDatasetDDSWrapper.cc \
 		AggMemberDatasetUsingLocationRef.cc \
 		AggregationElement.cc \
+		AggregationException.cc \
 		AggregationUtil.cc \
 		ArrayAggregateOnOuterDimension.cc \
 		AttributeElement.cc \
@@ -64,6 +65,7 @@ NCML_HDRS = \
 		AggMemberDatasetDDSWrapper.h \
 		AggMemberDatasetUsingLocationRef.h \
 		AggregationElement.h \
+		AggregationException.h \
 		AggregationUtil.h \
 		ArrayAggregateOnOuterDimension.h \
 		AttributeElement.h \

@@ -29,13 +29,16 @@
 
 #include "GridAggregateOnOuterDimension.h"
 
+#include "AggregationException.h"
 #include "AggregationUtil.h" // agg_util
 #include "Array.h" // libdap
+#include "ArrayAggregateOnOuterDimension.h" // agg_util
 #include "DataDDS.h" // libdap
 #include "DDS.h" // libdap
 #include "DDSLoader.h" // agg_util
 #include "Dimension.h" // agg_util
 #include "Grid.h" // libdap
+#include <memory> // auto_ptr
 #include "NCMLDebug.h" // ncml_module
 #include "NCMLUtil.h"  // ncml_module
 #include <sstream>
@@ -58,12 +61,10 @@ GridAggregateOnOuterDimension::duplicate(const GridAggregateOnOuterDimension& rh
   _loader = DDSLoader(rhs._loader.getDHI());
   _newDim = rhs._newDim;
 
-  NCML_ASSERT(_datasetDescs.empty());
-  _datasetDescs = rhs._datasetDescs; // full copy of vector, obj's are ref counted.
-
-  _pSubGridProto = ( (rhs._pSubGridProto) ?
-                    (static_cast<Grid*>(rhs._pSubGridProto->ptr_duplicate())) :
-                    (0) );
+  std::auto_ptr<Grid> pGridTemplateClone(( (rhs._pSubGridProto.get()) ?
+      (static_cast<Grid*>(rhs._pSubGridProto->ptr_duplicate())) :
+      (0) ));
+  _pSubGridProto = pGridTemplateClone;
 }
 
 GridAggregateOnOuterDimension::GridAggregateOnOuterDimension(
@@ -74,24 +75,21 @@ GridAggregateOnOuterDimension::GridAggregateOnOuterDimension(
 : Grid(proto) // this should give us map vectors and the member array rank (without new dim).
 , _loader(loaderProto.getDHI()) // create a new loader with the given dhi... is this safely in scope?
 , _newDim(newDim)
-, _datasetDescs(memberDatasets)
-, _pSubGridProto(0)
+// make a clone of the Grid constraint template
+, _pSubGridProto( static_cast<Grid*>(const_cast<Grid&>(proto).ptr_duplicate()))
 {
   BESDEBUG("ncml:2", "GridAggregateOnOuterDimension() ctor called!" << endl);
 
-  // Keep the Grid template around
-  _pSubGridProto = static_cast<Grid*>(const_cast<Grid&>(proto).ptr_duplicate());
-
   // nasty to throw in a ctor, but Grid
   // super will be fully created by here, so will dtor itself properly.
-  createRep();
+  createRep(memberDatasets);
 }
 
 GridAggregateOnOuterDimension::GridAggregateOnOuterDimension(const GridAggregateOnOuterDimension& proto)
 : Grid(proto)
 , _loader(proto._loader.getDHI())
 , _newDim()
-, _datasetDescs()
+, _pSubGridProto(0)
 {
   BESDEBUG("ncml:2", "GridAggregateOnOuterDimension() copy ctor called!" << endl);
   duplicate(proto);
@@ -139,6 +137,18 @@ GridAggregateOnOuterDimension::set_in_selection(bool state)
   Grid::set_in_selection(state);
 }
 
+const AMDList&
+GridAggregateOnOuterDimension::getDatasetList() const
+{
+  ArrayAggregateOnOuterDimension* pAggArray =
+      dynamic_cast<ArrayAggregateOnOuterDimension*>(
+          const_cast<GridAggregateOnOuterDimension*>(this)->array_var());
+  NCML_ASSERT_MSG(pAggArray, "GridAggregateOnOuterDimension::getDatasetList(): "
+      "Expected an ArrayAggregateOnOuterDimension for the data array of "
+      "the Grid, but failed to find it.");
+  return pAggArray->getDatasetList();
+}
+
 bool
 GridAggregateOnOuterDimension::read()
 {
@@ -155,7 +165,7 @@ GridAggregateOnOuterDimension::read()
       printConstraints(*(get_array()));
     }
 
-  VALID_PTR(_pSubGridProto);
+  VALID_PTR(_pSubGridProto.get());
 
   // Transfers constraints to the proto grid and reads it
   readProtoSubGrid();
@@ -171,98 +181,59 @@ GridAggregateOnOuterDimension::read()
   // Only do this portion if the array part is supposed to serialize!
   if (pAggArray->send_p() || pAggArray->is_in_selection())
     {
-      readAndAggregateGrids();
+      pAggArray->read();
     }
 
   set_read_p(true);
   return true;
 }
 
-void
-GridAggregateOnOuterDimension::readAndAggregateGrids()
-{
-  Array* pAggArray = static_cast<Array*>(array_var());
-  const Array::dimension& outerDim = *(pAggArray->dim_begin());
-  BESDEBUG("ncml", "Aggregating datasets array with outer dimension constraints: " <<
-      " start=" << outerDim.start <<
-      " stride=" << outerDim.stride <<
-      " stop=" << outerDim.stop << endl);
-
-  // Be extra sure we have enough datasets for the given request
-  if (static_cast<unsigned int>(outerDim.size) != _datasetDescs.size())
-    {
-      // Not sure whose fault it was, but tell the author
-      ostringstream oss;
-      oss << "The new outer dimension of the joinNew aggregation doesn't " <<
-            " have the same size as the number of datasets in the aggregation!";
-      THROW_NCML_PARSE_ERROR(-1, oss.str());
-    }
-
-  // The prototype array is used to transfer constraints to
-  // each dataset
-  Array* pProtoArray = _pSubGridProto->get_array();
-  VALID_PTR(pProtoArray);
-
-  // Prepare the output array for the data to be streamed into it.
-  pAggArray->reserve_value_capacity(); // for the constrained length()
-
-  // this index pointing into the value buffer for where to write.
-  // The buffer has a stride equal to the pProtoArray->length().
-  int nextElementIndex = 0;
-
-  // Traverse the dataset array respecting hyperslab
-  // TODO OPTIMIZE this code can be optimized with
-  // using pointers into the vector memory...
-  for (int i = outerDim.start;
-      i <= outerDim.stop && i < outerDim.size;
-      i += outerDim.stride)
-    {
-      AggMemberDataset& dataset = *(_datasetDescs[i]);
-
-      // This call can throw on any kind of error
-      addDatasetGridArrayDataToAggArray(pAggArray,
-          nextElementIndex,
-          *pProtoArray,
-          name(),
-          dataset);
-
-      // Jump forward by the amount we added.
-      nextElementIndex += pProtoArray->length();
-    }
-
-  // If we succeeded, we are at the end of the array!
-  NCML_ASSERT_MSG(nextElementIndex == pAggArray->length(),
-      "Logic error:\n"
-        "GridAggregateOnOuterDimension::read(): "
-      "At end of aggregating, expected the nextElementIndex to be the length of the "
-      "aggregated array, but it wasn't!");
-}
+// Private
 
 void
-GridAggregateOnOuterDimension::createRep()
+GridAggregateOnOuterDimension::createRep(const AMDList& memberDatasets)
 {
-  // Add the new dimension to the data array.
-  // We have created it from a prototype, so the Array should be there!
-  Array* pArr = get_array();
+  BESDEBUG("ncml:2", "GridAggregateOnOuterDimension: "
+      "Replacing the Grid's data Array with an ArrayAggregateOnOuterDimension..." << endl);
+
+  // This is the prototype we need.  It will have been set in the ctor.
+  Array* pArr = static_cast<Array*>(array_var());
   NCML_ASSERT_MSG(pArr, "GridAggregateOnOuterDimension::createRep(): "
-      "Expected to find an Array but we did not!");
-  BESDEBUG("ncml:2", "GridAggregateOnOuterDimension: adding new dimension to Array portion." << endl);
-  // Up the rank of the array to the new dimension.
-  pArr->prepend_dim(_newDim.size, _newDim.name);
+       "Expected to find a contained data Array but we did not!");
 
-  // TODO consider adding a placeholder map vector here with no data in it...
-  BESDEBUG("ncml:2", "GridAggregateOnOuterDimension: NOT adding placeholder map: Consider adding this!" << endl);
+  // Create the Grid version of the read getter and make a new AAOOD from our state.
+  std::auto_ptr<ArrayGetterInterface> arrayGetter(new TopLevelGridDataArrayGetter());
+
+  // Create the subclass that does the work and replace our data array with it.
+  // Note this ctor will prepend the new dimension itself, so we do not.
+  std::auto_ptr<ArrayAggregateOnOuterDimension> aggDataArray(
+        new ArrayAggregateOnOuterDimension(
+            *pArr, // prototype, already should be setup properly _without_ the new dim
+            _newDim,
+            memberDatasets,
+            _loader,
+            arrayGetter));
+
+  // Make sure null since sink function
+  // called on the auto_ptr
+  NCML_ASSERT(!(arrayGetter.get()));
+
+  // Replace our data Array with this one.  Will delete old one and may throw.
+  set_array(aggDataArray.get());
+
+  // Release here on successful set since set_array uses raw ptr only.
+  // In case we threw then auto_ptr cleans up itself.
+  aggDataArray.release();
 }
 
 void
 GridAggregateOnOuterDimension::cleanup() throw()
 {
-  SAFE_DELETE(_pSubGridProto);
 }
 
 void
 GridAggregateOnOuterDimension::addDatasetGridArrayDataToAggArray(
-    Array* pAggArray,
+    libdap::Array& oOutputArray,
     unsigned int atIndex,
     const Array& protoSubArray,
     const string& gridName,
@@ -273,7 +244,8 @@ GridAggregateOnOuterDimension::addDatasetGridArrayDataToAggArray(
       "while loading dataset = " + dataset.getLocation() );
 
   // Grab the Grid in question
-  BaseType* pDatasetBT = ncml_module::NCMLUtil::getVariableNoRecurse(*pDataDDS, gridName);
+  BaseType* pDatasetBT =
+      agg_util::AggregationUtil::getVariableNoRecurse(*pDataDDS, gridName);
   if (!pDatasetBT)
     {
       // It better exist!
@@ -301,8 +273,15 @@ GridAggregateOnOuterDimension::addDatasetGridArrayDataToAggArray(
   Array* pDatasetArray = static_cast<Array*>(pDatasetGrid->array_var());
   NCML_ASSERT_MSG(pDatasetArray, "In aggregation member dataset, failed to get the array! "
         "Dataset location = " + dataset.getLocation());
-  agg_util::AggregationUtil::transferArrayConstraints(pDatasetArray, protoSubArray, false, true, "ncml:2");
-
+  agg_util::AggregationUtil::transferArrayConstraints
+    (
+     pDatasetArray, // into this dataset array to be read
+     protoSubArray, // from this template
+     false, // same rank Array's in template and loaded, don't skip first dim
+     true, // printDebug
+     "ncml:2" // debugChannel
+     );
+  
   // Force it to read...
   pDatasetGrid->set_send_p(true);
   pDatasetGrid->set_in_selection(true);
@@ -343,14 +322,14 @@ GridAggregateOnOuterDimension::addDatasetGridArrayDataToAggArray(
     }
 
   // FINALLY, we get to stream the data!
-  pAggArray->set_value_slice_from_row_major_vector(*pDatasetArray, atIndex);
+  oOutputArray.set_value_slice_from_row_major_vector(*pDatasetArray, atIndex);
 }
 
 void
 GridAggregateOnOuterDimension::readProtoSubGrid()
 {
-  VALID_PTR(_pSubGridProto);
-  transferConstraintsToSubGrid(_pSubGridProto);
+  VALID_PTR(_pSubGridProto.get());
+  transferConstraintsToSubGrid(_pSubGridProto.get());
 
   // Pass it the values for the aggregated grid...
   _pSubGridProto->set_send_p(send_p());
@@ -366,7 +345,7 @@ GridAggregateOnOuterDimension::readProtoSubGrid()
 void
 GridAggregateOnOuterDimension::copyProtoMapsIntoThisGrid()
 {
-  VALID_PTR(_pSubGridProto);
+  VALID_PTR(_pSubGridProto.get());
 
   Map_iter mapIt;
   Map_iter mapEndIt = map_end();
@@ -454,8 +433,12 @@ GridAggregateOnOuterDimension::transferConstraintsToSubGridMaps(Grid* pSubGrid)
         }
       Array* subGridMap = static_cast<Array*>(*subGridMapIt);
       Array* superGridMap = static_cast<Array*>(*it);
-      agg_util::AggregationUtil::transferArrayConstraints(subGridMap, *superGridMap, false, true, "ncml:2"); // the dims match, no skip
-      ++subGridMapIt; // keep in sync
+      agg_util::AggregationUtil::transferArrayConstraints(subGridMap,
+          *superGridMap,
+          false, // skipFirstDim = false since map sizes consistent
+          true, // printDebug
+          "ncml:2"); // debugChannel
+      ++subGridMapIt; // keep iterators in sync
     }
 }
 
@@ -470,7 +453,13 @@ GridAggregateOnOuterDimension::transferConstraintsToSubGridArray(Grid* pSubGrid)
   VALID_PTR(pThisArray);
 
   // transfer, skipping first dim which is the new one.
-  agg_util::AggregationUtil::transferArrayConstraints(pSubGridArray, *pThisArray, true, true, "ncml:2");
+  agg_util::AggregationUtil::transferArrayConstraints(
+      pSubGridArray, // into the prototype
+      *pThisArray, // from the output array (with valid constraints)
+      true, // skipFirstDim: need to skip since the ranks differ
+      true,  // printDebug
+      "ncml:2" //debugChannel
+      );
 }
 
 void

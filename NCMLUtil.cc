@@ -291,45 +291,4 @@ namespace ncml_module
         pTemplate->set_name(name);
       }
   }
-
-  BaseType*
-  NCMLUtil::getVariableNoRecurse(const libdap::DDS& ddsConst, const std::string& name)
-  {
-    BaseType* ret = 0;
-    DDS& dds = const_cast<DDS&>(ddsConst); // semantically const
-    DDS::Vars_iter endIt = dds.var_end();
-    DDS::Vars_iter it;
-    for (it = dds.var_begin(); it != endIt; ++it)
-      {
-        BaseType* var = *it;
-        if (var && var->name() == name)
-          {
-            ret = var;
-            break;
-          }
-      }
-    return ret;
-  }
-
-  // Ugh cut and pasted...  DDS and Constructor really need a common abstract interface,
-  // like IVariableContainer that declares the iterators and associated methods.
-  BaseType*
-  NCMLUtil::getVariableNoRecurse(const libdap::Constructor& varContainerConst, const std::string& name)
-  {
-    BaseType* ret = 0;
-    Constructor& varContainer = const_cast<Constructor&>(varContainerConst); // semantically const
-    Constructor::Vars_iter endIt = varContainer.var_end();
-    Constructor::Vars_iter it;
-    for (it = varContainer.var_begin(); it != endIt; ++it)
-      {
-        BaseType* var = *it;
-        if (var && var->name() == name)
-          {
-            ret = var;
-            break;
-          }
-      }
-    return ret;
-  }
-
-}
+} // namespace ncml_module

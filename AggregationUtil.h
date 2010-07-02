@@ -38,16 +38,113 @@ namespace libdap
 {
   class Array;
   class BaseType;
+  class Constructor;
+  class DataDDS;
   class DDS;
 };
 
 namespace agg_util
 {
+  class AggMemberDataset;
   class Dimension;
 };
 
 namespace agg_util
 {
+
+  /**
+   * Helper class hierarchy for acquiring variable of a certain type
+   * from a DDS.  Will be passed into a
+   * static helper function within AggregationUtil.
+   */
+
+  /** Interface class for the functor */
+  struct ArrayGetterInterface
+  {
+    virtual ~ArrayGetterInterface();
+
+    /** Virtual constructor idiom */
+    virtual ArrayGetterInterface* clone() const = 0;
+
+    /** Find, constrain, read, and return an Array inside the DDS
+     * using the given name information (somehow, as specified in subclasses)
+     *
+     * NOTE: this is a functor so sbuclasses may do searches,
+     * may dig into Grid's, etc in order to find the item it needs.
+     *
+     * @param name  name information on finding the correct Array
+     *          note: this need not be the exact FQN, but can be
+     *          interpreted by subclasses as "name.name" in the
+     *          case of a Grid array, e.g.
+     * @param dds  the DataDDS to search for the Array
+     * @param pConstraintTemplate  if not NULL, use this Array
+     *            as a template from which to copy constraints
+     *            onto the returned Array prior to read.
+     * @param debugChannel  if !empty(), the channel to print
+     *            out debug information.
+     *  */
+    virtual libdap::Array* readAndGetArray(
+        const std::string& name,
+        const libdap::DataDDS& dds,
+        const libdap::Array* const pConstraintTemplate,
+        const std::string& debugChannel
+        ) const = 0;
+  }; // class ArrayGetterInterface
+
+  /** Concrete impl that simply finds the
+   * Array by looking for a variable of the
+   * given name at the top level of the DDS
+   * (i.e. doesn't recurse using field notation!)
+   * and making sure it
+   * is of the proper type.
+   */
+  struct TopLevelArrayGetter : public ArrayGetterInterface
+  {
+    TopLevelArrayGetter();
+    virtual ~TopLevelArrayGetter();
+
+    virtual TopLevelArrayGetter* clone() const;
+
+    /** Lookup name within the top level of DDS ONLY and
+     * return it as an Array* if it is a subclass of Array.
+     * May return NULL if not found or other problem.
+     * @throw AggregationException if not found or if found but
+     *          cannot be cast properly into an Array*
+     */
+    virtual libdap::Array* readAndGetArray(
+            const std::string& name,
+            const libdap::DataDDS& dds,
+            const libdap::Array* const pConstraintTemplate,
+            const std::string& debugChannel
+            ) const;
+  }; // class TopLevelArrayGetter
+
+  struct TopLevelGridDataArrayGetter : public ArrayGetterInterface
+  {
+    TopLevelGridDataArrayGetter();
+    virtual ~TopLevelGridDataArrayGetter();
+
+    virtual TopLevelGridDataArrayGetter* clone() const;
+
+    /** Find the array as the data Array of a
+     * TOP-LEVEL Grid with name.  Therefore,
+     * the Array would have name "name.name" as an
+     * qualified name w.r.t. the DataDDS.
+     * @throw AggregationException if not found or illegal shape.
+     * @param name name of the Grid to find the Array in.
+     * @param dds  DDS to search
+     * @param pConstraintTemplate  template for constraints
+     * @param debugChannel if !empty() the channel to print to.
+     * @return the read in Array* or 0 if not found.
+     */
+    virtual libdap::Array* readAndGetArray(
+            const std::string& name,
+            const libdap::DataDDS& dds,
+            const libdap::Array* const pConstraintTemplate,
+            const std::string& debugChannel
+            ) const;
+  }; // class TopLevelGridDataArrayGetter
+
   /**
    *   A static class for encapsulating the aggregation functionality on libdap.
    *   This class should have references to libdap and STL, but should NOT
@@ -254,7 +351,56 @@ namespace agg_util
     		bool printDebug = false,
     		const std::string& debugChannel = "agg_util");
 
-  };
+    /**
+    * Return the variable in dds top level (no recursing, no fully qualified name dot notation)
+    * if it exists, else 0.
+    * The name IS ALLOWED to contain a dot '.', but this is interpreted as PART OF THE NAME
+    * and not as a field separator!
+    */
+    static libdap::BaseType* getVariableNoRecurse(
+        const libdap::DDS& dds,
+        const std::string& name);
+
+    /**
+    * Return the variable in dds top level (no recursing, no fully qualified name dot notation)
+    * if it exists, else 0.
+    * The name IS ALLOWED to contain a dot '.', but this is interpreted as PART OF THE NAME
+    * and not as a field separator!
+    */
+    static libdap::BaseType* getVariableNoRecurse(
+        const libdap::Constructor& varContainer,
+        const std::string& name);
+
+
+    /**
+    * Load the given dataset's DataDDS.
+    * Find the aggVar of the given name in it, must be Array.
+    * Transfer the constraints from the local template to it.
+    * Call read() on it.
+    * Stream the data into oOutputArray's output buffer
+    * at the element index nextElementIndex.
+    *
+    * @param oOutputArray  the Array to output the data into
+    * @param atIndex  where in the output buffer of rOutputArray
+    *                          to stream it (note: not byte, element!)
+    * @param constrainedTemplateArray  the Array to use as the template for the
+    *                       constraints on loading the dataset.
+    * @param name the name of the aggVar to find in the DDS
+    * @param dataset the dataset to load for this element.
+    * @param arrayGetter  the class to use to get the member Array by name from DDS
+    * @param debugChannel if not empty(), BESDEBUG channel to use
+    */
+    static void addDatasetArrayDataToAggregationOutputArray(
+        libdap::Array& oOutputArray, // output location
+        unsigned int atIndex, // oOutputArray[atIndex] will be where data put
+        const libdap::Array& constrainedTemplateArray, // for copying constraints
+        const string& varName, // top level var to find in dataset DDS
+        AggMemberDataset& dataset, // Dataset who's DDS should be searched
+        const ArrayGetterInterface& arrayGetter, // alg for getting Array from DDS
+        const string& debugChannel // if !"", debug output goes to this channel.
+        );
+
+  }; // class AggregationUtil
 
 
   /**

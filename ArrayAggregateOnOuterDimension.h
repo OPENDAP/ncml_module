@@ -30,10 +30,12 @@
 #ifndef __AGG_UTIL__ARRAY_AGGREGATE_ON_OUTER_DIMENSION_H__
 #define __AGG_UTIL__ARRAY_AGGREGATE_ON_OUTER_DIMENSION_H__
 
+#include "AggregationUtil.h" // agg_util
 #include "AggMemberDataset.h" // agg_util
 #include <Array.h>  // libap::Array
 #include "Dimension.h" // agg_util
 #include "DDSLoader.h" // agg_util
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -80,11 +82,16 @@ namespace agg_util
      *                        may be destroyed after this call (though the element
      *                        AggMemberDataset objects will be ref()'d in our copy).
      * @param loaderProto loader to reuse for loading the memberDatasets if needed.
+     * @param arrayGetter  smart ptr to the algorithm for getting out the constrained
+     *                     array from each individual AMDList DataDDS.
+     *                     Ownership transferred to this (clearly).
      */
     ArrayAggregateOnOuterDimension(const libdap::Array& proto,
          const Dimension& newDim,
          const AMDList& memberDatasets,
-         const DDSLoader& loaderProto);
+         const DDSLoader& loaderProto,
+         std::auto_ptr<ArrayGetterInterface>& arrayGetter
+         );
 
     /** Construct from a copy */
     ArrayAggregateOnOuterDimension(const ArrayAggregateOnOuterDimension& proto);
@@ -108,6 +115,11 @@ namespace agg_util
 
     virtual void set_send_p(bool state);
     virtual void set_in_selection(bool state);
+
+    /**
+     * Get the list of AggMemberDataset's that comprise this aggregation
+     */
+    const AMDList& getDatasetList() const;
 
     /**
     * Read in only those datasets that are in the currently constrained output
@@ -143,15 +155,21 @@ namespace agg_util
      * Find the aggVar of the given name in it, must be Array.
      * Transfer the constraints from the local template to it.
      * Call read() on it.
-     * Stream the data into this's output buffer at the element nextElementIndex.
+     * Stream the data into rOutputArray's output buffer
+     * at the element index nextElementIndex.
      *
-     * @param atIndex  where in the output buffer
+     * @param rOutputArray  the Array to output the data into
+     * @param atIndex  where in the output buffer of rOutputArray
      *                          to stream it (note: not byte, element!)
+     * @param subArrayProto  the Array to use as the template for the
+     *                       constraints on loading the dataset.
      * @param name the name of the aggVar
      * @param dataset the dataset to load for this element.
      */
-    void addDatasetArrayDataToOutputArray(
+    static void addDatasetArrayDataToOutputArray(
+        libdap::Array& oOutputArray,
         unsigned int atIndex, // element (not byte!) to place the data in output buffer
+        const libdap::Array& subArrayProto,
         const string& name,
         AggMemberDataset& dataset);
 
@@ -172,7 +190,11 @@ namespace agg_util
     // It will be used to constrain and validate other
     // dataset aggVar's as they are loaded.
     // OWNED heap memory.
-    libdap::Array* _pSubArrayProto;
+    std::auto_ptr<libdap::Array> _pSubArrayProto;
+
+    // Use this object in order to get the
+    // constrained, read data out for aggregating into this object.
+    std::auto_ptr<ArrayGetterInterface> _pArrayGetter;
 
   }; // class ArrayAggregateOnOuterDimension
 

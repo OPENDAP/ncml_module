@@ -29,7 +29,7 @@
 
 #include "ArrayAggregateOnOuterDimension.h"
 
-#include "AggregationUtil.h"
+#include "AggregationException.h"
 #include <DataDDS.h> // libdap::DataDDS
 
 // only NCML backlinks we want in this agg_util class.
@@ -49,18 +49,16 @@ namespace agg_util
       const libdap::Array& proto,
       const Dimension& newDim,
       const AMDList& memberDatasets,
-      const DDSLoader& loaderProto)
+      const DDSLoader& loaderProto,
+      std::auto_ptr<ArrayGetterInterface>& arrayGetter)
   : Array(proto) // ctor on super from the proto, will not have the new dim
   , _loader(loaderProto.getDHI()) // copy from DataHandlerInterface
   , _newDim(newDim)
   , _datasetDescs(memberDatasets) // copy the vector of RCPtr will ref()
-  , _pSubArrayProto(0) // created below
+  , _pSubArrayProto(static_cast<Array*>(const_cast<Array&>(proto).ptr_duplicate()))
+  , _pArrayGetter(arrayGetter)
   {
     BESDEBUG(DEBUG_CHANNEL, "ArrayAggregateOnOuterDimension: ctor called!" << endl);
-
-    // Copy the prototype so we're sure no one modifies it on us.
-    // We use this to copy constraints over to each member dataset's aggVar Array.
-    _pSubArrayProto = static_cast<Array*>(const_cast<Array&>(proto).ptr_duplicate());
 
     // Up the rank of the array using the new dimension as outer (prepend)
     BESDEBUG(DEBUG_CHANNEL,
@@ -77,9 +75,12 @@ namespace agg_util
   , _loader(proto._loader.getDHI())
   , _newDim()
   , _datasetDescs() // copied below
-  , _pSubArrayProto(0)
+  , _pSubArrayProto(0) // duplicate() handles this
+  , _pArrayGetter(0) // duplicate() handles this
   {
-    BESDEBUG(DEBUG_CHANNEL, "ArrayAggregateOnOuterDimension() copy ctor called!" << endl);
+    BESDEBUG(DEBUG_CHANNEL,
+        "ArrayAggregateOnOuterDimension() copy ctor called!" <<
+        endl);
     duplicate(proto);
   }
 
@@ -129,6 +130,12 @@ namespace agg_util
     Array::set_in_selection(state);
   }
 
+  const AMDList&
+  ArrayAggregateOnOuterDimension::getDatasetList() const
+  {
+    return _datasetDescs;
+  }
+
   bool
   ArrayAggregateOnOuterDimension::read()
   {
@@ -161,7 +168,8 @@ namespace agg_util
 
     // transfer the constraints from this object into the subArray template
     // skipping our first dim which is the new one and not in the subArray.
-    agg_util::AggregationUtil::transferArrayConstraints(_pSubArrayProto, // into template
+    agg_util::AggregationUtil::transferArrayConstraints(
+        _pSubArrayProto.get(), // into template
         *this, // from this
         true, // skip first dim in the copy since one is a sub.
         true, // print debug
@@ -198,17 +206,23 @@ namespace agg_util
     // Make a copy of the vector and all elements
     _datasetDescs = rhs._datasetDescs;
 
-    // Clone the template so we can change it locally
-    SAFE_DELETE(_pSubArrayProto);
-    _pSubArrayProto = ( (rhs._pSubArrayProto) ?
+    // Clone the template if it isn't null.
+    std::auto_ptr<Array> pTemplateClone( ( (rhs._pSubArrayProto.get()) ?
         (static_cast<Array*>(rhs._pSubArrayProto->ptr_duplicate())) :
+        (0) ));
+    _pSubArrayProto = pTemplateClone;
+
+    // Clone the ArrayGetterInterface as well.
+    std::auto_ptr<ArrayGetterInterface> pGetterClone(
+        (rhs._pArrayGetter.get()) ?
+        ( rhs._pArrayGetter->clone() ) :
         (0) );
+    _pArrayGetter = pGetterClone;
   }
 
   void
   ArrayAggregateOnOuterDimension::cleanup() throw()
   {
-    SAFE_DELETE(_pSubArrayProto);
     _datasetDescs.clear();
     _datasetDescs.resize(0);
   }
@@ -255,11 +269,24 @@ namespace agg_util
        {
          AggMemberDataset& dataset = *(_datasetDescs[i]);
 
-         // This call can throw on any kind of error
-         addDatasetArrayDataToOutputArray(
-             nextElementIndex, // next open index
-             name(),
-             dataset);
+         try
+         {
+           agg_util::AggregationUtil::addDatasetArrayDataToAggregationOutputArray(
+               *this, // into the output buffer of this object
+               nextElementIndex, // into the next open slice
+               *_pSubArrayProto, // constraints template
+               name(), // aggvar name
+               dataset, // Dataset who's DDS should be searched
+               *_pArrayGetter,
+               "ncml:2"
+           );
+         }
+         catch (agg_util::AggregationException& ex)
+         {
+           THROW_NCML_PARSE_ERROR(-1,
+               "Got AggregationException while streaming dataset index i data.  Error msg was: "
+               + std::string(ex.what()));
+         }
 
          // Jump forward by the amount we added.
          nextElementIndex += _pSubArrayProto->length();
@@ -275,15 +302,17 @@ namespace agg_util
 
   void
   ArrayAggregateOnOuterDimension::addDatasetArrayDataToOutputArray(
-             unsigned int atIndex,
-             const std::string& varName,
-             agg_util::AggMemberDataset& dataset)
+      libdap::Array& oOutputArray,
+      unsigned int atIndex,
+      const libdap::Array& subArrayProto,
+      const std::string& varName,
+      agg_util::AggMemberDataset& dataset)
   {
     const DataDDS* pDataDDS = dataset.getDataDDS();
     NCML_ASSERT_MSG(pDataDDS, "ArrayAggregateOnOuterDimension::read(): Got a null DataDDS "
         "while loading dataset = " + dataset.getLocation() );
 
-    libdap::BaseType* pDatasetBT = ncml_module::NCMLUtil::getVariableNoRecurse(*pDataDDS, varName);
+    libdap::BaseType* pDatasetBT = agg_util::AggregationUtil::getVariableNoRecurse(*pDataDDS, varName);
     if (!pDatasetBT)
       {
         // It better exist!
@@ -299,7 +328,7 @@ namespace agg_util
         // It better be an Array!  Use -1 to indicate no known line number, ugh.
         THROW_NCML_PARSE_ERROR(-1,
             "ArrayAggregateOnOuterDimension::read(): The aggregation variable with "
-            "name=" + name() + " in the aggregation member dataset location=" +
+            "name=" + varName + " in the aggregation member dataset location=" +
             dataset.getLocation() +
             " was NOT of type Array!  " +
             " All aggregation variables in an aggregation must be of the same type!");
@@ -311,7 +340,7 @@ namespace agg_util
     // Transfer the constraints into the dataset variable (which isn't read() yet).
     agg_util::AggregationUtil::transferArrayConstraints(
         pDatasetArray, // into the dataset var to be read()
-        *_pSubArrayProto, // from the constraints template
+        subArrayProto, // from the constraints template
         false, // same rank Array's, so don't skip first dim
         true, // print to the debug channel
         DEBUG_CHANNEL);
@@ -330,28 +359,28 @@ namespace agg_util
       }
 
     // Make sure it matches the prototype or somthing went wrong
-    if (!AggregationUtil::doTypesMatch(*_pSubArrayProto, *pDatasetArray))
+    if (!AggregationUtil::doTypesMatch(subArrayProto, *pDatasetArray))
       {
         THROW_NCML_PARSE_ERROR(-1,
             "Invalid aggregation! "
             "ArrayAggregateOnOuterDimension::read(): "
-            "We found the Array name=" + name() +
+            "We found the Array name=" + varName +
             " but it was not of the same type as the prototype Array!");
       }
 
     // Make sure the subshapes match! (true means check dimension names too... debate this)
-    if (!AggregationUtil::doShapesMatch(*_pSubArrayProto, *pDatasetArray, true))
+    if (!AggregationUtil::doShapesMatch(subArrayProto, *pDatasetArray, true))
       {
         THROW_NCML_PARSE_ERROR(-1,
             "Invalid aggregation! "
             "ArrayAggregateOnOuterDimension::read(): "
-            "We found the Array name=" + name() +
+            "We found the Array name=" + varName +
             " but it was not of the same shape as the prototype Array!");
       }
 
     // OK, once we're here, make sure the length of the read() array
     // matches the length of our proto Array
-    if (_pSubArrayProto->length() != pDatasetArray->length())
+    if (subArrayProto.length() != pDatasetArray->length())
       {
         // This is an internal error, not user error
       THROW_NCML_INTERNAL_ERROR(
@@ -361,7 +390,7 @@ namespace agg_util
       }
 
     // Stream the loaded data into ourself
-    set_value_slice_from_row_major_vector(*pDatasetArray, atIndex);
+    oOutputArray.set_value_slice_from_row_major_vector(*pDatasetArray, atIndex);
   }
 
 }

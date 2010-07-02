@@ -392,7 +392,6 @@ namespace ncml_module
     unsigned int newDimSize = _datasets.size(); // ASSUMES we find an aggVar in EVERY dataset!
     getParentDataset()->addDimension(new DimensionElement(agg_util::Dimension(_dimName, newDimSize)));
 
-
     // We need at least one dataset, so warn.
     if (_datasets.empty())
       {
@@ -444,7 +443,7 @@ namespace ncml_module
       DDS* pTemplateDDS)
   {
     // Use the first dataset's variable as the template
-    BaseType* pAggVarTemplate = NCMLUtil::getVariableNoRecurse(*pTemplateDDS, varName);
+    BaseType* pAggVarTemplate = AggregationUtil::getVariableNoRecurse(*pTemplateDDS, varName);
     if (!pAggVarTemplate)
       {
         THROW_NCML_PARSE_ERROR(line(),
@@ -461,7 +460,7 @@ namespace ncml_module
 
     // First, be sure the name isn't taken!  I had this bug before, seems we can add same
     // name twice!
-    BaseType* pExists = NCMLUtil::getVariableNoRecurse(*pAggDDS, pAggVarTemplate->name());
+    BaseType* pExists = AggregationUtil::getVariableNoRecurse(*pAggDDS, pAggVarTemplate->name());
     NCML_ASSERT_MSG(!pExists,
         "processJoinNew failed since the name of"
         " the new variable to add (name=" + pAggVarTemplate->name() + ") already exists in the "
@@ -502,11 +501,20 @@ namespace ncml_module
       const agg_util::Dimension& dim,
       const AMDList& memberDatasets )
   {
+    // Use the basic array getter to read adn get from top level DDS.
+    auto_ptr<agg_util::ArrayGetterInterface>
+      arrayGetter(new agg_util::TopLevelArrayGetter());
+
     auto_ptr<ArrayAggregateOnOuterDimension> pAggArray(new ArrayAggregateOnOuterDimension(
         arrayTemplate,
         dim,
         memberDatasets,
-        _parser->getDDSLoader()));
+        _parser->getDDSLoader(),
+        arrayGetter) // will xfer ownership
+      );
+
+    // Make sure we xfer ownership of contained dumb ptr.
+    NCML_ASSERT_MSG(!(arrayGetter.get()), "Expected auto_ptr owner xfer, failed!");
 
     // This will copy, auto_ptr will clear the prototype.
     // NOTE: add_var() makes a copy.
@@ -558,7 +566,7 @@ namespace ncml_module
     const agg_util::Dimension& dim = pDim->getDimension();
 
     // See if there's an explicit or placeholder c.v. for this dimension name
-    BaseType* pBT = NCMLUtil::getVariableNoRecurse(*pParentDDS, dim.name);
+    BaseType* pBT = AggregationUtil::getVariableNoRecurse(*pParentDDS, dim.name);
     Array* pCV = 0; // this will be a ptr to the actual (new or existing) c.v. in the *pParentDDS.
 
     // If name totally unused, we need to create a new c.v. and add it.
@@ -603,7 +611,7 @@ namespace ncml_module
     for (it = beginAggVarIter(); it != endIt; ++it)
       {
         const string& aggVar = *it;
-        BaseType* pBT = NCMLUtil::getVariableNoRecurse(*pParentDDS, aggVar);
+        BaseType* pBT = AggregationUtil::getVariableNoRecurse(*pParentDDS, aggVar);
         GridAggregateOnOuterDimension* pGrid = dynamic_cast<GridAggregateOnOuterDimension*>(pBT);
         if (pGrid)
           {
@@ -682,7 +690,7 @@ namespace ncml_module
       const agg_util::Dimension& dim,
       bool throwOnInvalidCV/*=true*/) const
   {
-    BaseType* pBT = NCMLUtil::getVariableNoRecurse(dds, dim.name);
+    BaseType* pBT = AggregationUtil::getVariableNoRecurse(dds, dim.name);
 
     // Name doesn't exist, just NULL.  We'll have to create it from scratch
     if (!pBT)
@@ -750,7 +758,7 @@ namespace ncml_module
     pDDS->add_var(pNewArrCV.get()); // use raw ptr for the copy.
 
     // Pull out the copy we just added and hand it back
-    Array* pArrCV = static_cast<Array*>(NCMLUtil::getVariableNoRecurse(*pDDS, dim.name));
+    Array* pArrCV = static_cast<Array*>(AggregationUtil::getVariableNoRecurse(*pDDS, dim.name));
     VALID_PTR(pArrCV);
     return pArrCV;
   }
@@ -784,7 +792,7 @@ namespace ncml_module
     dds.add_var(pNewCV.get());
 
     // Grab the copy back out and set to our expected result.
-    Array* pCV = static_cast<Array*>( NCMLUtil::getVariableNoRecurse(
+    Array* pCV = static_cast<Array*>( AggregationUtil::getVariableNoRecurse(
           dds,
           dim.name) );
 
