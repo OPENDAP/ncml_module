@@ -173,6 +173,12 @@ AT_RUN_BES_AND_COMPARE([agg/joinNew_grid.ncml],[dods],[agg/joinNew_grid_hslab_1]
 AT_RUN_BES_AND_COMPARE([agg/joinNew_grid.ncml],[dods],[agg/joinNew_grid_hslab_2],[[ dsp_band_1[2][512][0:1023] ]])
 AT_RUN_BES_AND_COMPARE([agg/joinNew_grid.ncml],[dods],[agg/joinNew_grid_hslab_3],[[ dsp_band_1[3][512][0:1023] ]])
 
+dnl Test projection of the data array portion out works
+AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([agg/joinNew_grid.ncml],[[ dsp_band_1.dsp_band_1[0][512][0:1023] ]], [agg/joinNew_grid_arr_hslab_0])
+
+dnl Test a small inner slab that goes through all the outer dimension sets.
+AT_RUN_BES_AND_COMPARE([agg/joinNew_grid.ncml],[dods],[agg/joinNew_grid_arr_hslab_0123],[[ dsp_band_1.dsp_band_1[0:3][512][500:600] ]])
+
 dnl Testing that we can use a stride on the new dimension.
 dnl getdap of the dods was compared with a handmade version
 dnl from the original dataset getdaps (these are checked in
@@ -268,5 +274,18 @@ AT_ASSERT_PARSE_ERROR([agg/joinNew_grid_meta_err_1.ncml])
 
 dnl joinNew bug when an attribute container with the same name as a variable is attempted to be created.
 AT_ASSERT_PARSE_ERROR([agg/joinNew_bug_1514.ncml])
+
+dnl ---------------------------------------------------
+dnl ---- Heterogeneous format joinNew test
+
+dnl Make sure that a joinNew aggregation on data with mixed file
+dnl formats but valid data structure works
+dnl Just check the dods which is most important for this test.
+AT_RUN_BES_AND_COMPARE([agg/joinNew_mixed_formats.ncml],[dods],[agg/joinNew_mixed_grid_arr_hslab_0],[[ dsp_band_1.dsp_band_1[0][512][0:1023] ]])
+AT_RUN_BES_AND_COMPARE([agg/joinNew_mixed_formats.ncml],[dods],[agg/joinNew_mixed_grid_arr_hslab_1],[[ dsp_band_1.dsp_band_1[1][512][0:1023] ]])
+
+dnl Test slices through the heterogeneous formats in one agg by small chunk from each outer dim entry
+dnl dsp_band_1.dsp_band_1[0:3][512][500:600]
+AT_RUN_BES_AND_COMPARE([agg/joinNew_mixed_formats.ncml],[dods],[agg/joinNew_mixed_grid_arr_hslab_0123],[[ dsp_band_1.dsp_band_1[0:3][512][500:600] ]])
 
 
