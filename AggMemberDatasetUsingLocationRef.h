@@ -29,7 +29,7 @@
 #ifndef __AGG_UTIL__AGG_MEMBER_DATASET_USING_LOCATION_REF_H__
 #define __AGG_UTIL__AGG_MEMBER_DATASET_USING_LOCATION_REF_H__
 
-#include "AggMemberDataset.h"  super
+#include "AggMemberDataset.h"
 #include "DDSLoader.h"
 #include <string>
 
