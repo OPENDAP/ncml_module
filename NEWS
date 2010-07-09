@@ -2,6 +2,13 @@
 $Id: NEWS $
 
 -----------------------------------------------------------------------
+Version 1.0.3 (9 July 2010)
+  
+  * Optimization of joinNew aggregations on Array variables.
+
+  * Several new tests added to testsuite.
+
+-----------------------------------------------------------------------
 Version 1.0.2 (4 May 2010)
  
   * Fixes for outdated test baselines after changes to hdf4_handler's

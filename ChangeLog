@@ -1,3 +1,46 @@
+2010-07-09  Michael Johnson <m.johnson@opendap.org>
+
+	Removed extraneous characters caught by linux gcc but not mac.
+
+2010-07-08  Michael Johnson <m.johnson@opendap.org>
+
+	Several new tests for joinNew and for ticket #1581.
+
+2010-07-02  Michael Johnson <m.johnson@opendap.org>
+
+	Final changes for #1448.
+
+2010-06-11  Michael Johnson <m.johnson@opendap.org>
+
+	Initial changes for #1448 and #1533.
+
+	o ArrayAggregateOnOuterDimension: added to support efficient joinNew on Array datasets similarly to GridAggregateOnOuterDimension.  Now only the constrained subset of data is loaded on read() and serialize() and not the entire dataset prior to constraint application as old code.
+
+	o Added initial support for nested aggregations.  Was required to pass old Array joinNew tests since they used virtual data (effectively nesting) and the old joinNew code asssumed member datasets were external files and not libdap::BaseType subclasses.
+
+	o Added several interface classes to avoid backdependencies from agg_util into ncml_module.
+
+	o NCMLParser: Removed the RCObjectPool memory pool since the objects are now required AFTER NCMLParser dtor would delete the pool -- serialize() and read() calls occur after this.  Consider a static pool in the future, though this is dangerous in a threaded situation without using boost threadsafe containers.
+
+	o tests/aggregations.at:  Changed several tests for joinNew on Array where member dataset types and shapes were mismatched since they were failing with the optimization.  Since the BES handles errors differently in the read() and serialize() section of code, BESSyntaxUserError which we use for Parse Error response gets eaten.  Made ticket to fix this, but tests are modified for now to make sure we at least get a fatal error rather than streaming incorrect data.
+
+	TODO: still need to clean up some cut and pasted code from the refactor in GridAggregateOnOuterDimension.  Next step is to use an instance of ArrayAggregateOnOuterDimension INSISDE GridAggregateOnOuterDimension and call through to avoid the duplicated code.
+
+2010-05-12  Michael Johnson <m.johnson@opendap.org>
+
+	o reintegrate merge changes
+
+2010-05-12  Michael Johnson <m.johnson@opendap.org>
+
+	o moved function to AggregationUtil for refactor.
+
+2010-05-05  Michael Johnson <m.johnson@opendap.org>
+
+	Reintegration from the latest 1.6 branch changes.  NOTE: DOES NOT COMPILE AGAINST REST OF TRUNK until libdap and bes are reintegrated.
+
+;; Local Variables:
+;; coding: utf-8
+;; End:
 2010-05-04  Michael Johnson <m.johnson@opendap.org>
 
 	Checked and updated baselines for failing tests.  Ticket #1542.
