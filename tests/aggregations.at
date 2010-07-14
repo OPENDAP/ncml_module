@@ -46,28 +46,12 @@ dnl Test that not having an aggregation variable in all datasets is an error
 AT_ASSERT_PARSE_ERROR([agg/joinNew_error_1.ncml])
 
 dnl Test that datasets not all matching type is an error!
-dnl A few issues:
-dnl 1) Must check data request since the members won't be loaded
-dnl    until read() which is only on a data request.
-dnl 2) BES (3.8.4) is currently not passing the syntax error
-dnl    upwards so we don't see it as a parse error until this
-dnl    gets fixed.  So we check for BESError that it turns them
-dnl    into instead.
-dnl Ultimately, we want to check the next line when 2) is fixed.
-dnl TODO HACK: Next line is correct!! 
-dnl AT_ASSERT_PARSE_ERROR_FOR_DODS([agg/joinNew_error_2.ncml])
-dnl But for now, just make sure we don't stream bad data and
-dnl generate an error.  The BESDEBUG log will have more info for now...
-dnl The [1] is the status returned by besstandalone, which currently 
-dnl is an error status, which differs from a real BESSyntaxUserError.
-dnl We do check for the prescence of the <BESError> element though!
-AT_RUN_BES_AND_MATCH([agg/joinNew_error_2.ncml],["dods"],[".*<BESError>.*"],[], [1])
+dnl NOTE: Fails for BES 3.8.4 and earlier!
+AT_ASSERT_PARSE_ERROR_FOR_DODS([agg/joinNew_error_2.ncml])
 
 dnl Test that mismatched member dataset shapes is an error!
-dnl TODO HACK: Commented out test is correct!
-dnl Similar to last test: update when this a true parse error as well!
-dnl AT_ASSERT_PARSE_ERROR_FOR_DODS([agg/joinNew_error_3.ncml])
-AT_RUN_BES_AND_MATCH([agg/joinNew_error_3.ncml],["dods"],[".*<BESError>.*"],[], [1])
+dnl NOTE: Fails for BES 3.8.4 and earlier!
+AT_ASSERT_PARSE_ERROR_FOR_DODS([agg/joinNew_error_3.ncml])
 
 dnl Test datasets not matching dimension length is error
 AT_ASSERT_PARSE_ERROR([agg/joinNew_error_4.ncml])
