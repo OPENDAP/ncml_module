@@ -139,22 +139,6 @@ namespace agg_util
      */
     void createRep(const AMDList& memberDatasets);
 
-    /** Helper function to load and stream the given dataset's data into the pAggArray.
-     * Also will validate that shapes match the prototype, etc etc.
-     * @param pAggArray  the output Array to stream the data, assumed reserved enough memory.
-     * @param atIndex the location in pAggArray (element) to start streaming
-     * @param protoSubArray the example subarray, whose structure the dataset member needs to match!
-     * @param gridName the grid's name (right now name(), but preparing to refactor)
-     * @param dataset the dataset to load, stream and close.
-     * TODO this might be able to refactor all the way into AggregationUtil static class.
-     */
-    void addDatasetGridArrayDataToAggArray(
-        Array& oOutputArray,
-        unsigned int atIndex,
-        const Array& protoSubArray,
-        const string& gridName,
-        AggMemberDataset& dataset);
-
     /**
      * Transfer the constraints to the prototype and read it in.
      */

@@ -283,9 +283,11 @@ namespace agg_util
          }
          catch (agg_util::AggregationException& ex)
          {
-           THROW_NCML_PARSE_ERROR(-1,
-               "Got AggregationException while streaming dataset index i data.  Error msg was: "
-               + std::string(ex.what()));
+           std::ostringstream oss;
+           oss << "Got AggregationException while streaming dataset index=" << i <<
+               " data for location=\"" << dataset.getLocation() <<
+               "\" The error msg was: " << std::string(ex.what());
+           THROW_NCML_PARSE_ERROR(-1, oss.str());
          }
 
          // Jump forward by the amount we added.
@@ -298,99 +300,6 @@ namespace agg_util
            "ArrayAggregateOnOuterDimension::read(): "
          "At end of aggregating, expected the nextElementIndex to be the length of the "
          "aggregated array, but it wasn't!");
-  }
-
-  void
-  ArrayAggregateOnOuterDimension::addDatasetArrayDataToOutputArray(
-      libdap::Array& oOutputArray,
-      unsigned int atIndex,
-      const libdap::Array& subArrayProto,
-      const std::string& varName,
-      agg_util::AggMemberDataset& dataset)
-  {
-    const DataDDS* pDataDDS = dataset.getDataDDS();
-    NCML_ASSERT_MSG(pDataDDS, "ArrayAggregateOnOuterDimension::read(): Got a null DataDDS "
-        "while loading dataset = " + dataset.getLocation() );
-
-    libdap::BaseType* pDatasetBT = agg_util::AggregationUtil::getVariableNoRecurse(*pDataDDS, varName);
-    if (!pDatasetBT)
-      {
-        // It better exist!
-        THROW_NCML_PARSE_ERROR(-1,
-            "ArrayAggregateOnOuterDimension::read(): Didn't find the aggregation variable with "
-            "name=" + varName +
-            " in the aggregation member dataset location=" + dataset.getLocation() );
-      }
-
-    // Assert it's an Array or the author goofed
-    if (pDatasetBT->type() != libdap::dods_array_c)
-      {
-        // It better be an Array!  Use -1 to indicate no known line number, ugh.
-        THROW_NCML_PARSE_ERROR(-1,
-            "ArrayAggregateOnOuterDimension::read(): The aggregation variable with "
-            "name=" + varName + " in the aggregation member dataset location=" +
-            dataset.getLocation() +
-            " was NOT of type Array!  " +
-            " All aggregation variables in an aggregation must be of the same type!");
-      }
-
-    // Safe to cast and read it in now.
-    Array* pDatasetArray= static_cast<Array*>(pDatasetBT);
-
-    // Transfer the constraints into the dataset variable (which isn't read() yet).
-    agg_util::AggregationUtil::transferArrayConstraints(
-        pDatasetArray, // into the dataset var to be read()
-        subArrayProto, // from the constraints template
-        false, // same rank Array's, so don't skip first dim
-        true, // print to the debug channel
-        DEBUG_CHANNEL);
-
-    // Set these to force it to read...
-    pDatasetArray->set_send_p(true);
-    pDatasetArray->set_in_selection(true);
-    pDatasetArray->read();
-
-    // Make sure that the data was read in or I dunno what went on.
-    if (!pDatasetArray->read_p())
-      {
-        THROW_NCML_INTERNAL_ERROR(
-            "ArrayAggregateOnOuterDimension::addDatasetGridArrayDataToAggArray: "
-            " the dataset's Array was not read_p() after read()!");
-      }
-
-    // Make sure it matches the prototype or somthing went wrong
-    if (!AggregationUtil::doTypesMatch(subArrayProto, *pDatasetArray))
-      {
-        THROW_NCML_PARSE_ERROR(-1,
-            "Invalid aggregation! "
-            "ArrayAggregateOnOuterDimension::read(): "
-            "We found the Array name=" + varName +
-            " but it was not of the same type as the prototype Array!");
-      }
-
-    // Make sure the subshapes match! (true means check dimension names too... debate this)
-    if (!AggregationUtil::doShapesMatch(subArrayProto, *pDatasetArray, true))
-      {
-        THROW_NCML_PARSE_ERROR(-1,
-            "Invalid aggregation! "
-            "ArrayAggregateOnOuterDimension::read(): "
-            "We found the Array name=" + varName +
-            " but it was not of the same shape as the prototype Array!");
-      }
-
-    // OK, once we're here, make sure the length of the read() array
-    // matches the length of our proto Array
-    if (subArrayProto.length() != pDatasetArray->length())
-      {
-        // This is an internal error, not user error
-      THROW_NCML_INTERNAL_ERROR(
-            "ArrayAggregateOnOuterDimension::addDatasetArrayDataToOutputArray() "
-            " The prototype array and the loaded dataset array length()'s were not equal, even "
-            "though their shapes matched. Logic problem.");
-      }
-
-    // Stream the loaded data into ourself
-    oOutputArray.set_value_slice_from_row_major_vector(*pDatasetArray, atIndex);
   }
 
 }

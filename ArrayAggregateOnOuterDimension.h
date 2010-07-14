@@ -150,29 +150,6 @@ namespace agg_util
      */
     void readMemberArraysAndAggregateData();
 
-    /**
-     * Load the given dataset's DataDDS.
-     * Find the aggVar of the given name in it, must be Array.
-     * Transfer the constraints from the local template to it.
-     * Call read() on it.
-     * Stream the data into rOutputArray's output buffer
-     * at the element index nextElementIndex.
-     *
-     * @param rOutputArray  the Array to output the data into
-     * @param atIndex  where in the output buffer of rOutputArray
-     *                          to stream it (note: not byte, element!)
-     * @param subArrayProto  the Array to use as the template for the
-     *                       constraints on loading the dataset.
-     * @param name the name of the aggVar
-     * @param dataset the dataset to load for this element.
-     */
-    static void addDatasetArrayDataToOutputArray(
-        libdap::Array& oOutputArray,
-        unsigned int atIndex, // element (not byte!) to place the data in output buffer
-        const libdap::Array& subArrayProto,
-        const string& name,
-        AggMemberDataset& dataset);
-
   private: // data rep
 
     // Use this to laod the member datasets as needed

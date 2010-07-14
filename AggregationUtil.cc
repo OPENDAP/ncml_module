@@ -404,8 +404,8 @@ namespace agg_util
     // uses the first one as template for type and shape
     if (!validateArrayTypesAndShapesMatch(fromVars, true))
       {
-        THROW_NCML_PARSE_ERROR(-1, // Unspecified parse line for this case...
-            funcName + " The input arrays must all have the same data type and dimensions but do not!");
+        throw AggregationException(funcName +
+            " The input arrays must all have the same data type and dimensions but do not!");
       }
 
     // The first will be used to "set up" the pJoinedArray
@@ -791,34 +791,36 @@ namespace agg_util
     // Make sure that the data was read in or I dunno what went on.
     if (!pDatasetArray->read_p())
       {
-        THROW_NCML_INTERNAL_ERROR("GridAggregateOnOuterDimension::addDatasetGridArrayDataToAggArray: the Grid's array pDatasetArray was not read_p()!");
+        NCML_ASSERT_MSG(pDatasetArray->read_p(),
+            "AggregationUtil::addDatasetArrayDataToAggregationOutputArray: pDatasetArray was not read_p()!");
       }
 
     // Make sure it matches the prototype or somthing went wrong
     if (!AggregationUtil::doTypesMatch(constrainedTemplateArray, *pDatasetArray))
       {
-        THROW_NCML_PARSE_ERROR(-1,
-          "Invalid aggregation! "
-            "GridAggregateOnOuterDimension::read(): "
-            "We found the Grid name=" + varName +
-            " but it was not of the same type as the prototype Grid!");
+        throw AggregationException(
+            "Invalid aggregation! "
+            "AggregationUtil::addDatasetArrayDataToAggregationOutputArray: "
+            "We found the aggregation variable name=" + varName +
+            " but it was not of the same type as the prototype variable!");
       }
 
     // Make sure the subshapes match! (true means check dimension names too... debate this)
     if (!AggregationUtil::doShapesMatch(constrainedTemplateArray, *pDatasetArray, true))
       {
-        THROW_NCML_PARSE_ERROR(-1,
+        throw AggregationException(
             "Invalid aggregation! "
-            "GridAggregateOnOuterDimension::read(): "
-            "We found the Grid name=" + varName +
-            " but it was not of the same shape as the prototype Grid!");
+            "AggregationUtil::addDatasetArrayDataToAggregationOutputArray: "
+            "We found the aggregation variable name=" + varName +
+            " but it was not of the same shape as the prototype!");
       }
 
-    // OK, once we're here, make sure the length matches the proto
+    // Make sure the length of the data array also matches the proto
     if (constrainedTemplateArray.length() != pDatasetArray->length())
       {
-        THROW_NCML_INTERNAL_ERROR("GridAggregateOnOuterDimension::addDatasetGridArrayDataToAggArray() "
-            " The prototype array and the loaded dataset array length()'s were not equal, even "
+        NCML_ASSERT_MSG(constrainedTemplateArray.length() == pDatasetArray->length(),
+            "AggregationUtil::addDatasetArrayDataToAggregationOutputArray: "
+            "The prototype array and the loaded dataset array length()'s were not equal, even "
             "though their shapes matched. Logic problem.");
       }
 
