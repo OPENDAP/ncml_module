@@ -322,5 +322,10 @@ AT_RUN_BES_AND_COMPARE([agg/joinExisting_virtual_fine.ncml],[dods],[agg/joinExis
 dnl Full stride test -- make sure we can stride the whole thing (boundary condition)
 AT_RUN_BES_AND_COMPARE([agg/joinExisting_virtual_fine.ncml],[dods],[agg/joinExisting_fine_cons_3],[[ V[0:4:4] ]])
 
+dnl Test that two variables with an outer dimension matching the joinDim get aggregated.
+AT_CHECK_ALL_DAP_RESPONSES([agg/joinExisting_multi.ncml])
+
+dnl TODO Case for variableAgg with multiple selects out!
+
 dnl ---- end joinExisting Tests
 dnl -----------------------------------------------------
