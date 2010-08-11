@@ -30,14 +30,8 @@
 #ifndef __AGG_UTIL__ARRAY_AGGREGATE_ON_OUTER_DIMENSION_H__
 #define __AGG_UTIL__ARRAY_AGGREGATE_ON_OUTER_DIMENSION_H__
 
-#include "AggregationUtil.h" // agg_util
-#include "AggMemberDataset.h" // agg_util
-#include <Array.h>  // libap::Array
+#include "ArrayAggregationBase.h" // agg_util
 #include "Dimension.h" // agg_util
-#include "DDSLoader.h" // agg_util
-#include <memory>
-#include <string>
-#include <vector>
 
 using std::string;
 using std::vector;
@@ -46,7 +40,7 @@ using libdap::Array;
 namespace agg_util
 {
   /**
-   * class ArrayAggregateOnOuterDimension: subclass of libdap::Array
+   * class ArrayAggregateOnOuterDimension
    *
    * Array variable which contains information for performing a
    * joinNew (new outer dimension) aggregation of an Array variable using
@@ -67,7 +61,8 @@ namespace agg_util
    * wrapped virtual datasets (specified in NcML) or nested
    * aggregation's.
    */
-  class ArrayAggregateOnOuterDimension : public libdap::Array
+  class ArrayAggregateOnOuterDimension
+    : public ArrayAggregationBase
   {
   public:
     /**
@@ -76,22 +71,22 @@ namespace agg_util
      * @param proto the Array to use as a prototype for the UNaggregated Array
      *              (ie module the new dimension).
      *              It is the object for the aggVar as loaded from memberDatasets[0].
-     * @param newDim the new outer dimension this instance will add to the proto Array template
      * @param memberDatasets  list of the member datasets forming the aggregation.
      *                        this list will be copied internally so memberDatasets
      *                        may be destroyed after this call (though the element
      *                        AggMemberDataset objects will be ref()'d in our copy).
-     * @param loaderProto loader to reuse for loading the memberDatasets if needed.
      * @param arrayGetter  smart ptr to the algorithm for getting out the constrained
      *                     array from each individual AMDList DataDDS.
      *                     Ownership transferred to this (clearly).
+     * @param newDim the new outer dimension this instance will add to the proto Array template
+     *
      */
-    ArrayAggregateOnOuterDimension(const libdap::Array& proto,
-         const Dimension& newDim,
-         const AMDList& memberDatasets,
-         const DDSLoader& loaderProto,
-         std::auto_ptr<ArrayGetterInterface>& arrayGetter
-         );
+    ArrayAggregateOnOuterDimension(
+        const libdap::Array& proto,
+        const AMDList& memberDatasets,
+        std::auto_ptr<ArrayGetterInterface>& arrayGetter,
+        const Dimension& newDim
+    );
 
     /** Construct from a copy */
     ArrayAggregateOnOuterDimension(const ArrayAggregateOnOuterDimension& proto);
@@ -113,65 +108,29 @@ namespace agg_util
      */
     ArrayAggregateOnOuterDimension& operator=(const ArrayAggregateOnOuterDimension& rhs);
 
-    virtual void set_send_p(bool state);
-    virtual void set_in_selection(bool state);
+  protected: // Subclass Interface
+    /** Subclass hook for read() to copy granule constraints properly (inner dim ones). */
+    virtual void transferOutputConstraintsIntoGranuleTemplateHook();
 
-    /**
-     * Get the list of AggMemberDataset's that comprise this aggregation
-     */
-    const AMDList& getDatasetList() const;
-
-    /**
-    * Read in only those datasets that are in the currently constrained output
-    * making sure to apply the internal dimension constraints to the
-    * member datasets as well before reading them in.
-    * Stream the data into this's output buffer correctly for serialization.
-    * Note: This does nothing if read_p() is already set.
-    * Note: This also does nothing if the variable !is_in_selection()
-    * or !send_p().
-    * @return success.
+    /** Actually go through the constraints and stream the correctly
+    * constrained data into the superclass's output buffer for
+    * serializing out.
     */
-    virtual bool read();
+    virtual void readConstrainedGranuleArraysAndAggregateDataHook();
 
-  private: // helpers
+  private: // Helper interface
 
     /** Duplicate just the local (this subclass) data rep */
     void duplicate(const ArrayAggregateOnOuterDimension& rhs);
 
-    /** Delete any heap memory */
+    /** Clear out any used memory */
     void cleanup() throw();
 
-    /** Print out the constraints on fromArray to the debug channel */
-    void printConstraints(const Array& fromArray);
-
-    /** Actually go through the constraints and stream the correctly
-     * constrained data into the superclass's output buffer for
-     * serializing out.
-     */
-    void readMemberArraysAndAggregateData();
-
-  private: // data rep
-
-    // Use this to laod the member datasets as needed
-    DDSLoader _loader;
+  private: // Data rep
 
     // The new outer dimension description
     Dimension _newDim;
 
-    // Entries contain information on loading the individual datasets
-    // in a lazy evaluation as needed if they are in the output.
-    // The elements are ref counted, so need not be destroyed.
-    AMDList _datasetDescs;
-
-    // A template for the unaggregated (sub) Array
-    // It will be used to constrain and validate other
-    // dataset aggVar's as they are loaded.
-    // OWNED heap memory.
-    std::auto_ptr<libdap::Array> _pSubArrayProto;
-
-    // Use this object in order to get the
-    // constrained, read data out for aggregating into this object.
-    std::auto_ptr<ArrayGetterInterface> _pArrayGetter;
 
   }; // class ArrayAggregateOnOuterDimension
 

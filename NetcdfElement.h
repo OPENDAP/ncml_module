@@ -89,6 +89,16 @@ namespace ncml_module
     const string& id() const { return _id; }
     const string& title() const { return _title; }
     const string& coordValue() const { return _coordValue; }
+    const string& ncoords() const { return _ncoords; }
+
+    bool hasNcoords() const { return !_ncoords.empty(); }
+
+    /**
+     * Get the ncoords() field as a valid size.
+     * Throws: if !hasNCoords().
+     * @return the parsed value of the ncoords() field.
+     */
+    unsigned int getNcoordsAsUnsignedInt() const;
 
     /**
      * @return whether this is initialized properly and ready to be used.
@@ -287,6 +297,13 @@ namespace ncml_module
      * !empty() that we don't support, throw a parse error to tell the author.
      */
     void throwOnUnsupportedAttributes();
+
+    /**
+     * Does a more context sensitive check of attributes,
+     * like making sure ncoords is only specified on a child of
+     * a joinExisting aggregation element.
+    */
+    bool validateAttributeContextOrThrow() const;
 
     static vector<string> getValidAttributes();
 

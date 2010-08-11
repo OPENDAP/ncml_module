@@ -29,7 +29,7 @@
 #ifndef __AGG_UTIL__AGG_MEMBER_DATASET_USING_LOCATION_REF_H__
 #define __AGG_UTIL__AGG_MEMBER_DATASET_USING_LOCATION_REF_H__
 
-#include "AggMemberDataset.h"
+#include "AggMemberDatasetWithDimensionCacheBase.h"
 #include "DDSLoader.h"
 #include <string>
 
@@ -61,7 +61,8 @@ namespace agg_util
    * TODO Consider if we want to change the above by using an
    * external reference count on the loaded object state...
    */
-  class AggMemberDatasetUsingLocationRef : public agg_util::AggMemberDataset
+  class AggMemberDatasetUsingLocationRef
+  : public agg_util::AggMemberDatasetWithDimensionCacheBase
   {
   public:
 

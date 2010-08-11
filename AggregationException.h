@@ -44,8 +44,21 @@ namespace agg_util
   public:
     AggregationException(const std::string& msg);
     virtual ~AggregationException() throw();
+  }; // struct AggregationException
 
-  }; // class AggregationException
+  /** Basic information subclass for cases of dimension not found in
+   * an aggregation
+   */
+  class DimensionNotFoundException : public AggregationException
+  {
+  public:
+    DimensionNotFoundException(const std::string& msg)
+    : AggregationException(msg)
+    {
+    }
+
+    virtual ~DimensionNotFoundException() throw() {}
+  };
 }
 
 #endif /* __AGG_UTIL__AGGREGATION_EXCEPTION_H__ */

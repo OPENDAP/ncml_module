@@ -209,10 +209,10 @@ GridAggregateOnOuterDimension::createRep(const AMDList& memberDatasets)
   std::auto_ptr<ArrayAggregateOnOuterDimension> aggDataArray(
         new ArrayAggregateOnOuterDimension(
             *pArr, // prototype, already should be setup properly _without_ the new dim
-            _newDim,
             memberDatasets,
-            _loader,
-            arrayGetter));
+            arrayGetter,
+            _newDim
+            ));
 
   // Make sure null since sink function
   // called on the auto_ptr
@@ -342,6 +342,7 @@ GridAggregateOnOuterDimension::transferConstraintsToSubGridMaps(Grid* pSubGrid)
       agg_util::AggregationUtil::transferArrayConstraints(subGridMap,
           *superGridMap,
           false, // skipFirstDim = false since map sizes consistent
+          false, // same rank, dont skip this one either
           true, // printDebug
           "ncml:2"); // debugChannel
       ++subGridMapIt; // keep iterators in sync
@@ -363,6 +364,7 @@ GridAggregateOnOuterDimension::transferConstraintsToSubGridArray(Grid* pSubGrid)
       pSubGridArray, // into the prototype
       *pThisArray, // from the output array (with valid constraints)
       true, // skipFirstDim: need to skip since the ranks differ
+      false, // but not into the to array
       true,  // printDebug
       "ncml:2" //debugChannel
       );

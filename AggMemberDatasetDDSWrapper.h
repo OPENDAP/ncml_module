@@ -29,7 +29,7 @@
 #ifndef __AGG_UTIL__AGG_MEMBER_DATASET_DDS_WRAPPER_H__
 #define __AGG_UTIL__AGG_MEMBER_DATASET_DDS_WRAPPER_H__
 
-#include "AggMemberDataset.h" // super
+#include "AggMemberDatasetWithDimensionCacheBase.h" // super
 
 namespace agg_util
 {
@@ -51,7 +51,7 @@ namespace agg_util
    * be unref() upon destruction or loss of reference via assignment operator.
    *
    */
-  class AggMemberDatasetDDSWrapper : public AggMemberDataset
+  class AggMemberDatasetDDSWrapper : public AggMemberDatasetWithDimensionCacheBase
   {
   public:
     AggMemberDatasetDDSWrapper();

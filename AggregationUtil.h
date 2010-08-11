@@ -320,6 +320,9 @@ namespace agg_util
         bool reserveStorage=true,
         bool clearDataAfterUse=false);
 
+    /** Print out the dimensions name and size for the given Array into os */
+    static void printDimensions(std::ostream& os, const libdap::Array& fromArray);
+
     /**
      * Stream out the current constraints for all the dimensions in the Array.
      * @param os  the output stream
@@ -337,17 +340,28 @@ namespace agg_util
     /**
         * Copy the constraints from the from Array into the pToArray
         * in Dim_iter order.
-        * if skipFirstDim, the first dimension of fromArray will be skipped,
-        * for the case of copying from the aggregated array to a subset array.
+        *
+        * if skipFirstFromDim, the first dimension of fromArray will be skipped,
+        * for the case of copying from a joinNew aggregated array to a
+        * granule subset array
+        *
+        * if skipFirstToDim the first dimension of toArray will be skipped,
+        * for the case where presumably both first dims are skipped for a
+        * joinExisting aggregation where constraints on outer dim will be
+        * calculated by the caller.
+        *
         * @param pToArray array to put constraints into
         * @param fromArray array to take constraints from
-        * @param skipFirstDim whether the first dim of fromArray is aggregated and
+        * @param skipFirstFromDim whether the first dim of fromArray is aggregated and
+        *                  should be skipped.
+        * @param skipFirstToDim whether the first dim of toArray is aggregated and
         *                  should be skipped.
         */
     static void transferArrayConstraints(
     		libdap::Array* pToArray,
     		const libdap::Array& fromArray,
-    		bool skipFirstDim,
+    		bool skipFirstFromDim,
+    		bool skipFirstToDim,
     		bool printDebug = false,
     		const std::string& debugChannel = "agg_util");
 

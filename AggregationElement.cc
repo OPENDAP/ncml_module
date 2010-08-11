@@ -28,34 +28,38 @@
 /////////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
-#include <tr1/memory>
-#include <sstream>
+
 
 #include <AttrTable.h> // libdap
 #include "AggMemberDatasetUsingLocationRef.h" // agg_util
 #include "AggMemberDatasetDDSWrapper.h" // agg_util
 #include "AggregationElement.h"
-#include "AggregationUtil.h"
+#include "AggregationUtil.h" // agg_util
 #include <Array.h> // libdap
 #include "ArrayAggregateOnOuterDimension.h" // agg_util
+#include "ArrayJoinExistingAggregation.h" // agg_util
 #include <AttrTable.h> // libdap
 #include "DDSAccessInterface.h" // agg_util
 #include "Dimension.h" // agg_util
 #include "DimensionElement.h"
 #include <Grid.h> // libdap
 #include "GridAggregateOnOuterDimension.h" // agg_util
+// #include "GridJoinExistingAggregation.h"
 #include "MyBaseTypeFactory.h"
 #include "NCMLBaseArray.h"
 #include "NCMLDebug.h"
 #include "NCMLParser.h"
 #include "NetcdfElement.h"
 #include "ScanElement.h"
+#include <sstream>
 
 using agg_util::AggregationUtil;
 using agg_util::AggMemberDataset;
 using agg_util::AMDList;
 using agg_util::ArrayAggregateOnOuterDimension;
 using agg_util::GridAggregateOnOuterDimension;
+using agg_util::ArrayJoinExistingAggregation;
+// using agg_util::GridJoinExistingAggregation;
 using std::auto_ptr;
 
 namespace ncml_module
@@ -211,15 +215,15 @@ namespace ncml_module
     // Handle the actual processing!!
     BESDEBUG("ncml", "Got AggregationElement::handleEnd(): Processing the aggregation!!" << endl);
 
-    if (_type == "union")
+    if ( isUnionAggregation() )
       {
         processUnion();
       }
-    else if (_type == "joinNew")
+    else if ( isJoinNewAggregation() )
       {
         processJoinNew();
       }
-    else if (_type == "joinExisting")
+    else if ( isJoinExistingAggregation() )
       {
         processJoinExisting();
       }
@@ -244,6 +248,24 @@ namespace ncml_module
                 printAttributeIfNotEmpty("dimName", _dimName) +
                 printAttributeIfNotEmpty("recheckEvery", _recheckEvery) +
             ">";
+  }
+
+  bool
+  AggregationElement::isJoinNewAggregation() const
+  {
+    return (_type == "joinNew");
+  }
+
+  bool
+  AggregationElement::isUnionAggregation() const
+  {
+    return (_type == "union");
+  }
+
+  bool
+  AggregationElement::isJoinExistingAggregation() const
+  {
+    return (_type == "joinExisting");
   }
 
   void
@@ -384,7 +406,7 @@ namespace ncml_module
     BESDEBUG("ncml", "AggregationElement: beginning joinNew on the following aggVars=" +
         printAggregationVariables() << endl);
 
-    // Union the dimensions of the chid sets so they're available
+    // Union the dimensions of the child sets so they're available
     BESDEBUG("ncml", "Merging dimensions from children into aggregated dataset..." << endl);
     mergeDimensions();
 
@@ -410,89 +432,293 @@ namespace ncml_module
 
     // Then perform the aggregation for each variable...
     // TODO REFACTOR OPTIMIZE We loop on variables, not the datasets.
-    // It should be more efficient to do all vars for each dataset,
-    // but wait for profiling results.
+    // It might be more efficient to do all vars for each dataset
     vector<string>::const_iterator endIt = _aggVars.end();
     for (vector<string>::const_iterator it = _aggVars.begin(); it != endIt; ++it)
       {
         const string& varName = *it;
-        BESDEBUG("ncml", "Aggregating on aggVar=" << varName << "..." << endl);
-        processJoinNewOnAggVar(varName, pAggDDS, pTemplateDDS);
+        BESDEBUG("ncml", "Aggregating with joinNew on variable=" << varName << "..." << endl);
+        processJoinNewOnAggVar(pAggDDS, varName, *pTemplateDDS);
       }
 
     // Union any non-aggregated variables from the template dataset into the aggregated dataset
-    // This will not override the aggregated, since the union will find they are already there
-    // and skip them.
     AggregationUtil::unionAllVariablesInto(pAggDDS, *pTemplateDDS);
   }
 
   void
   AggregationElement::processJoinExisting()
   {
-    THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
-        "Unimplemented aggregation type: joinExisting");
+    BESDEBUG("ncml:2", "Called AggregationElement::processJoinExisting()...");
 
-    // TODO make sure we warn of the slowness if scan is used
-    // since every file needs to be opened until we make a caching daemon
-    // as in the design doc...
+    // Make sure there's no <scan> elements for now
+    // since we can't handle this case yet.
+    if (!_scanners.empty())
+      {
+        THROW_NCML_PARSE_ERROR(line(),
+            "Unimplemented: AggregationElement: processJoinExisting() found a <scan> element. "
+            "We apologize that this version doesn't yet allow them for joinExisting aggregation.");
+      }
+
+    // We need at least one dataset or it's an error
+    if (_datasets.empty())
+      {
+        THROW_NCML_PARSE_ERROR(line(),
+            "In joinExisting aggregation we cannot have zero datasets specified!");
+      }
+
+    // Figure out the cardinality of the aggregated dimension
+    // and add it into the parent dataset's scope for lookups.
+    addNewDimensionForJoinExisting();
+
+    // Union any declared dimensions of the child sets so they're available,
+    // but be carefuly to skip the join dimension since we already created it
+    // new ourselves with the post-aggregation value!
+    BESDEBUG("ncml:2", "Merging dimensions from children into aggregated dataset..." << endl);
+    mergeDimensions(true, _dimName);
+
+    // This is where the output variables go
+    DDS* pAggDDS = getParentDataset()->getDDS();
+
+    // The first dataset acts as the template
+    DDS* pTemplateDDS = _datasets[0]->getDDS();
+    NCML_ASSERT_MSG(pTemplateDDS, "AggregationElement::processJoinExisting(): NULL template dataset!");
+
+    // First, union the template's global attribute table into the output's table.
+    AggregationUtil::unionAttrTablesInto( &(pAggDDS->get_attr_table()),
+                                            pTemplateDDS->get_attr_table() );
+
+    // the prototype (first dataset) will define the set of vars to be aggregated.
+    // Note: the c.v. dim(dim) _must_ exist, either in all datasets or in the agg itself.
+    vector<string> matchingVars;
+    findVariablesWithOuterDimensionName(matchingVars, *pTemplateDDS, _dimName);
+    for (vector<string>::const_iterator it = matchingVars.begin();
+        it != matchingVars.end();
+        ++it)
+      {
+        addAggregationVariable(*it);
+      }
+
+    // For each variable to be aggregated, create the
+    // aggregation variable in the output based on the granule list.
+    vector<string>::const_iterator endIt = _aggVars.end();
+    for (vector<string>::const_iterator it = _aggVars.begin(); it != endIt; ++it)
+      {
+        const string& varName = *it;
+        BESDEBUG("ncml", "Aggregating with joinExisting on variable=" << varName << "..." << endl);
+        processJoinExistingOnAggVar(pAggDDS, varName, *pTemplateDDS);
+      }
+
+    // Union in the remaining unaggregated variables from the template DDS
+    // since they are likely to be coordinate variables.
+    AggregationUtil::unionAllVariablesInto(pAggDDS, *pTemplateDDS);
+  }
+
+  // For now, just count up the ncoords...
+  void
+  AggregationElement::addNewDimensionForJoinExisting()
+  {
+    // Sum up the cardinalities from the netcdf elements.
+    unsigned int aggDimSize = 0;
+    for (vector<NetcdfElement*>::const_iterator it = _datasets.begin();
+        it != _datasets.end();
+        ++it)
+      {
+        // Make sure the attribute exists or warn the author
+        const NetcdfElement* pDataset = *it;
+        if (!pDataset->hasNcoords())
+          {
+            THROW_NCML_PARSE_ERROR(line(),
+                "Expected netcdf element member of a joinExisting "
+                "aggregation to have the ncoords attribute specified "
+                "but it did not.  We do not support automatic loading "
+                "of aggregation dimension size yet!");
+          }
+        aggDimSize += pDataset->getNcoordsAsUnsignedInt();
+      }
+
+    // Error if the dimension exists in the output local scope already
+    NCML_ASSERT(getParentDataset());
+    NCML_ASSERT_MSG(! (getParentDataset()->getDimensionInLocalScope(_dimName)),
+        "AggregationElement::addNewDimensionForJoinExisting() found a dimension "
+        "named " + _dimName + " already but did not expect it!");
+
+    // Otherwise, create and add it in.
+    getParentDataset()->addDimension(
+        new DimensionElement(agg_util::Dimension(_dimName, aggDimSize)));
+
+    // And tell the world at large
+    ostringstream oss;
+    oss << "Added joinExisting aggregation dimension "
+        " name=" <<
+        _dimName <<
+        " with aggregated size= " <<
+        aggDimSize;
+    BESDEBUG("ncml:2", oss.str());
   }
 
   void
-  AggregationElement::processJoinNewOnAggVar(const std::string& varName,
-      DDS* pAggDDS,
-      DDS* pTemplateDDS)
+  AggregationElement::findVariablesWithOuterDimensionName(
+      vector<string>& oMatchingVars,
+      const DDS& templateDDS,
+      const string& outerDimName) const
   {
-    // Use the first dataset's variable as the template
-    BaseType* pAggVarTemplate = AggregationUtil::getVariableNoRecurse(*pTemplateDDS, varName);
-    if (!pAggVarTemplate)
+    for ( DDS::Vars_iter it = const_cast<DDS&>(templateDDS).var_begin();
+          it != const_cast<DDS&>(templateDDS).var_end();
+          ++it )
+      {
+        // After switch():
+        // if Array, will be cast to Array.
+        // if Grid, will be cast data Array member of Grid.
+        // Other types, will be null.
+        libdap::Array* pArray(0);
+        switch ((*it)->type())
+        {
+        case dods_array_c:
+          pArray = static_cast<libdap::Array*>(*it);
+          break;
+
+        case dods_grid_c:
+          pArray = static_cast<Grid*>(*it)->get_array();
+          break;
+
+        default:
+          pArray = 0;
+          break;
+        }
+
+        if ( outerDimName == pArray->dimension_name(pArray->dim_begin()) )
+          {
+            oMatchingVars.push_back(pArray->name());
+          }
+      }
+  }
+
+  void
+  AggregationElement::getParamsForJoinAggOnVariable(
+      JoinAggParams* pOutParams,
+      const DDS& aggOutputDDS,
+      const std::string& varName,
+      const DDS& templateDDS)
+  {
+    static const std::string sFuncName("AggregationElement::getTemplateAndGranulesForJoinAggOnVariable():");
+
+    VALID_PTR(pOutParams);
+
+    // Look up the template variable.
+    pOutParams->_pAggVarTemplate = AggregationUtil::getVariableNoRecurse(templateDDS, varName);
+    if (!(pOutParams->_pAggVarTemplate))
       {
         THROW_NCML_PARSE_ERROR(line(),
-            "In a joinNew aggregation, we could not find the aggregation variable=" +
+            sFuncName +
+            " We could not find a template for the specified aggregation variable=" +
             varName + " "
             "so we cannot continue the aggregation.");
       }
 
-    // Get the generic dimension object
+    // Dimension must exist already
     const DimensionElement* pDim = getParentDataset()->getDimensionInLocalScope(_dimName);
-    NCML_ASSERT_MSG(pDim, "  AggregationElement::processJoinNew(): "
-        " didn't find a DimensionElement with the joinNew dimName=" + _dimName );
-    const agg_util::Dimension& dim = pDim->getDimension();
+    NCML_ASSERT_MSG(pDim,
+        sFuncName +
+        " didn't find a DimensionElement with the aggregation dimName=" + _dimName );
+    pOutParams->_pAggDim = &(pDim->getDimension());
 
-    // First, be sure the name isn't taken!  I had this bug before, seems we can add same
-    // name twice!
-    BaseType* pExists = AggregationUtil::getVariableNoRecurse(*pAggDDS, pAggVarTemplate->name());
+    // Be sure the name isn't taken in the output DDS.
+    BaseType* pExists = AggregationUtil::getVariableNoRecurse(aggOutputDDS, varName);
     NCML_ASSERT_MSG(!pExists,
-        "processJoinNew failed since the name of"
-        " the new variable to add (name=" + pAggVarTemplate->name() + ") already exists in the "
+        sFuncName +
+        " failed since the name of"
+        " the new variable to add (name=" + varName +
+        ") already exists in the "
         " output aggregation DDS!  What happened?!");
 
     // Get a vector of lazy loaders
     // We will transfer AGM ownership to the calls so do not need to delete them.
-    AMDList memberDatasets;
-    collectAggMemberDatasets(memberDatasets);
+    collectAggMemberDatasets ( pOutParams->_memberDatasets );
+  }
+
+  void
+  AggregationElement::processJoinNewOnAggVar(
+      DDS* pAggDDS,
+      const std::string& varName,
+      const DDS& templateDDS)
+  {
+    static const string sFuncName("AggregationElement::processJoinNewOnAggVar(): ");
+
+    // Get the params we need to factory the actual aggregation subclass
+    JoinAggParams joinAggParams;
+    getParamsForJoinAggOnVariable(
+        &joinAggParams, // output
+        *pAggDDS,
+        varName,
+        templateDDS);
 
     // Factory out the proper subtype
+    BaseType* pAggVarTemplate = joinAggParams._pAggVarTemplate;
     if (pAggVarTemplate->type() == dods_array_c)
       {
         processAggVarJoinNewForArray(*pAggDDS,
             *(static_cast<Array*>(pAggVarTemplate)),
-            dim,
-            memberDatasets );
+            *(joinAggParams._pAggDim),
+            joinAggParams._memberDatasets );
       }
     else if (pAggVarTemplate->type() == dods_grid_c)
       {
         processAggVarJoinNewForGrid(*pAggDDS,
             *(static_cast<Grid*>(pAggVarTemplate)),
-            dim,
-            memberDatasets );
+            *(joinAggParams._pAggDim),
+            joinAggParams._memberDatasets);
       }
     else
       {
         THROW_NCML_PARSE_ERROR(line(),
-            "JoinNew Aggregation got an aggregation variable not of type Array or Grid, but of: " +
+            sFuncName +
+            " Got an aggregation variable not of type Array or Grid, but of: " +
+            pAggVarTemplate->type_name() + " which we cannot aggregate!");
+          }
+    // Nothing else to do for this var until the call to processParentDataset() is complete.
+  }
+
+
+  void
+  AggregationElement::processJoinExistingOnAggVar(
+      DDS* pAggDDS,
+      const std::string& varName,
+      const DDS& templateDDS)
+  {
+    static const string sFuncName("AggregationElement::processJoinExistingOnAggVar(): ");
+
+    // Get the params we need to factory the actual aggregation subclass
+    JoinAggParams joinAggParams;
+    getParamsForJoinAggOnVariable(
+        &joinAggParams, // output
+        *pAggDDS,
+        varName,
+        templateDDS);
+
+    // Factory out the proper subtype
+    BaseType* pAggVarTemplate = joinAggParams._pAggVarTemplate;
+    if (pAggVarTemplate->type() == dods_array_c)
+      {
+        processAggVarJoinExistingForArray(*pAggDDS,
+            *(static_cast<Array*>(pAggVarTemplate)),
+            *(joinAggParams._pAggDim),
+            joinAggParams._memberDatasets );
+      }
+    else if (pAggVarTemplate->type() == dods_grid_c)
+      {
+        processAggVarJoinExistingForGrid(*pAggDDS,
+            *(static_cast<Grid*>(pAggVarTemplate)),
+            *(joinAggParams._pAggDim),
+            joinAggParams._memberDatasets);
+      }
+    else
+      {
+        THROW_NCML_PARSE_ERROR(line(),
+            sFuncName +
+              " Got an aggregation variable not of type Array or Grid, but of: " +
             pAggVarTemplate->type_name() + " which we cannot aggregate!");
       }
-    // Nothing else to do for this var until the call to processParentDataset() is complete.
+       // Nothing else to do for this var until the call to processParentDataset() is complete.
   }
 
   void
@@ -505,12 +731,12 @@ namespace ncml_module
     auto_ptr<agg_util::ArrayGetterInterface>
       arrayGetter(new agg_util::TopLevelArrayGetter());
 
-    auto_ptr<ArrayAggregateOnOuterDimension> pAggArray(new ArrayAggregateOnOuterDimension(
-        arrayTemplate,
-        dim,
-        memberDatasets,
-        _parser->getDDSLoader(),
-        arrayGetter) // will xfer ownership
+    auto_ptr<ArrayAggregateOnOuterDimension> pAggArray(
+        new ArrayAggregateOnOuterDimension(
+              arrayTemplate,
+              memberDatasets,
+              arrayGetter, // will xfer ownership
+              dim)
       );
 
     // Make sure we xfer ownership of contained dumb ptr.
@@ -550,6 +776,68 @@ namespace ncml_module
 
     // processParentDatasetCompleteForJoinNew() will
     // make sure the correct new map vector gets added
+  }
+
+  void
+  AggregationElement::processAggVarJoinExistingForArray(
+      DDS& aggDDS,
+      const libdap::Array& arrayTemplate,
+      const agg_util::Dimension& dim,
+      const AMDList& memberDatasets )
+  {
+    // Use the basic array getter to read adn get from top level DDS.
+    auto_ptr<agg_util::ArrayGetterInterface> arrayGetter(
+        new agg_util::TopLevelArrayGetter() );
+
+    auto_ptr<ArrayJoinExistingAggregation> pAggArray(
+        new ArrayJoinExistingAggregation(
+              arrayTemplate,
+              memberDatasets,
+              arrayGetter, // will xfer ownership
+              dim)
+    );
+
+    // Make sure we xfer ownership of contained dumb ptr.
+    NCML_ASSERT_MSG(!(arrayGetter.get()), "Expected auto_ptr owner xfer, failed!");
+
+    // This will copy, auto_ptr will clear the prototype.
+    // NOTE: add_var() makes a copy.
+    // OPTIMIZE change to add_var_no_copy when it exists.
+    BESDEBUG("ncml",
+        "Adding new ArrayJoinExistingAggregation with name=" <<
+        arrayTemplate.name() <<
+        " to aggregated dataset!" <<
+        endl);
+
+    aggDDS.add_var(pAggArray.get());
+  }
+
+
+  void
+  AggregationElement::processAggVarJoinExistingForGrid(
+      DDS& /* aggDDS*/,
+      const Grid& /*gridTemplate*/,
+      const agg_util::Dimension& /*dim*/,
+      const AMDList& /*memberDatasets*/ )
+  {
+    THROW_NCML_INTERNAL_ERROR("AggregationElement::processAggVarJoinExistingForGrid(): "
+        "Unimplemented method!");
+    // TODO Impl these classes once the Array pathway works
+//     auto_ptr<GridJoinExistingAggregation> pAggGrid(new GridJoinExistingAggregation(
+//             gridTemplate,
+//             dim,
+//             memberDatasets,
+//             _parser->getDDSLoader()
+//             ));
+//
+//     // This will copy, auto_ptr will clear the prototype.
+//     // OPTIMIZE change to add_var_no_copy when it exists.
+//     BESDEBUG("ncml", "Adding new GridJoinExistingAggregation with name=" << gridTemplate.name() <<
+//         " to aggregated dataset!" << endl);
+//     aggDDS.add_var(pAggGrid.get());
+//
+//     // processParentDatasetCompleteForJoinNew() will
+//     // make sure the correct new map vector gets added
   }
 
   void
@@ -934,7 +1222,6 @@ namespace ncml_module
       }
   }
 
-
   void
   AggregationElement::collectAggMemberDatasets(AMDList& rMemberDatasets) const
   {
@@ -945,6 +1232,7 @@ namespace ncml_module
         it != _datasets.end();
         ++it)
       {
+        VALID_PTR(*it);
         const string& location = (*it)->location();
         // basically, if we have a location we assume it's a deferred load.
         // if empty(), we assume that's it already has a valid DDS we can
@@ -966,6 +1254,20 @@ namespace ncml_module
                 location,
                 _parser->getDDSLoader());
           }
+
+        VALID_PTR(pAGM.get());
+
+        // Push down the ncoords hint if it was given
+        if ( !( (*it)->ncoords().empty()) &&
+             !_dimName.empty() )
+          {
+            if (! (pAGM->isDimensionCached(_dimName)) )
+              {
+                unsigned int ncoords = (*it)->getNcoordsAsUnsignedInt();
+                pAGM->setDimensionCacheFor(agg_util::Dimension(_dimName,ncoords), false);
+              }
+          }
+
         // don't need to ref(), the RCPtr copy ctor in the vector elt
         // takes care of it when we push_back()
         rMemberDatasets.push_back( pAGM );
@@ -1011,7 +1313,9 @@ namespace ncml_module
   }
 
   void
-  AggregationElement::mergeDimensions(bool checkDimensionMismatch/*=true*/)
+  AggregationElement::mergeDimensions(
+      bool checkDimensionMismatch/*=true*/,
+      const std::string& dimToSkip/*=""*/)
   {
     NetcdfElement* pParent = getParentDataset();
     // For each dataset in the children....
@@ -1029,6 +1333,13 @@ namespace ncml_module
           {
             const DimensionElement* pDim = *dimIt;
             VALID_PTR(pDim);
+            // Skip if asked to do so
+            if (!dimToSkip.empty() &&
+                (pDim->name() == dimToSkip) )
+              {
+                continue;
+              }
+            // Otherwise continue to look it up
             const DimensionElement* pUnionDim = pParent->getDimensionInLocalScope(pDim->name());
             if (pUnionDim)
               {

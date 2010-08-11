@@ -184,15 +184,9 @@ namespace ncml_module
     // If this is the root, it also needs to set up our response!!
     p.pushCurrentDataset(this);
 
-#if 0 // we now will lazy evaluate these...
-    // Use the loader to load the location specified in the <netcdf> element.
-    // If not found, this call will throw an exception and we'll just unwind out.
-    if (!_location.empty())
-      {
-        loadLocation();
-      }
-#endif
-
+    // Make sure the attributes that are set are valid for context
+    // that we just pushed.
+    validateAttributeContextOrThrow();
   }
 
   void
@@ -287,6 +281,23 @@ namespace ncml_module
     // Technically handleBegin() sets the parser,
     // so we're not ready until after that has successfully completed.
     return _response && _parser;
+  }
+
+  unsigned int
+  NetcdfElement::getNcoordsAsUnsignedInt() const
+  {
+    NCML_ASSERT_MSG(hasNcoords(),
+        "NetcdfElement::getNCoords(): called illegally when no ncoords attribute was specified!");
+    unsigned int num = 0;
+    istringstream iss(_ncoords);
+    iss >> num;
+    if (iss.fail())
+      {
+        THROW_NCML_PARSE_ERROR(line(),
+            "A <netcdf> element has an invalid ncoords attribute set.  Bad value was:"
+            "\"" + _ncoords + "\"");
+      }
+    return num;
   }
 
   void
@@ -589,12 +600,6 @@ namespace ncml_module
         THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
             msgStart + "addRecords" + msgEnd);
       }
-    // Not until we do joinExisting
-    if (!_ncoords.empty())
-      {
-        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
-            msgStart + "ncoords" + msgEnd);
-      }
 
     // not until fmrc
     if (!_fmrcDefinition.empty())
@@ -602,6 +607,23 @@ namespace ncml_module
          THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
              msgStart + "fmrcDefinition" + msgEnd);
       }
+  }
+
+  bool
+  NetcdfElement::validateAttributeContextOrThrow() const
+  {
+    if (hasNcoords())
+      {
+        AggregationElement* pParentAgg = getParentAggregation();
+        if (!pParentAgg ||
+            !( pParentAgg->isJoinExistingAggregation()) )
+          {
+            THROW_NCML_PARSE_ERROR(line(),
+                "Cannot specify netcdf@ncoords attribute while not within a "
+                "joinExisting aggregation!");
+          }
+      }
+    return true;
   }
 
   vector<string>

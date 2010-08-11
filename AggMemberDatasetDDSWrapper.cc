@@ -35,13 +35,13 @@
 namespace agg_util
 {
   AggMemberDatasetDDSWrapper::AggMemberDatasetDDSWrapper()
-  : AggMemberDataset("") // empty location for the wrapper
+  : AggMemberDatasetWithDimensionCacheBase("") // empty location for the wrapper
   , _pDDSHolder(0) // NULL, really shouldn't create a default.
   {
   }
 
   AggMemberDatasetDDSWrapper::AggMemberDatasetDDSWrapper(const DDSAccessRCInterface* pDDSHolder)
-  : AggMemberDataset("") // empty location
+  : AggMemberDatasetWithDimensionCacheBase("") // empty location
   , _pDDSHolder(pDDSHolder)
   {
     if (_pDDSHolder)
@@ -58,7 +58,7 @@ namespace agg_util
 
   AggMemberDatasetDDSWrapper::AggMemberDatasetDDSWrapper(const AggMemberDatasetDDSWrapper& proto)
   : RCObjectInterface()
-  , AggMemberDataset(proto)
+  , AggMemberDatasetWithDimensionCacheBase(proto)
   , _pDDSHolder(0)
   {
     copyRepFrom(proto);
@@ -72,7 +72,7 @@ namespace agg_util
         // deal with old reference
         cleanup();
         // super changes
-        AggMemberDataset::operator=(that);
+        AggMemberDatasetWithDimensionCacheBase::operator=(that);
         // local changes
         copyRepFrom(that);
       }

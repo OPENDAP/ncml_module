@@ -239,7 +239,7 @@ namespace ncml_module
   std::string
   NCMLElement::printAttributeIfNotEmpty(const std::string& attrName, const std::string& attrValue)
   {
-    return ( (attrValue.empty())?(""):(attrName + "=\"" + attrValue + "\" "));
+    return ( (attrValue.empty())?(""):(" " + attrName + "=\"" + attrValue + "\""));
   }
 
   bool

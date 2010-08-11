@@ -3,7 +3,7 @@
 // to allow NcML files to be used to be used as a wrapper to add
 // AIS to existing datasets of any format.
 //
-// Copyright (c) 2009 OPeNDAP, Inc.
+// Copyright (c) 2010 OPeNDAP, Inc.
 // Author: Michael Johnson  <m.johnson@opendap.org>
 //
 // For more information, please also see the main website: http://opendap.org/
@@ -29,6 +29,7 @@
 #ifndef __AGG_UTIL__AGG_MEMBER_DATASET_H__
 #define __AGG_UTIL__AGG_MEMBER_DATASET_H__
 
+#include "Dimension.h" // agg_util
 #include "RCObject.h"
 #include <string>
 #include <vector>
@@ -75,7 +76,7 @@ namespace agg_util
     /** The location to which the AggMemberDataset refers
      * Note: this could be "" for some subclasses
      * if they are virtual or nested */
-    const std::string& getLocation() const { return _location; }
+    const std::string& getLocation() const;
 
     /**
      * Return the DataDDS for the location, loading it in
@@ -85,6 +86,58 @@ namespace agg_util
      * @return the DataDDS ptr containing the loaded dataset or NULL.
      */
     virtual const libdap::DataDDS* getDataDDS() = 0;
+
+    /**
+     * Get the size of the given dimension named dimName
+     * cached within the dataset.  If not found in cache, throws.
+     *
+     * If a cached value exists from a prior load of the DataDDS
+     * using loadDimensionCacheFromDataDDS() or from a call to
+     * setDimensionCacheFor(), return that.
+     *
+     * Otherwise, this must load the DataDDS to get the values.
+     *
+     * Implementation is left up to subclasses for efficiency.
+     *
+     * @return the size of the dimension if found
+     * @throw agg_util::DimensionNotFoundException if not located
+     * via any means.
+     */
+    virtual unsigned int getCachedDimensionSize(const std::string& dimName) const = 0;
+
+    /** Return whether the dimension is already cached,
+     * or would have to be loaded to be found. */
+    virtual bool isDimensionCached(const std::string& dimName) const = 0;
+
+    /**
+     * Seed the dimension cache using the given dimension,
+     * so that later calls to getDimensionSize for dim.name will
+     * return the dim.size immediately without checking or
+     * loading the actual DDS.
+     *
+     * If it already exists and throwIfFound then will throw
+     * an AggregationException.
+     *
+     * If it exists and !throwIfFound, will replace the old one.
+     *
+     * @param dim the dimension to seed
+     * @param if true, throw if name take.  Else replace original.
+     */
+    virtual void setDimensionCacheFor(const Dimension& dim, bool throwIfFound) = 0;
+
+    /**
+     * Uses the getDataDDS() call in order to find all named dimensions
+     * within it and to seed them into the dimension cache table for
+     * faster later lookups.
+     * Potentially slow!
+     */
+    virtual void fillDimensionCacheByUsingDataDDS() = 0;
+
+    /**
+     * Flush out any cache for the Dimensions so that it will
+     * have to be loaded.
+     */
+    virtual void flushDimensionCache() = 0;
 
   private: // data rep
     std::string _location; // non-empty location from which to load DataDDS

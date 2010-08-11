@@ -30,6 +30,7 @@
 #ifndef __AGG_UTIL__DIMENSION_H__
 #define __AGG_UTIL__DIMENSION_H__
 
+#include <ostream>
 #include <string>
 #include <vector>
 
@@ -53,6 +54,9 @@ namespace agg_util
     Dimension(const std::string& nameArg, unsigned int sizeArg, bool isSharedArg=false, bool isSizeConstantArg=true);
     ~Dimension();
 
+    /** Dump to string and return (using operator<<) */
+    std::string toString() const;
+
     // The name of the dimension (merely mnemonic)
     std::string name;
 
@@ -66,12 +70,17 @@ namespace agg_util
     bool isSizeConstant;
   };
 
+  /** Dump to stream */
+  std::ostream& operator<<(std::ostream& os, const Dimension& dim);
+
   /** Container class for a table of dimensions for a given dataset */
   class DimensionTable
   {
   public:
     DimensionTable(unsigned int capacity=0);
     ~DimensionTable();
+
+    void clear();
 
     /** Add the dimension to the table if one with the same name doesn't already exist.
      *  If a dimension with the same name is already there, it is NOT added.
@@ -84,7 +93,7 @@ namespace agg_util
      */
     bool findDimension(const std::string& name, Dimension* pOut=0) const;
 
-    const std::vector<Dimension>& getDimensions() const { return _dimensions; }
+    const std::vector<Dimension>& getDimensions() const;
 
   private:
     std::vector<Dimension> _dimensions;

@@ -21,10 +21,13 @@ NCML_SRCS = \
 		AggMemberDataset.cc \
 		AggMemberDatasetDDSWrapper.cc \
 		AggMemberDatasetUsingLocationRef.cc \
+		AggMemberDatasetWithDimensionCacheBase.cc \
 		AggregationElement.cc \
 		AggregationException.cc \
 		AggregationUtil.cc \
 		ArrayAggregateOnOuterDimension.cc \
+		ArrayAggregationBase.cc \
+		ArrayJoinExistingAggregation.cc \
 		AttributeElement.cc \
 		DDSAccessInterface.cc \
 		DDSLoader.cc \
@@ -64,10 +67,13 @@ NCML_HDRS = \
 		AggMemberDataset.h \
 		AggMemberDatasetDDSWrapper.h \
 		AggMemberDatasetUsingLocationRef.h \
+		AggMemberDatasetWithDimensionCacheBase.h \
 		AggregationElement.h \
 		AggregationException.h \
 		AggregationUtil.h \
 		ArrayAggregateOnOuterDimension.h \
+		ArrayAggregationBase.h \
+		ArrayJoinExistingAggregation.h \
 		AttributeElement.h \
 		DDSAccessInterface.h \
 		DDSLoader.h \
@@ -119,25 +125,34 @@ EXTRA_DIST = COPYRIGHT COPYING ncml.conf.in ncml_module.spec data OSX_Resources
 CLEANFILES = *~ ncml.conf
 
 # Sample data primaries for install
-sample_datadir = $(datadir)/hyrax/data/ncml
-sample_data_DATA = data/ncml/fnoc1_improved.ncml data/ncml/fnoc1.nc data/ncml/sample_virtual_dataset.ncml 
+sample_datadir = 		$(datadir)/hyrax/data/ncml
+sample_data_DATA = 		data/ncml/fnoc1_improved.ncml \
+				data/ncml/fnoc1.nc \
+				data/ncml/sample_virtual_dataset.ncml 
 
 # Subdir of data for aggregation samples
-sample_data_aggdir = $(datadir)/hyrax/data/ncml/agg
-sample_data_agg_DATA = data/ncml/agg/joinNew_grid.ncml data/ncml/agg/joinNew_scan.ncml data/ncml/agg/joinNew_scan_dfm.ncml
+sample_data_aggdir = 		$(datadir)/hyrax/data/ncml/agg
+sample_data_agg_DATA = 		data/ncml/agg/joinNew_grid.ncml \
+				data/ncml/agg/joinNew_scan.ncml \
+				data/ncml/agg/joinNew_scan_dfm.ncml \
+				data/ncml/agg/aggExisting.ncml
 
 # Two subdirs of agg for the actual aggregation members
-sample_data_agg_gridsdir = $(datadir)/hyrax/data/ncml/agg/grids
+sample_data_agg_gridsdir = 	$(datadir)/hyrax/data/ncml/agg/grids
 sample_data_agg_grids_DATA = 	data/ncml/agg/grids/f97182070958.hdf \
 				data/ncml/agg/grids/f97182183448.hdf \
 				data/ncml/agg/grids/f97183065853.hdf \
 				data/ncml/agg/grids/f97183182355.hdf 
 
-sample_data_agg_dateddir = $(datadir)/hyrax/data/ncml/agg/dated
+sample_data_agg_dateddir = 	$(datadir)/hyrax/data/ncml/agg/dated
 sample_data_agg_dated_DATA = 	data/ncml/agg/dated/CG2006158_120000h_usfc.nc \
 				data/ncml/agg/dated/CG2006158_130000h_usfc.nc \
 				data/ncml/agg/dated/CG2006158_140000h_usfc.nc \
 				data/ncml/agg/dated/CG2006158_150000h_usfc.nc 
+
+sample_data_ncdir = 		$(datadir)/hyrax/data/nc
+sample_data_nc_DATA =		data/nc/jan.nc data/nc/feb.nc
+
 
 install-data-local: ncml.conf
 	@currdate=`date +"%y%m%d%H%M"`; \

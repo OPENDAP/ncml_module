@@ -29,7 +29,8 @@
 #ifndef __NCML_MODULE__AGGREGATION_ELEMENT_H__
 #define __NCML_MODULE__AGGREGATION_ELEMENT_H__
 
-#include "AggMemberDataset.h"
+#include "AggMemberDataset.h" // agg_util
+#include "AggregationUtil.h" // agg_util
 #include <memory>
 #include "NCMLElement.h"
 #include "NCMLUtil.h"
@@ -42,12 +43,14 @@ namespace agg_util
 namespace libdap
 {
   class Array;
+  class BaseType;
   class DDS;
   class Grid;
 };
 
 using agg_util::AggMemberDataset;
 using libdap::Array;
+using libdap::BaseType;
 using libdap::DDS;
 using libdap::Grid;
 using std::auto_ptr;
@@ -84,6 +87,11 @@ namespace ncml_module
     const string& type() const { return _type; }
     const string& dimName() const {return _dimName; }
     const string& recheckEvery() const { return _recheckEvery; }
+
+    bool isJoinNewAggregation() const;
+    bool isUnionAggregation() const;
+    bool isJoinExistingAggregation() const;
+
 
     /** Set the parent and return the old one, which could be null.
      * Should only be called on a handleBegin() call here when we know we can find it
@@ -150,11 +158,86 @@ namespace ncml_module
     void processJoinNew();
     void processJoinExisting();
 
-    /** Helper called from processJoinNew iteration for each aggVar */
+    /**
+     * Figure out the size of the fully aggregated outer dimension
+     * for the joinExisting from the member datasets and make sure the
+     * dimension exists in the output object scope.
+     */
+    void addNewDimensionForJoinExisting();
+
+    /**
+     * Iterate over all top-level variables in the templateDDS
+     * and add any Array or Grid with outer dimension matching
+     * outerDimName into the matchingVars array.
+     *
+     * NOTE: in the case of a Grid variable,
+     * the data Array field of the Grid will be matched
+     * against the outer dimension name!
+     *
+     * @param oMatchingVars the output array to place matching var names into
+     * @param templateDDS the DDS whose top-level should be searched.
+     * @param outerDimName the outer dimension name to find variables with
+     */
+    void findVariablesWithOuterDimensionName(
+        vector<string>& oMatchingVars,
+        const DDS& templateDDS,
+        const string& outerDimName) const;
+
+   /** Inner helper class for holding multiple return values for next function */
+   struct JoinAggParams
+     {
+        JoinAggParams()
+        : _pAggVarTemplate(0)
+        , _pAggDim(0)
+        , _memberDatasets()
+        {
+        }
+
+        libdap::BaseType* _pAggVarTemplate; // template for the granule's aggVar
+        const agg_util::Dimension* _pAggDim; // the aggregated dimension (with full size)
+        agg_util::AMDList _memberDatasets; // the granule datasets to use
+     }; // struct JoinAggParams
+
+   /** Fill in pOutParams with the parameters we need
+    * to create the appropriate concrete aggregation class.
+    *
+    * @param pOutParams  the output
+    * @param aggOutputDDS the output DDS
+    * @param varName name of the variable to get params for
+    * @param templateDDS  the dds to find the template for varName
+    */
+   void getParamsForJoinAggOnVariable(
+       JoinAggParams* pOutParams,
+       const DDS& aggOutputDDS,
+       const std::string& varName,
+       const DDS& templateDDS);
+
+    /** Top level call to process the joinNew for the given variable
+    * varName.  Creates the aggregation subclass of the variable type
+    * and places it into the output DDS.
+    * @param varName variable for which to create the aggregation
+    * @param pAggDDS the output DDS into which to place the new agg variable
+    * @param templateDDS the DDS to use to find the template version
+    *                     of the variable in order to determine type and shape.
+    */
     void processJoinNewOnAggVar(
-        const std::string& varName,
         DDS* pAggDDS,
-        DDS* pTemplateDDS);
+        const std::string& varName,
+        const DDS& templateDDS);
+
+    /** Top level call to process the joinExisting for the given variable
+    * varName.  Creates the aggregation subclass of the variable type
+    * and places it into the output DDS.
+    * @param varName variable for which to create the aggregation
+    * @param pAggDDS the output DDS into which to place the new agg variable
+    * @param templateDDS the DDS to use to find the template version
+    *                     of the variable in order to determine type and shape.
+    */
+    void processJoinExistingOnAggVar(
+        DDS* pAggDDS,
+        const std::string& varName,
+        const DDS& templateDDS);
+
 
     /**
      * Create and add a new ArrayAggregateOnOuterDimension
@@ -176,7 +259,8 @@ namespace ncml_module
      *                       be copied in the construction of
      *                       the new aggregated variable.
     */
-    void processAggVarJoinNewForArray(DDS& aggDDS,
+    void processAggVarJoinNewForArray(
+        DDS& aggDDS,
         const Array& arrayTemplate,
         const agg_util::Dimension& dim,
         const agg_util::AMDList& memberDatasets );
@@ -206,7 +290,20 @@ namespace ncml_module
      *                       be copied in the construction of
      *                       the new aggregated variable.
     */
-    void processAggVarJoinNewForGrid(DDS& aggDDS,
+    void processAggVarJoinNewForGrid(
+        DDS& aggDDS,
+        const Grid& gridTemplate,
+        const agg_util::Dimension& dim,
+        const agg_util::AMDList& memberDatasets );
+
+    void processAggVarJoinExistingForArray(
+        DDS& aggDDS,
+        const libdap::Array& arrayTemplate,
+        const agg_util::Dimension& dim,
+        const agg_util::AMDList& memberDatasets );
+
+    void processAggVarJoinExistingForGrid(
+        DDS& aggDDS,
         const Grid& gridTemplate,
         const agg_util::Dimension& dim,
         const agg_util::AMDList& memberDatasets );
@@ -239,11 +336,17 @@ namespace ncml_module
      * If checkDimensionMismatch is set, then we throw a parse error
      * if a dimension with the same name is specified but its size doesn't
      * match the one that is in the union.
+     * If dimToSkip is not empty, the dimension will not be merged.  Used for
+     * dealing with aggregations where the join dimension cannot be merged.
+     * @param checkDimensionMismatch  exception of set to true and mismatch
+     * @param dimToSkip dimension with given name not merged if set
      */
-    void mergeDimensions(bool checkDimensionMismatch=true);
+    void mergeDimensions(bool checkDimensionMismatch=true,
+        const std::string& dimToSkip="");
 
     /** Called from processParentDatasetComplete() if we're a joinNew. */
     void processParentDatasetCompleteForJoinNew();
+
 
     /** Make sure the variable in pBT is a valid coordinate variable for the dimension dim
      * and return it as an Array* if so.  Else throw or return null.

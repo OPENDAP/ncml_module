@@ -28,8 +28,10 @@
 /////////////////////////////////////////////////////////////////////////////
 #include "Dimension.h"
 #include "NCMLDebug.h"// the only NCML dep we allow...
+#include <sstream>
 
 using std::string;
+using std::ostringstream;
 using std::vector;
 
 namespace agg_util
@@ -52,6 +54,24 @@ namespace agg_util
 
   Dimension::~Dimension()
   {
+  }
+
+  std::string
+  Dimension::toString() const
+  {
+    ostringstream oss;
+    oss << *this;
+    return oss.str();
+  }
+
+  std::ostream& operator<<(std::ostream& os, const Dimension& dim)
+  {
+    os << "Dimension{";
+    os << dim.name;
+    os << "=";
+    os << dim.size;
+    os << "}";
+    return os;
   }
 
   bool
@@ -87,4 +107,11 @@ namespace agg_util
         BESDEBUG("ncml", "A dimension with name=" << dim.name << " already exists.  Not adding." << endl);
       }
   }
+
+  const std::vector<Dimension>&
+  DimensionTable::getDimensions() const
+  {
+    return _dimensions;
+  }
+
 }

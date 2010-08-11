@@ -120,6 +120,7 @@ namespace agg_util
             pDatasetArray, // into this dataset array to be read
             *pConstraintTemplate, // from this template
             false, // same rank Array's in template and loaded, don't skip first dim
+            false, // or the to dimension.  copy whole thing.
             !(debugChannel.empty()), // printDebug
             debugChannel
         );
@@ -203,6 +204,7 @@ namespace agg_util
             pDataArray, // into this data array to be read
             *pConstraintTemplate, // from this template
             false, // same rank Array's in template and loaded, don't skip first dim
+            false, // also don't skip in the to array
             !(debugChannel.empty()), // printDebug
             debugChannel
         );
@@ -619,18 +621,39 @@ namespace agg_util
     // That's all folks!
   }
 
+  //////// Mnemonic for below calls....
+  //    struct dimension
+  //        {
+  //            int size;  ///< The unconstrained dimension size.
+  //            string name;    ///< The name of this dimension.
+  //            int start;  ///< The constraint start index
+  //            int stop;  ///< The constraint end index
+  //            int stride;  ///< The constraint stride
+  //            int c_size;  ///< Size of dimension once constrained
+  //        };
+
+  /** Print out the dimensions name and size for the given Array into os */
+  void
+  AggregationUtil::printDimensions(std::ostream& os, const libdap::Array& fromArray)
+  {
+    os << "Array dimensions: " << endl;
+    Array& theArray = const_cast<Array&>(fromArray);
+    Array::Dim_iter it;
+    Array::Dim_iter endIt = theArray.dim_end();
+    for (it = theArray.dim_begin(); it != endIt; ++it)
+      {
+        Array::dimension d = *it;
+        os << "Dim = {" << endl;
+        os << "name=" << d.name << endl;
+        os << "size=" << d.size << endl;
+        os << " }" << endl;
+      }
+    os << "End Array dimensions." << endl;
+  }
+
   void
   AggregationUtil::printConstraints(std::ostream& os, const Array& rcArray)
   {
-//    struct dimension
-//        {
-//            int size;  ///< The unconstrained dimension size.
-//            string name;    ///< The name of this dimension.
-//            int start;  ///< The constraint start index
-//            int stop;  ///< The constraint end index
-//            int stride;  ///< The constraint stride
-//            int c_size;  ///< Size of dimension once constrained
-//        };
     os << "Array constraints: " << endl;
     Array& theArray = const_cast<Array&>(rcArray);
     Array::Dim_iter it;
@@ -662,7 +685,8 @@ namespace agg_util
   void
   AggregationUtil::transferArrayConstraints(Array* pToArray,
       const Array& fromArrayConst,
-      bool skipFirstDim,
+      bool skipFirstFromDim,
+      bool skipFirstToDim,
       bool printDebug /* = false */,
       const std::string& debugChannel /* = "agg_util" */)
   {
@@ -673,9 +697,16 @@ namespace agg_util
     pToArray->reset_constraint();
 
     // Ensure the dimensionalities will work out.
-    unsigned int skipDelta = ((skipFirstDim)?(1):(0));
-    if (pToArray->dimensions() + skipDelta !=
-        const_cast<Array&>(fromArrayConst).dimensions())
+    int skipDelta = ((skipFirstFromDim)?(1):(0));
+    // If skipping output as well, subtract out the delta.
+    // If we go negative, also an error.
+    if (skipFirstToDim)
+      {
+        skipDelta -= 1;
+      }
+    if (skipDelta < 0 ||
+        (pToArray->dimensions() + skipDelta !=
+         const_cast<Array&>(fromArrayConst).dimensions()) )
       {
         throw AggregationException("AggregationUtil::transferArrayConstraints: "
             "Mismatched dimensionalities!");
@@ -700,8 +731,14 @@ namespace agg_util
         fromArrIt != fromArrEndIt;
         ++fromArrIt)
       {
-        if (skipFirstDim && (fromArrIt == fromArray.dim_begin()) )
+        if (skipFirstFromDim && (fromArrIt == fromArray.dim_begin()) )
           {
+            // If we skip first to array as well, increment
+            // before the next call.
+            if (skipFirstToDim)
+              {
+                ++toArrIt;
+              }
             continue;
           }
 

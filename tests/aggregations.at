@@ -273,3 +273,54 @@ dnl dsp_band_1.dsp_band_1[0:3][512][500:600]
 AT_RUN_BES_AND_COMPARE([agg/joinNew_mixed_formats.ncml],[dods],[agg/joinNew_mixed_grid_arr_hslab_0123],[[ dsp_band_1.dsp_band_1[0:3][512][500:600] ]])
 
 
+dnl -----------------------------------------------------
+dnl ---- joinExisting Tests
+
+dnl TEMPORARY test that all joinExisting netcdf elements
+dnl have ncoords attribute specified on them.
+dnl Can be removed when we support auto-calculation
+dnl of the member dataset dimensionalities.
+AT_ASSERT_PARSE_ERROR([agg/error_joinExisting_1.ncml])
+
+dnl Test that an unparseable unsigned int in ncoords attribute 
+dnl is a parse error.  This case is a -1.
+AT_ASSERT_PARSE_ERROR([agg/error_joinExisting_2.ncml])
+
+dnl A test of a purely virtual dataset
+AT_CHECK_ALL_DAP_RESPONSES([agg/joinExisting_virtual.ncml])
+
+dnl --------------------
+dnl Test constraints on the virtual dataset
+
+dnl Evens (stride test)
+AT_RUN_BES_AND_COMPARE([agg/joinExisting_virtual.ncml],[dods],[agg/joinExisting_virtual_cons_1],[[ V[0:2:9] ]])
+
+dnl Odds (stride test).  Also tests non-0 start.
+AT_RUN_BES_AND_COMPARE([agg/joinExisting_virtual.ncml],[dods],[agg/joinExisting_virtual_cons_2],[[ V[1:2:9] ]])
+
+dnl Interval within both endpoints
+AT_RUN_BES_AND_COMPARE([agg/joinExisting_virtual.ncml],[dods],[agg/joinExisting_virtual_cons_3],[[ V[1:1:5] ]])
+
+dnl First elt is in 2nd granule test
+AT_RUN_BES_AND_COMPARE([agg/joinExisting_virtual.ncml],[dods],[agg/joinExisting_virtual_cons_4],[[ V[4:1:9] ]])
+
+dnl Skip 2 granules at once test for one elt
+AT_RUN_BES_AND_COMPARE([agg/joinExisting_virtual.ncml],[dods],[agg/joinExisting_virtual_cons_5],[[ V[9] ]])
+
+dnl ----------------------------
+dnl Fine Grained Boundary Test
+
+dnl Test a new set with fine grained granule size all 1 (boundary condition essentially)
+AT_CHECK_ALL_DAP_RESPONSES([agg/joinExisting_virtual_fine.ncml])
+
+dnl Evens Stride 2 for this case
+AT_RUN_BES_AND_COMPARE([agg/joinExisting_virtual_fine.ncml],[dods],[agg/joinExisting_fine_cons_1],[[ V[0:2:4] ]])
+
+dnl Odds stride 2
+AT_RUN_BES_AND_COMPARE([agg/joinExisting_virtual_fine.ncml],[dods],[agg/joinExisting_fine_cons_2],[[ V[1:2:4] ]])
+
+dnl Full stride test -- make sure we can stride the whole thing (boundary condition)
+AT_RUN_BES_AND_COMPARE([agg/joinExisting_virtual_fine.ncml],[dods],[agg/joinExisting_fine_cons_3],[[ V[0:4:4] ]])
+
+dnl ---- end joinExisting Tests
+dnl -----------------------------------------------------

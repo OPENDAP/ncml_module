@@ -40,7 +40,7 @@ namespace agg_util
   AggMemberDatasetUsingLocationRef::AggMemberDatasetUsingLocationRef(
       const std::string& locationToLoad,
       const agg_util::DDSLoader& loaderToUse)
-  : AggMemberDataset(locationToLoad)
+  : AggMemberDatasetWithDimensionCacheBase(locationToLoad)
   , _loader(loaderToUse)
   , _pDataResponse(0)
   {
@@ -53,7 +53,7 @@ namespace agg_util
 
   AggMemberDatasetUsingLocationRef::AggMemberDatasetUsingLocationRef(const AggMemberDatasetUsingLocationRef& proto)
   : RCObjectInterface()
-  , AggMemberDataset(proto)
+  , AggMemberDatasetWithDimensionCacheBase(proto)
   , _loader(proto._loader)
   , _pDataResponse(0) // force a reload as needed for a copy
   {
@@ -67,7 +67,7 @@ namespace agg_util
         // clear out any old loaded stuff
         cleanup();
         // assign
-        AggMemberDataset::operator=(that);
+        AggMemberDatasetWithDimensionCacheBase::operator=(that);
         copyRepFrom(that);
       }
     return *this;

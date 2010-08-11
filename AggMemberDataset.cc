@@ -3,7 +3,7 @@
 // to allow NcML files to be used to be used as a wrapper to add
 // AIS to existing datasets of any format.
 //
-// Copyright (c) 2009 OPeNDAP, Inc.
+// Copyright (c) 2010 OPeNDAP, Inc.
 // Author: Michael Johnson  <m.johnson@opendap.org>
 //
 // For more information, please also see the main website: http://opendap.org/
@@ -55,6 +55,12 @@ namespace agg_util
   AggMemberDataset::~AggMemberDataset()
   {
     _location = "";
+  }
+
+  const std::string&
+  AggMemberDataset::getLocation() const
+  {
+    return _location;
   }
 
   AggMemberDataset&
