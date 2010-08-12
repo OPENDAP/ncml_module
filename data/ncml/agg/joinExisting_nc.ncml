@@ -1,30 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- joinExisting test on (data-reduced) netcdf 1Grid granules from NOAA  -->
-<netcdf title="joinExisting test on netcdf Grid granules">
+<!-- joinExisting test on simple 2D netcdf granules  -->
+<netcdf title="joinExisting test on netcdf Grid granules"
+	>
   
   <attribute name="Description" type="string"
-	     value=" joinExisting test on netcdf granules which are Grid's"/>
-  
+	     value=" joinExisting test on netcdf granules"/>
+
   <aggregation type="joinExisting" 
 	       dimName="time" >
 
-    <netcdf location="data/nc/PH_mday/PH2006001_2006031_ssta.nc" 
-	    ncoords="1"> 
+    <netcdf location="data/nc/simple_test/test_1.nc" 
+	    ncoords="2"> 
       <attribute name="GranuleFilename" type="string" 
-		 value="data/nc/PH_mday/PH2006001_2006031_ssta.nc"/>
+		 value="data/nc/simple_test/test_1.nc" />
     </netcdf>
 
-    <netcdf location="data/nc/PH_mday/PH2006032_2006059_ssta.nc" 
-	    ncoords="1"> 
+    <netcdf location="data/nc/simple_test/test_1.nc" 
+	    ncoords="2"> 
       <attribute name="GranuleFilename" type="string" 
-		 value="data/nc/PH_mday/PH2006032_2006059_ssta.nc" />
+		 value="data/nc/simple_test/test_1.nc" />
     </netcdf>
 
-    <netcdf location="data/nc/PH_mday/PH2006060_2006090_ssta.nc" 
-	    ncoords="1"> 
+    <netcdf location="data/nc/simple_test/test_1.nc" 
+	    ncoords="2"> 
       <attribute name="GranuleFilename" type="string" 
-		 value="data/nc/PH_mday/PH2006060_2006090_ssta.nc"/>
+		 value="data/nc/simple_test/test_1.nc" />
     </netcdf>
-  </aggregation> 
+
+  </aggregation>
   
 </netcdf>

@@ -273,7 +273,7 @@ dnl dsp_band_1.dsp_band_1[0:3][512][500:600]
 AT_RUN_BES_AND_COMPARE([agg/joinNew_mixed_formats.ncml],[dods],[agg/joinNew_mixed_grid_arr_hslab_0123],[[ dsp_band_1.dsp_band_1[0:3][512][500:600] ]])
 
 
-dnl -----------------------------------------------------
+dnl ****************************************************************************
 dnl ---- joinExisting Tests
 
 dnl TEMPORARY test that all joinExisting netcdf elements
@@ -327,5 +327,17 @@ AT_CHECK_ALL_DAP_RESPONSES([agg/joinExisting_multi.ncml])
 
 dnl TODO Case for variableAgg with multiple selects out!
 
+dnl ------------------------
+dnl NetCDF Checks
+dnl Check that NetCDF granules can be aggregated
+
+dnl Basic full responses (small datasets)
+AT_CHECK_ALL_DAP_RESPONSES([agg/joinExisting_nc.ncml])
+
+dnl constraints pathway
+AT_RUN_BES_AND_COMPARE([agg/joinExisting_nc.ncml],[dods],[agg/joinExisting_nc_cons_1],[[ v[0:2:5][1:1] ]])
+
+
+
 dnl ---- end joinExisting Tests
-dnl -----------------------------------------------------
+dnl ****************************************************************************
