@@ -77,6 +77,8 @@ namespace ncml_module
     , _datasets()
     , _scanners()
     , _aggVars()
+    , _gotVariableAggElement(false)
+    , _coordinateAxisType("")
   {
   }
 
@@ -90,6 +92,8 @@ namespace ncml_module
     , _datasets() // deep copy below
     , _scanners() // deep copy below
     , _aggVars(proto._aggVars)
+    , _gotVariableAggElement(false)
+    , _coordinateAxisType("")
   {
     // Deep copy all the datasets and add them to me...
     // This is potentially expensive in memory for large datasets, so let's tell someone.
@@ -342,6 +346,18 @@ namespace ncml_module
     return _aggVars.end();
   }
 
+  bool
+  AggregationElement::gotVariableAggElement() const
+  {
+    return _gotVariableAggElement;
+  }
+
+  void
+  AggregationElement::setVariableAggElement()
+  {
+    _gotVariableAggElement = true;
+  }
+
   void
   AggregationElement::addScanElement(ScanElement* pScanner)
   {
@@ -487,18 +503,10 @@ namespace ncml_module
     AggregationUtil::unionAttrTablesInto( &(pAggDDS->get_attr_table()),
                                             pTemplateDDS->get_attr_table() );
 
-    // the prototype (first dataset) will define the set of vars to be aggregated.
-    // Note: the c.v. dim(dim) _must_ exist, either in all datasets or in the agg itself.
-    vector<string> matchingVars;
-    findVariablesWithOuterDimensionName(matchingVars, *pTemplateDDS, _dimName);
-    for (vector<string>::const_iterator it = matchingVars.begin();
-        it != matchingVars.end();
-        ++it)
-      {
-        addAggregationVariable(*it);
-      }
+    // Fills in the _aggVars list properly.
+    decideWhichVariablesToJoinExist(*pTemplateDDS);
 
-    // For each variable to be aggregated, create the
+    // For each variable in the to-be-aggregated list, create the
     // aggregation variable in the output based on the granule list.
     vector<string>::const_iterator endIt = _aggVars.end();
     for (vector<string>::const_iterator it = _aggVars.begin(); it != endIt; ++it)
@@ -510,7 +518,113 @@ namespace ncml_module
 
     // Union in the remaining unaggregated variables from the template DDS
     // since they are likely to be coordinate variables.
-    AggregationUtil::unionAllVariablesInto(pAggDDS, *pTemplateDDS);
+    // Handle variableAgg properly.
+    unionAddAllRequiredNonAggregatedVariablesFrom(*pTemplateDDS);
+    // AggregationUtil::unionAllVariablesInto(pAggDDS, *pTemplateDDS);
+  }
+
+  void
+  AggregationElement::unionAddAllRequiredNonAggregatedVariablesFrom(const DDS& templateDDS)
+  {
+    // If we didn't get a variable agg for a joinExisting, then union them all.
+    if (isJoinExistingAggregation())
+      {
+        if (!gotVariableAggElement())
+          {
+            AggregationUtil::unionAllVariablesInto(
+                    getParentDataset()->getDDS(),
+                    templateDDS);
+          }
+        else
+          {
+            // THROW ONLY IF A GRID since we need to implement the path that handles maps
+          }
+      } // if isJoinExistingAggregation
+
+    else if (isJoinNewAggregation())
+      // joinNew requires the lsit of vars, so for this one just union them all in as well.
+    {
+      AggregationUtil::unionAllVariablesInto(
+                getParentDataset()->getDDS(),
+                templateDDS);
+    }
+  }
+
+  void
+  AggregationElement::decideWhichVariablesToJoinExist(const DDS& templateDDS)
+  {
+    // If they were not specified by hand, then discover them.
+    if (_aggVars.empty())
+      {
+        BESDEBUG("ncml", "Searching the the template DDS for variables with outer "
+            "dimension matching the join dimension = " << _dimName
+            << " in order to add them to the aggregation output list." << endl);
+
+        // the prototype (first dataset) will define the set of vars to be aggregated.
+        // Note: the c.v. dim(dim) _must_ exist, either in all datasets or in the agg itself.
+        vector<string> matchingVars;
+        findVariablesWithOuterDimensionName(matchingVars, templateDDS, _dimName);
+        for (vector<string>::const_iterator it = matchingVars.begin();
+              it != matchingVars.end();
+              ++it)
+          {
+            addAggregationVariable(*it);
+          }
+      }
+    else // make sure the listed ones are valid
+      {
+        BESDEBUG("ncml", "joinExist aggregation had variableAgg specified...  "
+            "Validating these variables have outer dimension named "
+            << _dimName
+            << endl);
+
+        for (vector<string>::const_iterator it = _aggVars.begin();
+              it != _aggVars.end();
+              ++it)
+            {
+              BaseType* pVar = AggregationUtil::findVariableAtDDSTopLevel(templateDDS, *it);
+
+              // First, it must exist!
+              if (!pVar)
+                {
+                  std::ostringstream msg;
+                  msg << "Error validating the variableAgg list.  The variable named "
+                      << *it
+                      << " was not found in the top-level DDS!";
+                  THROW_NCML_PARSE_ERROR(line(), msg.str());
+                }
+
+              // Next see that it can be aggregated
+              Array* pArray = AggregationUtil::getAsArrayIfPossible(pVar);
+              if (!pArray)
+                {
+                  std::ostringstream msg;
+                  msg << "The declared variableAgg aggregation variable named "
+                      << *it
+                      << " was not of a type able to be aggregated!";
+                  THROW_NCML_PARSE_ERROR(line(), msg.str());
+                }
+
+              // Make sure the dimension name matches.
+              if (pArray->dimension_name(pArray->dim_begin()) != _dimName)
+                {
+                  std::ostringstream msg;
+                  msg << "The declared variableAgg variable named "
+                      << *it
+                      << " did not match the outer dimension name "
+                      << _dimName
+                      << " for this joinExisting aggregation!";
+                  THROW_NCML_PARSE_ERROR(line(), msg.str());
+                }
+
+              // Otherwise, it's good, so let the log know.
+              std::ostringstream msg;
+              msg << "The variable named "
+                  << *it
+                  << " is a valid joinExisting variable.  Will be added to output.";
+              BESDEBUG("ncml", msg.str() << endl);
+            } // for loop over user-declared variableAgg list.
+      }
   }
 
   // For now, just count up the ncoords...
@@ -566,27 +680,9 @@ namespace ncml_module
           it != const_cast<DDS&>(templateDDS).var_end();
           ++it )
       {
-        // After switch():
-        // if Array, will be cast to Array.
-        // if Grid, will be cast data Array member of Grid.
-        // Other types, will be null.
-        libdap::Array* pArray(0);
-        switch ((*it)->type())
-        {
-        case dods_array_c:
-          pArray = static_cast<libdap::Array*>(*it);
-          break;
-
-        case dods_grid_c:
-          pArray = static_cast<Grid*>(*it)->get_array();
-          break;
-
-        default:
-          pArray = 0;
-          break;
-        }
-
-        if ( outerDimName == pArray->dimension_name(pArray->dim_begin()) )
+        Array* pArray = AggregationUtil::getAsArrayIfPossible(*it);
+        // Only if it's an array or a grid data array
+        if ( pArray && outerDimName == pArray->dimension_name(pArray->dim_begin()) )
           {
             oMatchingVars.push_back(pArray->name());
           }

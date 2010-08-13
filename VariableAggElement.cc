@@ -96,7 +96,9 @@ namespace ncml_module
             " at scope=" + _parser->getScopeString() );
       }
 
-    getParentAggregation().addAggregationVariable(_name);
+    AggregationElement& parentAgg = getParentAggregation();
+    parentAgg.addAggregationVariable(_name);
+    parentAgg.setVariableAggElement(); // let the agg know we're adding to it.
   }
 
   void

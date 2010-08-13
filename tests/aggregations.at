@@ -325,7 +325,20 @@ AT_RUN_BES_AND_COMPARE([agg/joinExisting_virtual_fine.ncml],[dods],[agg/joinExis
 dnl Test that two variables with an outer dimension matching the joinDim get aggregated.
 AT_CHECK_ALL_DAP_RESPONSES([agg/joinExisting_multi.ncml])
 
-dnl TODO Case for variableAgg with multiple selects out!
+dnl ----------------------------
+dnl variableAgg tests
+
+dnl Case for variableAgg with multiple selects out the ones we want
+AT_CHECK_ALL_DAP_RESPONSES([agg/joinExisting_varAgg.ncml])
+
+dnl Error check: Make sure that if variableAgg declares a variable, that variable exists!
+AT_ASSERT_PARSE_ERROR([agg/joinExisting_varAgg_err_1.ncml])
+
+dnl Error check: Make sure the variable is an Array type or we can't aggregate it
+AT_ASSERT_PARSE_ERROR([agg/joinExisting_varAgg_err_2.ncml])
+
+dnl Error check: Make sure if named and existing and Array/Grid, otuer dim matches dimName!
+AT_ASSERT_PARSE_ERROR([agg/joinExisting_varAgg_err_3.ncml])
 
 dnl ------------------------
 dnl NetCDF Checks

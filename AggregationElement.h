@@ -122,6 +122,16 @@ namespace ncml_module
     AggVarIter beginAggVarIter() const;
     AggVarIter endAggVarIter() const;
 
+    /** whether this aggregation contained a variableAgg
+     * element to select aggregation variables.
+     */
+    bool gotVariableAggElement() const;
+
+    /** Should only be used by the VariableAggElement class to
+     * let us know it added the vars.
+     */
+    void setVariableAggElement();
+
     /** Add a child ScanElement to the Aggregation
      * to be used to to add to the list of child datasets.
      * This will be a strong (ref()'d) reference.
@@ -159,11 +169,31 @@ namespace ncml_module
     void processJoinExisting();
 
     /**
+     * Union add all the non-aggregated variables that we need to add.
+     * joinExisting with a variableAgg will only add required coordinate vars.
+     * joinNew should do the same.
+     * @param templateDDS  the template from which to draw the variables
+     */
+    void unionAddAllRequiredNonAggregatedVariablesFrom(const DDS& templateDDS);
+
+    /**
      * Figure out the size of the fully aggregated outer dimension
      * for the joinExisting from the member datasets and make sure the
      * dimension exists in the output object scope.
      */
     void addNewDimensionForJoinExisting();
+
+    /**
+     * If there was no variableAgg element describing the
+     * set of aggregation variables, then find all variables
+     * with the matching outerDim name.
+     *
+     * If variableAgg was specified, then make sure the
+     * variable has the correct outer dimension name!
+     *
+     * @param templateDDS
+     */
+    void decideWhichVariablesToJoinExist(const libdap::DDS& templateDDS);
 
     /**
      * Iterate over all top-level variables in the templateDDS
@@ -505,6 +535,9 @@ namespace ncml_module
     // A vector containing the names of the variables to be aggregated in this aggregation.
     // Not used for union.
     vector<string> _aggVars;
+
+    // Did a variableAgg element set our _aggVars or not?
+    bool  _gotVariableAggElement;
 
     // If set, we want to create a new attribute _CoordinateAxisType
     // with this value on each aggVar.

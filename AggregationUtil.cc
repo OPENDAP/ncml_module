@@ -801,6 +801,37 @@ namespace agg_util
     return ret;
   }
 
+  /*static*/
+  Array*
+  AggregationUtil::getAsArrayIfPossible(BaseType* pBT)
+  {
+    if (!pBT)
+      {
+        return 0;
+      }
+
+    // After switch():
+    // if Array, will be cast to Array.
+    // if Grid, will be cast data Array member of Grid.
+    // Other types, will be null.
+    libdap::Array* pArray(0);
+    switch (pBT->type())
+    {
+      case libdap::dods_array_c:
+        pArray = static_cast<libdap::Array*>(pBT);
+        break;
+
+      case libdap::dods_grid_c:
+        pArray = static_cast<Grid*>(pBT)->get_array();
+        break;
+
+      default:
+        pArray = 0;
+        break;
+    }
+    return pArray;
+  }
+
   void
   AggregationUtil::addDatasetArrayDataToAggregationOutputArray(
       libdap::Array& oOutputArray,

@@ -9,14 +9,6 @@ xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/d
         <Int32/>
         <dimension name="sample" size="4"/>
     </Array>
-    <Array name="A">
-        <Int32/>
-        <dimension name="sample" size="2"/>
-    </Array>
-    <Array name="Decoy">
-        <String/>
-        <dimension size="3"/>
-    </Array>
     <Array name="B_expected">
         <Int32/>
         <dimension name="sample" size="4"/>

@@ -385,6 +385,14 @@ namespace agg_util
         const libdap::Constructor& varContainer,
         const std::string& name);
 
+    /**
+     * If pBT is an Array type, cast and return it as the Array.
+     * If pBT is a Grid type, return the data Array field.
+     * Otherwise, return NULL.
+     * @param pBT the variable to adapt
+     * @return the array pointer or null if it cannot be adapted.
+     */
+    static libdap::Array* getAsArrayIfPossible(libdap::BaseType* pBT);
 
     /**
     * Load the given dataset's DataDDS.
