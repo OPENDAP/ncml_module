@@ -32,6 +32,7 @@
 #include "AggMemberDataset.h" // agg_util
 #include "AggregationUtil.h" // agg_util
 #include <Array.h> // libdap
+#include <memory> // std
 
 namespace agg_util
 {
