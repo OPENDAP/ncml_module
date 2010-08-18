@@ -35,7 +35,9 @@ NCML_SRCS = \
 		DimensionElement.cc \
 		DirectoryUtil.cc \
 		ExplicitElement.cc \
+		GridAggregationBase.cc \
 		GridAggregateOnOuterDimension.cc \
+		GridJoinExistingAggregation.cc \
 		MyBaseTypeFactory.cc \
 		NCMLBaseArray.cc \
 		NCMLCommonTypes.cc \
@@ -81,7 +83,9 @@ NCML_HDRS = \
 		DimensionElement.h \
 		DirectoryUtil.h \
 		ExplicitElement.h \
+		GridAggregationBase.h \
 		GridAggregateOnOuterDimension.h \
+		GridJoinExistingAggregation.h \
 		MyBaseTypeFactory.h \
 		NCMLArray.h \
 		NCMLBaseArray.h \

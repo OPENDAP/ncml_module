@@ -38,10 +38,12 @@
 #include "Dimension.h" // agg_util
 #include "DDSLoader.h" // agg_util
 #include <Grid.h> // libdap
+#include "GridAggregationBase.h" // agg_util
 
 namespace libdap
 {
   class Array;
+  class Grid;
 };
 
 using std::string;
@@ -52,7 +54,7 @@ using libdap::Grid;
 namespace agg_util
 {
   /**
-   * class GridAggregateOnOuterDimension : public libdap::Grid
+   * class GridAggregateOnOuterDimension : public GridAggregationBase
    *
    * Grid that performs a joinNew aggregation by taking
    * an ordered list of datatsets which contain Grid's with
@@ -79,7 +81,7 @@ namespace agg_util
    * the other handlers do the same sort of thing,
    * but can be smarter about seeking, etc.
    */
-  class GridAggregateOnOuterDimension : public libdap::Grid
+  class GridAggregateOnOuterDimension : public GridAggregationBase
   {
   public:
     /** Create the new Grid from the template proto... we'll
@@ -103,27 +105,6 @@ namespace agg_util
 
     GridAggregateOnOuterDimension& operator=(const GridAggregateOnOuterDimension& rhs);
 
-    // Overrides to make sure I am getting the calls.
-    virtual void set_send_p(bool state);
-    virtual void set_in_selection(bool state);
-
-    /**
-     * Accessor for the dataset description list that describes
-     * this aggregation.
-     * @return a reference to the AggMemberDataset list.
-     */
-    const AMDList& getDatasetList() const;
-
-    /**
-     * Read in only those datasets that are in the constrained output
-     * making sure to apply the internal dimension constraints to the
-     * member datasets properly before reading them!
-     * Stream the data into the output buffer correctly.
-     * @return success.
-     */
-    virtual bool read();
-
-
   private: // helpers
 
     /** Duplicate just the local data rep */
@@ -138,6 +119,12 @@ namespace agg_util
       * @param memberDatasets the dataset description for this agg.
      */
     void createRep(const AMDList& memberDatasets);
+
+    /** Subclass hook called by the superclass read().
+     * Does the work of loading the maps into this output
+     * object with constraints.
+     */
+    virtual void readAndAggregateConstrainedMapsHook();
 
     /**
      * Transfer the constraints to the prototype and read it in.
@@ -164,21 +151,10 @@ namespace agg_util
     void transferConstraintsToSubGridMaps(Grid* pSubGrid);
     void transferConstraintsToSubGridArray(Grid* pSubGrid);
 
-    void printConstraints(const Array& fromArray);
-
-    /** Find the map with the given name or NULL if not found */
-    static Array* findMapByName(Grid& inGrid, const string& findName);
-
   private: // data rep
-    // Use this to laod the member datasets as needed
-    DDSLoader _loader;
-
     // The new outer dimension description
     Dimension _newDim;
 
-    // A template for the unaggregated (sub) Grids.
-    // It will be used to validate other datasets as they are loaded.
-    std::auto_ptr<Grid> _pSubGridProto;
   };
 
 }

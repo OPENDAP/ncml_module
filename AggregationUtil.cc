@@ -57,10 +57,16 @@ using std::vector;
 
 namespace agg_util
 {
+  /////////////////////////////////////////////////////////////////////////////
+    // ArrayGetterInterface impls
+
   /* virtual */
   ArrayGetterInterface::~ArrayGetterInterface()
   {
   }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // TopLevelArrayGetter impl
 
   TopLevelArrayGetter::TopLevelArrayGetter()
   : ArrayGetterInterface()
@@ -133,6 +139,9 @@ namespace agg_util
 
     return pDatasetArray;
   }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // TopLevelGridDataArrayGetter impl
 
   TopLevelGridDataArrayGetter::TopLevelGridDataArrayGetter()
   : ArrayGetterInterface()
@@ -230,6 +239,92 @@ namespace agg_util
 
     return pDataArray;
   }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // TopLevelGridMapArrayGetter impl
+
+  TopLevelGridMapArrayGetter::TopLevelGridMapArrayGetter(const std::string& gridName)
+  : ArrayGetterInterface()
+  , _gridName(gridName)
+  {
+  }
+
+  /* virtual */
+  TopLevelGridMapArrayGetter::~TopLevelGridMapArrayGetter()
+  {
+  }
+
+  /* virtual */
+  TopLevelGridMapArrayGetter*
+  TopLevelGridMapArrayGetter::clone() const
+  {
+    return new TopLevelGridMapArrayGetter(*this);
+  }
+
+  /* virtual */
+  libdap::Array*
+  TopLevelGridMapArrayGetter::readAndGetArray(
+               const std::string& arrayName,
+               const libdap::DataDDS& dds,
+               const libdap::Array* const pConstraintTemplate,
+               const std::string& debugChannel
+               ) const
+  {
+    static const string sFuncName("TopLevelGridMapArrayGetter::readAndGetArray(): ");
+
+    // First, look up the Grid the map is in
+    BaseType* pBT = AggregationUtil::getVariableNoRecurse(dds, _gridName);
+
+    // Next, if it's not there, throw exception.
+    if (!pBT)
+      {
+        throw AggregationException(sFuncName +
+                "Did not find a variable named \"" +
+                _gridName + "\" at the top-level of the DDS!");
+      }
+
+    // Next, make sure it's a Grid before we cast it
+    // Prefer using the enum type for speed rather than RTTI
+    if (pBT->type() != libdap::dods_grid_c)
+      {
+        throw AggregationException(sFuncName +
+                "The top-level DDS variable named \"" +
+                _gridName +
+                "\" was not of the expected type!"
+                " Expected:Grid  Found:" + pBT->type_name());
+      }
+
+    // Find the correct map
+    Grid* pDataGrid = static_cast<Grid*>(pBT);
+    Array* pMap = const_cast<Array*>(AggregationUtil::findMapByName(*pDataGrid, arrayName));
+    NCML_ASSERT_MSG(pMap, sFuncName +
+        "Expected to find the map with name " + arrayName + " within the Grid "
+        + _gridName + " but failed to find it!");
+
+    // Prepare it to be read in so we can get the data
+    pMap->set_send_p(true);
+    pMap->set_in_selection(true);
+
+    // If given, copy the constraints over to the found Array
+    if (pConstraintTemplate)
+      {
+        agg_util::AggregationUtil::transferArrayConstraints
+        (
+            pMap, // into this data array to be read
+            *pConstraintTemplate, // from this template
+            false, // same rank Array's in template and loaded, don't skip first dim
+            false, // also don't skip in the to array
+            !(debugChannel.empty()), // printDebug
+            debugChannel
+        );
+      }
+
+    // Do the read
+    pMap->read();
+
+    return pMap;
+  }
+
 
   /*********************************************************************************************************
    * AggregationUtil Impl
@@ -830,6 +925,24 @@ namespace agg_util
         break;
     }
     return pArray;
+  }
+
+  const Array*
+  AggregationUtil::findMapByName(const libdap::Grid& inGrid, const string& findName)
+  {
+    Grid& grid = const_cast<Grid&>(inGrid);
+    Array* pRet = 0;
+    Grid::Map_iter it;
+    Grid::Map_iter endIt = grid.map_end();
+    for (it = grid.map_begin(); it != endIt; ++it)
+      {
+        if ( (*it)->name() == findName )
+          {
+            pRet = static_cast<Array*>(*it);
+            break;
+          }
+      }
+    return pRet;
   }
 
   void

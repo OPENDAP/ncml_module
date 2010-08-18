@@ -229,7 +229,7 @@ namespace ncml_module
     _parser->popCurrentDataset(this);
 
 
-    // We'll leave our element table around until we're destoryed since people are allowed to use it if they
+    // We'll leave our element table around until we're destroyed since people are allowed to use it if they
     // maintained a ref to us....
   }
 

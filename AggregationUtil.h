@@ -41,6 +41,7 @@ namespace libdap
   class Constructor;
   class DataDDS;
   class DDS;
+  class Grid;
 };
 
 namespace agg_util
@@ -144,6 +145,34 @@ namespace agg_util
             const std::string& debugChannel
             ) const;
   }; // class TopLevelGridDataArrayGetter
+
+  struct TopLevelGridMapArrayGetter : public ArrayGetterInterface
+    {
+      TopLevelGridMapArrayGetter(const std::string& gridName);
+      virtual ~TopLevelGridMapArrayGetter();
+
+      virtual TopLevelGridMapArrayGetter* clone() const;
+
+      /**
+       * Find's the Array using name as the name of a map to find
+       * within a top level Grid names in the constructor!
+       * @throw AggregationException if not found or illegal shape.
+       * @param name name of the Grid to find the Array in.
+       * @param dds  DDS to search
+       * @param pConstraintTemplate  template for constraints
+       * @param debugChannel if !empty() the channel to print to.
+       * @return the read in Array* or 0 if not found.
+       */
+      virtual libdap::Array* readAndGetArray(
+              const std::string& name,
+              const libdap::DataDDS& dds,
+              const libdap::Array* const pConstraintTemplate,
+              const std::string& debugChannel
+              ) const;
+
+      // The name of the Grid within which the desired map is contained.
+      const string _gridName;
+    }; // class TopLevelGridMapArrayGetter
 
   /**
    *   A static class for encapsulating the aggregation functionality on libdap.
@@ -393,6 +422,9 @@ namespace agg_util
      * @return the array pointer or null if it cannot be adapted.
      */
     static libdap::Array* getAsArrayIfPossible(libdap::BaseType* pBT);
+
+    /** Find the given map name in the given Grid and return it if found, else NULL */
+    static const libdap::Array* findMapByName(const libdap::Grid& inGrid, const std::string& findName);
 
     /**
     * Load the given dataset's DataDDS.

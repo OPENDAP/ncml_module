@@ -378,6 +378,9 @@ namespace ncml_module
     void processParentDatasetCompleteForJoinNew();
 
 
+    /** Called from processParentDatasetComplete() if we're a joinExisting. */
+    void processParentDatasetCompleteForJoinExisting();
+
     /** Make sure the variable in pBT is a valid coordinate variable for the dimension dim
      * and return it as an Array* if so.  Else throw or return null.
      * A valid c.v. will:
@@ -538,6 +541,10 @@ namespace ncml_module
 
     // Did a variableAgg element set our _aggVars or not?
     bool  _gotVariableAggElement;
+
+    // Did we add a join existing aggregated Grid to the output yet?
+    // Needed to know if we need to add an aggregated map c.v. to output.
+    bool _wasAggregatedMapAddedForJoinExistingGrid;
 
     // If set, we want to create a new attribute _CoordinateAxisType
     // with this value on each aggVar.
