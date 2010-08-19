@@ -291,7 +291,9 @@ namespace ncml_module
     unsigned int num = 0;
     istringstream iss(_ncoords);
     iss >> num;
-    if (iss.fail())
+    if (iss.fail() ||
+        (_ncoords[0] == '-') // parsing negatives is locale-dependent, but we DO NOT want them allowed.
+        )
       {
         THROW_NCML_PARSE_ERROR(line(),
             "A <netcdf> element has an invalid ncoords attribute set.  Bad value was:"
