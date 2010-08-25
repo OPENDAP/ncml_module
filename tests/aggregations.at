@@ -342,7 +342,7 @@ AT_ASSERT_PARSE_ERROR([agg/joinExisting_varAgg_err_3.ncml])
 
 dnl ------------------------
 dnl NetCDF Checks
-dnl Check that NetCDF granules can be aggregated
+dnl Check that NetCDF Array granules can be aggregated
 
 dnl Basic full responses (small datasets)
 AT_CHECK_ALL_DAP_RESPONSES([agg/joinExisting_nc.ncml])
@@ -350,6 +350,45 @@ AT_CHECK_ALL_DAP_RESPONSES([agg/joinExisting_nc.ncml])
 dnl constraints pathway
 AT_RUN_BES_AND_COMPARE([agg/joinExisting_nc.ncml],[dods],[agg/joinExisting_nc_cons_1],[[ v[0:2:5][1:1] ]])
 
+dnl ------------------------
+dnl NetCDF Grid Tests
+
+dnl First a full data response for a Grid, 
+dnl (which is viable since the 
+dnl sets were created by hand to be small).
+AT_CHECK_ALL_DAP_RESPONSES([agg/joinExisting_simple_grid.ncml])
+
+dnl Test constraint on the Grid's inner dimension only.
+dnl Both check the stride on different starts
+AT_RUN_BES_AND_COMPARE([agg/joinExisting_simple_grid.ncml],[dods],[agg/joinExisting_simple_grid_cons_0],[[ v[1:2:2][0:2] ]])
+AT_RUN_BES_AND_COMPARE([agg/joinExisting_simple_grid.ncml],[dods],[agg/joinExisting_simple_grid_cons_1],[[ v[0:2:2][0:2] ]])
+
+dnl Test constraint on both dimensions (middle entry of inner dim x)
+AT_RUN_BES_AND_COMPARE([agg/joinExisting_simple_grid.ncml],[dods],[agg/joinExisting_simple_grid_cons_2],[[ v[0:2:2][1:1] ]])
+
+dnl Test selection of just the joinExisting coodinate variable (here time)
+AT_RUN_BES_AND_COMPARE([agg/joinExisting_simple_grid.ncml],[dods],[agg/joinExisting_simple_grid_cons_3],[[ time[1:1] ]])
+
+dnl Likewise, select it as a map from the Grid itself.  Note: Returns a Structure.
+AT_RUN_BES_AND_COMPARE([agg/joinExisting_simple_grid.ncml],[dods],[agg/joinExisting_simple_grid_cons_4],[[ v.time[1:1] ]])
+
+dnl Select out just the data array.  Will also end up in a Structure.
+dnl NOTE: BUG: This is a bug in the Netcdf handler!  It shoes up as an invalid Grid. Ticket 1621
+dnl I'll leave the test out until it's fixed...
+dnl AT_RUN_BES_AND_COMPARE([agg/joinExisting_simple_grid.ncml],[dods],[agg/joinExisting_simple_grid_cons_5],[[ v.v ]])
+
+dnl Finally a series to pull out each separate granule
+AT_RUN_BES_AND_COMPARE([agg/joinExisting_simple_grid.ncml],[dods],[agg/joinExisting_simple_grid_cons_6],[[ v[0:0][0:2] ]])
+AT_RUN_BES_AND_COMPARE([agg/joinExisting_simple_grid.ncml],[dods],[agg/joinExisting_simple_grid_cons_7],[[ v[1:1][0:2] ]])
+AT_RUN_BES_AND_COMPARE([agg/joinExisting_simple_grid.ncml],[dods],[agg/joinExisting_simple_grid_cons_8],[[ v[2:2][0:2] ]])
+
+dnl TODO make a test of constrained projection of inner dimension map
+AT_RUN_BES_AND_COMPARE([agg/joinExisting_simple_grid.ncml],[dods],[agg/joinExisting_simple_grid_cons_9],[[ v.x[0:0] ]])
+AT_RUN_BES_AND_COMPARE([agg/joinExisting_simple_grid.ncml],[dods],[agg/joinExisting_simple_grid_cons_10],[[ v.x[1:1] ]])
+AT_RUN_BES_AND_COMPARE([agg/joinExisting_simple_grid.ncml],[dods],[agg/joinExisting_simple_grid_cons_11],[[ v.x[2:2] ]])
+
+dnl TODO Make a test for the other end case of middle to end of map dim.
+AT_RUN_BES_AND_COMPARE([agg/joinExisting_simple_grid.ncml],[dods],[agg/joinExisting_simple_grid_cons_12],[[ v[1:2][1:2] ]])
 
 
 dnl ---- end joinExisting Tests

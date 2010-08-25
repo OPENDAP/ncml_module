@@ -105,6 +105,23 @@ namespace agg_util
 
     GridAggregateOnOuterDimension& operator=(const GridAggregateOnOuterDimension& rhs);
 
+  protected: // Subclass Impl
+
+    /**
+     * For the data array and all maps, transfer the constraints
+     * from the super grid (ie this) to all the grids in the
+     * given prototype subgrid.
+     *
+     * Note that this Grid has one more outer dimension than the
+     * subgrid, so the first one on this will clearly be skipped.
+     *
+     * @param pToGrid
+    */
+    virtual void transferConstraintsToSubGridHook(Grid* pSubGrid);
+
+    virtual const Dimension& getAggregationDimension() const;
+
+
   private: // helpers
 
     /** Duplicate just the local data rep */
@@ -120,34 +137,8 @@ namespace agg_util
      */
     void createRep(const AMDList& memberDatasets);
 
-    /** Subclass hook called by the superclass read().
-     * Does the work of loading the maps into this output
-     * object with constraints.
-     */
-    virtual void readAndAggregateConstrainedMapsHook();
 
-    /**
-     * Transfer the constraints to the prototype and read it in.
-     */
-    void readProtoSubGrid();
-
-    /** Copy the maps read in from readProtoSubGrid into
-     * this Grid's maps.
-     * */
-    void copyProtoMapsIntoThisGrid();
-
-    /**
-     * For the data array and all maps, transfer the constraints
-     * from the super grid (ie this) to all the grids in the
-     * given prototype subgrid.
-     *
-     * Note that this Grid has one more outer dimension than the
-     * subgrid, so the first one on this will clearly be skipped.
-     *
-     * @param pToGrid
-    */
-    void transferConstraintsToSubGrid(Grid* pSubGrid);
-
+    // Local helpers called from transferConstraintsToSubGridMapsHook()
     void transferConstraintsToSubGridMaps(Grid* pSubGrid);
     void transferConstraintsToSubGridArray(Grid* pSubGrid);
 

@@ -54,12 +54,10 @@ namespace agg_util
 
   protected: // subclass interface
 
-    /**
-    * Hook for subclasses to handle the read() functionality on the
-    * maps.
-    * Called from read()!
-    */
-    virtual void readAndAggregateConstrainedMapsHook();
+    /** Required specialization for the read() call stack */
+    virtual void transferConstraintsToSubGridHook(Grid* pSubGrid);
+
+    virtual const Dimension& getAggregationDimension() const;
 
   private: // helpers
 
@@ -76,6 +74,11 @@ namespace agg_util
      * @param granuleList   agg granules
      */
     void createRep(const libdap::Grid& protoSubGrid, const AMDList& granuleList);
+
+
+    // Local helpers to implement transferConstraintsToSubGridHook()
+    void transferConstraintsToSubGridMaps(Grid* pSubGrid);
+    void transferConstraintsToSubGridArray(Grid* pSubGrid);
 
   private: // Data Rep
 

@@ -37,7 +37,8 @@
 using libdap::Array;
 using libdap::Grid;
 
-static const string DEBUG_CHANNEL("agg_util");
+static const bool PRINT_CONSTRAINTS = true;
+static const string DEBUG_CHANNEL("ncml:2");
 
 namespace agg_util
 {
@@ -92,22 +93,20 @@ namespace agg_util
 
   /* virtual */
   void
-  GridJoinExistingAggregation::readAndAggregateConstrainedMapsHook()
+  GridJoinExistingAggregation::transferConstraintsToSubGridHook(Grid* pSubGrid)
   {
-    static const string sFuncName("GridJoinExistingAggregation::readAndAggregateConstrainedMapsHook(): ");
-    THROW_NCML_INTERNAL_ERROR(sFuncName + "Impl Me!");
-
-    /* TODO Refactor the joinnew versions and then make some reduced size test cases.
-     * We need to load the other maps, noting that we need to read the ENTIRE
-     * subgrid since the HDF and otehr handlers CANNOT READ STANDALONE COPIES
-     * of a map. Argh.
-     *
-     * The inner dim maps needs to be then copied from the proto subgrid into this
-     * object's map output buffers.
-     *
-     * The aggregated dimensions should just work, with the constraints passed in as given.
-     */
+    VALID_PTR(pSubGrid);
+    transferConstraintsToSubGridMaps(pSubGrid);
+    transferConstraintsToSubGridArray(pSubGrid);
   }
+
+  /* virtual */
+  const Dimension&
+  GridJoinExistingAggregation::getAggregationDimension() const
+  {
+    return _joinDim;
+  }
+
 
   ///////////////////////////////////////////////////////////
   // Private Impl
@@ -192,6 +191,38 @@ namespace agg_util
     // Release here on successful set since set_array uses raw ptr only.
     // In case we threw then auto_ptr cleans up itself.
     aggDataArray.release();
+  }
+
+  void
+  GridJoinExistingAggregation::transferConstraintsToSubGridMaps(Grid* pSubGrid)
+  {
+    BESDEBUG(DEBUG_CHANNEL, "Transferring constraints to the subgrid maps..." << endl);
+    Map_iter subGridMapIt = pSubGrid->map_begin();
+    for (Map_iter it = map_begin(); it != map_end(); ++it)
+      {
+        // Skip the aggregated outer dimension since handled specially
+        if (it != map_begin())
+          {
+            Array* subGridMap = static_cast<Array*>(*subGridMapIt);
+            Array* superGridMap = static_cast<Array*>(*it);
+            agg_util::AggregationUtil::transferArrayConstraints(subGridMap,
+                *superGridMap,
+                false, // skipFirstDim = false since inner dim map sizes consistent
+                false, // same rank, don't skip this one either
+                true, // printDebug
+                DEBUG_CHANNEL);
+          }
+        ++subGridMapIt; // keep them in sync
+      }
+  }
+
+  void
+  GridJoinExistingAggregation::transferConstraintsToSubGridArray(Grid* /* pSubGrid */)
+  {
+    // Data array gets the constraints set on it directly since we replaced
+    // the map with an aggregated array variable.  Thus it handles its own
+    // constraints.
+    // Leaving the stub here in case this changes in the future.
   }
 
 

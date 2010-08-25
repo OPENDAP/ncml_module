@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- joinExisting test on simple 2D netcdf granules  -->
-<netcdf title="joinExisting test on netcdf granules"
+<!-- joinExisting test on simple 2D netcdf Array granules  -->
+<netcdf title="joinExisting test on netcdf Array granules"
 	>
   
   <attribute name="Description" type="string"

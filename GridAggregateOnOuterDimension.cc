@@ -54,6 +54,9 @@ namespace agg_util
   // Local flag for whether to print constraints, to help debugging
   static const bool PRINT_CONSTRAINTS = true;
 
+  // BES Debug output channel for this file.
+  static const string DEBUG_CHANNEL("ncml:2");
+
  // Copy local data
 void
 GridAggregateOnOuterDimension::duplicate(const GridAggregateOnOuterDimension& rhs)
@@ -70,7 +73,7 @@ GridAggregateOnOuterDimension::GridAggregateOnOuterDimension(
 : GridAggregationBase(proto, memberDatasets, loaderProto)
 , _newDim(newDim)
 {
-  BESDEBUG("ncml:2", "GridAggregateOnOuterDimension() ctor called!" << endl);
+  BESDEBUG(DEBUG_CHANNEL, "GridAggregateOnOuterDimension() ctor called!" << endl);
 
   createRep(memberDatasets);
 }
@@ -79,7 +82,7 @@ GridAggregateOnOuterDimension::GridAggregateOnOuterDimension(const GridAggregate
 : GridAggregationBase(proto)
 , _newDim()
 {
-  BESDEBUG("ncml:2", "GridAggregateOnOuterDimension() copy ctor called!" << endl);
+  BESDEBUG(DEBUG_CHANNEL, "GridAggregateOnOuterDimension() copy ctor called!" << endl);
   duplicate(proto);
 }
 
@@ -103,7 +106,7 @@ GridAggregateOnOuterDimension::operator=(const GridAggregateOnOuterDimension& rh
 
 GridAggregateOnOuterDimension::~GridAggregateOnOuterDimension()
 {
-  BESDEBUG("ncml:2", "~GridAggregateOnOuterDimension() dtor called!" << endl);
+  BESDEBUG(DEBUG_CHANNEL, "~GridAggregateOnOuterDimension() dtor called!" << endl);
   cleanup();
 }
 
@@ -113,12 +116,13 @@ GridAggregateOnOuterDimension::~GridAggregateOnOuterDimension()
 void
 GridAggregateOnOuterDimension::createRep(const AMDList& memberDatasets)
 {
-  BESDEBUG("ncml:2", "GridAggregateOnOuterDimension: "
+  static const string sFuncName("GridAggregateOnOuterDimension::createRep(): ");
+  BESDEBUG(DEBUG_CHANNEL, sFuncName +
       "Replacing the Grid's data Array with an ArrayAggregateOnOuterDimension..." << endl);
 
   // This is the prototype we need.  It will have been set in the ctor.
   Array* pArr = static_cast<Array*>(array_var());
-  NCML_ASSERT_MSG(pArr, "GridAggregateOnOuterDimension::createRep(): "
+  NCML_ASSERT_MSG(pArr, sFuncName +
        "Expected to find a contained data Array but we did not!");
 
   // Create the Grid version of the read getter and make a new AAOOD from our state.
@@ -153,116 +157,24 @@ GridAggregateOnOuterDimension::cleanup() throw()
 
 /* virtual */
 void
-GridAggregateOnOuterDimension::readAndAggregateConstrainedMapsHook()
-{
-  // Transfers constraints to the proto grid and reads it
-  readProtoSubGrid();
-
-  // Copy the read-in, constrained maps from the proto grid
-  // into our output maps.
-  copyProtoMapsIntoThisGrid();
-}
-
-void
-GridAggregateOnOuterDimension::readProtoSubGrid()
-{
-  Grid* pSubGridTemplate = getSubGridTemplate();
-  VALID_PTR(pSubGridTemplate);
-  transferConstraintsToSubGrid(pSubGridTemplate);
-
-  // Pass it the values for the aggregated grid...
-  pSubGridTemplate->set_send_p(send_p());
-  pSubGridTemplate->set_in_selection(is_in_selection());
-
-  // Those settings will be used by read.
-  pSubGridTemplate->read();
-
-  // For some reason, some handlers only set read_p for the parts, not the whole!!
-  pSubGridTemplate->set_read_p(true);
-}
-
-void
-GridAggregateOnOuterDimension::copyProtoMapsIntoThisGrid()
-{
-  Grid* pSubGridTemplate = getSubGridTemplate();
-  VALID_PTR(pSubGridTemplate);
-
-  Map_iter mapIt;
-  Map_iter mapEndIt = map_end();
-  for (mapIt = map_begin();
-       mapIt != mapEndIt;
-       ++mapIt)
-    {
-      Array* pOutMap = static_cast<Array*>(*mapIt);
-      VALID_PTR(pOutMap);
-
-      // If it isn't getting dumped, then don't bother with it
-      if (! (pOutMap->send_p() || pOutMap->is_in_selection()) )
-        {
-          continue;
-        }
-
-      // If it's the new dimension, then it's already fine
-      // Since it got it's constraints poked in directly
-      // and contains its data.
-      if (pOutMap->name() == _newDim.name)
-        {
-          if (PRINT_CONSTRAINTS)
-            {
-              BESDEBUG("ncml:2", "readMaps(): About to call read() on the map for the new outer dimension name=" <<
-                _newDim.name <<
-                " It's constraints are:" << endl);
-              printConstraints(*pOutMap);
-            }
-
-          // Make sure it's read with these constraints.
-          pOutMap->read();
-          continue;
-        }
-
-      // Otherwise, find the map in the protogrid and copy it's data into this.
-      Array* pProtoGridMap = const_cast<Array*>(AggregationUtil::findMapByName(*pSubGridTemplate, pOutMap->name()));
-      NCML_ASSERT_MSG(pProtoGridMap, "GridAggregateOnOuterDimension::readMaps(): "
-          "Couldn't find map in prototype grid for map name=" + pOutMap->name() );
-      BESDEBUG("ncml:2",
-          "readMaps(): About to call read() on prototype map vector name="
-          << pOutMap->name() << " and calling transfer constraints..." << endl);
-
-      // Make sure the protogrid maps were properly read
-      NCML_ASSERT_MSG(pProtoGridMap->read_p(),
-          "GridAggregateOnOuterDimension::readMaps(): "
-          "Expected the prototype map to have been read but it wasn't.");
-
-      // Make sure the lengths match to be sure we're not gonna blow memory up
-      NCML_ASSERT_MSG(pOutMap->length() == pProtoGridMap->length(),
-          "GridAggregateOnOuterDimension::readMaps(): "
-          "Expected the prototype and output maps to have same length() "
-          "after transfer of constraints, but they were not so we can't "
-          "copy the data!");
-
-      // The dimensions will have been set up correctly now so length() is correct...
-      // We assume the _pSubGridProto matches at this point as well.
-      // So we can use this call to copy from one vector to the other
-      // so we don't use temp storage in between
-      pOutMap->reserve_value_capacity(); // reserves mem for length
-      pOutMap->set_value_slice_from_row_major_vector(*pProtoGridMap, 0);
-      pOutMap->set_read_p(true);
-    }
-
-}
-
-void
-GridAggregateOnOuterDimension::transferConstraintsToSubGrid(Grid* pSubGrid)
+GridAggregateOnOuterDimension::transferConstraintsToSubGridHook(Grid* pSubGrid)
 {
   VALID_PTR(pSubGrid);
   transferConstraintsToSubGridMaps(pSubGrid);
   transferConstraintsToSubGridArray(pSubGrid);
 }
 
+/* virtual */
+const Dimension&
+GridAggregateOnOuterDimension::getAggregationDimension() const
+{
+  return _newDim;
+}
+
 void
 GridAggregateOnOuterDimension::transferConstraintsToSubGridMaps(Grid* pSubGrid)
 {
-  BESDEBUG("ncml:2", "Transferring constraints to the subgrid maps..." << endl);
+  BESDEBUG(DEBUG_CHANNEL, "Transferring constraints to the subgrid maps..." << endl);
   Map_iter subGridMapIt = pSubGrid->map_begin();
   for (Map_iter it = map_begin(); it != map_end(); ++it)
     {
@@ -278,7 +190,7 @@ GridAggregateOnOuterDimension::transferConstraintsToSubGridMaps(Grid* pSubGrid)
           false, // skipFirstDim = false since map sizes consistent
           false, // same rank, dont skip this one either
           true, // printDebug
-          "ncml:2"); // debugChannel
+          DEBUG_CHANNEL); // debugChannel
       ++subGridMapIt; // keep iterators in sync
     }
 }
@@ -286,7 +198,7 @@ GridAggregateOnOuterDimension::transferConstraintsToSubGridMaps(Grid* pSubGrid)
 void
 GridAggregateOnOuterDimension::transferConstraintsToSubGridArray(Grid* pSubGrid)
 {
-  BESDEBUG("ncml:2", "Transferring constraints to the subgrid array..." << endl);
+  BESDEBUG(DEBUG_CHANNEL, "Transferring constraints to the subgrid array..." << endl);
 
   Array* pSubGridArray = static_cast<Array*>(pSubGrid->get_array());
   VALID_PTR(pSubGridArray);
@@ -300,7 +212,7 @@ GridAggregateOnOuterDimension::transferConstraintsToSubGridArray(Grid* pSubGrid)
       true, // skipFirstDim: need to skip since the ranks differ
       false, // but not into the to array
       true,  // printDebug
-      "ncml:2" //debugChannel
+      DEBUG_CHANNEL
       );
 }
 

@@ -79,13 +79,6 @@ namespace agg_util
     cleanup();
   }
 
-  /* virtual */
-  GridAggregationBase*
-  GridAggregationBase::ptr_duplicate()
-  {
-    return new GridAggregationBase(*this);
-  }
-
   GridAggregationBase&
   GridAggregationBase::operator=(const GridAggregationBase& rhs)
   {
@@ -209,11 +202,13 @@ namespace agg_util
   void
   GridAggregationBase::readAndAggregateConstrainedMapsHook()
   {
-    static const string sFuncName("GridAggregationBase::readAndAggregateConstrainedMapsHook()");
-    THROW_NCML_INTERNAL_ERROR("Unimplemented Method!  GridAggregationBase::readAndAggregateConstrainedMapsHook()"
-        " Subclasses should override this call!");
-  }
+    // Transfers constraints to the proto grid and reads it
+    readProtoSubGrid();
 
+    // Copy the read-in, constrained maps from the proto grid
+    // into our output maps.
+    copyProtoMapsIntoThisGrid(getAggregationDimension());
+  }
 
   /* static */
   libdap::Grid*
@@ -228,6 +223,104 @@ namespace agg_util
     ostringstream oss;
     AggregationUtil::printConstraints(oss, fromArray);
     BESDEBUG("ncml:2", "Constraints for Grid: " << name() << ": " << oss.str() << endl);
+  }
+
+  void
+  GridAggregationBase::readProtoSubGrid()
+  {
+    Grid* pSubGridTemplate = getSubGridTemplate();
+    VALID_PTR(pSubGridTemplate);
+
+    // Call the specialized subclass constraint transfer method
+    transferConstraintsToSubGridHook(pSubGridTemplate);
+
+    // Pass it the values for the aggregated grid...
+    pSubGridTemplate->set_send_p(send_p());
+    pSubGridTemplate->set_in_selection(is_in_selection());
+
+    // Those settings will be used by read.
+    pSubGridTemplate->read();
+
+    // For some reason, some handlers only set read_p for the parts, not the whole!!
+    pSubGridTemplate->set_read_p(true);
+  }
+
+  void
+  GridAggregationBase::copyProtoMapsIntoThisGrid(const Dimension& aggDim)
+  {
+    static const string sFuncName("copyProtoMapsIntoThisGridHook(): ");
+
+    Grid* pSubGridTemplate = getSubGridTemplate();
+    VALID_PTR(pSubGridTemplate);
+
+    Map_iter mapIt;
+    Map_iter mapEndIt = map_end();
+    for (mapIt = map_begin();
+        mapIt != mapEndIt;
+        ++mapIt)
+      {
+        Array* pOutMap = static_cast<Array*>(*mapIt);
+        VALID_PTR(pOutMap);
+
+        // If it isn't getting dumped, then don't bother with it
+        if (! (pOutMap->send_p() || pOutMap->is_in_selection()) )
+          {
+            continue;
+          }
+
+        // We don't want to touch the aggregation dimension since it's
+        // handled specially.
+        if (pOutMap->name() == aggDim.name)
+          {
+            if (PRINT_CONSTRAINTS)
+              {
+                BESDEBUG(DEBUG_CHANNEL, sFuncName +
+                    "About to call read() on the map for the new outer dimension name=" <<
+                    aggDim.name <<
+                    " It's constraints are:" << endl);
+                printConstraints(*pOutMap);
+              }
+
+            // Make sure it's read with these constraints.
+            pOutMap->read();
+            continue;
+          }
+
+        // Otherwise, find the map in the protogrid and copy it's data into this.
+        Array* pProtoGridMap = const_cast<Array*>(AggregationUtil::findMapByName(*pSubGridTemplate, pOutMap->name()));
+        NCML_ASSERT_MSG(pProtoGridMap, sFuncName +
+            "Couldn't find map in prototype grid for map name=" + pOutMap->name() );
+        BESDEBUG(DEBUG_CHANNEL, sFuncName +
+            "About to call read() on prototype map vector name="
+            << pOutMap->name() << " and calling transfer constraints..." << endl);
+
+        // Make sure the protogrid maps were properly read
+        NCML_ASSERT_MSG(pProtoGridMap->read_p(),
+            sFuncName +
+            "Expected the prototype map to have been read but it wasn't.");
+
+        // Make sure the lengths match to be sure we're not gonna blow memory up
+        NCML_ASSERT_MSG(pOutMap->length() == pProtoGridMap->length(),
+            sFuncName +
+            "Expected the prototype and output maps to have same length() "
+            "after transfer of constraints, but they were not so we can't "
+            "copy the data!");
+
+        // The dimensions will have been set up correctly now so length() is correct...
+        // We assume the pProtoGridMap matches at this point as well.
+        // So we can use this call to copy from one vector to the other
+        // so we don't use temp storage in between
+        pOutMap->reserve_value_capacity(); // reserves mem for length
+        pOutMap->set_value_slice_from_row_major_vector(*pProtoGridMap, 0);
+        pOutMap->set_read_p(true);
+      }
+  }
+
+  /* virtual */
+  void
+  GridAggregationBase::transferConstraintsToSubGridHook(Grid* /*pSubGrid*/)
+  {
+    THROW_NCML_INTERNAL_ERROR("Impl me!");
   }
 
 }

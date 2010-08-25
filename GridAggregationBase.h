@@ -74,8 +74,6 @@ namespace agg_util
 
     virtual ~GridAggregationBase();
 
-    virtual GridAggregationBase* ptr_duplicate();
-
     GridAggregationBase& operator=(const GridAggregationBase& rhs);
 
     /**
@@ -111,9 +109,8 @@ namespace agg_util
   protected: // subclass interface
 
     /**
-     * Hook for subclasses to handle the read() functionality on the
-     * maps.
-     * Called from read()!
+     * Called from read()!  Invokes the user hooks eventually.
+     * Can be overridden, but default calls should suffice for now.
      */
     virtual void readAndAggregateConstrainedMapsHook();
 
@@ -122,7 +119,37 @@ namespace agg_util
     */
     Grid* getSubGridTemplate();
 
+    /** Get the contained aggregation dimension info */
+    virtual const Dimension& getAggregationDimension() const = 0;
+
     void printConstraints(const libdap::Array& fromArray);
+
+
+    /** Transfer constraints properly from this object's maps
+     * and read in the proto subgrid entirely (respecting constraints) */
+    void readProtoSubGrid();
+
+    // Support calls for the read()....
+
+    /**
+        * Copy the template's read in subgrid maps into this.
+        * Skip any map found in the subgrid named aggDim.name
+        * since we handle the aggregation dimension map specially.
+        * @param aggDim  a map with aggDim.name is NOT copied.
+        */
+    void copyProtoMapsIntoThisGrid(const Dimension& aggDim);
+
+    /** To be specialized in subclass to copy constraints on this
+     * object properly into the given pSubGrid map list
+     * and data array for read.
+     *
+     * Should handle the aggregation dimension properly, hence
+     * the specialization.
+     *
+     * Called from readProtoSubGrid
+     * @param pSubGrid Grid to modify with the constraints
+     */
+    virtual void transferConstraintsToSubGridHook(Grid* pSubGrid);
 
   private: // helpers
 
@@ -133,6 +160,7 @@ namespace agg_util
     void cleanup() throw();
 
     static libdap::Grid* cloneSubGridProto(const libdap::Grid& proto);
+
 
   private: // data rep
 
