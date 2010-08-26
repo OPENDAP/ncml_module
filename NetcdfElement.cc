@@ -289,11 +289,7 @@ namespace ncml_module
     NCML_ASSERT_MSG(hasNcoords(),
         "NetcdfElement::getNCoords(): called illegally when no ncoords attribute was specified!");
     unsigned int num = 0;
-    istringstream iss(_ncoords);
-    iss >> num;
-    if (iss.fail() ||
-        (_ncoords[0] == '-') // parsing negatives is locale-dependent, but we DO NOT want them allowed.
-        )
+    if (!NCMLUtil::toUnsignedInt(_ncoords, num))
       {
         THROW_NCML_PARSE_ERROR(line(),
             "A <netcdf> element has an invalid ncoords attribute set.  Bad value was:"

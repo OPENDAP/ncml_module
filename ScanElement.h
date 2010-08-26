@@ -72,6 +72,9 @@ namespace ncml_module
     virtual void handleEnd();
     virtual string toString() const;
 
+    ////// Accessors
+    const string& ncoords() const;
+
     /** Get the aggregation of which I am a child */
     AggregationElement* getParent() const;
 
@@ -147,6 +150,7 @@ namespace ncml_module
     string _olderThan;
     string _dateFormatMark;
     string _enhance; // we're not implementing this one now.
+    string _ncoords; // OPeNDAP EXTENSION to NcML.  Inherited by all matched datasets.
 
     // Back pointer to our parent
     AggregationElement* _pParent;

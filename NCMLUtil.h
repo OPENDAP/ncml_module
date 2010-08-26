@@ -128,6 +128,15 @@ namespace ncml_module
         std::vector<std::string>& tokens,
         const std::string& trimChars = WHITESPACE);
 
+
+    /** Convert the string to an unsigned int into oVal.
+     *  Return success, else oVal is invalid on return.
+     * @param stringVal val to parse
+     * @param oVal location to place parsed result
+     * @return success at parse
+     */
+    static bool toUnsignedInt(const std::string& stringVal, unsigned int& oVal);
+
     /** Given we have a valid attribute tree inside of the DDS, recreate it in the DAS.
           @param das the das to clear and populate
           @param dds_const the source dds

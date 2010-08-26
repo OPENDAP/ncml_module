@@ -137,6 +137,22 @@ namespace ncml_module
       }
   }
 
+  bool
+  NCMLUtil::toUnsignedInt(const std::string& stringVal, unsigned int& oVal)
+  {
+    bool success = true;
+    oVal = 0;
+    istringstream iss(stringVal);
+    iss >> oVal;
+    if (iss.fail() ||
+        (stringVal[0] == '-') // parsing negatives is locale-dependent, but we DO NOT want them allowed.
+        )
+      {
+        success = false;
+      }
+    return success;
+  }
+
   /** Recursion helper:
    *  Recurse on the members of composite variable consVar and recursively add their AttrTables
    *  to the given dasTable for the container.

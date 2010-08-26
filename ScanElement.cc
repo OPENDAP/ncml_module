@@ -100,6 +100,8 @@ namespace ncml_module
   , _subdirs("")
   , _olderThan("")
   , _dateFormatMark("")
+  , _enhance("")
+  , _ncoords("")
   , _pParent(0)
   , _pDateFormatters(0)
   {
@@ -114,6 +116,8 @@ namespace ncml_module
   , _subdirs(proto._subdirs)
   , _olderThan(proto._olderThan)
   , _dateFormatMark(proto._dateFormatMark)
+  , _enhance(proto._enhance)
+  , _ncoords(proto._ncoords)
   , _pParent(proto._pParent) // weak ref so this is fair...
   , _pDateFormatters(0)
   {
@@ -163,6 +167,7 @@ namespace ncml_module
     _olderThan = attrs.getValueForLocalNameOrDefault("olderThan", "");
     _dateFormatMark = attrs.getValueForLocalNameOrDefault("dateFormatMark", "");
     _enhance = attrs.getValueForLocalNameOrDefault("enhance", "");
+    _ncoords = attrs.getValueForLocalNameOrDefault("ncoords", "");
 
     // default is to print errors and throw which we want.
     validateAttributes(attrs, _sValidAttrs);
@@ -216,7 +221,14 @@ namespace ncml_module
         printAttributeIfNotEmpty("subdirs", _subdirs) +
         printAttributeIfNotEmpty("olderThan", _olderThan) +
         printAttributeIfNotEmpty("dateFormatMark", _dateFormatMark) +
+        printAttributeIfNotEmpty("ncoords", _ncoords) +
         ">";
+  }
+
+  const string&
+  ScanElement::ncoords() const
+  {
+    return _ncoords;
   }
 
   bool
@@ -297,6 +309,16 @@ namespace ncml_module
         DirectoryUtil::printFileInfoList(files);
       }
 
+    // Let the user know we're performing syntactic sugar with ncoords
+    // We'll let the other context decide whether its proper to use it.
+    if (!_ncoords.empty())
+      {
+        BESDEBUG("ncml",
+            "Scan has ncoords attribute specified: ncoords="
+            << _ncoords
+            << "  Will be inherited by all matching datasets!"
+            << endl);
+      }
 
     // Adapt the file list into a temp vector of NetcdfElements
     // created from the parser's factory so they
@@ -316,6 +338,13 @@ namespace ncml_module
 
         // The path to the file, relative to the BES root as needed.
         attrs.addAttribute(XMLAttribute("location", it->getFullPath()));
+
+        // If the user has specified the ncoords sugar,
+        // pass it down into the netcdf element.
+        if (!_ncoords.empty())
+          {
+            attrs.addAttribute(XMLAttribute("ncoords", _ncoords));
+          }
 
         // If there's a dateFormatMark, pull out the coordVal
         // and add it to the attrs map since we want to use that and
@@ -564,7 +593,14 @@ namespace ncml_module
     attrs.push_back("subdirs");
     attrs.push_back("olderThan");
     attrs.push_back("dateFormatMark");
-    attrs.push_back("enhance"); // it's in the schema, but we don't plan to support it
+
+    // it's in the schema, but we don't support it yet.
+    // Will throw later.
+    attrs.push_back("enhance");
+
+    // OPeNDAP extension, syntactic sugar applied to all matches.
+    attrs.push_back("ncoords");
+
     return attrs;
   }
 

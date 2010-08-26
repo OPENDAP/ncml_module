@@ -468,6 +468,25 @@ namespace ncml_module
     AggregationUtil::unionAllVariablesInto(pAggDDS, *pTemplateDDS);
   }
 
+  /* File local helper for next function */
+  static bool
+  doAllScannersSpecifyNCoords(const vector<ScanElement*>& scanners)
+  {
+    bool success = true;
+    for (vector<ScanElement*>::const_iterator it = scanners.begin();
+        it != scanners.end();
+        ++it)
+      {
+        VALID_PTR(*it);
+        if ((*it)->ncoords().empty())
+          {
+            success = false;
+            break;
+          }
+      }
+    return success;
+  }
+
   void
   AggregationElement::processJoinExisting()
   {
@@ -475,12 +494,17 @@ namespace ncml_module
 
     // Make sure there's no <scan> elements for now
     // since we can't handle this case yet.
-    if (!_scanners.empty())
+    if (!_scanners.empty() && !doAllScannersSpecifyNCoords(_scanners))
       {
         THROW_NCML_PARSE_ERROR(line(),
-            "Unimplemented: AggregationElement: processJoinExisting() found a <scan> element. "
-            "We apologize that this version doesn't yet allow them for joinExisting aggregation.");
+            "Unimplemented: AggregationElement: processJoinExisting() found a scan element "
+            "without ncoords attribute specified. "
+            "We apologize that this version doesn't yet allow "
+            "a full scan for joinExisting aggregation.");
       }
+
+    // If we're here, we're allowed to scan
+    processAnyScanElements();
 
     // We need at least one dataset or it's an error
     if (_datasets.empty())

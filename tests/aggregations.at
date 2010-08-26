@@ -382,14 +382,16 @@ AT_RUN_BES_AND_COMPARE([agg/joinExisting_simple_grid.ncml],[dods],[agg/joinExist
 AT_RUN_BES_AND_COMPARE([agg/joinExisting_simple_grid.ncml],[dods],[agg/joinExisting_simple_grid_cons_7],[[ v[1:1][0:2] ]])
 AT_RUN_BES_AND_COMPARE([agg/joinExisting_simple_grid.ncml],[dods],[agg/joinExisting_simple_grid_cons_8],[[ v[2:2][0:2] ]])
 
-dnl TODO make a test of constrained projection of inner dimension map
+dnl Tests of constrained projection of inner dimension map
 AT_RUN_BES_AND_COMPARE([agg/joinExisting_simple_grid.ncml],[dods],[agg/joinExisting_simple_grid_cons_9],[[ v.x[0:0] ]])
 AT_RUN_BES_AND_COMPARE([agg/joinExisting_simple_grid.ncml],[dods],[agg/joinExisting_simple_grid_cons_10],[[ v.x[1:1] ]])
 AT_RUN_BES_AND_COMPARE([agg/joinExisting_simple_grid.ncml],[dods],[agg/joinExisting_simple_grid_cons_11],[[ v.x[2:2] ]])
 
-dnl TODO Make a test for the other end case of middle to end of map dim.
+dnl Test for the other end case of middle to end of map dim.
 AT_RUN_BES_AND_COMPARE([agg/joinExisting_simple_grid.ncml],[dods],[agg/joinExisting_simple_grid_cons_12],[[ v[1:2][1:2] ]])
 
+dnl Test the scan@ncoords extension.  Scan chosen to match the above tests in output.
+AT_CHECK_ALL_DAP_RESPONSES([agg/joinExist_scan_ncoords.ncml])
 
 dnl ---- end joinExisting Tests
 dnl ****************************************************************************
