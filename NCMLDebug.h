@@ -51,14 +51,18 @@
 #define NCML_MODULE_DBG_CHANNEL_2 "ncml:2"
 
 // Spew the std::string msg to debug channel then throw BESInternalError.  for those errors that are internal problems, not user/parse errors.
-#define THROW_NCML_INTERNAL_ERROR(msg) { BESDEBUG(NCML_MODULE_DBG_CHANNEL, std::string("NCMLModule InternalError: ") << (msg) << endl); \
-                                   throw BESInternalError("NCMLModule InternalError: " + std::string(msg) , \
+#define THROW_NCML_INTERNAL_ERROR(msg) { \
+  std::ostringstream __NCML_PARSE_ERROR_OSS__; \
+  __NCML_PARSE_ERROR_OSS__ << std::string("NCMLModule InternalError: ") << __PRETTY_FUNCTION__ << ": " << (msg); \
+  BESDEBUG(NCML_MODULE_DBG_CHANNEL,  __NCML_PARSE_ERROR_OSS__.str() << endl); \
+                                   throw BESInternalError( __NCML_PARSE_ERROR_OSS__.str(), \
                                                           __FILE__, __LINE__); }
 
 // Spew the std::string msg to debug channel then throw a BESSyntaxUserError.  For parse and syntax errors in the NCML.
 #define THROW_NCML_PARSE_ERROR(parseLine, msg) { \
       std::ostringstream __NCML_PARSE_ERROR_OSS__; \
-      __NCML_PARSE_ERROR_OSS__ << "NCMLModule ParseError: at line " << (parseLine) << ": " << (msg); \
+      __NCML_PARSE_ERROR_OSS__ << "NCMLModule ParseError: at *.ncml line=" << (parseLine) << ": " << \
+      __PRETTY_FUNCTION__ << ": " << (msg); \
       BESDEBUG(NCML_MODULE_DBG_CHANNEL, \
               __NCML_PARSE_ERROR_OSS__.str() << endl); \
           throw BESSyntaxUserError( __NCML_PARSE_ERROR_OSS__.str(), \
@@ -70,7 +74,7 @@
 
 // An assert that can carry a std::string msg
 #define NCML_ASSERT_MSG(cond, msg)  { if (!(cond)) { \
-  BESDEBUG(NCML_MODULE_DBG_CHANNEL, (msg) << endl); \
+  BESDEBUG(NCML_MODULE_DBG_CHANNEL, __PRETTY_FUNCTION__ << ": " << (msg) << endl); \
   THROW_NCML_INTERNAL_ERROR(std::string("ASSERTION FAILED: condition=( ") + std::string(#cond) + std::string(" ) ") + std::string(msg)); } }
 
 // Check pointers before dereferencing them.

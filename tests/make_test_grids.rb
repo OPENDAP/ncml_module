@@ -29,8 +29,11 @@ def make_test_file(filename, nx, nt, offset)
   tdim = file.def_dim("time", nt) 
   
   x = file.def_var("x", "int", [xdim])
+  x.put_att("Description", "Test coordinate variable x.");
   time = file.def_var("time", "int", [tdim])
+  time.put_att("Description", "Test coordinate variable time.");
   v = file.def_var("v", "sfloat", [xdim, tdim])
+  v.put_att("Description", "Test output data array v");
   file.enddef
   
   x.put( NArray.float(nx).indgen! )

@@ -31,6 +31,7 @@
 
 #include "AggMemberDataset.h" // agg_util
 #include "AggregationUtil.h" // agg_util
+#include "ArrayJoinExistingAggregation.h" // agg_util
 #include <memory>
 #include "NCMLElement.h"
 #include "NCMLUtil.h"
@@ -377,9 +378,21 @@ namespace ncml_module
     /** Called from processParentDatasetComplete() if we're a joinNew. */
     void processParentDatasetCompleteForJoinNew();
 
-
     /** Called from processParentDatasetComplete() if we're a joinExisting. */
     void processParentDatasetCompleteForJoinExisting();
+
+    /** Handle the placeholder variable for the joinExisting.
+     * Merges the placeholder metadata into pNewVar's metadata.
+     * Tells the parent that we now have values for placeholderVar
+     * as well to remove it from the value validation list.
+     * Also matches the type of the placeholder to the
+     * element type of pNewVar or throw.
+     * @param placeholderVar  ref to the placeholder (scalar)
+     * @param pNewVar  the new coordinate variable that will replace placeholderVar
+     */
+    void processPlaceholderCoordinateVariableForJoinExisting(
+          const libdap::BaseType& placeholderVar,
+          libdap::Array* pNewVar);
 
     /** Make sure the variable in pBT is a valid coordinate variable for the dimension dim
      * and return it as an Array* if so.  Else throw or return null.

@@ -341,7 +341,7 @@ namespace agg_util
         VALID_PTR(pDDS);
 
         // Merge in the global attribute tables
-        unionAttrTablesInto(&(pOutputUnion->get_attr_table()),
+        unionAttrsInto(&(pOutputUnion->get_attr_table()),
             // TODO there really should be const version of this in libdap::DDS
             const_cast<DDS*>(pDDS)->get_attr_table());
 
@@ -352,7 +352,7 @@ namespace agg_util
   }
 
   void
-  AggregationUtil::unionAttrTablesInto(AttrTable* pOut, const AttrTable& fromTableIn)
+  AggregationUtil::unionAttrsInto(AttrTable* pOut, const AttrTable& fromTableIn)
   {
     // semantically const
     AttrTable& fromTable = const_cast<AttrTable&>(fromTableIn);
@@ -438,17 +438,32 @@ namespace agg_util
   }
 
   bool
-  AggregationUtil::addCopyOfVariableIfNameIsAvailable(libdap::DDS* pOutputUnion, const libdap::BaseType& var)
+  AggregationUtil::addCopyOfVariableIfNameIsAvailable(libdap::DDS* pOutDDS, const libdap::BaseType& varProto)
   {
     bool ret = false;
-    BaseType* existingVar = findVariableAtDDSTopLevel(*pOutputUnion, var.name());
+    BaseType* existingVar = findVariableAtDDSTopLevel(*pOutDDS, varProto.name());
     if (!existingVar)
       {
         // Add the var.   add_var does a clone, so we don't need to.
-        pOutputUnion->add_var(const_cast<BaseType*>(&var));
+        pOutDDS->add_var(const_cast<BaseType*>(&varProto));
         ret = true;
       }
     return ret;
+  }
+
+  void
+  AggregationUtil::addOrReplaceVariableForName(libdap::DDS* pOutDDS, const libdap::BaseType& varProto)
+  {
+    BaseType* existingVar = findVariableAtDDSTopLevel(*pOutDDS, varProto.name());
+
+    // If exists, nuke it.
+    if (existingVar)
+      {
+        pOutDDS->del_var(varProto.name());
+      }
+
+    // Add the var.   add_var does a clone, so we don't need to clone it here.
+    pOutDDS->add_var(const_cast<BaseType*>(&varProto));
   }
 
   libdap::BaseType*
@@ -1009,5 +1024,25 @@ namespace agg_util
     oOutputArray.set_value_slice_from_row_major_vector(*pDatasetArray, atIndex);
   }
 
+  void
+  AggregationUtil::gatherMetadataChangesFrom(BaseType* pIntoVar, const BaseType& fromVarC)
+  {
+    BaseType& fromVar = const_cast<BaseType&>(fromVarC); //semantic const
+    // The output will end up here.
+    AttrTable finalAT;
+
+    // First, seed it with the changes in the fromVar.
+    unionAttrsInto(&finalAT, fromVar.get_attr_table());
+
+    // Then union in the items from the to var
+    unionAttrsInto(&finalAT, pIntoVar->get_attr_table());
+
+    // HACK BUG In the set_attr_table call through AttrTable operator=
+    // means we keep bad memory around.  Workaround until fixed!
+    pIntoVar->get_attr_table().erase();
+
+    // Finally, replace the output var's table with the constructed one!
+    pIntoVar->set_attr_table(finalAT);
+  }
 
 } // namespace agg_util

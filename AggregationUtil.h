@@ -208,7 +208,7 @@ namespace agg_util
      *        from fromTable
      * @param fromTable
      */
-    static void unionAttrTablesInto(libdap::AttrTable* pOut, const libdap::AttrTable& fromTable);
+    static void unionAttrsInto(libdap::AttrTable* pOut, const libdap::AttrTable& fromTable);
 
     /**
      *  Lookup the attribute with given name in inTable and place a reference in attr.
@@ -230,12 +230,21 @@ namespace agg_util
     static void unionAllVariablesInto(libdap::DDS* pOutputUnion, const libdap::DDS& fromDDS);
 
     /**
-     * If a variable does not exist within pOutputUnion (top level) with the same name as var,
-     * then place a clone of var into pOutputUnion.
+     * If a variable does not exist within pOutDDS (top level) with the same name as varProto,
+     * then place a clone of varProto (using virtual ctor ptr_duplicate) into pOutDDS.
      *
-     * @return whether pOutputUnion changed with the addition of var.clone().
+     * @return whether pOutDDS changed (ie name was free).
      */
-    static bool addCopyOfVariableIfNameIsAvailable(libdap::DDS* pOutputUnion, const libdap::BaseType& var);
+    static bool addCopyOfVariableIfNameIsAvailable(libdap::DDS* pOutDDS, const libdap::BaseType& varProto);
+
+    /**
+     * If a variable with the name varProto.name() doesn't exist, add a copy of varProto to
+     * pOutDDS.
+     * If the variable already exists, REPLACE it with a copy of varProto.
+     * @param pOutDDS the DDS to change
+     * @param varProto prototype to clone and add to pOutDDS.
+     */
+    static void addOrReplaceVariableForName(libdap::DDS* pOutDDS, const libdap::BaseType& varProto);
 
     /**
      * Find a variable with name at the top level of the DDS.
@@ -454,8 +463,19 @@ namespace agg_util
         const string& debugChannel // if !"", debug output goes to this channel.
         );
 
-  }; // class AggregationUtil
+    /**
+     * Union fromVar's AttrTable (initially) with pIntoVar's AttrTable
+     * and replace pIntoVar's AttrTable with this union.
+     * Essentially uses fromVar's AttrTable as a set of changes to pIntoVar's
+     * table.
+     * @param pIntoVar  the var whose AttrTable is the output
+     * @param fromVar the var to use as changes to the output
+     */
+    static void gatherMetadataChangesFrom(
+        libdap::BaseType* pIntoVar,
+        const libdap::BaseType& fromVar);
 
+  }; // class AggregationUtil
 
   /**
    * For each ptr element pElt in vecToClear, delete pElt and remove it

@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Dataset name="joinExisting_simple_grid.ncml"
+<Dataset name="joinExist_grid_mod_meta.ncml"
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xmlns="http://xml.opendap.org/ns/DAP2"
 xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/dap2.xsd">
 
-    <Attribute name="Description" type="String">
-        <value> joinExisting test on netcdf Grid granules</value>
-    </Attribute>
-    <Attribute name="GranuleFilename" type="String">
-        <value>data/nc/simple_test/test_grid_0.nc</value>
+    <Attribute name="Test Description" type="String">
+        <value>Modifying metadata on the auto-generated aggregated map vector.</value>
     </Attribute>
 
     <Grid name="v">
@@ -22,7 +19,7 @@ xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/d
         </Array>
         <Map name="time">
             <Attribute name="Description" type="String">
-                <value>Test coordinate variable time.</value>
+                <value>This is a user-modified attribute on the aggregated map vector!</value>
             </Attribute>
             <Int32/>
             <dimension name="time" size="3"/>
@@ -37,7 +34,7 @@ xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/d
     </Grid>
     <Array name="time">
         <Attribute name="Description" type="String">
-            <value>Test coordinate variable time.</value>
+            <value>This is a user-modified attribute on the aggregated map vector!</value>
         </Attribute>
         <Int32/>
         <dimension name="time" size="3"/>

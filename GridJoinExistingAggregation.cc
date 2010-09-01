@@ -88,6 +88,35 @@ namespace agg_util
     return *this;
   }
 
+  auto_ptr<ArrayJoinExistingAggregation>
+  GridJoinExistingAggregation::makeAggregatedOuterMapVector() const
+  {
+    BESDEBUG(DEBUG_CHANNEL, __PRETTY_FUNCTION__ << ": " <<
+        "Making an aggregated map "
+        "as a coordinate variable..." << endl);
+    Grid* pGridGranuleTemplate = const_cast<GridJoinExistingAggregation*>(this)->getSubGridTemplate();
+    NCML_ASSERT_MSG(pGridGranuleTemplate, "Expected grid granule template but got null.");
+
+    const Array* pMapTemplate = AggregationUtil::findMapByName(*pGridGranuleTemplate, _joinDim.name);
+    NCML_ASSERT_MSG(pMapTemplate, "Expected to find a dim map for the joinExisting agg but failed!");
+
+    // Make an array getter that pulls out the map array we are interested in.
+    // Use the basic array getter to read and get from top level DDS.
+    // N.B. Must use this->name() ie the gridname since that's what it will search!
+    auto_ptr<agg_util::ArrayGetterInterface> mapArrayGetter(
+        new agg_util::TopLevelGridMapArrayGetter(name()) );
+
+    auto_ptr<ArrayJoinExistingAggregation> pNewMap =
+        auto_ptr<ArrayJoinExistingAggregation>(
+            new ArrayJoinExistingAggregation(
+                *pMapTemplate,
+                getDatasetList(),
+                mapArrayGetter,
+                _joinDim));
+
+    return pNewMap;
+  }
+
   ///////////////////////////////////////////////////////////
   // Subclass Impl (Protected)
 

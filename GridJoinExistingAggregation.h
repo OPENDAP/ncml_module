@@ -30,8 +30,10 @@
 #ifndef __AGG_UTIL__GRID_JOIN_EXISTING_AGGREGATION_H__
 #define __AGG_UTIL__GRID_JOIN_EXISTING_AGGREGATION_H__
 
+#include "ArrayJoinExistingAggregation.h" //agg_util
 #include "Dimension.h" // agg_util
 #include "GridAggregationBase.h" // agg_util
+#include <memory>
 
 namespace agg_util
 {
@@ -51,6 +53,15 @@ namespace agg_util
     virtual GridJoinExistingAggregation* ptr_duplicate();
 
     GridJoinExistingAggregation& operator=(const GridJoinExistingAggregation& rhs);
+
+    /** Create a new map aggregated map vector for this aggregation, using its
+     * data templates, granule list, and outer dimension.
+     * The returned variable will be have name joinDim.name and will
+     * be of shape with the joinDim.  Does NOT add it to the maps!
+     * The caller will likely prepend it themselves as needed.
+     * @return the new object wrapped as a source return.
+     */
+    auto_ptr<ArrayJoinExistingAggregation> makeAggregatedOuterMapVector() const;
 
   protected: // subclass interface
 
