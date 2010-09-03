@@ -270,15 +270,13 @@ namespace agg_util
                const std::string& debugChannel
                ) const
   {
-    static const string sFuncName("TopLevelGridMapArrayGetter::readAndGetArray(): ");
-
     // First, look up the Grid the map is in
     BaseType* pBT = AggregationUtil::getVariableNoRecurse(dds, _gridName);
 
     // Next, if it's not there, throw exception.
     if (!pBT)
       {
-        throw AggregationException(sFuncName +
+        throw AggregationException(
                 "Did not find a variable named \"" +
                 _gridName + "\" at the top-level of the DDS!");
       }
@@ -287,7 +285,7 @@ namespace agg_util
     // Prefer using the enum type for speed rather than RTTI
     if (pBT->type() != libdap::dods_grid_c)
       {
-        throw AggregationException(sFuncName +
+        throw AggregationException(
                 "The top-level DDS variable named \"" +
                 _gridName +
                 "\" was not of the expected type!"
@@ -297,7 +295,7 @@ namespace agg_util
     // Find the correct map
     Grid* pDataGrid = static_cast<Grid*>(pBT);
     Array* pMap = const_cast<Array*>(AggregationUtil::findMapByName(*pDataGrid, arrayName));
-    NCML_ASSERT_MSG(pMap, sFuncName +
+    NCML_ASSERT_MSG(pMap,
         "Expected to find the map with name " + arrayName + " within the Grid "
         + _gridName + " but failed to find it!");
 

@@ -116,13 +116,12 @@ GridAggregateOnOuterDimension::~GridAggregateOnOuterDimension()
 void
 GridAggregateOnOuterDimension::createRep(const AMDList& memberDatasets)
 {
-  static const string sFuncName("GridAggregateOnOuterDimension::createRep(): ");
-  BESDEBUG(DEBUG_CHANNEL, sFuncName +
+    BESDEBUG_FUNC(DEBUG_CHANNEL,
       "Replacing the Grid's data Array with an ArrayAggregateOnOuterDimension..." << endl);
 
   // This is the prototype we need.  It will have been set in the ctor.
   Array* pArr = static_cast<Array*>(array_var());
-  NCML_ASSERT_MSG(pArr, sFuncName +
+  NCML_ASSERT_MSG(pArr,
        "Expected to find a contained data Array but we did not!");
 
   // Create the Grid version of the read getter and make a new AAOOD from our state.

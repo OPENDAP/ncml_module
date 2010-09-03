@@ -50,10 +50,17 @@
 // For more verbose stuff, level 2
 #define NCML_MODULE_DBG_CHANNEL_2 "ncml:2"
 
+// Shorthand macro for printing debug info that includes the containing fully qualified function name,
+// even though it's a nightmare of verbosity in some cases like the usage of STL containers.
+// Switch this out if it gets too ugly...
+#define NCML_MODULE_FUNCTION_NAME_MACRO __PRETTY_FUNCTION__
+// #define NCML_MODULE_FUNCTION_NAME_MACRO __func__
+#define BESDEBUG_FUNC(channel, info) BESDEBUG( (channel), "[" << std::string(NCML_MODULE_FUNCTION_NAME_MACRO) << "]: " << info )
+
 // Spew the std::string msg to debug channel then throw BESInternalError.  for those errors that are internal problems, not user/parse errors.
 #define THROW_NCML_INTERNAL_ERROR(msg) { \
   std::ostringstream __NCML_PARSE_ERROR_OSS__; \
-  __NCML_PARSE_ERROR_OSS__ << std::string("NCMLModule InternalError: ") << __PRETTY_FUNCTION__ << ": " << (msg); \
+  __NCML_PARSE_ERROR_OSS__ << std::string("NCMLModule InternalError: ") << "[" << __PRETTY_FUNCTION__ << "]: " << (msg); \
   BESDEBUG(NCML_MODULE_DBG_CHANNEL,  __NCML_PARSE_ERROR_OSS__.str() << endl); \
                                    throw BESInternalError( __NCML_PARSE_ERROR_OSS__.str(), \
                                                           __FILE__, __LINE__); }
@@ -62,7 +69,7 @@
 #define THROW_NCML_PARSE_ERROR(parseLine, msg) { \
       std::ostringstream __NCML_PARSE_ERROR_OSS__; \
       __NCML_PARSE_ERROR_OSS__ << "NCMLModule ParseError: at *.ncml line=" << (parseLine) << ": " << \
-      __PRETTY_FUNCTION__ << ": " << (msg); \
+      "[" << __PRETTY_FUNCTION__ << "]: " << (msg); \
       BESDEBUG(NCML_MODULE_DBG_CHANNEL, \
               __NCML_PARSE_ERROR_OSS__.str() << endl); \
           throw BESSyntaxUserError( __NCML_PARSE_ERROR_OSS__.str(), \
@@ -77,7 +84,7 @@
   BESDEBUG(NCML_MODULE_DBG_CHANNEL, __PRETTY_FUNCTION__ << ": " << (msg) << endl); \
   THROW_NCML_INTERNAL_ERROR(std::string("ASSERTION FAILED: condition=( ") + std::string(#cond) + std::string(" ) ") + std::string(msg)); } }
 
-// Check pointers before dereferencing them.
-#define VALID_PTR(ptr) NCML_ASSERT_MSG((ptr), std::string("Null pointer."));
+// Quick macro to check pointers before dereferencing them.
+#define VALID_PTR(ptr) NCML_ASSERT_MSG((ptr), std::string("Null pointer:" + std::string(#ptr)));
 
 #endif // __NCML_MODULE__NCML_DEBUG__

@@ -730,8 +730,6 @@ namespace ncml_module
       const std::string& varName,
       const DDS& templateDDS)
   {
-    static const std::string sFuncName("AggregationElement::getTemplateAndGranulesForJoinAggOnVariable():");
-
     VALID_PTR(pOutParams);
 
     // Look up the template variable.
@@ -739,26 +737,23 @@ namespace ncml_module
     if (!(pOutParams->_pAggVarTemplate))
       {
         THROW_NCML_PARSE_ERROR(line(),
-            sFuncName +
-            " We could not find a template for the specified aggregation variable=" +
-            varName + " "
-            "so we cannot continue the aggregation.");
+            " We could not find a template for the specified aggregation variable="
+            + varName
+            + " so we cannot continue the aggregation.");
       }
 
     // Dimension must exist already
     const DimensionElement* pDim = getParentDataset()->getDimensionInLocalScope(_dimName);
     NCML_ASSERT_MSG(pDim,
-        sFuncName +
-        " didn't find a DimensionElement with the aggregation dimName=" + _dimName );
+        "Didn't find a DimensionElement with the aggregation dimName=" + _dimName );
     pOutParams->_pAggDim = &(pDim->getDimension());
 
     // Be sure the name isn't taken in the output DDS.
     BaseType* pExists = AggregationUtil::getVariableNoRecurse(aggOutputDDS, varName);
     NCML_ASSERT_MSG(!pExists,
-        sFuncName +
-        " failed since the name of"
-        " the new variable to add (name=" + varName +
-        ") already exists in the "
+        "Failed since the name of the new variable to add (name="
+        + varName
+        + ") already exists in the "
         " output aggregation DDS!  What happened?!");
 
     // Get a vector of lazy loaders
@@ -772,8 +767,6 @@ namespace ncml_module
       const std::string& varName,
       const DDS& templateDDS)
   {
-    static const string sFuncName("AggregationElement::processJoinNewOnAggVar(): ");
-
     // Get the params we need to factory the actual aggregation subclass
     JoinAggParams joinAggParams;
     getParamsForJoinAggOnVariable(
@@ -801,9 +794,9 @@ namespace ncml_module
     else
       {
         THROW_NCML_PARSE_ERROR(line(),
-            sFuncName +
-            " Got an aggregation variable not of type Array or Grid, but of: " +
-            pAggVarTemplate->type_name() + " which we cannot aggregate!");
+            "Got an aggregation variable not of type Array or Grid, but of: " +
+            pAggVarTemplate->type_name() +
+            " which we cannot aggregate!");
           }
     // Nothing else to do for this var until the call to processParentDataset() is complete.
   }
@@ -815,8 +808,6 @@ namespace ncml_module
       const std::string& varName,
       const DDS& templateDDS)
   {
-    static const string sFuncName("AggregationElement::processJoinExistingOnAggVar(): ");
-
     // Get the params we need to factory the actual aggregation subclass
     JoinAggParams joinAggParams;
     getParamsForJoinAggOnVariable(
@@ -844,8 +835,7 @@ namespace ncml_module
     else
       {
         THROW_NCML_PARSE_ERROR(line(),
-            sFuncName +
-              " Got an aggregation variable not of type Array or Grid, but of: " +
+            "Got an aggregation variable not of type Array or Grid, but of: " +
             pAggVarTemplate->type_name() + " which we cannot aggregate!");
       }
        // Nothing else to do for this var until the call to processParentDataset() is complete.
@@ -950,8 +940,6 @@ namespace ncml_module
       const agg_util::Dimension& dim,
       const AMDList& memberDatasets)
   {
-    static const string sFuncName("AggregationElement::processAggVarJoinExistingForGrid(): ");
-
     auto_ptr<GridJoinExistingAggregation> pAggGrid(
         new GridJoinExistingAggregation(
               gridTemplate,
@@ -960,8 +948,10 @@ namespace ncml_module
               dim));
 
     BESDEBUG("ncml",
-          "Adding new GridJoinExistingAggregation with name=" << gridTemplate.name() <<
-          " to aggregated dataset!" << endl);
+          "Adding new GridJoinExistingAggregation with name=" <<
+          gridTemplate.name() <<
+          " to aggregated dataset!" <<
+          endl);
     aggDDS.add_var(pAggGrid.get()); // will copy
   }
 
@@ -1037,9 +1027,6 @@ namespace ncml_module
   void
   AggregationElement::processParentDatasetCompleteForJoinExisting()
   {
-    static const string sFuncName("AggregationElement::processParentDatasetCompleteForJoinExisting(): ");
-    // THROW_NCML_INTERNAL_ERROR(sFuncName + "Impl Me!");
-
     NetcdfElement* pParentDataset = getParentDataset();
     VALID_PTR(pParentDataset);
     DDS* pAggDDS = pParentDataset->getDDS();
@@ -1047,7 +1034,6 @@ namespace ncml_module
 
     const DimensionElement* pDim = getParentDataset()->getDimensionInLocalScope(_dimName);
     NCML_ASSERT_MSG(pDim,
-       sFuncName +
         " Didn't find a DimensionElement with the joinExisting dimName=" + _dimName );
     const agg_util::Dimension& dim = pDim->getDimension();
 
@@ -1074,8 +1060,6 @@ namespace ncml_module
         else // it was deferred, need to do some special work below...
           {
             //pCV = processDeferredCoordinateVariable(pDimNameVar, dim);
-            //pCV = dynamic_cast<Array*>(pDimNameVar);
-            //(pCV);
             placeholderExists = true;
           }
       }
@@ -1096,6 +1080,7 @@ namespace ncml_module
       {
         const string& aggVar = *it;
         BaseType* pAggVar = AggregationUtil::getVariableNoRecurse(*pAggDDS, aggVar);
+
         // HACK TODO clean this downcast later when we refactor this file.
         GridJoinExistingAggregation* pGrid = dynamic_cast<GridJoinExistingAggregation*>(pAggVar);
         if (pGrid)
@@ -1126,8 +1111,9 @@ namespace ncml_module
               }
 
             // It MUST exist for a Grid since we have to add it for completeness.
-            NCML_ASSERT_MSG(pCV, sFuncName +
+            NCML_ASSERT_MSG(pCV,
                 "Expected a coordinate variable since a Grid exists... what happened?");
+
             // Add the given map to the Grid as a copy
             pGrid->prepend_map(pCV, true);
           }
@@ -1259,7 +1245,6 @@ namespace ncml_module
   libdap::Array*
   AggregationElement::processDeferredCoordinateVariable(libdap::BaseType* pBT, const agg_util::Dimension& dim)
   {
-    static const string sFuncName("AggregationElement::processDeferredCoordinateVariable():");
     VALID_PTR(pBT);
 
     BESDEBUG("ncml", "Processing the placeholder coordinate variable (no values) for the "
@@ -1270,9 +1255,8 @@ namespace ncml_module
     // @OPTIMIZE try to refactor this to avoid unnecessary copies.
     auto_ptr<Array> pNewArrCV = createCoordinateVariableForNewDimension(dim);
     NCML_ASSERT_MSG(pNewArrCV.get(),
-        sFuncName
-        + " createCoordinateVariableForNewDimension()"
-        " returned null.  Out of memory perhaps?");
+        " createCoordinateVariableForNewDimension()"
+        " returned null.");
 
     // Make sure the types of the placeholder scalar and created array match or the author goofed
     BaseType* pNewEltProto = pNewArrCV->var();

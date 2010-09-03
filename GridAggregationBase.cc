@@ -133,13 +133,11 @@ namespace agg_util
   bool
   GridAggregationBase::read()
   {
-    static const string sFuncName("GridAggregationBase::read(): ");
-
-    BESDEBUG(DEBUG_CHANNEL, sFuncName + " called!" << endl);
+    BESDEBUG_FUNC(DEBUG_CHANNEL, "Function entered..." << endl);
 
     if (read_p())
       {
-        BESDEBUG(DEBUG_CHANNEL, sFuncName + " read_p() set, early exit!");
+        BESDEBUG_FUNC(DEBUG_CHANNEL, "read_p() set, early exit!");
         return true;
       }
 
@@ -248,8 +246,6 @@ namespace agg_util
   void
   GridAggregationBase::copyProtoMapsIntoThisGrid(const Dimension& aggDim)
   {
-    static const string sFuncName("copyProtoMapsIntoThisGridHook(): ");
-
     Grid* pSubGridTemplate = getSubGridTemplate();
     VALID_PTR(pSubGridTemplate);
 
@@ -274,7 +270,7 @@ namespace agg_util
           {
             if (PRINT_CONSTRAINTS)
               {
-                BESDEBUG(DEBUG_CHANNEL, sFuncName +
+                BESDEBUG_FUNC(DEBUG_CHANNEL,
                     "About to call read() on the map for the new outer dimension name=" <<
                     aggDim.name <<
                     " It's constraints are:" << endl);
@@ -288,20 +284,18 @@ namespace agg_util
 
         // Otherwise, find the map in the protogrid and copy it's data into this.
         Array* pProtoGridMap = const_cast<Array*>(AggregationUtil::findMapByName(*pSubGridTemplate, pOutMap->name()));
-        NCML_ASSERT_MSG(pProtoGridMap, sFuncName +
+        NCML_ASSERT_MSG(pProtoGridMap,
             "Couldn't find map in prototype grid for map name=" + pOutMap->name() );
-        BESDEBUG(DEBUG_CHANNEL, sFuncName +
+        BESDEBUG_FUNC(DEBUG_CHANNEL,
             "About to call read() on prototype map vector name="
             << pOutMap->name() << " and calling transfer constraints..." << endl);
 
         // Make sure the protogrid maps were properly read
         NCML_ASSERT_MSG(pProtoGridMap->read_p(),
-            sFuncName +
             "Expected the prototype map to have been read but it wasn't.");
 
         // Make sure the lengths match to be sure we're not gonna blow memory up
         NCML_ASSERT_MSG(pOutMap->length() == pProtoGridMap->length(),
-            sFuncName +
             "Expected the prototype and output maps to have same length() "
             "after transfer of constraints, but they were not so we can't "
             "copy the data!");

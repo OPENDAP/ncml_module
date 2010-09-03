@@ -91,8 +91,8 @@ namespace agg_util
   auto_ptr<ArrayJoinExistingAggregation>
   GridJoinExistingAggregation::makeAggregatedOuterMapVector() const
   {
-    BESDEBUG(DEBUG_CHANNEL, __PRETTY_FUNCTION__ << ": " <<
-        "Making an aggregated map "
+    BESDEBUG_FUNC(DEBUG_CHANNEL,
+        "Making an aggregated map " <<
         "as a coordinate variable..." << endl);
     Grid* pGridGranuleTemplate = const_cast<GridJoinExistingAggregation*>(this)->getSubGridTemplate();
     NCML_ASSERT_MSG(pGridGranuleTemplate, "Expected grid granule template but got null.");
@@ -156,8 +156,6 @@ namespace agg_util
       const libdap::Grid& constProtoSubGrid,
       const AMDList& memberDatasets)
   {
-    static const string sFuncName("GridJoinExistingAggregation::createRep(): ");
-
     // Semantically const calls below
     Grid& protoSubGrid = const_cast<Grid&>(constProtoSubGrid);
 
@@ -176,7 +174,6 @@ namespace agg_util
         if (it == firstIt)
           {
              NCML_ASSERT_MSG( (*it)->name() == _joinDim.name,
-                 sFuncName +
                  "Expected the first map to be the outer dimension "
                  "named " + _joinDim.name +
                  " but it was not!  Logic problem.");
@@ -189,12 +186,12 @@ namespace agg_util
         add_map(pMap, true); // add as a copy
       }
 
-    BESDEBUG(DEBUG_CHANNEL, sFuncName +
+    BESDEBUG_FUNC(DEBUG_CHANNEL,
         "Replacing the Grid's data Array with an ArrayAggregateOnOuterDimension..." << endl);
 
     // This is the prototype we need.  It will have been set in the ctor.
     Array* pArr = static_cast<Array*>(array_var());
-    NCML_ASSERT_MSG(pArr, sFuncName +
+    NCML_ASSERT_MSG(pArr,
          "Expected to find a contained data Array but we did not!");
 
     // Create the Grid version of the read getter and make a new AAOOD from our state.

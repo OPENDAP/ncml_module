@@ -100,8 +100,8 @@ namespace agg_util
     else
       {
         std::ostringstream oss;
-        oss << "AggMemberDatasetWithDimensionCacheBase::getCachedDimensionSize(): "
-            " Dimension "
+        oss << __PRETTY_FUNCTION__
+            << " Dimension "
             << dimName
             << " was not found in the cache!";
         throw DimensionNotFoundException(oss.str());
@@ -134,7 +134,7 @@ namespace agg_util
         else
           {
             std::ostringstream msg;
-            msg << "AggMemberDatasetWithDimensionCacheBase::setDimensionCacheFor():"
+            msg << __PRETTY_FUNCTION__ <<
                 " Dimension name="
                 << dim.name
                 << " already exists and we were asked to set uniquely!";
@@ -193,23 +193,16 @@ namespace agg_util
   void
   AggMemberDatasetWithDimensionCacheBase::addDimensionsForVariableRecursive(libdap::BaseType& var)
   {
-    static const string sFuncName = "AggMemberDatasetWithDimensionCacheBase::addDimensionsForVariable():";
-
-    {
-      std::ostringstream oss;
-      oss << sFuncName
-          << " Adding for variable name = "
-          << var.name();
-      BESDEBUG(DEBUG_CHANNEL, oss.str() << endl);
-    }
+    BESDEBUG_FUNC(DEBUG_CHANNEL, "Adding dimensions for variable name="
+        << var.name()
+        << endl);
 
     if (var.type() == libdap::dods_array_c)
       {
-        std::ostringstream oss;
-        oss << sFuncName
-            << " Adding dimensions for array variable name = "
-            << var.name();
-        BESDEBUG(DEBUG_CHANNEL, oss.str() << endl);
+        BESDEBUG(DEBUG_CHANNEL,
+            " Adding dimensions for array variable name = "
+              << var.name()
+              << endl);
 
         libdap::Array& arrVar = dynamic_cast<libdap::Array&>(var);
         libdap::Array::Dim_iter it;
@@ -219,36 +212,32 @@ namespace agg_util
             if (!isDimensionCached(dim.name))
               {
                 Dimension newDim(dim.name, dim.size);
-
-                std::ostringstream msg;
-                msg << sFuncName
-                    << " Adding dimension: "
-                    << newDim.toString()
-                    << " to the dataset granule cache...";
-                BESDEBUG(DEBUG_CHANNEL, msg.str() << endl);
-
                 setDimensionCacheFor(newDim, false);
+
+                BESDEBUG(DEBUG_CHANNEL,
+                    " Adding dimension: "
+                    << newDim.toString()
+                    << " to the dataset granule cache..."
+                    << endl);
               }
           }
       }
-    // if it's a constructor type, recurse!
-    else if (var.is_constructor_type())
+
+    else if (var.is_constructor_type()) // then recurse
       {
-        std::ostringstream oss;
-        oss << sFuncName
-            << " Recursing on all variables for constructor variable name = "
-            << var.name();
-        BESDEBUG(DEBUG_CHANNEL, oss.str() << endl);
+         BESDEBUG(DEBUG_CHANNEL,
+             " Recursing on all variables for constructor variable name = "
+             << var.name()
+             << endl);
 
         libdap::Constructor& containerVar = dynamic_cast<libdap::Constructor&>(var);
         libdap::Constructor::Vars_iter it;
         for (it = containerVar.var_begin(); it != containerVar.var_end(); ++it)
           {
-            std::ostringstream msg;
-            msg << sFuncName
-                << " Recursing on variable name="
-                << (*it)->name();
-            BESDEBUG(DEBUG_CHANNEL, msg.str() << endl);
+            BESDEBUG(DEBUG_CHANNEL,
+                " Recursing on variable name="
+                << (*it)->name()
+                << endl);
 
             addDimensionsForVariableRecursive( *(*it) );
           }

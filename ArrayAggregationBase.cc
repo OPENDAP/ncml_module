@@ -92,20 +92,19 @@ namespace agg_util
    bool
    ArrayAggregationBase::read()
    {
-     static const string sFuncName("ArrayJoinExistingBase::read(): ");
-     BESDEBUG(DEBUG_CHANNEL, sFuncName << "called..." << endl);
+     BESDEBUG_FUNC(DEBUG_CHANNEL, " function entered..." << endl);
 
      // Early exit if already done, avoid doing it twice!
      if (read_p())
        {
-         BESDEBUG(DEBUG_CHANNEL, sFuncName << "read_p() set, early exit!");
+         BESDEBUG_FUNC(DEBUG_CHANNEL, "read_p() set, early exit!");
          return true;
        }
 
      // Only continue if we are supposed to serialize this object at all.
      if (! (send_p() || is_in_selection()) )
        {
-         BESDEBUG(DEBUG_CHANNEL, sFuncName <<
+         BESDEBUG_FUNC(DEBUG_CHANNEL,
              "Object not in output, skipping...  name=" <<
              name() <<
              endl);
@@ -114,7 +113,7 @@ namespace agg_util
 
      if (PRINT_CONSTRAINTS)
        {
-         BESDEBUG(DEBUG_CHANNEL, sFuncName <<
+         BESDEBUG_FUNC(DEBUG_CHANNEL,
              "Constraints on this Array are:" <<
              endl);
          printConstraints(*this);
@@ -125,7 +124,7 @@ namespace agg_util
 
      if (PRINT_CONSTRAINTS)
        {
-         BESDEBUG(DEBUG_CHANNEL, sFuncName <<
+         BESDEBUG_FUNC(DEBUG_CHANNEL,
              "After transfer, constraints on the member template Array are: " <<
              endl);
          printConstraints(getGranuleTemplateArray());

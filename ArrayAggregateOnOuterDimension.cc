@@ -133,13 +133,10 @@ namespace agg_util
   void
   ArrayAggregateOnOuterDimension::readConstrainedGranuleArraysAndAggregateDataHook()
   {
-    static const string sFuncName = "ArrayAggregateOnOuterDimension::readConstrainedGranuleArraysAndAggregateData(): ";
-
-     // outer one is the first in iteration
+    // outer one is the first in iteration
      const Array::dimension& outerDim = *(dim_begin());
      BESDEBUG(DEBUG_CHANNEL,
-         sFuncName
-         << "Aggregating datasets array with outer dimension constraints: "
+         "Aggregating datasets array with outer dimension constraints: "
          << " start=" << outerDim.start
          << " stride=" << outerDim.stride
          << " stop=" << outerDim.stop
@@ -149,12 +146,9 @@ namespace agg_util
      if (static_cast<unsigned int>(outerDim.size) != getDatasetList().size())
        {
          // Not sure whose fault it was, but tell the author
-         ostringstream oss;
-         oss <<
-             sFuncName
-             << "The new outer dimension of the joinNew aggregation doesn't "
-             << " have the same size as the number of datasets in the aggregation!";
-         THROW_NCML_PARSE_ERROR(-1, oss.str());
+         THROW_NCML_PARSE_ERROR(-1,
+             "The new outer dimension of the joinNew aggregation doesn't "
+             " have the same size as the number of datasets in the aggregation!");
        }
 
      // Prepare our output buffer for our constrained length
@@ -186,11 +180,12 @@ namespace agg_util
          catch (agg_util::AggregationException& ex)
          {
            std::ostringstream oss;
-           oss <<
-               sFuncName
-               << "Got AggregationException while streaming dataset index=" << i <<
-               " data for location=\"" << dataset.getLocation() <<
-               "\" The error msg was: " << std::string(ex.what());
+           oss << "Got AggregationException while streaming dataset index="
+               << i
+               << " data for location=\""
+               << dataset.getLocation()
+               << "\" The error msg was: "
+               << std::string(ex.what());
            THROW_NCML_PARSE_ERROR(-1, oss.str());
          }
 
@@ -201,7 +196,7 @@ namespace agg_util
      // If we succeeded, we are at the end of the array!
      NCML_ASSERT_MSG(nextElementIndex == length(),
          "Logic error:\n"
-           "ArrayAggregateOnOuterDimension::read(): "
+         "ArrayAggregateOnOuterDimension::read(): "
          "At end of aggregating, expected the nextElementIndex to be the length of the "
          "aggregated array, but it wasn't!");
   }

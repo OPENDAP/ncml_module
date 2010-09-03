@@ -49,9 +49,7 @@ namespace agg_util
   : ArrayAggregationBase(granuleTemplate, memberDatasets, arrayGetter)
   , _joinDim(joinDim)
   {
-    static const string sFuncName("ArrayJoinExistingAggregation: ");
-    BESDEBUG(DEBUG_CHANNEL,
-        sFuncName +
+    BESDEBUG_FUNC(DEBUG_CHANNEL,
         "Making the aggregated outer dimension be: " +
         joinDim.toString() + "\n");
 
@@ -60,7 +58,7 @@ namespace agg_util
     // value in the passed in dimension object.
     libdap::Array::dimension& rOuterDim = *(dim_begin());
     NCML_ASSERT_MSG(rOuterDim.name == joinDim.name,
-        sFuncName + "the outer dimension name of this is not the expected "
+        "The outer dimension name of this is not the expected "
         "outer dimension name!  Broken precondition:  This ctor cannot be called "
         "without this being true!");
     rOuterDim.size = joinDim.size;
@@ -75,8 +73,7 @@ namespace agg_util
         // constraints as well to ensure reset worked.
         AggregationUtil::printConstraints(oss, *this);
       }
-    BESDEBUG(DEBUG_CHANNEL,
-        sFuncName +
+    BESDEBUG_FUNC(DEBUG_CHANNEL,
         "Constrained Dims after set are: " +
         oss.str());
   }
@@ -148,9 +145,6 @@ namespace agg_util
   void
   ArrayJoinExistingAggregation::readConstrainedGranuleArraysAndAggregateDataHook()
   {
-    static const string
-      sFuncName("ArrayJoinExistingAggregation::readConstrainedGranuleArraysAndAggregateData(): ");
-
     // outer one is the first in iteration
     const Array::dimension& outerDim = *(dim_begin());
     BESDEBUG("ncml", "Aggregating datasets array with outer dimension constraints: " <<
@@ -198,9 +192,8 @@ namespace agg_util
               currDatasetSize = pCurrDataset->getCachedDimensionSize(_joinDim.name);
               currDatasetWasRead = false;
 
-              BESDEBUG(DEBUG_CHANNEL,
-                  sFuncName
-                  << " the constraint traversal passed a granule boundary "
+              BESDEBUG_FUNC(DEBUG_CHANNEL,
+                  "The constraint traversal passed a granule boundary "
                   << "on the outer dimension and is stepping forward into "
                   << "granule index="
                   << currDatasetIndex
@@ -211,8 +204,7 @@ namespace agg_util
           // then do it now.  Map constraints into the local granule space.
           if (!currDatasetWasRead)
             {
-              BESDEBUG(DEBUG_CHANNEL,
-                  sFuncName <<
+              BESDEBUG_FUNC(DEBUG_CHANNEL,
                   " Current granule dataset was traversed but not yet "
                   "read and copied into output.  Mapping constraints "
                   "and calling read()..." << endl);
@@ -264,9 +256,8 @@ namespace agg_util
               nextOutputBufferElementIndex += getGranuleTemplateArray().length();
               currDatasetWasRead = true;
 
-              BESDEBUG(DEBUG_CHANNEL,
-                  sFuncName
-                  << " The granule index "
+              BESDEBUG_FUNC(DEBUG_CHANNEL,
+                  " The granule index "
                   << currDatasetIndex
                   << " was read with constraints and copied into the aggregation output."
                   << endl);
