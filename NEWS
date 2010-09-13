@@ -2,6 +2,21 @@
 $Id: NEWS $
 
 -----------------------------------------------------------------------
+Version 1.1.0 (13 September 2010)
+  
+  * Initial implementation of joinExisting aggregation:
+
+    o Requires use of <netcdf> (or <scan>) "ncoords" attribute to
+      indicate granule join dimension cardinality since granule DDS is
+      not (yet) loaded from disk.
+
+    o Extends NcML 2.2 to allow <scan> element to contain ncoords
+      attribute that is implicitly inherited by every dataset granule
+      that matches the scan criteria.  Used to allow scan to be used
+      in joinExisting aggregation where all granules have the same
+      outer dimension size.
+
+-----------------------------------------------------------------------
 Version 1.0.3 (9 July 2010)
   
   * Optimization of joinNew aggregations on Array variables.

@@ -1,3 +1,86 @@
+2010-09-03  Michael Johnson <m.johnson@opendap.org>
+
+	o Modified exception macros to add function names automatically to help debugging and cleaned out resulting dead code.
+
+2010-09-01  Michael Johnson <m.johnson@opendap.org>
+
+	o Changes for ticket #1626 to allow metadata to be specified on a placeholder coordinate variable for the aggregated joinExisting dimension and then applied all all Grid map vectors.
+
+	o NCMLDebug.h: changes to debug exception macros to print the function name for errors so we don't have to do so in every function.
+
+2010-08-26  Michael Johnson <m.johnson@opendap.org>
+
+	o Implementation and test for scan@ncoords syntactic sugar extension.  Ticket #1613.
+
+2010-08-25  Michael Johnson <m.johnson@opendap.org>
+
+	o Fixes and data constraint tests for Grid joinExisting on netcdf Grid granules.   Tests for various constraints.   Does not include code for user specification of the joined coordinate variable, only implementation for automatically creating the aggregation from the granules themselves.
+
+	o tests/make_test_grids.rb: ruby script using netcdf bindings in order to create simple test Grids.  Requires bindings installed, checked in since it's useful and I don't want it lost.
+
+2010-08-19  Michael Johnson <m.johnson@opendap.org>
+
+	For ticket #1631.  Nightly build error on test 533, where netcdf@ncoords is negative.  This is supposed to be a parse error, but some compilers seems to implictly convert it to an unsigned int rather than making an error.  Did not duplicate in CentOS.  Added a check for the explicit '-' sign in the coords to force the error.
+
+2010-08-18  Michael Johnson <m.johnson@opendap.org>
+
+	o Incremental checkin with initial codepaths for Grid joinExisting passing previous tests.
+
+	o Grid joinExisting DDS response works.  DAS/DDX unknown, need testing.
+
+	o DODS response is currently NOT implemented and throws as such.
+
+	o Tests not fully integrated yet.
+
+2010-08-18  Michael Johnson <m.johnson@opendap.org>
+
+	Potential fix for Linux build fails, for ticket #1631.
+
+2010-08-13  Michael Johnson <m.johnson@opendap.org>
+
+	o Initial changes for #1620.  We now only output specified vars in variableAgg if joinExisting declares it.  Still outputs vars not in aggregqation.  Still needs changes and tests to handle coordinate variables!
+
+2010-08-12  Michael Johnson <m.johnson@opendap.org>
+
+	o New tests to make sure the AggMemberDataset pathway loading files from disk (Netcdf in this case) works for joinExisting.  Small sets, testing with full data and simple constraint.  Ticket #1623
+
+	o Also getting the (non working and non connected in aggregations.at) tests for variableAgg.  Those will come later.
+
+2010-08-11  Michael Johnson <m.johnson@opendap.org>
+
+	o Test added that successfully tests for multiple variables with given outer dimension getting aggregated.  #1628.  Variables without matching dimension get added from the first dataset ONLY.  <variableAgg> not support yet.
+
+2010-08-11  Michael Johnson <m.johnson@opendap.org>
+
+	o Basic implementation of joinExisting for Array datatypes for ticket #1624
+
+	o Test cases for joinExisting on virtual data Array's.
+
+	o Added dimension size cache to AggMemberDataset to help with joinExisting
+
+	o Added ncoords to netcdf element.
+
+2010-07-15  Patrick West <pwest@ucar.edu>
+
+	Added include of dependent dap.conf
+
+2010-07-14  Michael Johnson <m.johnson@opendap.org>
+
+	o AggregationUtil.cc: fixed some incorrect exception text and converted exceptions over to AggregationException.
+
+	o {Array,Grid}AggregateOnOuterDimension.{cc,h}: Removed dead functions from previous refactor that were  accidentally left in.
+
+2010-07-14  Michael Johnson <m.johnson@opendap.org>
+
+	tests/aggregations.at:  For ticket #1575: removed hack from read parse error tests for joinNew now that #1574 is fixed.  NOTE: these tests will now FAIL for BES 3.8.4 release and earlier.  Only pass in the trunk!
+
+2010-07-09  Michael Johnson <m.johnson@opendap.org>
+
+	Changes for release of v1.0.3.
+
+;; Local Variables:
+;; coding: utf-8
+;; End:
 2010-07-09  Michael Johnson <m.johnson@opendap.org>
 
 	Removed extraneous characters caught by linux gcc but not mac.
@@ -23,8 +106,6 @@
 	o NCMLParser: Removed the RCObjectPool memory pool since the objects are now required AFTER NCMLParser dtor would delete the pool -- serialize() and read() calls occur after this.  Consider a static pool in the future, though this is dangerous in a threaded situation without using boost threadsafe containers.
 
 	o tests/aggregations.at:  Changed several tests for joinNew on Array where member dataset types and shapes were mismatched since they were failing with the optimization.  Since the BES handles errors differently in the read() and serialize() section of code, BESSyntaxUserError which we use for Parse Error response gets eaten.  Made ticket to fix this, but tests are modified for now to make sure we at least get a fatal error rather than streaming incorrect data.
-
-	TODO: still need to clean up some cut and pasted code from the refactor in GridAggregateOnOuterDimension.  Next step is to use an instance of ArrayAggregateOnOuterDimension INSISDE GridAggregateOnOuterDimension and call through to avoid the duplicated code.
 
 2010-05-12  Michael Johnson <m.johnson@opendap.org>
 

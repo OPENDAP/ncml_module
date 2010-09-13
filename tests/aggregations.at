@@ -409,6 +409,9 @@ AT_RUN_BES_AND_COMPARE([agg/joinExist_grid_mod_meta.ncml],[ddx],[agg/joinExist_g
 dnl Make sure placeholder type mismatch is a parse error
 AT_ASSERT_PARSE_ERROR([agg/joinExist_grid_meta_err_1.ncml])
 
+dnl TODO Add HDF4 tests on canned datasets that are easy to test
+
+
 dnl ---- end joinExisting Tests
 dnl ****************************************************************************
 
