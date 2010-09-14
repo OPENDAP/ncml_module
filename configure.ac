@@ -3,6 +3,7 @@
 # Configure script for OPeNDAP NCML data handler
 
 AC_PREREQ(2.61)
+
 AC_INIT(ncml_module, 1.1.0, support@opendap.org)
 AC_CONFIG_AUX_DIR([conf])
 AC_CONFIG_MACRO_DIR([conf])
@@ -35,12 +36,12 @@ AC_SEARCH_LIBS([isdigit], [cctype])
 AC_CHECK_FUNCS([strchr isdigit])
 
 dnl Checks for specific libraries
-AC_CHECK_LIBDAP([3.10.2],
+AC_CHECK_LIBDAP([3.11.0],
  [
 dnl  LIBS="$LIBS $DAP_LIBS"
 dnl  CPPFLAGS="$CPPFLAGS $DAP_CFLAGS"
  ],
- [ AC_MSG_ERROR([Cannot find libdap])
+ [ AC_MSG_ERROR([Cannot find expected version of libdap])
 ])
 
 dnl Look for the minimum version of the icu libs and headers
@@ -58,13 +59,11 @@ AC_MSG_NOTICE([ICU_LIBS=$ICU_LIBS])
 [ AC_MSG_ERROR([Could not find compatible icu (International Components for Unicode) library and headers!])
 ])
 
-  
-AC_CHECK_BES([3.8.3],
+AC_CHECK_BES([3.9.0],
 [
 ],
-[ AC_MSG_ERROR([Could not find bes library and headers])
+[ AC_MSG_ERROR([Could not find expected version of bes library and headers])
 ])
-
 
 # Test for a readlink bug, see
 # <http://lists.gnu.org/archive/html/bug-coreutils/2008-02/msg00126.html>.
