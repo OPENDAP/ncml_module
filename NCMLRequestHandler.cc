@@ -138,7 +138,7 @@ NCMLRequestHandler::ncml_build_das( BESDataHandlerInterface &dhi )
 
     if (!(loaded_bdds.get()))
       {
-        throw BESInternalError("Null BESDDSResonse in ncml DAS handler.", __FILE__, __LINE__);
+        throw BESInternalError("Null BESDDSResponse in ncml DAS handler.", __FILE__, __LINE__);
       }
 
     // Now fill in the desired DAS response object from the DDS
