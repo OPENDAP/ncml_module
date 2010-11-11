@@ -130,6 +130,7 @@ void
 DDSLoader::loadInto(const std::string& location, ResponseType type, BESDapResponse* pResponse)
 {
   VALID_PTR(pResponse);
+  VALID_PTR(_dhi.response_handler);
 
   // Just be sure we're cleaned up before doing anything, in case the caller calls load again after exception
   // and before dtor.
@@ -170,8 +171,6 @@ DDSLoader::loadInto(const std::string& location, ResponseType type, BESDapRespon
   pDDS->set_dap_major( pDDSResponse->get_dds()->get_dap_major() );
   pDDS->set_dap_minor( pDDSResponse->get_dds()->get_dap_major() );
 #endif
-
-
 
   // DO IT!
   BESRequestHandlerList::TheList()->execute_current( _dhi ) ;
@@ -260,6 +259,8 @@ DDSLoader::removeContainerFromStorage() throw()
 void
 DDSLoader::snapshotDHI()
 {
+  VALID_PTR(_dhi.response_handler);
+
   // Store off the container for the original ncml file call and replace with the new one
   _origContainer = _dhi.container ;
   _origAction = _dhi.action;
@@ -272,6 +273,8 @@ DDSLoader::snapshotDHI()
 void
 DDSLoader::restoreDHI()
 {
+  VALID_PTR(_dhi.response_handler);
+
   // Make sure we have state before we go mucking
   if (!_hijacked)
     {
