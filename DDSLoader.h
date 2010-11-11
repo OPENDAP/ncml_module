@@ -85,8 +85,9 @@ private:
   BESContainer* _origContainer;
   BESResponseObject* _origResponse;
 
-private:
-
+  // A counter we use to generate a "class-unique" symbol for containers internally.
+  // Incremented by getNextContainerName().
+  static long _gensymID;
 
 public:
 
@@ -218,6 +219,11 @@ private:
     * On exit, everything should be in the same state as construction.
     */
    void ensureClean() throw();
+
+   /** Increment _gensymID and use it to generate a container name
+    * string unique to the class and return it.
+    */
+   static std::string getNextContainerName();
 
   }; // class DDSLoader
 } // namespace ncml_module

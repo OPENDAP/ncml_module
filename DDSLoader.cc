@@ -29,6 +29,8 @@
 #include "config.h"
 #include "DDSLoader.h"
 
+#include <sstream>
+
 #include <BESConstraintFuncs.h>
 #include <BESContainerStorage.h>
 #include <BESContainerStorageList.h>
@@ -50,8 +52,17 @@
 #include "NCMLDebug.h"
 #include "NCMLUtil.h"
 
+
 using namespace std;
 using namespace agg_util;
+
+
+// Rep Init
+
+/* static */
+long DDSLoader::_gensymID = 0L;
+
+// Impl
 
 DDSLoader::DDSLoader(BESDataHandlerInterface& dhi)
 : _dhi(dhi)
@@ -184,12 +195,12 @@ DDSLoader::cleanup() throw()
   ensureClean();
 }
 
-
 BESContainer*
 DDSLoader::addNewContainerToStorage()
 {
   // Make sure we can find the storage
   BESContainerStorageList *store_list = BESContainerStorageList::TheList() ;
+  VALID_PTR(store_list);
   BESContainerStorage* store = store_list->find_persistence( "catalog" ) ;
   if( !store )
     {
@@ -198,7 +209,9 @@ DDSLoader::addNewContainerToStorage()
     }
 
   // Make a new symbol from the ncml filename
-  string newSymbol = _dhi.container->get_symbolic_name() + "_location_" + _filename;
+  // NCML_ASSERT_MSG(_dhi.container, "DDSLoader::addNewContainerToStorage(): null container!");
+  // string newSymbol = _dhi.container->get_symbolic_name() + "_location_" + _filename;
+  string newSymbol = getNextContainerName() + "__" + _filename;
 
   // this will throw an exception if the location isn't found in the
   // catalog. Might want to catch this. Wish the add returned the
@@ -233,9 +246,11 @@ DDSLoader::removeContainerFromStorage() throw()
         // so make sure we don't.
         _store->del_container( _containerSymbol );
       }
-      catch (...)
+      catch (BESError& besErr)
       {
-        BESDEBUG("ncml", "WARNING: tried to remove symbol " << _containerSymbol << " from singleton but unexpectedly it was not there." << endl);
+        BESDEBUG("ncml",
+            "WARNING: tried to remove symbol " << _containerSymbol <<
+            " from singleton but unexpectedly it was not there." << endl);
       }
       _containerSymbol = "";
       _store = 0;
@@ -292,6 +307,18 @@ DDSLoader::ensureClean() throw()
    // Make sure we've removed the new symbol from the container list as well.
    removeContainerFromStorage();
 }
+
+/* static */
+std::string
+DDSLoader::getNextContainerName()
+{
+  static const string _sPrefix = "__DDSLoader_Container_ID_";
+  _gensymID++;
+  std::ostringstream oss;
+  oss << _sPrefix << (_gensymID);
+  return oss.str();
+}
+
 
 std::auto_ptr<BESDapResponse>
 DDSLoader::makeResponseForType(ResponseType type)
