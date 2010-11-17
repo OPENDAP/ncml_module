@@ -68,8 +68,8 @@
 // Spew the std::string msg to debug channel then throw a BESSyntaxUserError.  For parse and syntax errors in the NCML.
 #define THROW_NCML_PARSE_ERROR(parseLine, msg) { \
       std::ostringstream __NCML_PARSE_ERROR_OSS__; \
-      __NCML_PARSE_ERROR_OSS__ << "NCMLModule ParseError: at *.ncml line=" << (parseLine) << ": " << \
-      "[" << __PRETTY_FUNCTION__ << "]: " << (msg); \
+      __NCML_PARSE_ERROR_OSS__ << "NCMLModule ParseError: at *.ncml line=" << (parseLine) << ": " \
+     << (msg); \
       BESDEBUG(NCML_MODULE_DBG_CHANNEL, \
               __NCML_PARSE_ERROR_OSS__.str() << endl); \
           throw BESSyntaxUserError( __NCML_PARSE_ERROR_OSS__.str(), \
