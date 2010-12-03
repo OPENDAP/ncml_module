@@ -5,7 +5,7 @@
 	<key>CFBundleGetInfoString</key>
 	<string>0.9.0, OPeNDAP</string>
 	<key>CFBundleIdentifier</key>
-	<string>opendap.netcdf_handler</string>
+	<string>opendap.ncml_handler</string>
 	<key>CFBundleShortVersionString</key>
 	<string>0.9.0</string>
 	<key>IFMajorVersion</key>
@@ -21,7 +21,7 @@
 	<key>IFPkgFlagBackgroundScaling</key>
 	<string>none</string>
 	<key>IFPkgFlagDefaultLocation</key>
-	<string>/usr</string>
+	<string>/usr/local/opendap/servers/hyrax-1.6.2</string>
 	<key>IFPkgFlagFollowLinks</key>
 	<true/>
 	<key>IFPkgFlagInstallFat</key>
