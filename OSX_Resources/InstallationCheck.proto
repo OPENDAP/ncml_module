@@ -4,7 +4,7 @@
 
 # use "i386" or "ppc.*" - nake sure to use a regex for PPC!
 
-PATH="/usr/local/opendap/servers/hyrax-1.6.2/bin:$PATH"
+PATH="_PREFIX_/bin:$PATH"
 
 
 architecture="i386.*"
