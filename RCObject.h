@@ -31,7 +31,9 @@
 
 #include "RCObjectInterface.h" // interface super
 
+#include <list>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -105,6 +107,19 @@ private:
   }; // class RCObjectPool
 
   /**
+   * Interface for registering callbacks to the RCObject for
+   * when the usecount hits 0 but before the deallocate
+   * functionality is performed.
+   */
+  class UseCountHitZeroCB
+  {
+  public:
+    UseCountHitZeroCB() {}
+    virtual ~UseCountHitZeroCB() { }
+    virtual void executeUseCountHitZeroCB(RCObject* pAboutToDie) = 0;
+  };
+
+  /**
    * @brief A base class for a simple reference counted object.
    *
    * Use as a base class for objects that need to delete themselves
@@ -148,10 +163,14 @@ private:
     : public virtual RCObjectInterface // abstract interface
   {
     friend class RCObjectPool;
+
+    typedef std::list<UseCountHitZeroCB*> PreDeleteCBList;
+
   private:
     RCObject& operator=(const RCObject& rhs); //disallow
 
   public:
+
     /** If the pool is given, the object will be released back to the pool when its count hits 0,
      * otherwise it will be deleted.
      */
@@ -194,10 +213,24 @@ private:
     /** Just prints the count and address  */
     virtual std::string toString() const;
 
+  public: // to workaround template friend issues.  Not designed for public consumption.
+
+    /** Add uniquely.  If it is added agan, the second time is ignored.  */
+    void addPreDeleteCB(UseCountHitZeroCB* pCB);
+
+    /** Remove it exists.  If not, this unchanged.  */
+    void removePreDeleteCB(UseCountHitZeroCB* pCB);
+
   private: // interface
 
     /** Same as toString(), just not virtual so we can always use it. */
     std::string printRCObject() const;
+
+    /** Go through the list of preDeleteCallbacks registered
+     * with this object and call each of them, then clear the
+     * callback list.
+     */
+    void executeAndClearPreDeleteCallbacks();
 
   private: // data rep
 
@@ -208,6 +241,10 @@ private:
     // If not null, the object is from the given pool and should be release()'d to the
     // pool when count hits 0, not deleted.  If null, it can be deleted.
     RCObjectPool* _pool;
+
+    // Callback list for when the use count hits 0 but before deallocate
+    PreDeleteCBList _preDeleteCallbacks;
+
   }; // class RCObject
 
   /** @brief A reference to an RCObject which automatically ref() and deref() on creation and destruction.
@@ -326,8 +363,161 @@ private:
 
   private:
     T* _obj;
-  };
+  }; // class RCPtr<T>
 
-}
+
+  /** Exception class for all errors from WeakRCPtr<T> */
+  class BadWeakPtr : public std::runtime_error
+  {
+  public:
+    BadWeakPtr(const std::string& msg)
+    : std::runtime_error(msg)
+    {
+    }
+
+    virtual ~BadWeakPtr() throw() { }
+  }; // class         BadWeakPtr
+
+
+  /**
+   *  A variant of boost::weak_ptr that uses our intrusive RCObject counting.
+   *
+   *  WeakRCPtr<T> is used to refer weakly to a class T
+   *  where T inherits from RCObject.
+   *
+   * NOTE: These are NOT thread-safe!!
+   *
+   *  By weak we mean that RCWeakPtr<T> does not
+   *  change the use count of the wrapped object.
+   *  Also it may transition from containing a valid ptr to containing NULL
+   *  if the RCObject it wraps is deleted by its use count going to 0.
+   *  Therefore, similarly to boost::weak_ptr,
+   *  a lock() function is provided to returns a new
+   *  RCPtr<T> for the object which ups its ref count and therefore
+   *  maintains the life of the object for the duration of the use of
+   *  the ptr returned from lock().
+   *
+   *  get() is provided as access to the raw ptr BUT NOTE THAT IT IS NOT SAFE.
+   *  The memory may go away during the use of the returned ptr, so lock() is
+   *  the preferred method to get the resource.  get() is useful for checking
+   *  for null of the wrapped ptr.
+   * */
+  template <class T>
+  class WeakRCPtr : public UseCountHitZeroCB // can we private inherit this to avoid outside callers?
+  {
+
+  public:
+
+    /** Default contains NULL */
+    WeakRCPtr()
+    : _pObj(0)
+    {
+    }
+
+    explicit WeakRCPtr(RCPtr<T> src)
+    {
+      // Connect to the shared ptr by adding listener and storing raw.
+      _pObj = src.get();
+      addMeAsListener();
+    }
+
+    ~WeakRCPtr()
+    {
+      clear();
+    }
+
+    WeakRCPtr& operator=(const WeakRCPtr& r)
+    {
+      if (&r != this)
+        {
+          clear();
+          _pObj = r._pObj;
+          addMeAsListener();
+        }
+      return *this;
+    }
+
+    /** Will getting a lock() return a null? */
+    bool expired() const
+    {
+      return empty();
+    }
+
+    /** Will getting a lock() return a null? */
+    bool empty() const
+    {
+      return (!_pObj);
+    }
+
+    RCPtr<T> lock() const
+    {
+      // return a safe shared ptr to the wrapped resource
+      // which will up it's count properly
+      if (_pObj)
+        {
+          return RCPtr<T>(_pObj);
+        }
+      else
+        {
+          return RCPtr<T>(NULL);
+        }
+    }
+
+    /** Remove any listener and NULL the wrapped pointer.
+     * On Exit: expired()
+     */
+    void clear()
+    {
+      // Remove the listener, clear the ptr so it's like default ctor.
+      removeMeAsListener();
+      _pObj = NULL;
+    }
+
+  public: // to avoid template friend issues, but not for public use!
+
+    /**
+     *  Listener callback from the RCObject to implement the interface.
+     *  This is called when the wrapped RCObject ref count goes to 0
+     *  so we can safely disconnect.
+     */
+    virtual void executeUseCountHitZeroCB(RCObject* pAboutToDie)
+    {
+      if (pAboutToDie != _pObj)
+        {
+          throw BadWeakPtr(
+              "executeUseCountHitZeroCB() called with mismatched raw pointers!");
+        }
+      clear();
+    }
+
+
+    ////////// Private Impl
+ private:
+
+    void removeMeAsListener()
+    {
+      if (_pObj)
+        {
+          _pObj->removePreDeleteCB(this);
+        }
+    }
+
+    void addMeAsListener()
+    {
+      if (_pObj)
+        {
+          _pObj->addPreDeleteCB(this);
+        }
+    }
+
+  private: // data rep
+
+    // The underlying wrapped object, or NULL if uninit or expired.
+    // NOTE: MUST be a subclass of RCObject
+    T* _pObj;
+
+  }; // class WeakRCPtr<T>
+
+} // namespace agg_util
 
 #endif /* __AGG_UTIL__REF_COUNTED_OBJECT_H__ */

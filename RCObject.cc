@@ -30,6 +30,7 @@
 
 #include "BESDebug.h"
 #include "NCMLDebug.h"
+#include <algorithm> // std::find
 #include <sstream>
 #include <vector>
 
@@ -39,6 +40,7 @@ namespace agg_util
   : RCObjectInterface()
   , _count(0)
   , _pool(pool)
+  , _preDeleteCallbacks()
   {
     if (_pool)
       {
@@ -50,6 +52,7 @@ namespace agg_util
   : RCObjectInterface()
   , _count(0) // new objects have no count, forget what the proto has!
   , _pool(proto._pool)
+  , _preDeleteCallbacks()
   {
     if (_pool)
       {
@@ -66,15 +69,19 @@ namespace agg_util
  int
  RCObject::ref() const
  {
-   return ++_count;
+   ++_count;
+   BESDEBUG("ncml:memory", "Ref count for " << printRCObject() << " is now: " << _count << endl);
+   return _count;
  }
 
  int
  RCObject::unref() const throw()
  {
-   int tmp = --_count;
-   if (_count == 0)
+   int tmp = --_count; // need tmp since might delete and need _count valid at end
+   if (tmp == 0)
      {
+       // Semantic constness here as well..
+       const_cast<RCObject*>(this)->executeAndClearPreDeleteCallbacks();
        if (_pool)
          {
            BESDEBUG("ncml:memory", "Releasing back to pool: Object ref count hit 0.  " << printRCObject() <<
@@ -87,6 +94,10 @@ namespace agg_util
              " with toString() == " << toString() << endl);
            delete this;
          }
+     }
+   else
+     {
+       BESDEBUG("ncml:memory", "unref() called and: " << printRCObject() << endl);
      }
    return tmp;
  }
@@ -119,8 +130,55 @@ namespace agg_util
  RCObject::printRCObject() const
  {
    std::ostringstream oss;
-   oss << "RCObject@(" << reinterpret_cast<const void*>(this) << ") _count=" << _count;
+   oss << "RCObject@(" <<
+       reinterpret_cast<const void*>(this) <<
+       ") _count=" << _count <<
+       " numberDeleteListeners=" << _preDeleteCallbacks.size();
    return oss.str();
+ }
+
+ void
+ RCObject::addPreDeleteCB(UseCountHitZeroCB* pCB)
+ {
+   if (pCB)
+     {
+       if (std::find(
+           _preDeleteCallbacks.begin(),
+           _preDeleteCallbacks.end(),
+           pCB) == _preDeleteCallbacks.end())
+         {
+           BESDEBUG("ncml:memory", "Adding WeakRCPtr listener: " << printRCObject() <<
+               " is getting listener: " << reinterpret_cast<const void*>(pCB) << endl);
+           _preDeleteCallbacks.push_back(pCB);
+           BESDEBUG("ncml:memory", "After listener add, obj is: " << printRCObject() << endl);
+         }
+     }
+ }
+
+ void
+ RCObject::removePreDeleteCB(UseCountHitZeroCB* pCB)
+ {
+   if (pCB)
+     {
+       BESDEBUG("ncml:memory", "Removing WeakRCPtr listener from: " << printRCObject() <<
+                    " Removed listener: " << reinterpret_cast<const void*>(pCB) << endl);
+       _preDeleteCallbacks.remove(pCB);
+       BESDEBUG("ncml:mempory", "Object after remove listener is: " << printRCObject() << endl);
+     }
+ }
+
+ void
+ RCObject::executeAndClearPreDeleteCallbacks()
+ {
+   PreDeleteCBList::iterator endIt = _preDeleteCallbacks.end();
+   for (PreDeleteCBList::iterator it = _preDeleteCallbacks.begin();
+       it != endIt;
+       ++it)
+     {
+       UseCountHitZeroCB* pCB = (*it);
+       pCB->executeUseCountHitZeroCB(this);
+     }
+   _preDeleteCallbacks.clear();
  }
 
 
@@ -194,8 +252,13 @@ namespace agg_util
    for (; it != endIt; ++it)
      {
        RCObject* pObj = *it;
-       BESDEBUG("ncml:memory", "Calling delete on RCObject=" << pObj->printRCObject() << endl);
-       delete pObj;
+       // Just in case, flush the predelete list to avoid dangling WeakRCPtr
+       if (pObj)
+         {
+           pObj->executeAndClearPreDeleteCallbacks();
+           BESDEBUG("ncml:memory", "Calling delete on RCObject=" << pObj->printRCObject() << endl);
+           delete pObj;
+         }
      }
    _liveObjects.clear();
    BESDEBUG("ncml:memory", "RCObjectPool::deleteAllObjects() complete!" << endl);
