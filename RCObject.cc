@@ -64,6 +64,8 @@ namespace agg_util
  {
    // just to let us know its invalid
    _count = -1;
+   NCML_ASSERT_MSG(_preDeleteCallbacks.empty(),
+       "~RCObject() called with a non-empty listener list!");
  }
 
  int
@@ -142,6 +144,7 @@ namespace agg_util
  {
    if (pCB)
      {
+       // unique add
        if (std::find(
            _preDeleteCallbacks.begin(),
            _preDeleteCallbacks.end(),
@@ -170,15 +173,21 @@ namespace agg_util
  void
  RCObject::executeAndClearPreDeleteCallbacks()
  {
-   PreDeleteCBList::iterator endIt = _preDeleteCallbacks.end();
-   for (PreDeleteCBList::iterator it = _preDeleteCallbacks.begin();
-       it != endIt;
-       ++it)
+   // Since the callbacks might remove themselves
+   // from the PreDeleteCBList, we can't use an
+   // iterator.  Use the queue interface instead
+   // and force the deletion of a node when it's used
+   // to be sure the loop exits.
+   while (! (_preDeleteCallbacks.empty()) )
      {
-       UseCountHitZeroCB* pCB = (*it);
-       pCB->executeUseCountHitZeroCB(this);
+       UseCountHitZeroCB* pCB = _preDeleteCallbacks.front();
+       _preDeleteCallbacks.pop_front();
+       if (pCB)
+         {
+           pCB->executeUseCountHitZeroCB(this);
+         }
      }
-   _preDeleteCallbacks.clear();
+   NCML_ASSERT(_preDeleteCallbacks.empty());
  }
 
 

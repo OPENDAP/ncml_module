@@ -226,9 +226,15 @@ private:
     /** Same as toString(), just not virtual so we can always use it. */
     std::string printRCObject() const;
 
-    /** Go through the list of preDeleteCallbacks registered
-     * with this object and call each of them, then clear the
-     * callback list.
+    /**
+     * Go through the list of preDeleteCallbacks registered
+     * with this object.  For each one, remove it from the
+     * callback list, then call it.
+     * On exit, the pre callback list is empty.
+     * Note: callbacks may remove themselves as well,
+     * though this function will forcibly remove them
+     * before they get a chance to maintain valid iterator
+     * state.
      */
     void executeAndClearPreDeleteCallbacks();
 
