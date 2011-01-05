@@ -173,6 +173,20 @@ namespace agg_util
     _dimensionCache.clear();
   }
 
+  /* virtual */
+  void
+  AggMemberDatasetWithDimensionCacheBase::saveDimensionCache(std::ostream& ostr)
+  {
+    saveDimensionCacheInternal(ostr);
+  }
+
+  /* virtual */
+  void
+  AggMemberDatasetWithDimensionCacheBase::loadDimensionCache(std::istream& istr)
+  {
+    loadDimensionCacheInternal(istr);
+  }
+
   Dimension*
   AggMemberDatasetWithDimensionCacheBase::findDimension(
       const std::string& dimName)
@@ -240,6 +254,76 @@ namespace agg_util
                 << endl);
 
             addDimensionsForVariableRecursive( *(*it) );
+          }
+      }
+  }
+
+  // Sort function
+  static bool sIsDimNameLessThan(const Dimension& lhs, const Dimension& rhs)
+  {
+    return (lhs.name < rhs.name);
+  }
+
+  void
+  AggMemberDatasetWithDimensionCacheBase::saveDimensionCacheInternal(std::ostream& ostr)
+  {
+    BESDEBUG("agg_util", "Saving dimension cache for dataset location = "
+        << getLocation()
+        << " ..." << endl);
+
+    // Not really necessary, but might help with trying to read output
+    std::sort(_dimensionCache.begin(), _dimensionCache.end(), sIsDimNameLessThan);
+
+    // Save out the location first, ASSUMES \n is NOT in the location for read back
+    const std::string& loc = getLocation();
+    ostr << loc << '\n';
+
+    // Now save each dimension
+    unsigned int n =  _dimensionCache.size();
+    ostr << n << '\n';
+    for (unsigned int i=0; i<n; ++i)
+      {
+        const Dimension& dim = _dimensionCache.at(i);
+        // note this assumes the dimension names don't contain spaces.
+        ostr << dim.name << '\n' << dim.size << '\n';
+      }
+  }
+
+  void
+  AggMemberDatasetWithDimensionCacheBase::loadDimensionCacheInternal(std::istream& istr)
+  {
+    BESDEBUG("agg_util", "Loading dimension cache for dataset location = "
+           << getLocation()
+           << " ..." << endl);
+
+    // Read in the location string
+    std::string loc;
+    getline(istr, loc, '\n');
+
+    // Make sure the location we read is the same as the location
+    // for this AMD or there's an unrecoverable serialization bug
+    if (loc != getLocation())
+      {
+         stringstream ss;
+         ss << "Serialization error: the location loaded from the "
+            "dimensions cache was: \"" << loc << "\" but we expected it to be "
+            << getLocation() << "\".  Unrecoverable!";
+         THROW_NCML_INTERNAL_ERROR(ss.str());
+      }
+
+    unsigned int n = 0;
+    istr >> n >> ws;
+    for (unsigned int i=0; i<n; ++i)
+      {
+        Dimension newDim;
+        istr >> newDim.name >> ws;
+        istr >> newDim.size >> ws;
+        if (istr.failbit)
+          {
+            // Best we can do is throw an internal error for now.
+            // Perhaps later throw something else that causes a
+            // recreation of the cache
+            THROW_NCML_INTERNAL_ERROR("Parsing dimension cache failed to deserialize from stream.");
           }
       }
   }

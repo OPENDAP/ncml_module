@@ -73,6 +73,9 @@ namespace agg_util
   /** Dump to stream */
   std::ostream& operator<<(std::ostream& os, const Dimension& dim);
 
+  /* Read back in */
+  std::istream& operator>>(std::istream& is, Dimension& dim);
+
   /** Container class for a table of dimensions for a given dataset */
   class DimensionTable
   {

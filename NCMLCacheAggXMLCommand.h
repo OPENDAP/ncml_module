@@ -3,7 +3,7 @@
 // to allow NcML files to be used to be used as a wrapper to add
 // AIS to existing datasets of any format.
 //
-// Copyright (c) 2009 OPeNDAP, Inc.
+// Copyright (c) 2010 OPeNDAP, Inc.
 // Author: Michael Johnson  <m.johnson@opendap.org>
 //
 // For more information, please also see the main website: http://opendap.org/
@@ -26,34 +26,58 @@
 //
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
+#ifndef __NCML_MODULE__NCML_CACHE_AGG_XML_COMMAND_H__
+#define __NCML_MODULE__NCML_CACHE_AGG_XML_COMMAND_H__
 
-#ifndef I_NCMLModule_H
-#define I_NCMLModule_H 1
-
-#include "BESAbstractModule.h"
+#include "BESDataHandlerInterface.h"
+#include "BESResponseHandler.h"
+#include "BESXMLCommand.h"
 
 namespace ncml_module
 {
-class NCMLModule : public BESAbstractModule
-{
-public:
-    				NCMLModule() {}
-    virtual		    	~NCMLModule() {}
-    virtual void		initialize( const string &modname ) ;
-    virtual void		terminate( const string &modname ) ;
 
-    virtual void		dump( ostream &strm ) const ;
+  /**
+   * The BESXMLCommand for the command to recalculate the aggregation caches.
+   */
+  class NCMLCacheAggXMLCommand : public BESXMLCommand
+  {
+  public:
+    NCMLCacheAggXMLCommand(const BESDataHandlerInterface& baseDHI);
 
-private:
-    // Helpers for initialize(), added the handlers under the given modname
-    void addCommandAndResponseHandlers(const string& modname);
-    void addCacheAggCommandAndResponseHandlers(const string& modname);
+    virtual ~NCMLCacheAggXMLCommand();
 
-    // Helpers for terminate()
-    void removeCommandAndResponseHandlers();
-    void removeCacheAggCommandAndResponseHandlers();
+    virtual void parse_request(xmlNode* pNode);
 
-} ; // class NCMLModule
+    virtual bool has_response();
+
+    virtual void prep_request();
+
+    virtual void dump(ostream& strm) const;
+
+    static BESXMLCommand* makeInstance(const BESDataHandlerInterface& baseDHI);
+  }; // class NCMLCacheAggXMLCommand
+
+  /**
+   * The response handler for the NCMLCacheAggXMLCommand
+   */
+  class NCMLCacheAggResponseHandler
+  : public BESResponseHandler
+    {
+    public:
+      NCMLCacheAggResponseHandler(const string &name) ;
+      virtual ~NCMLCacheAggResponseHandler() ;
+
+      virtual void execute(BESDataHandlerInterface &dhi);
+
+      virtual void transmit(BESTransmitter *pTransmitter,
+          BESDataHandlerInterface &dhi );
+
+      virtual void dump( ostream &strm) const;
+
+      static BESResponseHandler *makeInstance(const string &name) ;
+    }; // class NCMLCacheAggResponseHandler
+
+
 } // namespace ncml_module
-#endif // I_NCMLModule_H
 
+#endif /* __NCML_MODULE__NCML_CACHE_AGG_XML_COMMAND_H__ */

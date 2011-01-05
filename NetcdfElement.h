@@ -29,11 +29,10 @@
 #ifndef __NCML_MODULE__NETCDF_ELEMENT_H__
 #define __NCML_MODULE__NETCDF_ELEMENT_H__
 
+#include "AggMemberDataset.h" // agg_util
 #include "DDSAccessInterface.h"
 #include "DDSLoader.h"
 #include "NCMLElement.h"
-
-using namespace std;
 
 namespace libdap
 {
@@ -147,6 +146,15 @@ namespace ncml_module
     void createResponseObject(agg_util::DDSLoader::ResponseType type);
 
     /**
+     * Return a shared reference to the AggMemberDataset that encapsulates
+     * this dataset.
+     * If it doesn't exist in this instance yet, it is created and
+     * stored in this (semantically const accessor)
+     * If it does exist, a shared reference to the contained object is returned.
+     */
+    RCPtr<agg_util::AggMemberDataset> getAggMemberDataset() const;
+
+    /**
      * @return the DimensionElement with the given name in the
      * dimension table for THIS NetcdfElement only (no traversing
      * up the tree is allowed).  If not found, NULL is returned.
@@ -179,7 +187,7 @@ namespace ncml_module
     /** Get the list of dimension elements local to only this dataset, not its enclosing scope.  */
     const std::vector<DimensionElement*>& getDimensionElements() const;
 
-    /** Set our aggregtation to the given agg.
+    /** Set our aggregation to the given agg.
      *
      * If there exists an aggregation already and !throwIfExists, agg will replace it,
      * which might cause the previous one to be deleted.
@@ -348,6 +356,11 @@ namespace ncml_module
     // and unref() them in the dtor.
     // We won't have that many, so a vector is more efficient than a map for this.
     std::vector< DimensionElement* > _dimensions;
+
+    // Lazy evaluated, starts unassigned.
+    // When getAggMemberDataset() is called, it is lazy-constructed
+    // to weak ref the returned strong shared ptr (RCPtr).
+    agg_util::WeakRCPtr<agg_util::AggMemberDataset> _pDatasetWrapper;
 
   public: // inner classes can't be private?
     /**

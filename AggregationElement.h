@@ -178,11 +178,61 @@ namespace ncml_module
     void unionAddAllRequiredNonAggregatedVariablesFrom(const DDS& templateDDS);
 
     /**
-     * Figure out the size of the fully aggregated outer dimension
-     * for the joinExisting from the member datasets and make sure the
-     * dimension exists in the output object scope.
+     * For each dataset in _datasets, gets the AMD for it and adds it in
+     * order to granuleList.
+     *
+     * Also, make sures the DimensionCache for each of the AMD's has
+     * been initialized with the proper granule sizes for the
+     * aggregation dimension.
+     * This is done by using the ncoords if available else
+     * will try to load a cache file.  Barring that,
+     * it will go and get the DDX for all the datasets
+     * (which is very slow) and will seed the caches from that.
+     *
+     * On return,
+     * granuleList will contain the AMD's for the _datasets.
+     *
+     * @param granuleList  output list with the AMD granules in it.
+     * @param aggDimName  the dimension name for the aggregation
      */
-    void addNewDimensionForJoinExisting();
+    void fillDimensionCacheForJoinExistingDimension(
+        agg_util::AMDList& granuleList,
+        const std::string& aggDimName
+        );
+
+    /** Go see if the cache file exists using some magic */
+    bool doesDimensionCacheExist() const;
+
+    /** fill the rGrnauleList entries with numbers saved in the
+     * cache file for this aggregation.
+     */
+    void loadDimensionCacheFromCacheFile(agg_util::AMDList& rGranuleList);
+
+    /** false if _datasets.empty() */
+    bool doesFirstGranuleSpecifyNcoords() const;
+
+    /** true if _datasets.empty() */
+    bool doAllGranulesSpecifyNcoords() const;
+
+    /** Go through the datasets in this and push the found ncoords
+     * into the dimension cache for the entries in the rGranuleList.
+     * ASSUMES:  all entries in _datasets have ncoords specified!
+     */
+    void seedDimensionCacheFromUserSpecs(agg_util::AMDList& rGranuleList) const;
+
+    /** Force the dimension caches to load by doing a DDX query on them.
+     * SLOW!
+     * @OPTIMIZE Ideally this could be made parallel in the future as well, to
+     * load each one in parallel and save the caches.
+     */
+    void seedDimensionCacheByQueryOfDatasets(agg_util::AMDList& rGranuleList) const;
+
+    /**
+     * Figure out the size of the fully aggregated outer dimension
+     * for the joinExisting from the member datasets in rGranuleList
+     * and make sure the dimension exists in the output object scope.
+     */
+    void addNewDimensionForJoinExisting(const agg_util::AMDList& rGranuleList);
 
     /**
      * If there was no variableAgg element describing the
@@ -222,6 +272,14 @@ namespace ncml_module
         , _pAggDim(0)
         , _memberDatasets()
         {
+        }
+
+        ~JoinAggParams()
+        {
+          _pAggVarTemplate = NULL;
+          _pAggDim = NULL;
+          _memberDatasets.clear();
+          _memberDatasets.resize(0);
         }
 
         libdap::BaseType* _pAggVarTemplate; // template for the granule's aggVar

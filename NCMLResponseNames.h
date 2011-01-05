@@ -3,7 +3,7 @@
 // to allow NcML files to be used to be used as a wrapper to add
 // AIS to existing datasets of any format.
 //
-// Copyright (c) 2009 OPeNDAP, Inc.
+// Copyright (c) 2009-2010 OPeNDAP, Inc.
 // Author: Michael Johnson  <m.johnson@opendap.org>
 //
 // For more information, please also see the main website: http://opendap.org/
@@ -26,10 +26,33 @@
 //
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
-#ifndef E_NCMLResponseNames_H
-#define E_NCMLResponseNames_H 1
+#ifndef __NCML_MODULE__NCML_RESPONSE_NAMES_H__
+#define __NCML_MODULE__NCML_RESPONSE_NAMES_H__
 
-#define NCML_NAME "ncml"
+#include <string>
 
-#endif // E_NCMLResponseNames_H
+namespace ncml_module
+{
+  struct ModuleConstants
+  {
+    /** The name used to specify an ncml file. */
+    static const std::string NCML_NAME;
+
+    /** URL with the location of the documentation Wiki */
+    static const std::string DOC_WIKI_URL;
+
+    /** Response name in the DHI for the cache of aggregations command */
+    static const std::string CACHE_AGG_RESPONSE;
+
+    /** Name of the attribute in the cacheAgg XML command where the
+     * filename to do the caching on is located.
+     */
+    static const std::string CACHE_AGG_LOCATION_XML_ATTR;
+
+    /** Key in the dhi.data[] map where the location is stored. */
+    static const std::string ModuleConstants::CACHE_AGG_LOCATION_DATA_KEY;
+  };
+};
+
+#endif // __NCML_MODULE__NCML_RESPONSE_NAMES_H_
 

@@ -87,6 +87,11 @@ namespace agg_util
      */
     virtual const libdap::DataDDS* getDataDDS() = 0;
 
+    // TODO Consider adding freeDataDDS() or equivalent
+    // to clear the memory made by getDataDDS if it was
+    // loaded so we can tighten up the memory usage
+    // for large AMD Lists.
+
     /**
      * Get the size of the given dimension named dimName
      * cached within the dataset.  If not found in cache, throws.
@@ -138,6 +143,12 @@ namespace agg_util
      * have to be loaded.
      */
     virtual void flushDimensionCache() = 0;
+
+    /** Append the values in the dimension cache to the output stream */
+    virtual void saveDimensionCache(std::ostream& ostr) = 0;
+
+    /** Load the values in the dimension cache from the input stream */
+    virtual void loadDimensionCache(std::istream& istr) = 0;
 
   private: // data rep
     std::string _location; // non-empty location from which to load DataDDS

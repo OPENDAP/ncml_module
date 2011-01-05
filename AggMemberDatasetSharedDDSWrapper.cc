@@ -26,7 +26,7 @@
 //
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
-#include "AggMemberDatasetDDSWrapper.h"
+#include "AggMemberDatasetSharedDDSWrapper.h"
 #include <DataDDS.h> // libdap
 #include <DDS.h> // libdap
 #include "DDSAccessInterface.h"
@@ -34,25 +34,29 @@
 
 namespace agg_util
 {
-  AggMemberDatasetDDSWrapper::AggMemberDatasetDDSWrapper()
+  AggMemberDatasetSharedDDSWrapper::AggMemberDatasetSharedDDSWrapper()
   : AggMemberDatasetWithDimensionCacheBase("") // empty location for the wrapper
   , _pDDSHolder(0) // NULL, really shouldn't create a default.
   {
   }
 
-  AggMemberDatasetDDSWrapper::AggMemberDatasetDDSWrapper(const DDSAccessInterface* pDDSHolder)
+  AggMemberDatasetSharedDDSWrapper::AggMemberDatasetSharedDDSWrapper(const DDSAccessRCInterface* pDDSHolder)
   : AggMemberDatasetWithDimensionCacheBase("") // empty location
   , _pDDSHolder(pDDSHolder)
   {
+    if (_pDDSHolder)
+      {
+        _pDDSHolder->ref();
+      }
   }
 
-  AggMemberDatasetDDSWrapper::~AggMemberDatasetDDSWrapper()
+  AggMemberDatasetSharedDDSWrapper::~AggMemberDatasetSharedDDSWrapper()
   {
     BESDEBUG("ncml:memory", "~AggMemberDatasetDDSWrapper() called..." << endl);
     cleanup(); // will unref()
   }
 
-  AggMemberDatasetDDSWrapper::AggMemberDatasetDDSWrapper(const AggMemberDatasetDDSWrapper& proto)
+  AggMemberDatasetSharedDDSWrapper::AggMemberDatasetSharedDDSWrapper(const AggMemberDatasetSharedDDSWrapper& proto)
   : RCObjectInterface()
   , AggMemberDatasetWithDimensionCacheBase(proto)
   , _pDDSHolder(0)
@@ -60,8 +64,8 @@ namespace agg_util
     copyRepFrom(proto);
   }
 
-  AggMemberDatasetDDSWrapper&
-  AggMemberDatasetDDSWrapper::operator=(const AggMemberDatasetDDSWrapper& that)
+  AggMemberDatasetSharedDDSWrapper&
+  AggMemberDatasetSharedDDSWrapper::operator=(const AggMemberDatasetSharedDDSWrapper& that)
   {
     if (this != &that)
       {
@@ -77,7 +81,7 @@ namespace agg_util
 
 
   const libdap::DataDDS*
-  AggMemberDatasetDDSWrapper::getDataDDS()
+  AggMemberDatasetSharedDDSWrapper::getDataDDS()
   {
     const libdap::DDS* pDDS = 0;
     if (_pDDSHolder)
@@ -90,15 +94,23 @@ namespace agg_util
   /////////////////////////////// Private Helpers ////////////////////////////////////
 
   void
-  AggMemberDatasetDDSWrapper::cleanup() throw()
+  AggMemberDatasetSharedDDSWrapper::cleanup() throw()
   {
-    _pDDSHolder = 0;
+    if (_pDDSHolder)
+      {
+        _pDDSHolder->unref();
+        _pDDSHolder = 0;
+      }
   }
 
   void
-  AggMemberDatasetDDSWrapper::copyRepFrom(const AggMemberDatasetDDSWrapper& rhs)
+  AggMemberDatasetSharedDDSWrapper::copyRepFrom(const AggMemberDatasetSharedDDSWrapper& rhs)
   {
     NCML_ASSERT(!_pDDSHolder);
     _pDDSHolder = rhs._pDDSHolder;
+    if (_pDDSHolder)
+      {
+        _pDDSHolder->ref();
+      }
   }
 }

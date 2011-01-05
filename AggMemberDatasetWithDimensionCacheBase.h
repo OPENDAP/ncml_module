@@ -63,6 +63,10 @@ namespace agg_util
     virtual void fillDimensionCacheByUsingDataDDS();
     virtual void flushDimensionCache();
 
+    /** Append the values in the dimension cache to the output stream */
+    virtual void saveDimensionCache(std::ostream& ostr);
+    virtual void loadDimensionCache(std::istream& istr);
+
   private: // Helper Functions
 
     /** Check the _dimensionCache for the dimension with name
@@ -76,6 +80,9 @@ namespace agg_util
      * @param pBT
      */
     void addDimensionsForVariableRecursive(libdap::BaseType& var);
+
+    void saveDimensionCacheInternal(std::ostream& ostr);
+    void loadDimensionCacheInternal(std::istream& istr);
 
   private: // Data Rep
     std::vector<Dimension> _dimensionCache;

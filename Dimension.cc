@@ -28,11 +28,14 @@
 /////////////////////////////////////////////////////////////////////////////
 #include "Dimension.h"
 #include "NCMLDebug.h"// the only NCML dep we allow...
+
+#include <iostream>
 #include <sstream>
 
 using std::string;
 using std::ostringstream;
 using std::vector;
+using std::ws;
 
 namespace agg_util
 {
@@ -66,12 +69,19 @@ namespace agg_util
 
   std::ostream& operator<<(std::ostream& os, const Dimension& dim)
   {
-    os << "Dimension{";
-    os << dim.name;
-    os << "=";
-    os << dim.size;
-    os << "}";
+    os << dim.name << '\n';
+    os << dim.size << '\n';
     return os;
+  }
+
+  std::istream& operator>>(std::istream& is, Dimension& dim)
+  {
+    dim.isShared = false;
+    dim.isSizeConstant = true;
+
+    getline(is, dim.name);
+    is >> ws >> dim.size >> ws;
+    return is;
   }
 
   bool

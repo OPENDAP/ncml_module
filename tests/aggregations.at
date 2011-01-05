@@ -280,7 +280,8 @@ dnl TEMPORARY test that all joinExisting netcdf elements
 dnl have ncoords attribute specified on them.
 dnl Can be removed when we support auto-calculation
 dnl of the member dataset dimensionalities.
-AT_ASSERT_PARSE_ERROR([agg/error_joinExisting_1.ncml])
+dnl NO LONGER NEEDED once we can load in the dimensions explicitly.
+dnl AT_ASSERT_PARSE_ERROR([agg/error_joinExisting_1.ncml])
 
 dnl Test that an unparseable unsigned int in ncoords attribute 
 dnl is a parse error.  This case is a -1.
@@ -411,6 +412,14 @@ AT_ASSERT_PARSE_ERROR([agg/joinExist_grid_meta_err_1.ncml])
 
 dnl TODO Add HDF4 tests on canned datasets that are easy to test
 
+
+dnl Test the loading of the dimension sizes (missing ncoords) 
+dnl by querying the DDX for each granule 
+AT_CHECK_ALL_DAP_RESPONSES([agg/joinExisting_load_ncoords.ncml])
+
+dnl Also check that specifying the granules with a scan
+dnl without a scan@ncoords also produces the correct behavior.
+AT_CHECK_ALL_DAP_RESPONSES([agg/joinExist_scan.ncml])
 
 dnl ---- end joinExisting Tests
 dnl ****************************************************************************

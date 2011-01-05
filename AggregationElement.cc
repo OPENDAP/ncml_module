@@ -32,7 +32,7 @@
 
 #include <AttrTable.h> // libdap
 #include "AggMemberDatasetUsingLocationRef.h" // agg_util
-#include "AggMemberDatasetDDSWrapper.h" // agg_util
+#include "AggMemberDatasetSharedDDSWrapper.h" // agg_util
 #include "AggregationElement.h"
 #include "AggregationUtil.h" // agg_util
 #include <Array.h> // libdap
@@ -468,6 +468,11 @@ namespace ncml_module
     AggregationUtil::unionAllVariablesInto(pAggDDS, *pTemplateDDS);
   }
 
+#if 0
+  // This function was used previously, but not now.
+  // Leaving it in case we need it, but commented out
+  // to deal with -werror compilation.
+
   /* File local helper for next function */
   static bool
   doAllScannersSpecifyNCoords(const vector<ScanElement*>& scanners)
@@ -486,24 +491,14 @@ namespace ncml_module
       }
     return success;
   }
+#endif // 0
 
   void
   AggregationElement::processJoinExisting()
   {
     BESDEBUG("ncml:2", "Called AggregationElement::processJoinExisting()...");
 
-    // Make sure there's no <scan> elements for now
-    // since we can't handle this case yet.
-    if (!_scanners.empty() && !doAllScannersSpecifyNCoords(_scanners))
-      {
-        THROW_NCML_PARSE_ERROR(line(),
-            "Unimplemented: AggregationElement: processJoinExisting() found a scan element "
-            "without ncoords attribute specified. "
-            "We apologize that this version doesn't yet allow "
-            "a full scan for joinExisting aggregation.");
-      }
-
-    // If we're here, we're allowed to scan
+    // Merge any scans into _datasets
     processAnyScanElements();
 
     // We need at least one dataset or it's an error
@@ -513,9 +508,19 @@ namespace ncml_module
             "In joinExisting aggregation we cannot have zero datasets specified!");
       }
 
+    // We need to know the size of the joinExisting dimension
+    // for all granule datasets.
+    // Make sure that we either get them from:
+    // 1) ncoords specified
+    // 2) Dimension cache file previously created
+    // 3) Load them the slow way and cache the result
+    AMDList granuleList;
+    granuleList.reserve(_datasets.size());
+    fillDimensionCacheForJoinExistingDimension(granuleList, _dimName);
+
     // Figure out the cardinality of the aggregated dimension
     // and add it into the parent dataset's scope for lookups.
-    addNewDimensionForJoinExisting();
+    addNewDimensionForJoinExisting(granuleList);
 
     // Union any declared dimensions of the child sets so they're available,
     // but be carefuly to skip the join dimension since we already created it
@@ -657,31 +662,175 @@ namespace ncml_module
       }
   }
 
-  // For now, just count up the ncoords...
+  //
   void
-  AggregationElement::addNewDimensionForJoinExisting()
+  AggregationElement::fillDimensionCacheForJoinExistingDimension(
+      AMDList& granuleList,
+      const std::string& /* aggDimName */)
   {
-    // Sum up the cardinalities from the netcdf elements.
-    unsigned int aggDimSize = 0;
-    for (vector<NetcdfElement*>::const_iterator it = _datasets.begin();
-        it != _datasets.end();
+    // First, run down the dataset list (which has been expanded with scanners)
+    // and create the AMD list for them.
+    //    for each entry in _dataset
+    vector<NetcdfElement*>::iterator endIt = _datasets.end();
+    for (vector<NetcdfElement*>::iterator it = _datasets.begin();
+        it != endIt;
         ++it)
       {
-        // Make sure the attribute exists or warn the author
-        const NetcdfElement* pDataset = *it;
-        if (!pDataset->hasNcoords())
+        granuleList.push_back((*it)->getAggMemberDataset());
+      }
+
+    // Second, see if there is an ncoords for each of the datasets,
+    // and if so, for each one add it to the cache in the AMD.
+    if (doesFirstGranuleSpecifyNcoords())
+      {
+        // If so, check they all do or it's a user error.
+        if (!doAllGranulesSpecifyNcoords())
           {
-            THROW_NCML_PARSE_ERROR(line(),
-                "Expected netcdf element member of a joinExisting "
-                "aggregation to have the ncoords attribute specified "
-                "but it did not.  We do not support automatic loading "
-                "of aggregation dimension size yet!");
+            THROW_NCML_PARSE_ERROR(-1,
+                "In a joinExisting aggregation we found that the first "
+                "granule specified an ncoords but not all of the others "
+                "did.  Either all or none of them should have ncoords specified.");
           }
-        // @TODO This needs to be changed to go through the
-        // AggMemberDataset interface in order to get the
-        // benefit of the dimension cache rather than relying
-        // on the user size hint directly!
-        aggDimSize += pDataset->getNcoordsAsUnsignedInt();
+        // otherwise we're good, seed the cache from the ncoords
+        else
+          {
+            seedDimensionCacheFromUserSpecs(granuleList);
+          }
+      }
+    else // look for cached dimension file or load dimensionalities from granules
+      {
+        // If there is NOT an ncoords for all, then:
+      // 1) If there's a dimension cache file, load it.
+      if (doesDimensionCacheExist())
+        {
+          loadDimensionCacheFromCacheFile(granuleList);
+        }
+      // 2) Else do the slow load on the dimension cache
+      //     and optionally save the cache file out.
+      else
+        {
+          // SLOW!  Probably shoudl warn the user.
+          seedDimensionCacheByQueryOfDatasets(granuleList);
+        }
+      }
+  }
+
+  bool
+  AggregationElement::doesDimensionCacheExist() const
+  {
+    // TODO
+    BESDEBUG("ncml", "Warning: joinExisting dimension cache"
+        " is not implemented and we'll force a slow load." << endl);
+    return false;
+  }
+
+  void
+  AggregationElement::loadDimensionCacheFromCacheFile(agg_util::AMDList& /* rGranuleList */)
+  {
+    THROW_NCML_INTERNAL_ERROR("loadDimensionCacheFromCacheFile(): impl me!");
+  }
+
+  bool
+  AggregationElement::doesFirstGranuleSpecifyNcoords() const
+  {
+    if (_datasets.size() > 0)
+      {
+        return _datasets.at(0)->hasNcoords();
+      }
+    else
+      {
+        return false;
+      }
+  }
+
+  bool
+  AggregationElement::doAllGranulesSpecifyNcoords() const
+  {
+    bool success = true;
+    vector<NetcdfElement*>::const_iterator endIt = _datasets.end();
+    for (vector<NetcdfElement*>::const_iterator it = _datasets.begin();
+        it != endIt;
+        ++it)
+      {
+        success = success && (*it)->hasNcoords();
+        if (!success)
+          {
+            break;
+          }
+      }
+    return success;
+  }
+
+  void
+  AggregationElement::seedDimensionCacheFromUserSpecs(agg_util::AMDList& rGranuleList) const
+  {
+    NCML_ASSERT( _datasets.size() == rGranuleList.size() );
+
+    vector<NetcdfElement*>::const_iterator datasetIt;
+    AMDList::iterator amdIt;
+    for ( datasetIt = _datasets.begin(),
+        amdIt = rGranuleList.begin();
+          datasetIt != _datasets.end();
+          ++datasetIt, ++amdIt)
+        {
+          // Make sure the attribute exists or warn the author
+          const NetcdfElement* pDataset = *datasetIt;
+          if (!pDataset->hasNcoords())
+            {
+              // This is an assumption of the
+              THROW_NCML_INTERNAL_ERROR(
+                  "Expected netcdf element member of a joinExisting "
+                  "aggregation to have the ncoords attribute specified "
+                  "but it did not.");
+            }
+          unsigned int ncoords = pDataset->getNcoordsAsUnsignedInt();
+          RCPtr<AggMemberDataset> pAMD = *amdIt;
+          VALID_PTR(pAMD.get());
+          agg_util::Dimension dim;
+          dim.name = _dimName;
+          dim.size = ncoords;
+          pAMD->setDimensionCacheFor(dim, true);
+
+          NCML_ASSERT_MSG( (pAMD->isDimensionCached(dim.name) &&
+              pAMD->getCachedDimensionSize(dim.name) == dim.size ),
+              "Dimension cache bug");
+        }
+    // make sure they stayed in sync
+    NCML_ASSERT(amdIt == rGranuleList.end());
+  }
+
+  void
+  AggregationElement::seedDimensionCacheByQueryOfDatasets(agg_util::AMDList& rGranuleList) const
+  {
+    BESDEBUG("ncml",
+        "WARNING: netcdf@ncoords attribute not specified for the granules in joinExisting."
+        " We will query the granules serially for the dimensions size.  NOTE:  This is "
+        "potentially a very slow operation until cached!" << endl);
+    BESDEBUG("ncml", "We will be loading " << rGranuleList.size() << " granules." << endl);
+    AMDList::iterator endIt = rGranuleList.end();
+    for (AMDList::iterator it = rGranuleList.begin();
+        it != endIt;
+        ++it)
+      {
+        BESDEBUG("ncml",
+            "Getting joinExisting dimension for: " << (*it)->getLocation() << "..." << endl);
+        (*it)->fillDimensionCacheByUsingDataDDS();
+        BESDEBUG("ncml", "... done." << endl);
+      }
+  }
+
+  // For now, just count up the ncoords...
+  void
+  AggregationElement::addNewDimensionForJoinExisting(const agg_util::AMDList& rGranuleList)
+  {
+    // Sum up the cardinalities from AMD's
+    unsigned int aggDimSize = 0;
+    for (AMDList::const_iterator it = rGranuleList.begin();
+        it != rGranuleList.end();
+        ++it)
+      {
+        NCML_ASSERT( (*it)->isDimensionCached(_dimName) );
+        aggDimSize += (*it)->getCachedDimensionSize(_dimName);
       }
 
     // Error if the dimension exists in the output local scope already
@@ -1476,33 +1625,12 @@ namespace ncml_module
         ++it)
       {
         VALID_PTR(*it);
-        const string& location = (*it)->location();
-        // basically, if we have a location we assume it's a deferred load.
-        // if empty(), we assume that's it already has a valid DDS we can
-        // wrap and use instead.
-
-        RCPtr<AggMemberDataset> pAGM(0);
-        if (location.empty())
-          {
-            // if the location is empty, we must assume we have a valid DDS
-            // that has been created virtually or as a nested aggregation
-            // We create a wrapper for the NetcdfElement in this case
-            // using the ref-counted DDS accessor interface.
-            agg_util::DDSAccessRCInterface* pDDSHolder = (*it);
-            pAGM = new agg_util::AggMemberDatasetDDSWrapper(pDDSHolder);
-          }
-        else
-          {
-            pAGM = new agg_util::AggMemberDatasetUsingLocationRef(
-                location,
-                _parser->getDDSLoader());
-          }
-
+        RCPtr<AggMemberDataset> pAGM( (*it)->getAggMemberDataset() );
         VALID_PTR(pAGM.get());
 
         // Push down the ncoords hint if it was given
         if ( !( (*it)->ncoords().empty()) &&
-             !_dimName.empty() )
+            !_dimName.empty() )
           {
             if (! (pAGM->isDimensionCached(_dimName)) )
               {

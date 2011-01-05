@@ -259,7 +259,7 @@ NCMLRequestHandler::ncml_build_help( BESDataHandlerInterface &dhi )
     attrs["name"] = PACKAGE_NAME ;
     attrs["version"] = PACKAGE_VERSION ;
     list<string> services ;
-    BESServiceRegistry::TheRegistry()->services_handled( NCML_NAME, services );
+    BESServiceRegistry::TheRegistry()->services_handled( ncml_module::ModuleConstants::NCML_NAME, services );
     if( services.size() > 0 )
     {
 	string handles = BESUtil::implode( services, ',' ) ;
@@ -267,7 +267,7 @@ NCMLRequestHandler::ncml_build_help( BESDataHandlerInterface &dhi )
     }
     info->begin_tag( "module", &attrs ) ;
     //info->add_data_from_file( "NCML.Help", "NCML Help" ) ;
-    info->add_data("Please consult the online documentation at http://docs.opendap.org/index.php/BES_-_Modules_-_NcML_Module");
+    info->add_data("Please consult the online documentation at " + ncml_module::ModuleConstants::DOC_WIKI_URL);
     info->end_tag( "module" ) ;
 
     return ret ;

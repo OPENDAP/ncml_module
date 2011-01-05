@@ -32,6 +32,11 @@
 #include <BaseType.h> // libdap
 #include <BESDapResponse.h> // bes
 
+
+#include "AggMemberDataset.h" // agg_util
+#include "AggMemberDatasetDDSWrapper.h" // agg_util
+#include "AggMemberDatasetSharedDDSWrapper.h" // agg_util
+#include "AggMemberDatasetUsingLocationRef.h" // agg_util
 #include "AggregationElement.h"
 #include "DimensionElement.h"
 #include "NetcdfElement.h"
@@ -45,7 +50,7 @@
 
 using namespace std;
 using libdap::DDS;
-using agg_util::DDSLoader;
+using namespace agg_util;
 
 namespace ncml_module
 {
@@ -328,6 +333,42 @@ namespace ncml_module
     VALID_PTR(newResponse.get());
     _response = newResponse.release();
     _weOwnResponse = true;
+  }
+
+  RCPtr<agg_util::AggMemberDataset>
+  NetcdfElement::getAggMemberDataset() const
+  {
+    // If not created yet, make a new
+    // one in an RCPtr, store a weak ref,
+    // and return it.
+    RCPtr<AggMemberDataset> pAGM(0);
+    if (_pDatasetWrapper.empty())
+      {
+        if (_location.empty())
+          {
+            // if the location is empty, we must assume we have a valid DDS
+            // that has been created virtually or as a nested aggregation
+            // We create a wrapper for the NetcdfElement in this case
+            // using the ref-counted DDS accessor interface.
+            const DDSAccessRCInterface* pDDSHolder = this;
+            pAGM = RCPtr<AggMemberDataset>(new AggMemberDatasetSharedDDSWrapper(pDDSHolder));
+          }
+        else
+          {
+            pAGM = new AggMemberDatasetUsingLocationRef(
+                _location,
+                _parser->getDDSLoader());
+          }
+
+        VALID_PTR(pAGM.get());
+
+        // Make a weak ref to it, semantically const
+        const_cast<NetcdfElement*>(this)->_pDatasetWrapper = WeakRCPtr<AggMemberDataset>(pAGM.get());
+      }
+
+    // Either way the weak ref is valid here, so return a new RCPtr to it
+    NCML_ASSERT(!_pDatasetWrapper.empty());
+    return _pDatasetWrapper.lock();
   }
 
   const DimensionElement*

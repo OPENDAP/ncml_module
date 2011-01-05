@@ -3,7 +3,7 @@
 // to allow NcML files to be used to be used as a wrapper to add
 // AIS to existing datasets of any format.
 //
-// Copyright (c) 2009 OPeNDAP, Inc.
+// Copyright (c) 2009-2010 OPeNDAP, Inc.
 // Author: Michael Johnson  <m.johnson@opendap.org>
 //
 // For more information, please also see the main website: http://opendap.org/
@@ -27,33 +27,20 @@
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
 
-#ifndef I_NCMLModule_H
-#define I_NCMLModule_H 1
-
-#include "BESAbstractModule.h"
+#include "NCMLResponseNames.h"
 
 namespace ncml_module
 {
-class NCMLModule : public BESAbstractModule
-{
-public:
-    				NCMLModule() {}
-    virtual		    	~NCMLModule() {}
-    virtual void		initialize( const string &modname ) ;
-    virtual void		terminate( const string &modname ) ;
 
-    virtual void		dump( ostream &strm ) const ;
+  const std::string ModuleConstants::NCML_NAME = "ncml";
 
-private:
-    // Helpers for initialize(), added the handlers under the given modname
-    void addCommandAndResponseHandlers(const string& modname);
-    void addCacheAggCommandAndResponseHandlers(const string& modname);
+  const std::string ModuleConstants::DOC_WIKI_URL =
+      "http://docs.opendap.org/index.php/BES_-_Modules_-_NcML_Module";
 
-    // Helpers for terminate()
-    void removeCommandAndResponseHandlers();
-    void removeCacheAggCommandAndResponseHandlers();
+  const std::string ModuleConstants::CACHE_AGG_RESPONSE = "cacheAgg";
 
-} ; // class NCMLModule
-} // namespace ncml_module
-#endif // I_NCMLModule_H
+  const std::string ModuleConstants::CACHE_AGG_LOCATION_DATA_KEY = "cacheAgg_location";
+  const std::string ModuleConstants::CACHE_AGG_LOCATION_XML_ATTR = "location";
+
+}; // namespace ncml_module
 

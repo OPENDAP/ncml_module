@@ -34,35 +34,30 @@
 namespace agg_util
 {
   // fdecls
-  class DDSAccessRCInterface;
+  class DDSAccessInterface;
 
   /**
    * class AggMemberDatasetDDSWrapper: concrete subclass of AggMemberDataset
-   * designed to hold a ref-counted reference to an object containing
-   * a DataDDS (DDSAccessRCInterface).
+   * designed to hold a weak reference to an object containing
+   * a DataDDS (DDSAccessInterface).
    *
-   * This allows an object containing an aggregated DDS (DDSAccessRCInterface)
-   * to exist outside of its normal scope by letting the wrapper hold
-   * a strong (counted) reference to it until the aggregation serialization
-   * is complete.
-   *
-   * The wrapped DDSAccessRCInterface will be ref() upon construction
-   * or being added into this by assignment or copy construction and will
-   * be unref() upon destruction or loss of reference via assignment operator.
+   * Compare to AggMemberDatasetSharedDDSWrapper which use a ref-counted
+   * DDSAccessRCInterface.  The weak one doesn't use ref counting in
+   * order to avoid circular ref dependencies.
    *
    */
   class AggMemberDatasetDDSWrapper : public AggMemberDatasetWithDimensionCacheBase
   {
   public:
     AggMemberDatasetDDSWrapper();
-    AggMemberDatasetDDSWrapper(const DDSAccessRCInterface* pDDSHolder);
+    AggMemberDatasetDDSWrapper(const DDSAccessInterface* pDDSHolder);
     virtual ~AggMemberDatasetDDSWrapper();
 
     AggMemberDatasetDDSWrapper(const AggMemberDatasetDDSWrapper& proto);
     AggMemberDatasetDDSWrapper& operator=(const AggMemberDatasetDDSWrapper& that);
 
     /**
-     * Access via the wrapped DDSAccessRCInterface.
+     * Access via the wrapped DDSAccessInterface.
      * If the wrapped DDS is NOT a DataDDS, we return NULL!
      * @return null or the wrapped DataDDS
      */
@@ -70,19 +65,14 @@ namespace agg_util
 
   private:
 
-      // If _pDDSHolder, unref() and null it.
-      void cleanup() throw();
+    void cleanup() throw();
 
-      // If rhs._pDDSHodler, we ref() it
-      // and maintain an alias ourselves.
-      // ASSUMES: !_pDDSHolder
-      void copyRepFrom(const AggMemberDatasetDDSWrapper& rhs);
 
-      // data rep
+    void copyRepFrom(const AggMemberDatasetDDSWrapper& rhs);
 
-      // Invariant: If not-null, we maintain a strong ref() to it
-      // and unref() in cleanup().
-      const DDSAccessRCInterface* _pDDSHolder;
+    // data rep
+
+    const DDSAccessInterface* _pDDSHolder;
 
   }; // class AggMemberDatasetDDSWrapper
 

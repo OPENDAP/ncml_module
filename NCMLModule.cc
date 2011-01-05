@@ -37,8 +37,10 @@
 #include "BESRequestHandlerList.h"
 #include "BESResponseHandlerList.h"
 #include "BESResponseNames.h"
+#include "BESXMLCommand.h"
 #include <iostream>
 #include "NCMLModule.h"
+#include "NCMLCacheAggXMLCommand.h"
 #include "NCMLRequestHandler.h"
 #include "NCMLResponseNames.h"
 
@@ -57,7 +59,7 @@ NCMLModule::initialize( const string &modname )
 
     // If new commands are needed, then let's declare this once here. If
     // not, then you can remove this line.
-    string cmd_name ;
+    addCommandAndResponseHandlers(modname);
 
     // Dap services
     BESDEBUG( modname, modname << " handles dap services" << endl );
@@ -103,9 +105,8 @@ NCMLModule::terminate( const string &modname )
     BESRequestHandler *rh = BESRequestHandlerList::TheList()->remove_handler( modname ) ;
     if( rh ) delete rh ;
 
-    // If new commands are needed, then let's declare this once here. If
-    // not, then you can remove this line.
-    string cmd_name ;
+    // If new commands were added, remove them here.
+    removeCommandAndResponseHandlers();
 
     BESDEBUG( modname, "    removing catalog container storage"
                      << NCML_CATALOG << endl );
@@ -131,5 +132,52 @@ NCMLModule::dump( ostream &strm ) const
 {
     strm << BESIndent::LMarg << "NCMLModule::dump - ("
 			     << (void *)this << ")" << endl ;
+}
+
+void
+NCMLModule::addCommandAndResponseHandlers(const string& modname)
+{
+  BESDEBUG(modname, "Adding module extensions..." << endl);
+  addCacheAggCommandAndResponseHandlers(modname);
+  BESDEBUG(modname, "... done adding module extensions." << endl);
+}
+
+void
+NCMLModule::addCacheAggCommandAndResponseHandlers(const string& modname)
+{
+  string cmdName = ModuleConstants::CACHE_AGG_RESPONSE ;
+
+  BESDEBUG( modname, "    adding "
+      << cmdName
+      << " response handler" << endl ) ;
+  BESResponseHandlerList::TheList()->add_handler(
+      cmdName,
+      NCMLCacheAggResponseHandler::makeInstance);
+
+  BESDEBUG(modname, "    adding " << cmdName << " command" << endl ) ;
+  BESXMLCommand::add_command(
+      cmdName,
+      NCMLCacheAggXMLCommand::makeInstance);
+}
+
+void
+NCMLModule::removeCommandAndResponseHandlers()
+{
+  BESDEBUG(ModuleConstants::NCML_NAME, "Removing module extensions..." << endl);
+  removeCacheAggCommandAndResponseHandlers();
+  BESDEBUG(ModuleConstants::NCML_NAME, "... done removing module extensions." << endl);
+}
+
+void
+NCMLModule::removeCacheAggCommandAndResponseHandlers()
+{
+  string cmdName = ModuleConstants::CACHE_AGG_RESPONSE;
+
+  BESDEBUG( ModuleConstants::NCML_NAME, "    removing " << cmdName
+      << " response handler" << endl ) ;
+  BESResponseHandlerList::TheList()->remove_handler( cmdName ) ;
+
+  BESDEBUG( ModuleConstants::NCML_NAME, "    removing " << cmdName << " command" << endl ) ;
+  BESXMLCommand::del_command( cmdName ) ;
 }
 

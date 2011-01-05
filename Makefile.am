@@ -20,6 +20,7 @@ BES_HDRS:=
 NCML_SRCS = \
 		AggMemberDataset.cc \
 		AggMemberDatasetDDSWrapper.cc \
+		AggMemberDatasetSharedDDSWrapper.cc \
 		AggMemberDatasetUsingLocationRef.cc \
 		AggMemberDatasetWithDimensionCacheBase.cc \
 		AggregationElement.cc \
@@ -40,11 +41,13 @@ NCML_SRCS = \
 		GridJoinExistingAggregation.cc \
 		MyBaseTypeFactory.cc \
 		NCMLBaseArray.cc \
+		NCMLCacheAggXMLCommand.cc \
 		NCMLCommonTypes.cc \
 		NCMLElement.cc \
 		NCMLModule.cc \
 		NCMLParser.cc \
 		NCMLRequestHandler.cc \
+		NCMLResponseNames.cc \
 		NCMLUtil.cc \
 		NetcdfElement.cc \
 		OtherXMLParser.cc \
@@ -68,6 +71,7 @@ NCML_SRCS = \
 NCML_HDRS = \
 		AggMemberDataset.h \
 		AggMemberDatasetDDSWrapper.h \
+		AggMemberDatasetSharedDDSWrapper.h \
 		AggMemberDatasetUsingLocationRef.h \
 		AggMemberDatasetWithDimensionCacheBase.h \
 		AggregationElement.h \
@@ -89,6 +93,7 @@ NCML_HDRS = \
 		MyBaseTypeFactory.h \
 		NCMLArray.h \
 		NCMLBaseArray.h \
+		NCMLCacheAggXMLCommand.h \
 		NCMLCommonTypes.h \
 		NCMLDebug.h \
 		NCMLElement.h \
