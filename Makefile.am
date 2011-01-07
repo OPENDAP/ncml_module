@@ -39,6 +39,7 @@ NCML_SRCS = \
 		GridAggregationBase.cc \
 		GridAggregateOnOuterDimension.cc \
 		GridJoinExistingAggregation.cc \
+		JoinExistingDimensionCacheManager.cc \
 		MyBaseTypeFactory.cc \
 		NCMLBaseArray.cc \
 		NCMLCacheAggXMLCommand.cc \
@@ -90,6 +91,7 @@ NCML_HDRS = \
 		GridAggregationBase.h \
 		GridAggregateOnOuterDimension.h \
 		GridJoinExistingAggregation.h \
+		JoinExistingDimensionCacheManager.h \
 		MyBaseTypeFactory.h \
 		NCMLArray.h \
 		NCMLBaseArray.h \
