@@ -176,6 +176,11 @@ ncml.conf: ncml.conf.in config.status
 dist-hook:
 	rm -rf `find $(distdir) -name .svn`
 
+.PHONY: docs
+docs:
+	doxygen $(srcdir)/doxy.conf
+	(cd docs && tar -czf html.tar.gz html)
+
 C4_DIR=./cccc
 .PHONY: cccc
 cccc:	
@@ -224,7 +229,7 @@ pkg-dmg:
 	-rm -rf @PACKAGE@-@PACKAGE_VERSION@
 	-rm -rf @PACKAGE@-@PACKAGE_VERSION@.dmg
 	mkdir @PACKAGE@-@PACKAGE_VERSION@
-	mv @PACKAGE@-@PACKAGE_VERSION@.pkg @PACKAGE@-@PACKAGE_VERSION@
+	cp -r @PACKAGE@-@PACKAGE_VERSION@.pkg @PACKAGE@-@PACKAGE_VERSION@
 	cp README NEWS @PACKAGE@-@PACKAGE_VERSION@
 	dropdmg -i --sanitize-for-servers --format zlib @PACKAGE@-@PACKAGE_VERSION@
 	-rm -rf @PACKAGE@-@PACKAGE_VERSION@
