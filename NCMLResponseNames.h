@@ -50,7 +50,7 @@ namespace ncml_module
     static const std::string CACHE_AGG_LOCATION_XML_ATTR;
 
     /** Key in the dhi.data[] map where the location is stored. */
-    static const std::string ModuleConstants::CACHE_AGG_LOCATION_DATA_KEY;
+    static const std::string CACHE_AGG_LOCATION_DATA_KEY;
   };
 };
 
