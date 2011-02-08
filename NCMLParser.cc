@@ -41,7 +41,7 @@
 #include <BaseType.h> // libdap
 #include <DAS.h> // libdap
 #include <DDS.h> // libdap
-#include <mime_util.h>
+//#include <mime_util.h>
 #include <Structure.h> // libdap
 #include <map>
 #include <memory>

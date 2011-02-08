@@ -48,7 +48,7 @@
 #include <BESTextInfo.h>
 #include <BESUtil.h>
 #include <BESVersionInfo.h>
-#include <mime_util.h>
+//#include <mime_util.h>
 #include "NCMLDebug.h"
 #include "NCMLUtil.h"
 
