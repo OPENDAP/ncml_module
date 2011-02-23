@@ -4,8 +4,10 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xmlns="http://xml.opendap.org/ns/DAP2"
 xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/dap2.xsd">
 
-    <Attribute name="Test Description" type="String">
-        <value>Adding metadata to the auto-generated aggregated map vector.</value>
+    <Attribute name="NC_GLOBAL" type="Container">
+        <Attribute name="Test Description" type="String">
+            <value>Adding metadata to the auto-generated aggregated map vector.</value>
+        </Attribute>
     </Attribute>
 
     <Grid name="v">

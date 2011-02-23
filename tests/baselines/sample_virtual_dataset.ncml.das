@@ -1,4 +1,7 @@
 Attributes {
+    NC_GLOBAL {
+        String TOP_Level_DAP_Attribute "This is a top level attribute";
+    }
     MetaData {
         String Created "18 Aug 2009";
         String Author "eponymous";

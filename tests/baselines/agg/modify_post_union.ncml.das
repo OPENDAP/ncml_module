@@ -1,5 +1,7 @@
 Attributes {
-    String Dataset_Description "This is a union.";
+    NC_GLOBAL {
+        String Dataset_Description "This is a union.";
+    }
     SelfReferentialVariable {
     }
     Foo {

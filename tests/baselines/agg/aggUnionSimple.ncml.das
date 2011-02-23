@@ -1,7 +1,6 @@
 Attributes {
-    String title "Union cldc and lflx";
     NC_GLOBAL {
-        String title "COADS 1-degree Equatorial Enhanced";
+        String title "Union cldc and lflx", "COADS 1-degree Equatorial Enhanced";
         String history "";
         String Conventions "COARDS";
     }

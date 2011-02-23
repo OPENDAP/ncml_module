@@ -4,8 +4,10 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xmlns="http://xml.opendap.org/ns/DAP2"
 xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/dap2.xsd">
 
-    <Attribute name="Empty" type="String">
-        <value></value>
+    <Attribute name="NC_GLOBAL" type="Container">
+        <Attribute name="Empty" type="String">
+            <value></value>
+        </Attribute>
     </Attribute>
 
     <String name="EmptyVar"/>

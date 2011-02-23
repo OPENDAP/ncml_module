@@ -1,5 +1,7 @@
 Attributes {
-    String Description " joinExisting test on netcdf Grid granules using scan@ncoords";
+    NC_GLOBAL {
+        String Description " joinExisting test on netcdf Grid granules using scan@ncoords";
+    }
     v {
         time {
             String Description "Test coordinate variable time.";

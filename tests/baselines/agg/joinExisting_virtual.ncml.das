@@ -1,5 +1,7 @@
 Attributes {
-    String Description "A global aggregation attribute.";
+    NC_GLOBAL {
+        String Description "A global aggregation attribute.";
+    }
     V {
         String Description "A test attribute for V.";
     }
