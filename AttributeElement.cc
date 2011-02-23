@@ -26,16 +26,25 @@
 //
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
+
+#include <DDS.h>	// Needed for a test of the dds version
+
 #include "AttributeElement.h"
 #include "NCMLDebug.h"
 #include "NCMLParser.h"
 #include "NCMLUtil.h"
 #include "OtherXMLParser.h"
 
+// This control whether global attributes are added to a special container.
+// See below...
+#define USE_NC_GLOBAL_CONTAINER 1
+
 namespace ncml_module
 {
   const string AttributeElement::_sTypeName = "attribute";
   const vector<string> AttributeElement::_sValidAttributes = getValidAttributes();
+
+  const string AttributeElement::_default_global_container = "NC_GLOBAL";
 
   AttributeElement::AttributeElement()
   : NCMLElement(0)
@@ -100,7 +109,7 @@ namespace ncml_module
   void
   AttributeElement::handleContent(const string& content)
   {
-    // We should know if it's valid here, but doublecheck with parser.
+    // We should know if it's valid here, but double check with parser.
      if (_parser->isScopeAtomicAttribute())
        {
          BESDEBUG("ncml", "Adding attribute values as characters content for atomic attribute=" << _name <<
@@ -325,6 +334,7 @@ namespace ncml_module
                 " an attribute@value for OtherXML --- it must be set in the content!  Scope was: "
                 + p.getScopeString() );
           }
+
         p.getCurrentAttrTable()->append_attr(_name, internalType, _value);
       }
   }
@@ -353,13 +363,70 @@ namespace ncml_module
     // Split the values if needed, again avoiding OtherXML being tokenized since it's a scalar by definition.
     if (actualType == "OtherXML")
       {
-        BESDEBUG("ncml", "Setting OtherXML data to: " << endl << _value << endl);
+        BESDEBUG("ncml_attr", "Setting OtherXML data to: " << endl << _value << endl);
         pTable->append_attr(name, actualType, _value);
       }
     else
       {
         p.tokenizeAttrValues(_tokens, value, actualType, _separator);
+#if USE_NC_GLOBAL_CONTAINER
+        // If the NCML handler is adding an
+	// attribute to the top level AttrTable, that violates a rule of the
+	// DAP2 spec which says that the top level attribute object has only
+	// containers. In the case that this code tries to add an attribute
+	// to a top level container, we add it instead to a container named
+	// NC_GLOBAL. If that container does not exist, we create it. I used
+        // NC_GLOBAL (and not NCML_GLOBAL) because the TDS uses that name.
+	// 2/9/11 jhrg
+        // NOTE: It seems like this should above in addNewAttribute, but that
+        // will break the parse later on because of some kind of mismatch
+        // between the contents of the AttrTable and the scope stack. I could
+        // push a new thing on the scope stack, but that might break things
+        // elsewhere. If we _did_ do that, then we could use isScopeGlobal()
+        // to test for global attributes.
+
+        BESDEBUG("ncml_attr", "mutateAttributeAtCurrentScope: Looking at table: " << pTable->get_name() << endl);
+        BESDEBUG("ncml_attr", "Looking at attribute named: " << _name << endl);
+        BESDEBUG("ncml_attr", "isScopeGlobal(): " << p.isScopeGlobal() << endl);
+        BESDEBUG("ncml_attr", "isScopeNetcdf(): " << p.isScopeNetcdf() << endl);
+        BESDEBUG("ncml_attr", "isScopeAtomicAttribute(): " << p.isScopeAtomicAttribute() << endl);
+        BESDEBUG("ncml_attr", "isScopeAttributeContainer(): " << p.isScopeAttributeContainer() << endl);
+        BESDEBUG("ncml_attr", "isScopeVariable(): " << p.isScopeVariable() << endl);
+        BESDEBUG("ncml_attr", "getTypedScopeString(): " << p.getTypedScopeString() << endl);
+        BESDEBUG("ncml_attr", "getScopeDepth(): " << p.getScopeDepth() << endl);
+        BESDEBUG("ncml_attr", "DAP version: " << p.getDDSForCurrentDataset()->get_dap_major() << "." << p.getDDSForCurrentDataset()->get_dap_minor() << endl);
+
+        // Note that in DAP4 we are allowed to have top level attributes. This
+        // change was made so that Structure and Dataset are closer to one
+        // another.
+        if (p.getScopeDepth() < 2 && p.getDDSForCurrentDataset()->get_dap_major() < 4)
+          {
+            BESDEBUG("ncml_attr", "There's no parent container, looking for " << _default_global_container << "..." << endl);
+            // Using the getDDSForCurrentDataset's attr table is no different
+            // than using pTable. 2/22/11
+            //AttrTable &gat = p.getDDSForCurrentDataset()->get_attr_table();
+            //AttrTable *at = gat.find_container(_default_global_container);
+            AttrTable *at = pTable->find_container(_default_global_container);
+            if (!at)
+              {
+        	BESDEBUG("ncml_attr", " not found; adding." << endl);
+        	at = pTable->append_container(_default_global_container);
+              }
+            else
+              {
+        	BESDEBUG("ncml_attr", " found; using" << endl);
+              }
+
+            at->append_attr(_name, actualType, &(_tokens));
+          }
+        else
+          {
+            BESDEBUG("ncml_attr", "Found parent container..." << endl);
+            pTable->append_attr(_name, actualType, &(_tokens));
+          }
+#else
         pTable->append_attr(name, actualType, &(_tokens));
+#endif
       }
   }
 

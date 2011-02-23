@@ -155,12 +155,13 @@ DDSLoader::loadInto(const std::string& location, ResponseType type, BESDapRespon
     }
   pDDS->set_request_xml_base( pResponse->get_request_xml_base() );
 
-#if 0 // I took these out since they seem to have changed and I am not sure what the right thing to do is...
+#if 0
+  // I think this should be removed. pDDSResponse was likely changed to pResponse
+  // and pDDS is the same object. The BES will set these for us.
+  // I took these out since they seem to have changed and I am not sure what the right thing to do is...
   pDDS->set_dap_major( pDDSResponse->get_dds()->get_dap_major() );
   pDDS->set_dap_minor( pDDSResponse->get_dds()->get_dap_major() );
 #endif
-
-
 
   // DO IT!
   BESRequestHandlerList::TheList()->execute_current( _dhi ) ;

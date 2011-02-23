@@ -82,7 +82,7 @@ namespace ncml_module
        * Create an element of the proper type with the given AttrMap
        * for its defined attributes.
        * @return the new element or NULL if eltTypeName had to prototype.
-       * @param eltName element type name
+       * @param eltTypeName element type name
        * @param attrs the map of the attributes defined for the element
        * @param parser  the parser which is creating the element.
        */
@@ -163,14 +163,11 @@ namespace ncml_module
     /** Handle the characters content for the element.
      * Default impl throws if the content is not all whitespace.
      * Subclasses that handle non-whitespace content should override.
-     * @param p the parser to effect.
      * @param content the string of characters in the element content.
      */
     virtual void handleContent(const std::string& content);
 
-    /** Handle the closing of this element.
-     * @param p the parser to effect
-     * */
+    /** Handle the closing of this element. */
     virtual void handleEnd() = 0;
 
     /** Return a string describing the element */

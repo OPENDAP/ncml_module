@@ -72,6 +72,7 @@ namespace ncml_module
 public: // data rep
     static const string _sTypeName;
     static const vector<string> _sValidAttributes;
+    static const string _default_global_container;
 
   private: // method
 
