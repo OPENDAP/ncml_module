@@ -36,6 +36,7 @@
 #include "DDS.h" // libdap
 #include "NCMLDebug.h"
 #include <sstream>
+#include <algorithm>
 
 using std::string;
 using libdap::BaseType;
