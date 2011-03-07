@@ -1425,7 +1425,7 @@ namespace ncml_module
     // since we're about to delete the pointer to pBT!
     getParentDataset()->setVariableGotValues(pBT, true);
 
-    // Copy the entire AttrTable tree (recursively) from the placeholder into the new variable
+    // Copy the entire AttrTable tree (recursively) from the place holder into the new variable
     pNewArrCV->get_attr_table() = pBT->get_attr_table();
 
     // Delete the placeholder
@@ -1446,7 +1446,7 @@ namespace ncml_module
   auto_ptr<libdap::Array>
   AggregationElement::createCoordinateVariableForNewDimension(const agg_util::Dimension& dim) const
   {
-    // Get the netcdf@coordValue or use the netcdf@location (or autogenerate if empty() ).
+    // Get the netcdf@coordValue or use the netcdf@location (or auto generate if empty() ).
     NCML_ASSERT(_datasets.size() > 0);
     bool hasCoordValue = !(_datasets[0]->coordValue().empty());
     if (hasCoordValue)
