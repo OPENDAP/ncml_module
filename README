@@ -1,6 +1,4 @@
 
-$Id: README $
-
 [ Updated for version 1.1.0 (13 September 2010) ]
 
 ----------------------------------------------------------------------
@@ -167,8 +165,8 @@ Similarly to HDF4, there is a problem with the DAS created by the
 NetCDF Module in the case of Grid (at least).  A NetCDF dataset with
 shared dimensions will generate a DAP 2 Grid for the data with map
 vectors for these dimensions.  Attributes (metadata) specified on
-these map vectors is placed into the dataset attribute container
-instead of within the Grid attribute contrainer, however, which is a
+these map vectors are placed into the dataset attribute container
+instead of within the Grid attribute container, however, which is a
 deviation from the DAP 2 specification.  The NcML handler uses the
 (correctly created) DDX to generate the DAS, so the output of an NcML
 dataset with a Grid in it will have the map vector attributes within

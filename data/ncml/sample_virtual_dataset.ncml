@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <netcdf> <!-- No location, so purely virtual dataset specified in this file -->
-  
+  <attribute name="TOP_Level_DAP_Attribute"  type="string" value="This is a top level attribute"/>
+    
   <!-- Dimensions specified at top of netcdf and can be used until </netcdf> -->
   <dimension name="station" length="2"/>
   <dimension name="samples" length="5"/>

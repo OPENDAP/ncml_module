@@ -1,5 +1,14 @@
 
-$Id: NEWS $
+
+Version 1.2.0
+
+A know bug exists for attributes defined at the top-level (i.e., right
+after the <netcdf> element) for JoinExisting and Union aggregations.
+Since we don't know if they should be included in the NC_GLOBAL container
+or not, they are currently elided from the aggregation. However, now
+global attributes appear in a NC_GLOBAL container, unless the client
+requests a DAP4 response. Because of this change 12 tests fail: 354 356 
+359 361 369 371 373 375 561 563 566 568 
 
 -----------------------------------------------------------------------
 Version 1.1.0 (13 September 2010)

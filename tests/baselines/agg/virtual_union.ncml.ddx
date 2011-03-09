@@ -4,11 +4,13 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xmlns="http://xml.opendap.org/ns/DAP2"
 xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/dap2.xsd">
 
-    <Attribute name="Dataset_Description" type="String">
-        <value>Virtual union aggregation example</value>
-    </Attribute>
-    <Attribute name="Description" type="String">
-        <value>Dataset One</value>
+    <Attribute name="NC_GLOBAL" type="Container">
+        <Attribute name="Dataset_Description" type="String">
+            <value>Virtual union aggregation example</value>
+        </Attribute>
+        <Attribute name="Description" type="String">
+            <value>Dataset One</value>
+        </Attribute>
     </Attribute>
     <Attribute name="AttrContainer" type="Container">
         <Attribute name="Attr_1" type="Int32">

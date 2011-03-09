@@ -44,7 +44,7 @@ using namespace std;
  * of a variable or attribute in a DDS.  It can be used to generate the fully qualified
  * name of a variable or attribute within the DDS.
  *
- * For now, an empty scope stack will implicitly mean GLOBAL scope (DDS level, or what have you.
+ * For now, an empty scope stack will implicitly mean GLOBAL scope (DDS level, or what have you).
  * We won't actually push an entry for GLOBAL, it will just be assumed if empty().
  * We also won't put it in the scope strings since they are meant to refer to fully qualified names,
  * where an empty() name means global scope.
@@ -106,6 +106,13 @@ namespace ncml_module
      * isCurrentScope(GLOBAL) is true.
     */
     bool empty() const;
+
+    /** How many things are on the stack. This is useful for knowing if an
+     * atomic attribute is being added at the top level of the DAS/DDS (which
+     * DAP2 does not allow, but DAP4 will).
+     * @return The number of items on the stack.
+     */
+    int size() const;
 
     string getFullyQualifiedName() const { return getScopeString(); }
 

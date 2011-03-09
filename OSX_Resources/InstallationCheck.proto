@@ -4,6 +4,9 @@
 
 # use "i386" or "ppc.*" - nake sure to use a regex for PPC!
 
+PATH="_PREFIX_/bin:$PATH"
+
+
 architecture="i386.*"
 if arch | grep -v "$architecture"
 then
@@ -23,6 +26,7 @@ version=`uname -a | sed 's/.*Darwin Kernel Version \([0-9.]*\):.*/\1/'`
 major=`echo $version | sed 's/\([0-9]\)\.\([0-9]\)\.\([0-9]\)/\1/'`
 minor=`echo $version | sed 's/\([0-9]\)\.\([0-9]\)\.\([0-9]\)/\2/'`
 
+echo "OSX version: "$version" major: "$major" minor: "$minor 
 if test $major -lt 9 -o $major -eq 9 -a $minor -lt 7
 then
     # Warn and display message 16
@@ -39,11 +43,11 @@ then
     exit 113
 fi
 
-version=`dap-config --version | sed 's/libdap \([0-9.]*\)/\1/'`
-major=`echo $version | sed 's/\([0-9]\)\.\([0-9]\)\.\([0-9]\)/\1/'`
-minor=`echo $version | sed 's/\([0-9]\)\.\([0-9]\)\.\([0-9]\)/\2/'`
-#echo "dap version($version) major($major) minor ($minor)"
+version=`dap-config --version | sed 's@libdap \(.*\)@\1@'`
+major=`echo $version | sed 's/\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\)/\1/'`
+minor=`echo $version | sed 's/\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\)/\2/'`
 
+echo "Libdap version: "$version" major: "$major" minor: "$minor 
 if test $major -lt 3 -o $major -eq 3 -a $minor -lt 9
 then
    # echo "DAP requirement failed\n"
@@ -60,11 +64,11 @@ then
     exit 115
 fi
 
-version=`bes-config --version | sed 's/bes \([0-9.]*\)/\1/'`
-major=`echo $version | sed 's/\([0-9]\)\.\([0-9]\)\.\([0-9]\)/\1/'`
-minor=`echo $version | sed 's/\([0-9]\)\.\([0-9]\)\.\([0-9]\)/\2/'`
-#echo "bes version($version) major($major) minor ($minor)"
+version=`bes-config --version | sed 's@bes \(.*\)@\1@'`
+major=`echo $version | sed 's/\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\)/\1/'`
+minor=`echo $version | sed 's/\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\)/\2/'`
 
+echo "BES version: "$version" major: "$major" minor: "$minor 
 if test $major -lt 3 -o $major -eq 3 -a $minor -lt 7
 then
     # echo "BES requirement failed\n"

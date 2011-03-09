@@ -9,8 +9,10 @@ xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/d
             <value>I am a new attribute in a new container!</value>
         </Attribute>
     </Attribute>
-    <Attribute name="NewContainer.NewAttr" type="Int32">
-        <value>100</value>
+    <Attribute name="NC_GLOBAL" type="Container">
+        <Attribute name="NewContainer.NewAttr" type="Int32">
+            <value>100</value>
+        </Attribute>
     </Attribute>
 
 

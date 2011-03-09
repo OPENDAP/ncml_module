@@ -4,11 +4,13 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xmlns="http://xml.opendap.org/ns/DAP2"
 xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/dap2.xsd">
 
-    <Attribute name="title" type="String">
-        <value>Testing union with dimensions</value>
-    </Attribute>
-    <Attribute name="Description" type="String">
-        <value>The first dataset</value>
+    <Attribute name="NC_GLOBAL" type="Container">						    
+        <Attribute name="title" type="String">
+            <value>Testing union with dimensions</value>
+        </Attribute>
+        <Attribute name="Description" type="String">
+            <value>The first dataset</value>
+        </Attribute>
     </Attribute>
 
     <Array name="Grues">

@@ -93,6 +93,12 @@ namespace ncml_module
     return _scope.empty();
   }
 
+  int
+  ScopeStack::size() const
+  {
+    return _scope.size();
+  }
+
   string
   ScopeStack::getScopeString() const
   {

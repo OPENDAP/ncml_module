@@ -37,7 +37,8 @@
 #include <string>
 #include <vector>
 
-#include "AttrTable.h" // needed due to parameter with AttrTable::Attr_iter
+#include <AttrTable.h> // needed due to parameter with AttrTable::Attr_iter
+
 #include "DDSLoader.h"
 #include "NCMLElement.h" // NCMLElement::Factory
 #include "SaxParser.h" // interface superclass
@@ -260,7 +261,7 @@ private: //methods
   /** Is the innermost scope an atomic (leaf) attribute? */
   bool isScopeAtomicAttribute() const;
 
-  /** Is the inntermost scope an attribute container? */
+  /** Is the innermost scope an attribute container? */
   bool isScopeAttributeContainer() const;
 
   /** Is the innermost scope an non-Constructor variable? */
@@ -507,6 +508,9 @@ private: //methods
 
   /** Get a typed scope string */
   string getTypedScopeString() const;
+
+  /** Get a count of the current scope depth */
+  int getScopeDepth() const;
 
   /** Push the element onto the element stack
    * and ref() it. */

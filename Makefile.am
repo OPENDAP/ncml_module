@@ -125,9 +125,9 @@ NCML_HDRS = \
 
 # ICU_CPPFLAGS and ICU_LIBS set from configure.ac check for ICU
 libncml_module_la_SOURCES = $(NCML_SRCS) $(BES_SRCS) $(NCML_HDRS) $(BES_HDRS)
-libncml_module_la_CPPFLAGS = $(BES_CPPFLAGS)  $(DAP_CFLAGS) $(ICU_CPPFLAGS) -Werror
+libncml_module_la_CPPFLAGS = $(ICU_CPPFLAGS) $(BES_CPPFLAGS)  $(DAP_CFLAGS)  -Werror
 libncml_module_la_LDFLAGS = -avoid-version -module 
-libncml_module_la_LIBADD =  $(BES_DAP_LIBS)  $(DAP_LIBS) $(ICU_LIBS) 
+libncml_module_la_LIBADD =   $(ICU_LIBS) $(BES_DAP_LIBS)  $(DAP_LIBS)
 
 EXTRA_PROGRAMS = 
 
@@ -183,6 +183,11 @@ ncml.conf: ncml.conf.in config.status
 dist-hook:
 	rm -rf `find $(distdir) -name .svn`
 
+.PHONY: docs
+docs:
+	doxygen $(srcdir)/doxy.conf
+	(cd docs && tar -czf html.tar.gz html)
+
 C4_DIR=./cccc
 .PHONY: cccc
 cccc:	
@@ -209,28 +214,35 @@ rpm: dist
 PACKAGEMAKER=/Developer/usr/bin/packagemaker
 PKG_CONF_FLAGS=
 
-clean-pkg:
+clean-pkg: 
 	-rm -rf mac_osx @PACKAGE@-@PACKAGE_VERSION@.pkg
 
-pkg-build:
-	./configure --prefix=/usr --disable-dependency-tracking $(PKG_CONF_FLAGS)
+pkg-build: clean-pkg 
+	./configure --prefix=$(prefix) --with-icu-prefix=$(ICU_PATH) --disable-dependency-tracking $(PKG_CONF_FLAGS)
 	make clean all
 	DESTDIR=`pwd`/mac_osx make install
 
-pkg-main:
+pkg-main: pkg-build
 	./OSX_Resources/update_mac_package_contents.pl README
-	${PACKAGEMAKER} --root mac_osx/usr --id org.opendap.libdap \
+	cat ./OSX_Resources/InstallationCheck.proto | sed -e "s^_PREFIX_^$(prefix)^g" > foo
+	mv foo ./OSX_Resources/InstallationCheck
+	cat ./OSX_Resources/Info.plist.proto | sed -e "s^_PREFIX_^$(prefix)^g" > foo
+	mv foo ./OSX_Resources/Info.plist
+	${PACKAGEMAKER} --root mac_osx --id org.opendap.@PACKAGE@ \
 		--title "@PACKAGE@ @PACKAGE_VERSION@" --version @PACKAGE_VERSION@ \
 		--out @PACKAGE@-@PACKAGE_VERSION@.pkg --resources OSX_Resources
 
-pkg-dmg:
+pkg-dmg: pkg-main
 	-rm -rf @PACKAGE@-@PACKAGE_VERSION@
 	-rm -rf @PACKAGE@-@PACKAGE_VERSION@.dmg
 	mkdir @PACKAGE@-@PACKAGE_VERSION@
-	mv @PACKAGE@-@PACKAGE_VERSION@.pkg @PACKAGE@-@PACKAGE_VERSION@
+	cp -r @PACKAGE@-@PACKAGE_VERSION@.pkg @PACKAGE@-@PACKAGE_VERSION@
 	cp README NEWS @PACKAGE@-@PACKAGE_VERSION@
 	dropdmg -i --sanitize-for-servers --format zlib @PACKAGE@-@PACKAGE_VERSION@
 	-rm -rf @PACKAGE@-@PACKAGE_VERSION@
 
-pkg: clean-pkg pkg-build pkg-main pkg-dmg
+pkg: pkg-main
+
+
+
 

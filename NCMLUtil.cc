@@ -198,7 +198,7 @@ namespace ncml_module
 
     VALID_PTR(das);
 
-    // Make sure the DAS is empty tostart.
+    // Make sure the DAS is empty to start.
     das->erase();
 
     // dds is semantically const in this function, but the calls to it aren't...

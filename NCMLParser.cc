@@ -840,6 +840,8 @@ AttrTable*
 NCMLParser::getCurrentAttrTable() const
 {
   // will load the DDS of current dataset if required.
+  // The end result of calling AttrTableLazyPtr::get() is that the NCMLParser
+  // field '_pAttrTable' points to the DDS' AttrTable.
   return _pCurrentTable.get();
 }
 
@@ -1240,6 +1242,11 @@ NCMLParser::getTypedScopeString() const
   return _scope.getTypedScopeString();
 }
 
+int
+NCMLParser::getScopeDepth() const
+{
+    return _scope.size();
+}
 void
 NCMLParser::pushElement(NCMLElement* elt)
 {
