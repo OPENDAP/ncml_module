@@ -341,7 +341,9 @@ DDSLoader::makeResponseForType(ResponseType type)
     {
       THROW_NCML_INTERNAL_ERROR("DDSLoader::makeResponseForType() got unknown type!");
     }
+#if 0
   return auto_ptr<BESDapResponse>(0);
+#endif
 }
 
 std::string

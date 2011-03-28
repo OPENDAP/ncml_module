@@ -68,6 +68,7 @@ namespace ncml_module
     _value = proto._value;
     _separator = proto._separator;
     _orgName = proto._orgName;
+    _tokens = proto._tokens;	// jhrg 3/16/11
     _pOtherXMLParser = 0;
   }
 

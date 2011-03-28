@@ -243,6 +243,8 @@ NCMLRequestHandler::ncml_build_vers( BESDataHandlerInterface &dhi )
 {
     bool ret = true ;
     BESVersionInfo *info = dynamic_cast<BESVersionInfo *>(dhi.response_handler->get_response_object() ) ;
+    if (!info)
+    	throw InternalErr(__FILE__, __LINE__, "Expected a BESVersionInfo instance");
     info->add_module( PACKAGE_NAME, PACKAGE_VERSION ) ;
     return ret ;
 }
@@ -252,6 +254,8 @@ NCMLRequestHandler::ncml_build_help( BESDataHandlerInterface &dhi )
 {
     bool ret = true ;
     BESInfo *info = dynamic_cast<BESInfo *>(dhi.response_handler->get_response_object());
+    if (!info)
+    	throw InternalErr(__FILE__, __LINE__, "Expected a BESVersionInfo instance");
 
     // This is an example. If you had a help file you could load it like
     // this and if your handler handled the following responses.

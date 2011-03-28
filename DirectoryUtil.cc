@@ -506,7 +506,7 @@ namespace agg_util
   }
 
   bool
-  DirectoryUtil::matchesSuffix(const std::string filename, const std::string& suffix)
+  DirectoryUtil::matchesSuffix(const std::string& filename, const std::string& suffix)
   {
     // see if the last suffix.size() characters match.
     bool matches = (filename.find(suffix, filename.size() - suffix.size()) != string::npos);

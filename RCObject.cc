@@ -64,8 +64,10 @@ namespace agg_util
  {
    // just to let us know its invalid
    _count = -1;
+#if 0	// No exceptions in destructors. jhrg
    NCML_ASSERT_MSG(_preDeleteCallbacks.empty(),
        "~RCObject() called with a non-empty listener list!");
+#endif
  }
 
  int

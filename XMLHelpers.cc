@@ -89,6 +89,7 @@ namespace ncml_module
   : localname(proto.localname)
   , prefix(proto.prefix)
   , value(proto.value)
+  , nsURI(proto.nsURI)
   {
   }
 
@@ -102,6 +103,7 @@ namespace ncml_module
     localname = rhs.localname;
     prefix = rhs.prefix;
     value = rhs.value;
+    nsURI = rhs.nsURI;	// jhrg 3/16/11
     return *this;
   }
 

@@ -202,7 +202,7 @@ namespace agg_util
       */
      static std::string getBESRootDir();
 
-     static bool matchesSuffix(const std::string filename, const std::string& suffix);
+     static bool matchesSuffix(const std::string& filename, const std::string& suffix);
 
    private: // helper methods
 

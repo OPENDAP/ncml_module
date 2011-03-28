@@ -194,7 +194,21 @@ cccc:
 	cccc --outdir=$(C4_DIR) $(libncml_module_la_SOURCES)
 
 ###########################################################################
-#
+
+# Fortify targets.
+
+.PHONY: fortify
+fortify:
+	sourceanalyzer -b @PACKAGE@ $(MAKE)
+	sourceanalyzer -b @PACKAGE@ -scan -f @PACKAGE@-@PACKAGE_VERSION@.fpr
+
+# Use this to clean the fortify project.
+.PHONY: fortifyclean
+fortifyclean:
+	sourceanalyzer -b @PACKAGE@ -clean
+
+###########################################################################
+
 # Build linux RPMs
 
 srpm: dist

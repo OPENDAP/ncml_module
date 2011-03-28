@@ -49,6 +49,7 @@ namespace agg_util
   : RCObjectInterface()
   , RCObject(proto)
   {
+      _location = proto._location;	// jhrg 3/16/11
     // no rep yet
   }
 
