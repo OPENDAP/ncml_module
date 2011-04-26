@@ -1,11 +1,11 @@
 
-[ Updated for version 1.1.0 (13 September 2010) ]
+[ Updated for version 1.2.0.
 
 ----------------------------------------------------------------------
 
 ** Welcome to the OPeNDAP NcML Module for Hyrax! **
 
-This module can be added to the currently released Hyrax 1.6
+This module can be added to the currently released Hyrax 1.7
 installation to extend its data serving capability to NcML 2.2 files
 (see http://www.unidata.ucar.edu/software/netcdf/ncml/).  NcML
 provides a syntax for adding metadata and variables to existing
