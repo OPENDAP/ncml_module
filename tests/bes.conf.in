@@ -274,4 +274,5 @@ BES.DefaultResponseMethod=POST
 # Data Handler Specific key/value parameters                            #
 #                                                                       #
 #-----------------------------------------------------------------------#
+NCML.RootDirectory=ncml
 

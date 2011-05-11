@@ -26,23 +26,30 @@
 //
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
+
 #include "config.h"
+
+#include <iostream>
 
 #include <BESCatalogDirectory.h>
 #include <BESCatalogList.h>
 #include <BESContainerStorageList.h>
 #include <BESContainerStorageCatalog.h>
-#include "BESDapService.h"
-#include "BESDebug.h"
-#include "BESRequestHandlerList.h"
-#include "BESResponseHandlerList.h"
-#include "BESResponseNames.h"
-#include "BESXMLCommand.h"
-#include <iostream>
+#include <BESDapService.h>
+#include <BESDebug.h>
+#include <BESRequestHandlerList.h>
+#include <BESResponseHandlerList.h>
+#include <BESResponseNames.h>
+#include <BESXMLCommand.h>
+#include <BESContainerStorageList.h>
+#include <TheBESKeys.h>
+#include <BESInternalError.h>
+
 #include "NCMLModule.h"
 #include "NCMLCacheAggXMLCommand.h"
 #include "NCMLRequestHandler.h"
 #include "NCMLResponseNames.h"
+#include "NCMLContainerStorage.h"
 
 using std::endl;
 using namespace ncml_module;
@@ -88,8 +95,34 @@ NCMLModule::initialize( const string &modname )
          BESDEBUG( modname, "    storage already exists, skipping" << endl );
      }
 
+    BESDEBUG( modname, "    adding " << modname << " container storage" << endl );
+    BESContainerStorageList::TheList()->
+	add_persistence( new NCMLContainerStorage( modname ) ) ;
 
-    // INIT_END
+    string key = "NCML.RootDirectory" ;
+    BESDEBUG( modname, "    checking " << key << " parameter" << endl ) ;
+    string val ;
+    bool found = false ;
+    TheBESKeys::TheKeys()->get_value( key, val, found ) ;
+    if( !found || val.empty() || val == "/" )
+    {
+	string err = (string)"The parameter " + key
+		     + " must be set to use the NCML module" ;
+	throw BESInternalError( err, __FILE__, __LINE__ ) ;
+    }
+    // strip leading and trailing slash. This value is based on the BES
+    // Root Direcotry
+    if( val[0] == '/' )
+    {
+	val = val.substr( 1 ) ;
+    }
+    if( val[val.length()-1] == '/' )
+    {
+	val = val.substr( 0, val.length()-1 ) ;
+    }
+    NCMLContainerStorage::NCML_RootDir = val ;
+
+
     BESDEBUG( modname, "    adding NCML debug context" << endl );
     BESDebug::Register( modname ) ;
 
@@ -111,6 +144,9 @@ NCMLModule::terminate( const string &modname )
     BESDEBUG( modname, "    removing catalog container storage"
                      << NCML_CATALOG << endl );
     BESContainerStorageList::TheList()->deref_persistence( NCML_CATALOG ) ;
+
+    BESDEBUG( modname, "    removing ncml container storage" << endl ) ;
+    BESContainerStorageList::TheList()->deref_persistence( modname ) ;
 
     BESDEBUG( modname, "    removing " << NCML_CATALOG << " catalog" << endl );
     BESCatalogList::TheCatalogList()->deref_catalog( NCML_CATALOG ) ;

@@ -37,3 +37,10 @@ BES.module.ncml=@bes_modules_dir@/libncml_module.so
 
 BES.Catalog.catalog.TypeMatch+=ncml:.*\.ncml(\.bz2|\.gz|\.Z)?$;
 
+#-----------------------------------------------------------------------#
+# NCML module specific parameters
+#-----------------------------------------------------------------------#
+# NCML.RootDirectory - location from BES Root Directory to store the new
+#                      ncml documents.
+NCML.RootDirectory=ncml
+
