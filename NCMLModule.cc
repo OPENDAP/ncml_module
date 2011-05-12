@@ -99,7 +99,7 @@ NCMLModule::initialize( const string &modname )
     BESContainerStorageList::TheList()->
 	add_persistence( new NCMLContainerStorage( modname ) ) ;
 
-    string key = "NCML.RootDirectory" ;
+    string key = "NCML.TempDirectory" ;
     BESDEBUG( modname, "    checking " << key << " parameter" << endl ) ;
     string val ;
     bool found = false ;
@@ -110,18 +110,7 @@ NCMLModule::initialize( const string &modname )
 		     + " must be set to use the NCML module" ;
 	throw BESInternalError( err, __FILE__, __LINE__ ) ;
     }
-    // strip leading and trailing slash. This value is based on the BES
-    // Root Direcotry
-    if( val[0] == '/' )
-    {
-	val = val.substr( 1 ) ;
-    }
-    if( val[val.length()-1] == '/' )
-    {
-	val = val.substr( 0, val.length()-1 ) ;
-    }
-    NCMLContainerStorage::NCML_RootDir = val ;
-
+    NCMLContainerStorage::NCML_TempDir = val ;
 
     BESDEBUG( modname, "    adding NCML debug context" << endl );
     BESDebug::Register( modname ) ;

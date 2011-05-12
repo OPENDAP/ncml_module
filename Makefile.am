@@ -68,6 +68,7 @@ NCML_SRCS = \
 		VariableAggElement.cc \
 		VariableElement.cc \
 		NCMLContainerStorage.cc \
+		NCMLContainer.cc \
 		XMLHelpers.cc 
 
 NCML_HDRS = \
@@ -123,6 +124,7 @@ NCML_HDRS = \
 		VariableAggElement.h \
 		VariableElement.h \
 		NCMLContainerStorage.h \
+		NCMLContainer.h \
 		XMLHelpers.h
 
 # ICU_CPPFLAGS and ICU_LIBS set from configure.ac check for ICU

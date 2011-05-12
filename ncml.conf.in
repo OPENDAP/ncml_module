@@ -42,5 +42,5 @@ BES.Catalog.catalog.TypeMatch+=ncml:.*\.ncml(\.bz2|\.gz|\.Z)?$;
 #-----------------------------------------------------------------------#
 # NCML.RootDirectory - location from BES Root Directory to store the new
 #                      ncml documents.
-NCML.RootDirectory=ncml
+NCML.TempDirectory=/tmp
 

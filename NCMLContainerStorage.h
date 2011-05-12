@@ -2,8 +2,8 @@
 
 // -*- mode: c++; c-basic-offset:4 -*-
 
-// This file is part of gateway_module, A C++ module that can be loaded in to
-// the OPeNDAP Back-End Server (BES) and is able to handle remote requests.
+// This file is part of wcs_module, A C++ module that can be loaded in to
+// the OPeNDAP Back-End Server (BES) and is able to handle wcs requests.
 
 // Copyright (c) 2002,2003 OPeNDAP, Inc.
 // Author: Patrick West <pwest@ucar.edu>
@@ -33,16 +33,20 @@
 #ifndef NCMLContainerStorage_h_
 #define NCMLContainerStorage_h_ 1
 
+#include <list>
+
+using std::list ;
+
 #include "BESContainerStorageVolatile.h"
 
-namespace ncml_module
-{
+class BESCatalogUtils ;
+
 /** @brief implementation of BESContainerStorageVolatile that represents a
- * list of remote requests
+ * list of NCML requests
  *
- * Each of the containers stored in the NCMLContainerStorage represents
- * a remote request. When accessed the container will make the remote
- * request in order to create the target response.
+ * Each of the containers stored in the NCMLContainerStorage represents a NCML
+ * request. When accessed the container will make the NCML request in order
+ * to create the target response.
  *
  * @see BESContainerStorageVolatile
  * @see NCMLContainer
@@ -50,12 +54,10 @@ namespace ncml_module
 class NCMLContainerStorage : public BESContainerStorageVolatile
 {
 public:
-    static string		NCML_RootDir ;
+    static string		NCML_TempDir ;
 
     				NCMLContainerStorage( const string &n ) ;
     virtual			~NCMLContainerStorage() ;
-
-    virtual BESContainer * 	look_for( const string &sym_name ) ;
 
     virtual void		add_container( const string &s_name,
                                                const string &r_name,
@@ -63,8 +65,6 @@ public:
 
     virtual void		dump( ostream &strm ) const ;
 };
-
-} // namespace ncml_module
 
 #endif // NCMLContainerStorage_h_
 
