@@ -1,3 +1,152 @@
+2011-04-20  James Gallagher <jgallagher@opendap.org>
+
+	Hyrax 1.7 release
+
+2011-03-28  James Gallagher <jgallagher@opendap.org>
+
+	1.7RC1
+
+2011-03-17  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	ncml_module: Added automated version numbers to OSX Package builds
+
+2011-03-08  James Gallagher <jgallagher@opendap.org>
+
+	Merge for hyrax 1.7 from the hyrax_1.6.2_release branch of shrew
+	to the trunk
+
+	_M   .
+	M    ScopeStack.cc
+	M    ScopeStack.h
+	M    DDSLoader.cc
+	M    NEWS
+	D    OSX_Resources/InstallationCheck
+	A  + OSX_Resources/InstallationCheck.proto
+	D    OSX_Resources/Info.plist
+	A  + OSX_Resources/Info.plist.proto
+	M    AttributeElement.h
+	M    NCMLUtil.cc
+	M    conf/icu.m4
+	M    NCMLElement.h
+	M    NCMLParser.cc
+	M    tests/baselines/bugs/empty_attr_string.ncml.ddx
+	M    tests/baselines/bugs/empty_attr_string.ncml.das
+	M    tests/baselines/attribute_with_dot.ncml.das
+	M    tests/baselines/separator_test.ncml.ddx
+	M    tests/baselines/reentrancy_test.ncml.ddx
+	M    tests/baselines/separator_test.ncml.das
+	M    tests/baselines/reentrancy_test.ncml.das
+	M    tests/baselines/agg/joinExisting_virtual_fine.ncml.das
+	M    tests/baselines/agg/joinExisting_nc.ncml.das
+	M    tests/baselines/agg/virtual_union.ncml.das
+	M    tests/baselines/agg/joinExisting_simple_grid.ncml.ddx
+	M    tests/baselines/agg/joinExist_grid_mod_meta.ddx
+	M    tests/baselines/agg/modify_post_union.ncml.ddx
+	M    tests/baselines/agg/aggUnionSimple.ncml.das
+	M    tests/baselines/agg/joinExist_scan_ncoords.ncml.das
+	M    tests/baselines/agg/union_with_dimensions.ncml.ddx
+	M    tests/baselines/agg/joinExisting_virtual_fine.ncml.ddx
+	M    tests/baselines/agg/joinExisting_nc.ncml.ddx
+	M    tests/baselines/agg/joinExisting_virtual.ncml.das
+	M    tests/baselines/agg/virtual_union.ncml.ddx
+	M    tests/baselines/agg/multi_nested_unions.ncml.das
+	M    tests/baselines/agg/aggUnionSimple.ncml.ddx
+	M    tests/baselines/agg/joinExist_grid_add_cont_meta.ddx
+	M    tests/baselines/agg/joinExist_scan_ncoords.ncml.ddx
+	M    tests/baselines/agg/joinExisting_simple_grid.ncml.das
+	M    tests/baselines/agg/modify_post_union.ncml.das
+	M    tests/baselines/agg/joinExist_grid_add_meta.ddx
+	M    tests/baselines/agg/joinExisting_virtual.ncml.ddx
+	M    tests/baselines/agg/union_with_dimensions.ncml.das
+	M    tests/baselines/sample_virtual_dataset.ncml.ddx
+	M    tests/baselines/sample_virtual_dataset.ncml.das
+	M    tests/baselines/attribute_with_dot.ncml.ddx
+	M    data/ncml/sample_virtual_dataset.ncml
+	M    NCMLParser.h
+	M    README
+	M    AttributeElement.cc
+	A  + doxy_private.conf
+	A  + doxy.conf
+	M    Makefile.am
+
+2011-03-07  James Gallagher <jgallagher@opendap.org>
+
+	Comments
+
+	M    AggregationElement.cc
+
+2011-03-01  Patrick West <pwest@ucar.edu>
+
+	include of algorithm needed for sort method
+	M    AggMemberDatasetWithDimensionCacheBase.cc
+
+2011-02-08  James Gallagher <jgallagher@opendap.org>
+
+	removed unneeded mime_util.h and util.h includes; added comments about sending mime headers in our handlers (which may not be needed).
+
+2011-01-31  Patrick West <pwest@ucar.edu>
+
+	Fixed macro bug in code
+	M    NCMLResponseNames.h
+
+2011-01-07  mjohnson
+
+	Placeholder for join existing cache file system for saving the dimension cache in the AggMemberDataset to a binary file and reloading it later.  Commented out, in progress.
+
+2011-01-05  mjohnson
+
+	o Refactor to allow joinExisting to load dimension sizes from DDX. (ticket #1674).
+
+	o Tests for this
+
+	o Initial skeleton code for save/load of this dimension cache to allow for #1632 the caching of this slow load.
+
+	o Initial stub for a cacheAgg XML command on the module which will be hooked up to force a cache to be created from this slow load if the file contains a joinExisting agg in it.
+
+2011-01-03  mjohnson
+
+	o Fixed seg fault bug due to invalid iterator state caused by unsafe object mutation during iteration.
+
+2010-12-20  mjohnson
+
+	o Self-contained changes to add a WeakRCPtr<T> class as a peer or RCPtr<T> to handle circular references for ref-counted objects.  Similar to boost::weak_ptr.
+
+2010-11-17  mjohnson
+
+	o Removed function name in error response for parse error due to distracting verbosity.  Left for internal errors since this will be useful in a bug report.
+
+2010-11-11  mjohnson
+
+	* More error checking for Ticket #1666.
+
+2010-11-11  mjohnson
+
+	* Support for Ticket #1666 to make repro case in the testsuite.  Now the bes.conf for the testsuite also loads the fileout_netcdf  module.  We did not add an autotest for it yet however.
+
+2010-11-11  mjohnson
+
+	* Fix for Ticket #1666, a null pointer deref when a wrapped dataset is passed through the FONC return transmitter.
+
+2010-10-29  mjohnson
+
+	MERGE from the RELEASE branch for Hyrax 1.6.2 (shrew)
+
+2010-10-29  mjohnson
+
+	o Typo fix for logging
+
+2010-09-14  mjohnson
+
+	Updated to require libdap 3.11.0 and bes 3.9.0.
+
+2010-09-13  mjohnson
+
+	o Changes to prepare for release.  Note: libdap and bes requires (versions) not updated in configure.ac nor ncml_module.spec in this changeset.
+
+2010-09-03  mjohnson
+
+	o Modified exception macros to add function names automatically to help debugging and cleaned out resulting dead code.
+
 2010-09-03  Michael Johnson <m.johnson@opendap.org>
 
 	o Modified exception macros to add function names automatically to help debugging and cleaned out resulting dead code.

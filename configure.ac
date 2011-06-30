@@ -4,7 +4,7 @@
 
 AC_PREREQ(2.61)
 
-AC_INIT(ncml_module, 1.1.0, support@opendap.org)
+AC_INIT(ncml_module, 1.2.0, support@opendap.org)
 AC_CONFIG_AUX_DIR([conf])
 AC_CONFIG_MACRO_DIR([conf])
 
