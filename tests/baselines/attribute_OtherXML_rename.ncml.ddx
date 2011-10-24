@@ -1,28 +1,21 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Dataset name="attribute_OtherXML_rename.ncml"
-xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-xmlns="http://xml.opendap.org/ns/DAP2"
-xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/dap2.xsd">
-
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<Dataset name="attribute_OtherXML_rename.ncml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://xml.opendap.org/ns/DAP2" xsi:schemaLocation="http://xml.opendap.org/ns/DAP2 http://xml.opendap.org/dap/dap2.xsd">
     <Attribute name="RenamedOtherXML" type="OtherXML">
-        
-    <Domain xmlns="http://www.opengis.net/wcs/1.1" xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:gml="http://www.opengis.net/gml/3.2">
-      <SpatialDomain>
-        <ows:BoundingBox crs="urn:ogc:def:crs:EPSG::4326">
-          <ows:LowerCorner>-97.8839 21.736</ows:LowerCorner>
-          <ows:UpperCorner>-57.2312 46.4944</ows:UpperCorner>
-        </ows:BoundingBox>
-      </SpatialDomain>
-      <TemporalDomain>
-        <gml:timePosition>2008-03-27T16:00:00.000Z</gml:timePosition>
-      </TemporalDomain>
-    </Domain>
-    <SupportedCRS xmlns="http://www.opengis.net/wcs/1.1">urn:ogc:def:crs:EPSG::4326</SupportedCRS>
-    <SupportedFormat xmlns="http://www.opengis.net/wcs/1.1">netcdf-cf1.0</SupportedFormat>
-    <SupportedFormat xmlns="http://www.opengis.net/wcs/1.1">dap2.0</SupportedFormat>
-  
-    </Attribute>
-
-
+    &lt;Domain xmlns=&quot;http://www.opengis.net/wcs/1.1&quot; xmlns:ows=&quot;http://www.opengis.net/ows/1.1&quot; xmlns:gml=&quot;http://www.opengis.net/gml/3.2&quot;&gt;
+      &lt;SpatialDomain&gt;
+        &lt;ows:BoundingBox crs=&quot;urn:ogc:def:crs:EPSG::4326&quot;&gt;
+          &lt;ows:LowerCorner&gt;-97.8839 21.736&lt;/ows:LowerCorner&gt;
+          &lt;ows:UpperCorner&gt;-57.2312 46.4944&lt;/ows:UpperCorner&gt;
+        &lt;/ows:BoundingBox&gt;
+      &lt;/SpatialDomain&gt;
+      &lt;TemporalDomain&gt;
+        &lt;gml:timePosition&gt;2008-03-27T16:00:00.000Z&lt;/gml:timePosition&gt;
+      &lt;/TemporalDomain&gt;
+    &lt;/Domain&gt;
+    &lt;SupportedCRS xmlns=&quot;http://www.opengis.net/wcs/1.1&quot;&gt;urn:ogc:def:crs:EPSG::4326&lt;/SupportedCRS&gt;
+    &lt;SupportedFormat xmlns=&quot;http://www.opengis.net/wcs/1.1&quot;&gt;netcdf-cf1.0&lt;/SupportedFormat&gt;
+    &lt;SupportedFormat xmlns=&quot;http://www.opengis.net/wcs/1.1&quot;&gt;dap2.0&lt;/SupportedFormat&gt;
+  </Attribute>
     <dataBLOB href=""/>
 </Dataset>
+

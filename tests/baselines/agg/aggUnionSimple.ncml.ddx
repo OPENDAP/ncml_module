@@ -1,19 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Dataset name="aggUnionSimple.ncml"
-xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-xmlns="http://xml.opendap.org/ns/DAP2"
-xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/dap2.xsd">
-
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<Dataset name="aggUnionSimple.ncml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://xml.opendap.org/ns/DAP2" xsi:schemaLocation="http://xml.opendap.org/ns/DAP2 http://xml.opendap.org/dap/dap2.xsd">
     <Attribute name="NC_GLOBAL" type="Container">
         <Attribute name="title" type="String">
             <value>Union cldc and lflx</value>
-            <value>COADS 1-degree Equatorial Enhanced</value>
-        </Attribute>
-        <Attribute name="history" type="String">
-            <value></value>
-        </Attribute>
-        <Attribute name="Conventions" type="String">
-            <value>COARDS</value>
         </Attribute>
     </Attribute>
     <Attribute name="DODS_EXTRA" type="Container">
@@ -21,7 +10,54 @@ xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/d
             <value>time</value>
         </Attribute>
     </Attribute>
-
+    <Array name="lat">
+        <Attribute name="long_name" type="String">
+            <value>Latitude</value>
+        </Attribute>
+        <Attribute name="units" type="String">
+            <value>degrees_north</value>
+        </Attribute>
+        <Attribute name="actual_range" type="Float32">
+            <value>10.00000000</value>
+            <value>-10.00000000</value>
+        </Attribute>
+        <Float32/>
+        <dimension name="lat" size="21"/>
+    </Array>
+    <Array name="lon">
+        <Attribute name="long_name" type="String">
+            <value>Longitude</value>
+        </Attribute>
+        <Attribute name="units" type="String">
+            <value>degrees_east</value>
+        </Attribute>
+        <Attribute name="actual_range" type="Float32">
+            <value>0.5000000000</value>
+            <value>359.5000000</value>
+        </Attribute>
+        <Float32/>
+        <dimension name="lon" size="360"/>
+    </Array>
+    <Array name="time">
+        <Attribute name="units" type="String">
+            <value>days since 1-1-1 00:00:0.0</value>
+        </Attribute>
+        <Attribute name="long_name" type="String">
+            <value>Time</value>
+        </Attribute>
+        <Attribute name="delta_t" type="String">
+            <value>0000-01-00 00:00:00</value>
+        </Attribute>
+        <Attribute name="avg_period" type="String">
+            <value>0000-01-00 00:00:00</value>
+        </Attribute>
+        <Attribute name="actual_range" type="Float64">
+            <value>715511.00000000000</value>
+            <value>729360.00000000000</value>
+        </Attribute>
+        <Float64/>
+        <dimension name="time" size="456"/>
+    </Array>
     <Grid name="cldc">
         <Array name="cldc">
             <Attribute name="valid_range" type="Float32">
@@ -222,6 +258,6 @@ xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/d
             <dimension name="lon" size="360"/>
         </Map>
     </Grid>
-
     <dataBLOB href=""/>
 </Dataset>
+

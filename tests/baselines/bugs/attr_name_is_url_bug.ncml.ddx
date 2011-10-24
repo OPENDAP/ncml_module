@@ -1,71 +1,60 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Dataset name="attr_name_is_url_bug.ncml"
-xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-xmlns="http://xml.opendap.org/ns/DAP2"
-xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/dap2.xsd">
-
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<Dataset name="attr_name_is_url_bug.ncml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://xml.opendap.org/ns/DAP2" xsi:schemaLocation="http://xml.opendap.org/ns/DAP2 http://xml.opendap.org/dap/dap2.xsd">
     <Attribute name="eml://ecoinformatics.org/eml-2.0.1" type="OtherXML">
-        
     
-    <creator xmlns="">
-      <organizationName>Australian Commonwealth Scientific and Research Organization
-	(CSIRO)</organizationName>
-    </creator>
-    <keywordSet xmlns="">
-      <keyword>remote sensing</keyword>
-      <keyword>imagery</keyword>
-      <keyword>spatial raster</keyword>
-      <keyword>earth observation</keyword>
-      <keyword>satellite data</keyword>
+    &lt;creator xmlns=&quot;&quot;&gt;
+      &lt;organizationName&gt;Australian Commonwealth Scientific and Research Organization
+	(CSIRO)&lt;/organizationName&gt;
+    &lt;/creator&gt;
+    &lt;keywordSet xmlns=&quot;&quot;&gt;
+      &lt;keyword&gt;remote sensing&lt;/keyword&gt;
+      &lt;keyword&gt;imagery&lt;/keyword&gt;
+      &lt;keyword&gt;spatial raster&lt;/keyword&gt;
+      &lt;keyword&gt;earth observation&lt;/keyword&gt;
+      &lt;keyword&gt;satellite data&lt;/keyword&gt;
       
-      <keyword>CZCS</keyword>
-      <keyword>Chlorophyll</keyword>
-    </keywordSet>
-  
-    </Attribute>
-
+      &lt;keyword&gt;CZCS&lt;/keyword&gt;
+      &lt;keyword&gt;Chlorophyll&lt;/keyword&gt;
+    &lt;/keywordSet&gt;
+  </Attribute>
     <Structure name="chlor">
         <Attribute name="eml://ecoinformatics.org/eml-2.0.1" type="OtherXML">
-            
       
-      <attributeDefinition xmlns="">chlor is level of chlorophyll a in mg m^-3 as measured by the
-	satellite-borne CZCS sensor (From OtherXML, via NcML)</attributeDefinition>
+      &lt;attributeDefinition xmlns=&quot;&quot;&gt;chlor is level of chlorophyll a in mg m^-3 as measured by the
+	satellite-borne CZCS sensor (From OtherXML, via NcML)&lt;/attributeDefinition&gt;
       
-      <horizontalAccuracy xmlns="">
-	<accuracyReport>These data have very little variation in the horzontal
-	  dimensionality between pixels.</accuracyReport>
-      </horizontalAccuracy>
-      <verticalAccuracy xmlns="">
-	<accuracyReport>These data have very little variation in the vertical dimensionality
-	  between pixels.</accuracyReport>
-      </verticalAccuracy>
-      <numberOfBands xmlns="">1</numberOfBands>
-      <rasterOrigin xmlns="">Upper Left</rasterOrigin>
-      <rows xmlns="">2160</rows>
-      <columns xmlns="">4320</columns>
-      <verticals xmlns="">1</verticals>
-      <cellGeometry xmlns="">pixel</cellGeometry>
-    
-        </Attribute>
+      &lt;horizontalAccuracy xmlns=&quot;&quot;&gt;
+	&lt;accuracyReport&gt;These data have very little variation in the horzontal
+	  dimensionality between pixels.&lt;/accuracyReport&gt;
+      &lt;/horizontalAccuracy&gt;
+      &lt;verticalAccuracy xmlns=&quot;&quot;&gt;
+	&lt;accuracyReport&gt;These data have very little variation in the vertical dimensionality
+	  between pixels.&lt;/accuracyReport&gt;
+      &lt;/verticalAccuracy&gt;
+      &lt;numberOfBands xmlns=&quot;&quot;&gt;1&lt;/numberOfBands&gt;
+      &lt;rasterOrigin xmlns=&quot;&quot;&gt;Upper Left&lt;/rasterOrigin&gt;
+      &lt;rows xmlns=&quot;&quot;&gt;2160&lt;/rows&gt;
+      &lt;columns xmlns=&quot;&quot;&gt;4320&lt;/columns&gt;
+      &lt;verticals xmlns=&quot;&quot;&gt;1&lt;/verticals&gt;
+      &lt;cellGeometry xmlns=&quot;&quot;&gt;pixel&lt;/cellGeometry&gt;
+    </Attribute>
         <Array name="time">
             <Attribute name="eml://ecoinformatics.org/eml-2.0.1" type="OtherXML">
-                
-	<temporalCoverage xmlns="">
-	  <rangeOfDates>
-	    <beginDate>
-	      <calendarDate>1985-01-01</calendarDate>
-	    </beginDate>
-	    <endDate>
-	      <calendarDate>1985-12-27</calendarDate>
-	    </endDate>
-	  </rangeOfDates>
-	</temporalCoverage>
-      
-            </Attribute>
+	&lt;temporalCoverage xmlns=&quot;&quot;&gt;
+	  &lt;rangeOfDates&gt;
+	    &lt;beginDate&gt;
+	      &lt;calendarDate&gt;1985-01-01&lt;/calendarDate&gt;
+	    &lt;/beginDate&gt;
+	    &lt;endDate&gt;
+	      &lt;calendarDate&gt;1985-12-27&lt;/calendarDate&gt;
+	    &lt;/endDate&gt;
+	  &lt;/rangeOfDates&gt;
+	&lt;/temporalCoverage&gt;
+      </Attribute>
             <Int32/>
             <dimension size="3"/>
         </Array>
     </Structure>
-
     <dataBLOB href=""/>
 </Dataset>
+

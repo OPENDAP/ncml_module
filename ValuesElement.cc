@@ -156,6 +156,10 @@ namespace ncml_module
         autogenerateAndSetVariableValues(p, *pVar);
       }
     // else we'll expect content
+
+    // We zero this out here in 'begin'; load it up with raw text in 'handlerContent'
+    // and parse it in 'end'. jhrg 10/12/11
+    _accumulated_content.resize(0);
   }
 
   void
@@ -191,6 +195,10 @@ namespace ncml_module
             "However, we got " + toString() + " element for variable=" + pVarElt->toString() + " at scope=" + p.getScopeString());
       }
 
+    // Ripped out this block; moved to 'handleEnd'. Just accumulate raw text here. jhrg 10/12/11
+    _accumulated_content.append(content);
+
+#if 0
     // Tokenize the values for all cases EXCEPT if it's a scalar string.
     // We'll make a special exception an assume the entire content is the token
     // to avoid accidental tokenization with whitespace, which is clearly not intended
@@ -216,9 +224,12 @@ namespace ncml_module
         string sep = ((_separator.empty())?(NCMLUtil::WHITESPACE):(_separator));
         NCMLUtil::tokenize(content, _tokens, sep);
       }
+#endif
+#if 0
     setVariableValuesFromTokens(p, *pVar);
     _gotContent = true;
     setGotValuesOnOurVariableElement(p);
+#endif
   }
 
   void
@@ -226,19 +237,65 @@ namespace ncml_module
   {
     BESDEBUG("ncml", "ValuesElement::handleEnd called for " << toString() << endl);
 
-    // if unspecified, string and url vars get set to empty string ""
-    if (!shouldAutoGenerateValues())
-      {
-        dealWithEmptyStringValues();
-      }
+    NCMLParser& p = *_parser;
+    // There had better be one or we goofed!
+    BaseType* pVar = p.getCurrentVariable();
+    NCML_ASSERT_MSG(pVar, "ValuesElement::handleContent: got unexpected null getCurrentVariable() from parser!!");
 
+    // I set _gotContent here because other methods depend on it.
+    _gotContent = !_accumulated_content.empty();
+#if 0
     if (!shouldAutoGenerateValues() && !_gotContent)
       {
         THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
             "Values element=" + toString() + " expected content for values but didn't get any!");
       }
+#endif
+    // Tokenize the values for all cases EXCEPT if it's a scalar string.
+    // We'll make a special exception an assume the entire content is the token
+    // to avoid accidental tokenization with whitespace, which is clearly not intended
+    // by the NcML file author!
+    if (pVar->is_simple_type() && (pVar->type() == dods_str_c || pVar->type() == dods_url_c))
+      {
+        _tokens.resize(0);
+        _tokens.push_back(string(_accumulated_content));
+      }
+    // Don't tokenize a char array either, since we want to read all the char's in.
+    else if (pVar->is_vector_type() && getNCMLTypeForVariable(p) == "char")
+      {
+        NCMLUtil::tokenizeChars(_accumulated_content, _tokens); // tokenize with no separator so each char is token.
+      }
+    else if (pVar->is_vector_type() && getNCMLTypeForVariable(p) == "string")
+      {
+        string sep = ((_separator.empty())?(NCMLUtil::WHITESPACE):(_separator));
+        NCMLUtil::tokenize(_accumulated_content, _tokens, sep);
+      }
+    else // for arrays of other values, use whitespace separation for default if not specified.
+      {
+        string sep = ((_separator.empty())?(NCMLUtil::WHITESPACE):(_separator));
+        NCMLUtil::tokenize(_accumulated_content, _tokens, sep);
+      }
 
+    if (!shouldAutoGenerateValues())
+      {
+        setVariableValuesFromTokens(p, *pVar);
+        setGotValuesOnOurVariableElement(p);
+      }
+
+    // In the original version of this method, the 'if' before this was
+    // if (!shouldAutoGenerateValues() && !_gotContent) and it throws/threw an
+    // exception (I moved that code up in my modification of this method). But
+    // dealWithEmptyStringValues() only does something when _gotContent is false,
+    // so there's no way to get to call dealWithEmptyStringValues here. I'm
+    // removing it and looking at the tests. jhrg 10/12/11
+#if 0
+    // if unspecified, string and url vars get set to empty string ""
+    if (!shouldAutoGenerateValues())
+      {
+        dealWithEmptyStringValues();
+      }
     // Otherwise, we're all good.
+#endif
   }
 
   string
@@ -761,6 +818,8 @@ namespace ncml_module
     pContainingVar->setGotValues();
   }
 
+  // I'm not sure I understand this method - I think it's use in handleEnd() is
+  // no longer needed given the changes I made there. jhrg 10/12/11
   void
   ValuesElement::dealWithEmptyStringValues()
   {

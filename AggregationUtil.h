@@ -227,7 +227,7 @@ namespace agg_util
      * For each variable in fromDDS top level, union it into pOutputUnion if a variable with the same name isn't already there
      * @see addCopyOfVariableIfNameIsAvailable().
      */
-    static void unionAllVariablesInto(libdap::DDS* pOutputUnion, const libdap::DDS& fromDDS);
+    static void unionAllVariablesInto(libdap::DDS* pOutputUnion, const libdap::DDS& fromDDS, bool add_at_top = false);
 
     /**
      * If a variable does not exist within pOutDDS (top level) with the same name as varProto,
@@ -235,7 +235,7 @@ namespace agg_util
      *
      * @return whether pOutDDS changed (ie name was free).
      */
-    static bool addCopyOfVariableIfNameIsAvailable(libdap::DDS* pOutDDS, const libdap::BaseType& varProto);
+    static bool addCopyOfVariableIfNameIsAvailable(libdap::DDS* pOutDDS, const libdap::BaseType& varProto, bool add_at_top = false);
 
     /**
      * If a variable with the name varProto.name() doesn't exist, add a copy of varProto to

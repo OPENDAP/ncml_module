@@ -113,7 +113,7 @@ namespace ncml_module
     // We should know if it's valid here, but double check with parser.
      if (_parser->isScopeAtomicAttribute())
        {
-         BESDEBUG("ncml", "Adding attribute values as characters content for atomic attribute=" << _name <<
+         BESDEBUG("ncml2", "Adding attribute values as characters content for atomic attribute=" << _name <<
              " value=\"" << content << "\"" << endl);
          _value = content; // save the content unless we end the element, then we'll set it.
        }
@@ -170,7 +170,7 @@ namespace ncml_module
   void
   AttributeElement::processAttribute(NCMLParser& p)
   {
-    BESDEBUG("ncml", "handleBeginAttribute called for attribute name=" << _name << endl);
+    BESDEBUG("ncml2", "handleBeginAttribute called for attribute name=" << _name << endl);
 
     // Make sure we're in a netcdf and then process the attribute at the current table scope,
     // which could be anywhere including glboal attributes, nested attributes, or some level down a variable tree.
@@ -203,7 +203,7 @@ namespace ncml_module
     // First, if the type is a Structure, we are dealing with nested attributes and need to handle it separately.
     if (_type == NCMLParser::STRUCTURE_TYPE)
       {
-        BESDEBUG("ncml", "Processing an attribute element with type Structure." << endl);
+        BESDEBUG("ncml2", "Processing an attribute element with type Structure." << endl);
         processAttributeContainerAtCurrentScope(p);
       }
     else // It's atomic, so look it up in the current attr table and add a new one or mutate an existing one.

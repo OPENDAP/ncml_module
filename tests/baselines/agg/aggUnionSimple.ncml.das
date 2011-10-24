@@ -1,11 +1,26 @@
 Attributes {
     NC_GLOBAL {
-        String title "Union cldc and lflx", "COADS 1-degree Equatorial Enhanced";
-        String history "";
-        String Conventions "COARDS";
+        String title "Union cldc and lflx";
     }
     DODS_EXTRA {
         String Unlimited_Dimension "time";
+    }
+    lat {
+        String long_name "Latitude";
+        String units "degrees_north";
+        Float32 actual_range 10.00000000, -10.00000000;
+    }
+    lon {
+        String long_name "Longitude";
+        String units "degrees_east";
+        Float32 actual_range 0.5000000000, 359.5000000;
+    }
+    time {
+        String units "days since 1-1-1 00:00:0.0";
+        String long_name "Time";
+        String delta_t "0000-01-00 00:00:00";
+        String avg_period "0000-01-00 00:00:00";
+        Float64 actual_range 715511.00000000000, 729360.00000000000;
     }
     cldc {
         cldc {

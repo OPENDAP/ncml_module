@@ -197,6 +197,8 @@ namespace ncml_module
     // If we got handleContent successfully!
     bool _gotContent;
 
+    //TODO add comment
+    std::string _accumulated_content;
     // Temp to tokenize the content on handleContent()
     std::vector<string> _tokens;
   };

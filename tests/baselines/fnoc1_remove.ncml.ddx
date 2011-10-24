@@ -1,15 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Dataset name="fnoc1_remove.ncml"
-xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-xmlns="http://xml.opendap.org/ns/DAP2"
-xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/dap2.xsd">
-
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<Dataset name="fnoc1_remove.ncml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://xml.opendap.org/ns/DAP2" xsi:schemaLocation="http://xml.opendap.org/ns/DAP2 http://xml.opendap.org/dap/dap2.xsd">
     <Attribute name="NC_GLOBAL" type="Container">
         <Attribute name="title" type="String">
             <value> FNOC UV wind components from 1988- 10 to 1988- 13.</value>
         </Attribute>
     </Attribute>
-
     <Array name="u">
         <Attribute name="units" type="String">
             <value>meter per second</value>
@@ -64,6 +59,6 @@ xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/d
         <Float32/>
         <dimension name="time" size="16"/>
     </Array>
-
     <dataBLOB href=""/>
 </Dataset>
+

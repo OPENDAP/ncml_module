@@ -17,6 +17,37 @@ Attributes {
         Float64 polygon_longitude 236.58000000000001, 236.58000000000001, 237.48000000000002, 237.48000000000002, 236.58000000000001;
         String time_coverage_end "2006-06-07T12:00:00Z";
     }
+    fileTime {
+        String _CoordinateAxisType "Time";
+    }
+    time {
+        String long_name "End Time";
+        String standard_name "time";
+        String units "seconds since 1970-01-01T00:00:00Z";
+        Float64 actual_range 1149681600.0000000, 1149681600.0000000;
+    }
+    altitude {
+        String long_name "Altitude";
+        String standard_name "altitude";
+        String units "m";
+        Float32 actual_range 0.000000000, 0.000000000;
+    }
+    lat {
+        String long_name "Latitude";
+        String standard_name "latitude";
+        String units "degrees_north";
+        String point_spacing "even";
+        Float32 actual_range 37.26869965, 38.02470016;
+        String coordsys "geographic";
+    }
+    lon {
+        String long_name "Longitude";
+        String standard_name "longitude";
+        String units "degrees_east";
+        String point_spacing "even";
+        Float32 actual_range 236.5800018, 237.4799957;
+        String coordsys "geographic";
+    }
     CGusfc {
         fileTime {
             String _CoordinateAxisType "Time";
@@ -55,8 +86,5 @@ Attributes {
             Float32 actual_range 236.5800018, 237.4799957;
             String coordsys "geographic";
         }
-    }
-    fileTime {
-        String _CoordinateAxisType "Time";
     }
 }

@@ -412,7 +412,7 @@ namespace agg_util
   }
 
   void
-  AggregationUtil::unionAllVariablesInto(libdap::DDS* pOutputUnion, const libdap::DDS& fromDDS)
+  AggregationUtil::unionAllVariablesInto(libdap::DDS* pOutputUnion, const libdap::DDS& fromDDS, bool add_at_top)
   {
     DDS& dds = const_cast<DDS&>(fromDDS); // semantically const
     DDS::Vars_iter endIt = dds.var_end();
@@ -422,7 +422,7 @@ namespace agg_util
         BaseType* var = *it;
         if (var)
           {
-            bool addedVar = addCopyOfVariableIfNameIsAvailable(pOutputUnion, *var);
+            bool addedVar = addCopyOfVariableIfNameIsAvailable(pOutputUnion, *var, add_at_top);
             if (addedVar)
               {
                 BESDEBUG("ncml", "Variable name=" << var->name() << " wasn't in the union yet and was added." << endl);
@@ -436,14 +436,36 @@ namespace agg_util
   }
 
   bool
-  AggregationUtil::addCopyOfVariableIfNameIsAvailable(libdap::DDS* pOutDDS, const libdap::BaseType& varProto)
+  AggregationUtil::addCopyOfVariableIfNameIsAvailable(libdap::DDS* pOutDDS, const libdap::BaseType& varProto, bool add_at_top)
   {
     bool ret = false;
     BaseType* existingVar = findVariableAtDDSTopLevel(*pOutDDS, varProto.name());
     if (!existingVar)
       {
         // Add the var.   add_var does a clone, so we don't need to.
-        pOutDDS->add_var(const_cast<BaseType*>(&varProto));
+        BESDEBUG("ncml2", "AggregationUtil::addCopyOfVariableIfNameIsAvailable: " << varProto.name() << endl);
+        static int last_added = 0;
+        if (add_at_top)
+          {
+            // This provides a way to remember where the last CV was inserted and adds
+            // this one after it. That provides the behavior that all of the CVs are
+            // added at the beginning of the DDS but in the order they appear in the NCML.
+            // That will translate into a greater chance of success for users, I think ...
+            //
+            // See also similar code in AggregationElement::createAndAddCoordinateVariableForNewDimensio
+            // jhrg 10/17/11
+            DDS::Vars_iter pos = pOutDDS->var_begin();
+            for (int i = 0; i < last_added; ++i)
+                ++pos;
+
+            pOutDDS->insert_var(pos, const_cast<BaseType*>(&varProto));
+            ++last_added;
+          }
+        else
+          {
+            pOutDDS->add_var(const_cast<BaseType*>(&varProto));
+          }
+
         ret = true;
       }
     return ret;

@@ -156,8 +156,7 @@ DDSLoader::loadInto(const std::string& location, ResponseType type, BESDapRespon
   // TODO mpj do we need to do these calls?
   BESDEBUG( "ncml", "about to set dap version to: "
         << pResponse->get_dap_client_protocol() << endl);
-  BESDEBUG( "ncml", "about to set xml:base to: "
-                           << pResponse->get_request_xml_base() << endl);
+  BESDEBUG( "ncml", "about to set xml:base to: " << pResponse->get_request_xml_base() << endl);
 
   // Figure out which underlying type of response it is to get the DDS (or DataDDS via DDS super).
   DDS* pDDS = ncml_module::NCMLUtil::getDDSFromEitherResponse(pResponse);
@@ -176,7 +175,15 @@ DDSLoader::loadInto(const std::string& location, ResponseType type, BESDapRespon
 #endif
 
   // DO IT!
+  try {
+  BESDEBUG( "ncml", "Before BESRequestHandlerList::TheList()->execute_current" << endl);
+  BESDEBUG( "ncml", "Handler name: " << BESRequestHandlerList::TheList()->get_handler_names() << endl);
   BESRequestHandlerList::TheList()->execute_current( _dhi ) ;
+  BESDEBUG( "ncml", "After BESRequestHandlerList::TheList()->execute_current" << endl);
+  }
+  catch (BESError &e) {
+      cerr << "BESError: " << e.get_file() << ":" << e.get_line() << ": " << e.get_message();
+  }
 
   // Put back the dhi state we hijacked
   restoreDHI();

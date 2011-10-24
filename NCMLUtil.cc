@@ -27,6 +27,7 @@
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
 #include "NCMLUtil.h"
+
 #include "Array.h"
 #include "BESDapResponse.h"
 #include "BESDataDDSResponse.h"
@@ -52,6 +53,8 @@ namespace ncml_module
                  vector<string>& tokens,
                  const string& delimiters)
   {
+    BESDEBUG("ncml", "NCMLUtil::tokenize value of str:" << str << endl);
+
     // start empty
     tokens.resize(0);
     // Skip delimiters at beginning.

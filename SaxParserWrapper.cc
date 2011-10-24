@@ -257,6 +257,8 @@ static void ncmlCharacters(void* userData, const xmlChar* content, int len)
 {
   BEGIN_SAFE_PARSER_BLOCK(userData);
 
+  BESDEBUG("ncml", "ncmlCharacters: len:" << len << ", content: " << content << endl);
+
   // len is since the content string might not be null terminated,
   // so we have to build out own and pass it up special....
   // TODO consider just using these xmlChar's upstairs to avoid copies, or make an adapter or something.

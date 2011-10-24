@@ -1,4 +1,7 @@
 Dataset {
+    Float32 lat[lat = 21];
+    Float32 lon[lon = 360];
+    Float64 time[time = 456];
     Grid {
       Array:
         Int16 cldc[time = 456][lat = 21][lon = 360];

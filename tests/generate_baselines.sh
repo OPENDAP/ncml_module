@@ -1,16 +1,17 @@
 #!/bin/sh
 
 # Usage: from the tests subdirectory:
-#    ./generate_baselines.sh filename.ncml [constraint_expr] [output_prefix]
+#    ./generate_baselines.sh filename.ncml response [constraint_expr] [output_prefix]
 # 
 # This script is used to run the besstandalone on a particular
-# NcML file and save off the DAP responses { das|dds|dods|ddx} 
+# NcML file and save off the DAP responses { das|dds|dods|ddx}
 # into the baselines directory.  It is assumed the caller
-# will check these for accuracy before including them in the testsuite.at
+# will check these for accuracy before including them in the testsuite.at.
+# Use 'all' to generate all of the responses.
 # 
 # A constraint expression may be optionally specified as the second argument.
 #
-# The optional third argument is the prefix for the output files,
+# The optional fourth argument is the prefix for the output files,
 # which are named as $prefix.$response.  If not specified, 
 # the input filename is used.
 #
@@ -37,10 +38,10 @@ RUN_BES="besstandalone -c $BES_CONF -i $BESCMD_FILENAME"
 
 # Use the input file as the output prefix if not specified.
 OUTPUT_PREFIX=$1;
-if test $3 != ""
-then OUTPUT_PREFIX=$3
+if test "$4" != ""
+then OUTPUT_PREFIX=$4
 fi
-echo "Using output prefix of: $OUTPUT_PREFIX"
+echo "writing output to: $OUTPUT_PREFIX"
 
 # The input
 DATA_FILE=$DATADIR/$1
@@ -61,11 +62,18 @@ exit -1;
 fi
 
 # Set the constraint to use, can be empty
-CONSTRAINT_EXPR=$2;
+CONSTRAINT_EXPR=$3;
 echo "Using constraint=\"$CONSTRAINT_EXPR\""
 
-# Create baselines for all responses....
-for response in "das" "dds" "ddx" "dods"
+if test "$2" = "all"
+then
+    responses="das dds ddx dods"
+else
+    responses=$2
+fi
+    
+# Create baseline(s)
+for response in $responses
 do
     echo "Generating $BESCMD_FILENAME for $DATA_FILE response $response...";
     # use the helper script
