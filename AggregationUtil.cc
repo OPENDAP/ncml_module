@@ -57,8 +57,12 @@ using std::vector;
 
 namespace agg_util
 {
+  // Static class member used to track the position of the last CVs insertion
+  // when building a JoinExisting aggregation.
+  int AggregationUtil::d_last_added_cv_position = 0;
+
   /////////////////////////////////////////////////////////////////////////////
-    // ArrayGetterInterface impls
+  // ArrayGetterInterface impls
 
   /* virtual */
   ArrayGetterInterface::~ArrayGetterInterface()
@@ -331,6 +335,14 @@ namespace agg_util
   AggregationUtil::performUnionAggregation(DDS* pOutputUnion, const ConstDDSList& datasetsInOrder)
   {
     VALID_PTR(pOutputUnion);
+
+    // Union any non-aggregated variables from the template dataset into the aggregated dataset
+    // Because we want the joinExistingaggregation to build up the Coordinate Variables (CVs)
+    // in the order they are declared in the NCML file, we need to track the current position
+    // where the last one was inserted. We can do that with a field in the AggregationUtil
+    // class. Here we reset that field so that it starts at position 0. 12.13.11 jhrg
+    AggregationUtil::resetCVInsertionPosition();
+
     vector<const DDS*>::const_iterator endIt = datasetsInOrder.end();
     vector<const DDS*>::const_iterator it;
     for (it = datasetsInOrder.begin(); it != endIt; ++it)
@@ -340,8 +352,8 @@ namespace agg_util
 
         // Merge in the global attribute tables
         unionAttrsInto(&(pOutputUnion->get_attr_table()),
-            // TODO there really should be const version of this in libdap::DDS
-            const_cast<DDS*>(pDDS)->get_attr_table());
+        // TODO there really should be const version of this in libdap::DDS
+        const_cast<DDS*>(pDDS)->get_attr_table());
 
         // Merge in the variables, which carry their tables along with them since the AttrTable is
         // within the variable's "namespace", or lexical scope.
@@ -435,6 +447,16 @@ namespace agg_util
       }
   }
 
+  // This method is used to 'initialize' a new JoinExisting aggregation so that
+  // A set of Coordinate Variables (CVs) will be inserted _in the order they are
+  // listed_ in the .ncml file.
+  void
+  AggregationUtil::resetCVInsertionPosition()
+  {
+      //cerr << "Called resetCVInsertionPosition" << endl;
+      d_last_added_cv_position = 0;
+  }
+
   bool
   AggregationUtil::addCopyOfVariableIfNameIsAvailable(libdap::DDS* pOutDDS, const libdap::BaseType& varProto, bool add_at_top)
   {
@@ -444,7 +466,6 @@ namespace agg_util
       {
         // Add the var.   add_var does a clone, so we don't need to.
         BESDEBUG("ncml2", "AggregationUtil::addCopyOfVariableIfNameIsAvailable: " << varProto.name() << endl);
-        static int last_added = 0;
         if (add_at_top)
           {
             // This provides a way to remember where the last CV was inserted and adds
@@ -454,12 +475,12 @@ namespace agg_util
             //
             // See also similar code in AggregationElement::createAndAddCoordinateVariableForNewDimensio
             // jhrg 10/17/11
-            DDS::Vars_iter pos = pOutDDS->var_begin();
-            for (int i = 0; i < last_added; ++i)
-                ++pos;
+            //cerr << "d_last_added_cv_position: " << d_last_added_cv_position << endl;
+            DDS::Vars_iter pos = pOutDDS->var_begin() + d_last_added_cv_position;
 
             pOutDDS->insert_var(pos, const_cast<BaseType*>(&varProto));
-            ++last_added;
+
+            ++d_last_added_cv_position;
           }
         else
           {

@@ -468,6 +468,13 @@ namespace ncml_module
       }
 
     // Union any non-aggregated variables from the template dataset into the aggregated dataset
+    // Because we want the joinExistingaggregation to build up the Coordinate Variables (CVs)
+    // in the order they are declared in the NCML file, we need to track the current position
+    // where the last one was inserted. We can do that with a field in the AggregationUtil
+    // class. Here we reset that field so that it starts at position 0. 12.13.11 jhrg
+    AggregationUtil::resetCVInsertionPosition();
+
+    // Union any non-aggregated variables from the template dataset into the aggregated dataset
     AggregationUtil::unionAllVariablesInto(pAggDDS, *pTemplateDDS, /*add_at_top = */true);
   }
 
@@ -564,6 +571,14 @@ namespace ncml_module
   void
   AggregationElement::unionAddAllRequiredNonAggregatedVariablesFrom(const DDS& templateDDS)
   {
+    // Union any non-aggregated variables from the template dataset into the aggregated dataset
+    // Because we want the joinExistingaggregation to build up the Coordinate Variables (CVs)
+    // in the order they are declared in the NCML file, we need to track the current position
+    // where the last one was inserted. We can do that with a field in the AggregationUtil
+    // class. Here we reset that field so that it starts at position 0. 12.13.11 jhrg
+    AggregationUtil::resetCVInsertionPosition();
+
+
     // If we didn't get a variable agg for a joinExisting, then union them all.
     if (isJoinExistingAggregation())
       {
@@ -874,7 +889,7 @@ namespace ncml_module
   void
   AggregationElement::getParamsForJoinAggOnVariable(
       JoinAggParams* pOutParams,
-      const DDS& aggOutputDDS,
+      const DDS& /*aggOutputDDS*/,
       const std::string& varName,
       const DDS& templateDDS)
   {
