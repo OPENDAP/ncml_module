@@ -32,6 +32,25 @@ m4_define([AT_MAKE_BESCMD_FILE],
 m4_if([$3], [], [AT_MAKE_BESCMD_FILE_NO_CONSTRAINT([$1], [$2])], [AT_MAKE_BESCMD_FILE_WITH_CONSTRAINT([$1], [$2], [$3])]) 
 ])
 
+dnl Run the besstandlone on the filename for the response type
+dnl and compare stdout to the baseline for the response.
+dnl ncml_filename is expected to be the basename as the datadir is added.
+dnl $1 == { true | xfail } (Expected fail flag, xfail if it is expected to fail)
+dnl $2 == ncml_filename
+dnl $3 == {das | dds | dods | ddx }
+dnl $4 == baseline_filename (with path prefix but not response suffix!)
+dnl $5 == (optional) constraint_expression
+m4_define([AT_RUN_BES_AND_CONDITIONAL_COMPARE],
+[
+AT_SETUP([Comparing $3 response for $2 to baseline baselines_path/$4 ])
+AT_KEYWORDS([$3])
+AT_MAKE_BESCMD_FILE([$2], [$3], [$5])
+AT_CHECK([besstandalone -c bes_conf_path -i ./test.bescmd], [], [stdout], [ignore])
+AT_CHECK([diff -w -b -B baselines_path/$4.$3 stdout], [], [ignore], [], [])
+AT_XFAIL_IF([test "$1" = "xfail"])
+AT_CLEANUP
+])
+
 
 dnl Run the besstandlone on the filename for the response type
 dnl and compare stdout to the baseline for the response.
@@ -53,11 +72,12 @@ AT_CLEANUP
 dnl Run the besstandlone on the filename for the response type
 dnl and compare stdout to the baseline of name filename.{dds,ddx,dods,das}.
 dnl ncml_filename is expected to be the basename as the datadir is added.
-dnl $1 == ncml_filename
-dnl $2 == {das | dds | dods | ddx }
+dnl $1 == { true | xfail } (Expected fail flag, 'xfail' if it is expected to fail)
+dnl $2 == ncml_filename
+dnl $3 == {das | dds | dods | ddx }
 m4_define([AT_RUN_BES_AND_COMPARE_BASELINE],
 [
-AT_RUN_BES_AND_COMPARE([$1], [$2], [$1])
+AT_RUN_BES_AND_CONDITIONAL_COMPARE([$1], [$2], [$3], [$2])
 ])
 
 dnl Run the besstandlone on the filename for the response type
@@ -99,23 +119,27 @@ AT_CLEANUP
 dnl Syntactic sugar for each response
 
 dnl $1 == ncml_input_basename
+dnl $2 == [{ true | false }] (Expected fail flag, 'xfail' if it is expected to fail)
 m4_define([AT_CHECK_DAS],
-[AT_RUN_BES_AND_COMPARE_BASELINE([$1], [das])
+[AT_RUN_BES_AND_COMPARE_BASELINE([$2], [$1], [das])
 ])
 
 dnl $1 == ncml_input_basename
+dnl $2 == [{ true | false }] (Expected fail flag, 'xfail' if it is expected to fail)
 m4_define([AT_CHECK_DDS],
-[AT_RUN_BES_AND_COMPARE_BASELINE([$1], [dds])
+[AT_RUN_BES_AND_COMPARE_BASELINE([$2], [$1], [dds])
 ])
 
 dnl $1 == ncml_input_basename
+dnl $2 == [{ true | false }] (Expected fail flag, 'xfail' if it is expected to fail)
 m4_define([AT_CHECK_DDX],
-[AT_RUN_BES_AND_COMPARE_BASELINE([$1], [ddx])
+[AT_RUN_BES_AND_COMPARE_BASELINE([$2], [$1], [ddx])
 ])
 
 dnl $1 == ncml_input_basename
+dnl $2 == [{ true | false }] (Expected fail flag, 'xfail' if it is expected to fail)
 m4_define([AT_CHECK_DATADDS],
-[AT_RUN_BES_AND_COMPARE_BASELINE([$1], [dods])
+[AT_RUN_BES_AND_COMPARE_BASELINE([$2], [$1], [dods])
 ])
 
 dnl Run AT_RUN_BES_AND_COMPARE_DODS_GETDAP on the input and compare

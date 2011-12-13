@@ -21,7 +21,12 @@ dnl Test nested attribute containers (type="Structure")
 AT_CHECK_ALL_DAP_RESPONSES([nest_test.ncml])
 
 dnl Test that we can add to Grid map vectors.
-AT_CHECK_ALL_DAP_RESPONSES([grid_attributes.ncml])
+dnl AT_CHECK_ALL_DAP_RESPONSES([grid_attributes.ncml])
+AT_BANNER([Testing DAP responses for: grid_attributes.ncml])
+AT_CHECK_DAS([grid_attributes.ncml])
+AT_CHECK_DDS([grid_attributes.ncml])
+AT_CHECK_DDX([grid_attributes.ncml])
+AT_CHECK_DATADDS([grid_attributes.ncml])
 
 dnl Test that attribute@separator works as advertised
 AT_CHECK_ALL_DAP_RESPONSES([separator_test.ncml])
