@@ -18,8 +18,8 @@
             <value>degrees_north</value>
         </Attribute>
         <Attribute name="actual_range" type="Float32">
-            <value>10.00000000</value>
-            <value>-10.00000000</value>
+            <value>10.0000000</value>
+            <value>-10.0000000</value>
         </Attribute>
         <Float32/>
         <dimension name="lat" size="21"/>
@@ -32,8 +32,8 @@
             <value>degrees_east</value>
         </Attribute>
         <Attribute name="actual_range" type="Float32">
-            <value>0.5000000000</value>
-            <value>359.5000000</value>
+            <value>0.500000000</value>
+            <value>359.500000</value>
         </Attribute>
         <Float32/>
         <dimension name="lon" size="360"/>
@@ -52,8 +52,8 @@
             <value>0000-01-00 00:00:00</value>
         </Attribute>
         <Attribute name="actual_range" type="Float64">
-            <value>715511.00000000000</value>
-            <value>729360.00000000000</value>
+            <value>715511.0000000000</value>
+            <value>729360.0000000000</value>
         </Attribute>
         <Float64/>
         <dimension name="time" size="456"/>
@@ -61,12 +61,12 @@
     <Grid name="cldc">
         <Array name="cldc">
             <Attribute name="valid_range" type="Float32">
-                <value>0.000000000</value>
-                <value>8.000000000</value>
+                <value>0.00000000</value>
+                <value>8.00000000</value>
             </Attribute>
             <Attribute name="actual_range" type="Float32">
-                <value>0.000000000</value>
-                <value>8.000000000</value>
+                <value>0.00000000</value>
+                <value>8.00000000</value>
             </Attribute>
             <Attribute name="units" type="String">
                 <value>okta</value>
@@ -99,10 +99,10 @@
                 <value>Individual Obs\\012I</value>
             </Attribute>
             <Attribute name="add_offset" type="Float32">
-                <value>3276.500000</value>
+                <value>3276.50000</value>
             </Attribute>
             <Attribute name="scale_factor" type="Float32">
-                <value>0.1000000015</value>
+                <value>0.100000001</value>
             </Attribute>
             <Int16/>
             <dimension name="time" size="456"/>
@@ -123,8 +123,8 @@
                 <value>0000-01-00 00:00:00</value>
             </Attribute>
             <Attribute name="actual_range" type="Float64">
-                <value>715511.00000000000</value>
-                <value>729360.00000000000</value>
+                <value>715511.0000000000</value>
+                <value>729360.0000000000</value>
             </Attribute>
             <Float64/>
             <dimension name="time" size="456"/>
@@ -137,8 +137,8 @@
                 <value>degrees_north</value>
             </Attribute>
             <Attribute name="actual_range" type="Float32">
-                <value>10.00000000</value>
-                <value>-10.00000000</value>
+                <value>10.0000000</value>
+                <value>-10.0000000</value>
             </Attribute>
             <Float32/>
             <dimension name="lat" size="21"/>
@@ -151,8 +151,8 @@
                 <value>degrees_east</value>
             </Attribute>
             <Attribute name="actual_range" type="Float32">
-                <value>0.5000000000</value>
-                <value>359.5000000</value>
+                <value>0.500000000</value>
+                <value>359.500000</value>
             </Attribute>
             <Float32/>
             <dimension name="lon" size="360"/>
@@ -161,12 +161,12 @@
     <Grid name="lflx">
         <Array name="lflx">
             <Attribute name="valid_range" type="Float32">
-                <value>-1000.000000</value>
-                <value>1000.000000</value>
+                <value>-1000.00000</value>
+                <value>1000.00000</value>
             </Attribute>
             <Attribute name="actual_range" type="Float32">
-                <value>-88.70000458</value>
-                <value>236.1000061</value>
+                <value>-88.7000046</value>
+                <value>236.100006</value>
             </Attribute>
             <Attribute name="units" type="String">
                 <value>grams/kg m/s</value>
@@ -199,10 +199,10 @@
                 <value>Individual Obs\\012I</value>
             </Attribute>
             <Attribute name="add_offset" type="Float32">
-                <value>2276.500000</value>
+                <value>2276.50000</value>
             </Attribute>
             <Attribute name="scale_factor" type="Float32">
-                <value>0.1000000015</value>
+                <value>0.100000001</value>
             </Attribute>
             <Int16/>
             <dimension name="time" size="456"/>
@@ -223,8 +223,8 @@
                 <value>0000-01-00 00:00:00</value>
             </Attribute>
             <Attribute name="actual_range" type="Float64">
-                <value>715511.00000000000</value>
-                <value>729360.00000000000</value>
+                <value>715511.0000000000</value>
+                <value>729360.0000000000</value>
             </Attribute>
             <Float64/>
             <dimension name="time" size="456"/>
@@ -237,8 +237,8 @@
                 <value>degrees_north</value>
             </Attribute>
             <Attribute name="actual_range" type="Float32">
-                <value>10.00000000</value>
-                <value>-10.00000000</value>
+                <value>10.0000000</value>
+                <value>-10.0000000</value>
             </Attribute>
             <Float32/>
             <dimension name="lat" size="21"/>
@@ -251,8 +251,8 @@
                 <value>degrees_east</value>
             </Attribute>
             <Attribute name="actual_range" type="Float32">
-                <value>0.5000000000</value>
-                <value>359.5000000</value>
+                <value>0.500000000</value>
+                <value>359.500000</value>
             </Attribute>
             <Float32/>
             <dimension name="lon" size="360"/>
@@ -260,4 +260,3 @@
     </Grid>
     <dataBLOB href=""/>
 </Dataset>
-

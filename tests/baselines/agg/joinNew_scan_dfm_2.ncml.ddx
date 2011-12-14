@@ -14,44 +14,44 @@
             <value>0</value>
         </Attribute>
         <Attribute name="gctp_parm" type="Float64">
-            <value>0.0000000000000000</value>
-            <value>0.0000000000000000</value>
-            <value>0.0000000000000000</value>
-            <value>0.0000000000000000</value>
-            <value>0.0000000000000000</value>
-            <value>0.0000000000000000</value>
-            <value>0.0000000000000000</value>
-            <value>0.0000000000000000</value>
-            <value>0.0000000000000000</value>
-            <value>0.0000000000000000</value>
-            <value>0.0000000000000000</value>
-            <value>0.0000000000000000</value>
-            <value>0.0000000000000000</value>
-            <value>0.0000000000000000</value>
-            <value>0.0000000000000000</value>
+            <value>0.000000000000000</value>
+            <value>0.000000000000000</value>
+            <value>0.000000000000000</value>
+            <value>0.000000000000000</value>
+            <value>0.000000000000000</value>
+            <value>0.000000000000000</value>
+            <value>0.000000000000000</value>
+            <value>0.000000000000000</value>
+            <value>0.000000000000000</value>
+            <value>0.000000000000000</value>
+            <value>0.000000000000000</value>
+            <value>0.000000000000000</value>
+            <value>0.000000000000000</value>
+            <value>0.000000000000000</value>
+            <value>0.000000000000000</value>
         </Attribute>
         <Attribute name="gctp_datum" type="Int32">
             <value>12</value>
         </Attribute>
         <Attribute name="Southernmost_Northing" type="Float32">
-            <value>37.26869965</value>
+            <value>37.2686996</value>
         </Attribute>
         <Attribute name="Northernmost_Northing" type="Float32">
-            <value>38.02470016</value>
+            <value>38.0247002</value>
         </Attribute>
         <Attribute name="Westernmost_Easting" type="Float32">
-            <value>236.5800018</value>
+            <value>236.580002</value>
         </Attribute>
         <Attribute name="Easternmost_Easting" type="Float32">
-            <value>237.4799957</value>
+            <value>237.479996</value>
         </Attribute>
         <Attribute name="et_affine" type="Float64">
-            <value>0.0000000000000000</value>
-            <value>0.027000000000000007</value>
-            <value>0.036000000000000226</value>
-            <value>0.0000000000000000</value>
-            <value>236.58000000000001</value>
-            <value>37.268700000000003</value>
+            <value>0.000000000000000</value>
+            <value>0.02700000000000001</value>
+            <value>0.03600000000000023</value>
+            <value>0.000000000000000</value>
+            <value>236.5800000000000</value>
+            <value>37.26870000000000</value>
         </Attribute>
         <Attribute name="rows" type="Int32">
             <value>29</value>
@@ -60,18 +60,18 @@
             <value>26</value>
         </Attribute>
         <Attribute name="polygon_latitude" type="Float64">
-            <value>37.268700000000003</value>
-            <value>38.024700000000003</value>
-            <value>38.024700000000003</value>
-            <value>37.268700000000003</value>
-            <value>37.268700000000003</value>
+            <value>37.26870000000000</value>
+            <value>38.02470000000000</value>
+            <value>38.02470000000000</value>
+            <value>37.26870000000000</value>
+            <value>37.26870000000000</value>
         </Attribute>
         <Attribute name="polygon_longitude" type="Float64">
-            <value>236.58000000000001</value>
-            <value>236.58000000000001</value>
-            <value>237.48000000000002</value>
-            <value>237.48000000000002</value>
-            <value>236.58000000000001</value>
+            <value>236.5800000000000</value>
+            <value>236.5800000000000</value>
+            <value>237.4800000000000</value>
+            <value>237.4800000000000</value>
+            <value>236.5800000000000</value>
         </Attribute>
         <Attribute name="time_coverage_end" type="String">
             <value>2006-06-07T12:00:00Z</value>
@@ -95,8 +95,8 @@
             <value>seconds since 1970-01-01T00:00:00Z</value>
         </Attribute>
         <Attribute name="actual_range" type="Float64">
-            <value>1149681600.0000000</value>
-            <value>1149681600.0000000</value>
+            <value>1149681600.000000</value>
+            <value>1149681600.000000</value>
         </Attribute>
         <Float64/>
         <dimension name="time" size="1"/>
@@ -112,8 +112,8 @@
             <value>m</value>
         </Attribute>
         <Attribute name="actual_range" type="Float32">
-            <value>0.000000000</value>
-            <value>0.000000000</value>
+            <value>0.00000000</value>
+            <value>0.00000000</value>
         </Attribute>
         <Float32/>
         <dimension name="altitude" size="1"/>
@@ -132,8 +132,8 @@
             <value>even</value>
         </Attribute>
         <Attribute name="actual_range" type="Float32">
-            <value>37.26869965</value>
-            <value>38.02470016</value>
+            <value>37.2686996</value>
+            <value>38.0247002</value>
         </Attribute>
         <Attribute name="coordsys" type="String">
             <value>geographic</value>
@@ -155,8 +155,8 @@
             <value>even</value>
         </Attribute>
         <Attribute name="actual_range" type="Float32">
-            <value>236.5800018</value>
-            <value>237.4799957</value>
+            <value>236.580002</value>
+            <value>237.479996</value>
         </Attribute>
         <Attribute name="coordsys" type="String">
             <value>geographic</value>
@@ -167,17 +167,17 @@
     <Grid name="CGusfc">
         <Array name="CGusfc">
             <Attribute name="_FillValue" type="Float32">
-                <value>-1.000000033e+32</value>
+                <value>-1.00000003e+32</value>
             </Attribute>
             <Attribute name="missing_value" type="Float32">
-                <value>-1.000000033e+32</value>
+                <value>-1.00000003e+32</value>
             </Attribute>
             <Attribute name="numberOfObservations" type="Int32">
                 <value>303</value>
             </Attribute>
             <Attribute name="actual_range" type="Float32">
-                <value>-0.2876400054</value>
-                <value>0.2763200104</value>
+                <value>-0.287640005</value>
+                <value>0.276320010</value>
             </Attribute>
             <Float32/>
             <dimension name="fileTime" size="4"/>
@@ -204,8 +204,8 @@
                 <value>seconds since 1970-01-01T00:00:00Z</value>
             </Attribute>
             <Attribute name="actual_range" type="Float64">
-                <value>1149681600.0000000</value>
-                <value>1149681600.0000000</value>
+                <value>1149681600.000000</value>
+                <value>1149681600.000000</value>
             </Attribute>
             <Float64/>
             <dimension name="time" size="1"/>
@@ -221,8 +221,8 @@
                 <value>m</value>
             </Attribute>
             <Attribute name="actual_range" type="Float32">
-                <value>0.000000000</value>
-                <value>0.000000000</value>
+                <value>0.00000000</value>
+                <value>0.00000000</value>
             </Attribute>
             <Float32/>
             <dimension name="altitude" size="1"/>
@@ -241,8 +241,8 @@
                 <value>even</value>
             </Attribute>
             <Attribute name="actual_range" type="Float32">
-                <value>37.26869965</value>
-                <value>38.02470016</value>
+                <value>37.2686996</value>
+                <value>38.0247002</value>
             </Attribute>
             <Attribute name="coordsys" type="String">
                 <value>geographic</value>
@@ -264,8 +264,8 @@
                 <value>even</value>
             </Attribute>
             <Attribute name="actual_range" type="Float32">
-                <value>236.5800018</value>
-                <value>237.4799957</value>
+                <value>236.580002</value>
+                <value>237.479996</value>
             </Attribute>
             <Attribute name="coordsys" type="String">
                 <value>geographic</value>
@@ -276,4 +276,3 @@
     </Grid>
     <dataBLOB href=""/>
 </Dataset>
-
