@@ -5,6 +5,13 @@
             <value> joinExisting test on netcdf Grid granules WITHOUT using scan@ncoords</value>
         </Attribute>
     </Attribute>
+    <Array name="x">
+        <Attribute name="Description" type="String">
+            <value>Test coordinate variable x.</value>
+        </Attribute>
+        <Int32/>
+        <dimension name="x" size="3"/>
+    </Array>
     <Array name="time">
         <Attribute name="Description" type="String">
             <value>Test coordinate variable time.</value>
@@ -36,13 +43,5 @@
             <dimension name="x" size="3"/>
         </Map>
     </Grid>
-    <Array name="x">
-        <Attribute name="Description" type="String">
-            <value>Test coordinate variable x.</value>
-        </Attribute>
-        <Int32/>
-        <dimension name="x" size="3"/>
-    </Array>
     <dataBLOB href=""/>
 </Dataset>
-

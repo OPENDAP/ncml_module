@@ -1,4 +1,6 @@
 Dataset {
+    Int32 x[x = 3];
+    Int32 time[time = 3];
     Grid {
       Array:
         Float32 v[time = 3][x = 3];
@@ -6,5 +8,4 @@ Dataset {
         Int32 time[time = 3];
         Int32 x[x = 3];
     } v;
-    Int32 time[time = 3];
 } joinExist_scan.ncml;
