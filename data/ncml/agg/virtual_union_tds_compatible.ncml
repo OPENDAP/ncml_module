@@ -1,5 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- An example of a union aggregation fully specified in this file -->
+
+<!-- I modified the virtual_union.ncml file so that it would work with TDS 4.2.9 and the 
+     matching version of ToolsUI. This is the result.
+     
+     What I changed:
+     Added the ncml namespace
+     Changed the value of SelfReferentialVariable
+     Removed the attribute Structures
+     
+     jhrg 12.13.11
+-->
+
 <netcdf xmlns="http://www.unidata.ucar.edu/namespaces/netcdf/ncml-2.2">
   
   <!-- Can specify attributes outside of aggregation -->
@@ -7,9 +19,9 @@
   
   <!-- Can specify variables at this level still, outside aggregation -->
   <variable name="SelfReferentialVariable" type="string">
-    <values>My name is "SelfReferentialVariable"</values>
+    <values>"My_name_is_SelfReferentialVariable"</values>
   </variable>
-  
+
   <aggregation type="union">
     
     <!-- Dataset One -->
@@ -27,12 +39,6 @@
       <!-- This one should "lose" since it comes later... -->
       <attribute name="Description" type="string" value="Dataset Two"/>
 
-      <!-- This one should win and merge the entire structure -->
-      <attribute name="AttrContainer" type="Structure">
-	<attribute name="Attr_1" type="int">0 1 2 3 4 5 6 7 8 9</attribute>
-	<attribute name="Description" type="string">Test for whether a container gets merged correctly.</attribute>
-      </attribute>
-      
       <!-- This one should "lose" since it comes later... -->
       <variable name="Foo" type="string">
 	<attribute name="Description" type="string" value="This var names Foo comes later and should NOT be in output."/>
@@ -51,12 +57,6 @@
       <!-- This one should "lose" since it comes later... -->
       <attribute name="Description" type="string" value="Dataset Three"/>
 
-      <!-- This one should lose at this level.  Containers are not merged. -->
-      <attribute name="AttrContainer" type="Structure">
-	<attribute name="Attr_in_dataset_3" type="int">0 1 2 3 4 5 6 7 8 9</attribute>
-	<attribute name="Desc" type="string">I SHOULD LOSE!  Test for whether a container gets merged correctly.</attribute>
-      </attribute>
-   
       <!-- Will be skipped -->
       <variable name="Bar" type="string">
 	<attribute name="Description" type="string" value="This var names Bar comes later and should NOT be in output."/>

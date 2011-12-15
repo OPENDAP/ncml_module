@@ -420,7 +420,7 @@ private: //methods
  BaseType* getCurrentVariable() const;
 
  /**
-  *  Set the current scope to the variable pVar and update the _pCurrentTable to reflect this variables attributetable.
+  *  Set the current scope to the variable pVar and update the _pCurrentTable to reflect this variable's attribute table.
   *  If pVar is null and there is a valid dds, then set _pCurrentTable to the global attribute table.
   */
  void setCurrentVariable(BaseType* pVar);

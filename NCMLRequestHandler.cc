@@ -46,6 +46,8 @@
 #include <BESTextInfo.h>
 #include <BESUtil.h>
 #include <BESVersionInfo.h>
+#include <TheBESKeys.h>
+
 #include "mime_util.h"
 #include "DDSLoader.h"
 #include <memory>
@@ -58,6 +60,9 @@
 using namespace agg_util;
 using namespace ncml_module;
 
+bool NCMLRequestHandler::_global_attributes_container_name_set = false;
+string NCMLRequestHandler::_global_attributes_container_name = "NC_GLOBAL";
+
 
 NCMLRequestHandler::NCMLRequestHandler( const string &name )
     : BESRequestHandler( name )
@@ -67,6 +72,19 @@ NCMLRequestHandler::NCMLRequestHandler( const string &name )
     add_handler( DATA_RESPONSE, NCMLRequestHandler::ncml_build_data ) ;
     add_handler( VERS_RESPONSE, NCMLRequestHandler::ncml_build_vers ) ;
     add_handler( HELP_RESPONSE, NCMLRequestHandler::ncml_build_help ) ;
+
+    // Look for the SHowSharedDims property, if it has not been set
+    if (NCMLRequestHandler::_global_attributes_container_name_set == false) {
+        bool key_found = false;
+        string value;
+        TheBESKeys::TheKeys()->get_value("NCML.GlobalAttributesContainerName", value, key_found);
+        if (key_found) {
+            // It was set in the conf file
+            NCMLRequestHandler::_global_attributes_container_name_set = true;
+
+            NCMLRequestHandler::_global_attributes_container_name = value;
+        }
+    }
 }
 
 NCMLRequestHandler::~NCMLRequestHandler()
@@ -144,21 +162,22 @@ NCMLRequestHandler::ncml_build_das( BESDataHandlerInterface &dhi )
     // Now fill in the desired DAS response object from the DDS
     DDS* dds = NCMLUtil::getDDSFromEitherResponse(loaded_bdds.get());
     VALID_PTR(dds);
-    BESResponseObject *response =
-     dhi.response_handler->get_response_object();
+    BESResponseObject *response = dhi.response_handler->get_response_object();
     BESDASResponse *bdas = dynamic_cast < BESDASResponse * >(response);
     VALID_PTR(bdas);
 
     // Copy the modified DDS attributes into the DAS response object!
     DAS *das = bdas->get_das();
-    BESDEBUG("ncml", "Creating DAS response from the location DDX..." << endl);
+    BESDEBUG("ncml", "Creating DAS response from the DDS/X..." << endl);
+
+    if (dds->get_dap_major() < 4)
+        NCMLUtil::hackGlobalAttributesForDAP2(dds->get_attr_table(),
+                                              NCMLRequestHandler::get_global_attributes_container_name());
+
     NCMLUtil::populateDASFromDDS(das, *dds);
 
-    // Apply constraints to the result
-    dhi.data[POST_CONSTRAINT] = dhi.container->get_constraint();
-
     // loaded_bdds destroys itself.
-    return false ;
+    return true ;
 }
 
 bool
@@ -189,6 +208,10 @@ NCMLRequestHandler::ncml_build_dds( BESDataHandlerInterface &dhi )
     DDS *dds_out = bdds_out->get_dds();
     VALID_PTR(dds_out);
 
+    if (dds->get_dap_major() < 4)
+        NCMLUtil::hackGlobalAttributesForDAP2(dds->get_attr_table(),
+                                              NCMLRequestHandler::get_global_attributes_container_name());
+
     // If we just use DDS::operator=, we get into trouble with copied
     // pointers, bashing of the dataset name, etc etc so I specialize the copy for now.
     NCMLUtil::copyVariablesAndAttributesInto(dds_out, *dds);
@@ -202,7 +225,6 @@ NCMLRequestHandler::ncml_build_dds( BESDataHandlerInterface &dhi )
     // Our bes-testsuite fails since we get local path info in the dataset name.
     dds_out->filename(name_path(filename));
     dds_out->set_dataset_name(name_path(filename));
-    // Is there anything else I need to shove in the DDS?
 
     return true;
 }
@@ -241,18 +263,16 @@ NCMLRequestHandler::ncml_build_data( BESDataHandlerInterface &dhi )
 bool
 NCMLRequestHandler::ncml_build_vers( BESDataHandlerInterface &dhi )
 {
-    bool ret = true ;
     BESVersionInfo *info = dynamic_cast<BESVersionInfo *>(dhi.response_handler->get_response_object() ) ;
     if (!info)
     	throw InternalErr(__FILE__, __LINE__, "Expected a BESVersionInfo instance");
     info->add_module( PACKAGE_NAME, PACKAGE_VERSION ) ;
-    return ret ;
+    return true ;
 }
 
 bool
 NCMLRequestHandler::ncml_build_help( BESDataHandlerInterface &dhi )
 {
-    bool ret = true ;
     BESInfo *info = dynamic_cast<BESInfo *>(dhi.response_handler->get_response_object());
     if (!info)
     	throw InternalErr(__FILE__, __LINE__, "Expected a BESVersionInfo instance");
@@ -274,7 +294,7 @@ NCMLRequestHandler::ncml_build_help( BESDataHandlerInterface &dhi )
     info->add_data("Please consult the online documentation at " + ncml_module::ModuleConstants::DOC_WIKI_URL);
     info->end_tag( "module" ) ;
 
-    return ret ;
+    return true ;
 }
 
 void

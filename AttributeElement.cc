@@ -35,17 +35,17 @@
 #include "NCMLUtil.h"
 #include "OtherXMLParser.h"
 
-// This control whether global attributes are added to a special container.
+// This controls whether global attributes are added to a special container.
 // See below...
-#define USE_NC_GLOBAL_CONTAINER 1
+#define USE_NC_GLOBAL_CONTAINER 0
 
 namespace ncml_module
 {
   const string AttributeElement::_sTypeName = "attribute";
   const vector<string> AttributeElement::_sValidAttributes = getValidAttributes();
-
+#if 0
   const string AttributeElement::_default_global_container = "NC_GLOBAL";
-
+#endif
   AttributeElement::AttributeElement()
   : NCMLElement(0)
   , _name("")
@@ -322,6 +322,8 @@ namespace ncml_module
       {
         // Split the value string properly if the type is one that can be a vector.
         p.tokenizeAttrValues(_tokens, _value, internalType, _separator);
+        BESDEBUG("ncml2", "Adding the attribute '" << _name << "' to the current table" << endl);
+        BESDEBUG("ncml2", "The Current attribute table is at: '" << p.getCurrentAttrTable() << "'" << endl);
         p.getCurrentAttrTable()->append_attr(_name, internalType, &(_tokens));
       }
     else // if we are OtherXML
@@ -372,14 +374,15 @@ namespace ncml_module
         p.tokenizeAttrValues(_tokens, value, actualType, _separator);
 #if USE_NC_GLOBAL_CONTAINER
         // If the NCML handler is adding an
-	// attribute to the top level AttrTable, that violates a rule of the
-	// DAP2 spec which says that the top level attribute object has only
-	// containers. In the case that this code tries to add an attribute
-	// to a top level container, we add it instead to a container named
-	// NC_GLOBAL. If that container does not exist, we create it. I used
+        // attribute to the top level AttrTable, that violates a rule of the
+        // DAP2 spec which says that the top level attribute object has only
+        // containers. In the case that this code tries to add an attribute
+        // to a top level container, we add it instead to a container named
+        // NC_GLOBAL. If that container does not exist, we create it. I used
         // NC_GLOBAL (and not NCML_GLOBAL) because the TDS uses that name.
-	// 2/9/11 jhrg
-        // NOTE: It seems like this should above in addNewAttribute, but that
+        // 2/9/11 jhrg
+
+        // NOTE: It seems like this should be above in addNewAttribute, but that
         // will break the parse later on because of some kind of mismatch
         // between the contents of the AttrTable and the scope stack. I could
         // push a new thing on the scope stack, but that might break things
@@ -399,7 +402,7 @@ namespace ncml_module
 
         // Note that in DAP4 we are allowed to have top level attributes. This
         // change was made so that Structure and Dataset are closer to one
-        // another.
+        // another. jhrg
         if (p.getScopeDepth() < 2 && p.getDDSForCurrentDataset()->get_dap_major() < 4)
           {
             BESDEBUG("ncml_attr", "There's no parent container, looking for " << _default_global_container << "..." << endl);
@@ -410,12 +413,12 @@ namespace ncml_module
             AttrTable *at = pTable->find_container(_default_global_container);
             if (!at)
               {
-        	BESDEBUG("ncml_attr", " not found; adding." << endl);
-        	at = pTable->append_container(_default_global_container);
+                BESDEBUG("ncml_attr", " not found; adding." << endl);
+                at = pTable->append_container(_default_global_container);
               }
             else
               {
-        	BESDEBUG("ncml_attr", " found; using" << endl);
+                BESDEBUG("ncml_attr", " found; using" << endl);
               }
 
             at->append_attr(_name, actualType, &(_tokens));

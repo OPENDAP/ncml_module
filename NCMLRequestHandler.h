@@ -41,6 +41,8 @@ namespace ncml_module
 class NCMLRequestHandler : public BESRequestHandler
 {
 private: // rep
+    static bool     _global_attributes_container_name_set ;
+    static string   _global_attributes_container_name;
 
 private:
 
@@ -58,6 +60,9 @@ public:
     static bool		ncml_build_data( BESDataHandlerInterface &dhi ) ;
     static bool		ncml_build_vers( BESDataHandlerInterface &dhi ) ;
     static bool		ncml_build_help( BESDataHandlerInterface &dhi ) ;
+
+    static string get_global_attributes_container_name() { return _global_attributes_container_name; }
+
 }; // class NCMLRequestHandler
 } // namespace ncml_module
 
