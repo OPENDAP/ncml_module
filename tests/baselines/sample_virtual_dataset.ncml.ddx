@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <Dataset name="sample_virtual_dataset.ncml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://xml.opendap.org/ns/DAP2" xsi:schemaLocation="http://xml.opendap.org/ns/DAP2 http://xml.opendap.org/dap/dap2.xsd">
-    <Attribute name="NC_GLOBAL" type="Container">
-        <Attribute name="TOP_Level_DAP_Attribute" type="String">
-            <value>This is a top level attribute</value>
-        </Attribute>
-    </Attribute>
     <Attribute name="MetaData" type="Container">
         <Attribute name="Created" type="String">
             <value>18 Aug 2009</value>
         </Attribute>
         <Attribute name="Author" type="String">
             <value>eponymous</value>
+        </Attribute>
+    </Attribute>
+    <Attribute name="NC_GLOBAL" type="Container">
+        <Attribute name="TOP_Level_DAP_Attribute" type="String">
+            <value>This is a top level attribute</value>
         </Attribute>
     </Attribute>
     <Structure name="MyNewStructure">
@@ -40,4 +40,3 @@
     </Structure>
     <dataBLOB href=""/>
 </Dataset>
-

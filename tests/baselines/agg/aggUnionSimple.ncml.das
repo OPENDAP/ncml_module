@@ -1,6 +1,8 @@
 Attributes {
     NC_GLOBAL {
-        String title "Union cldc and lflx";
+        String title "COADS 1-degree Equatorial Enhanced", "Union cldc and lflx";
+        String history "";
+        String Conventions "COARDS";
     }
     DODS_EXTRA {
         String Unlimited_Dimension "time";

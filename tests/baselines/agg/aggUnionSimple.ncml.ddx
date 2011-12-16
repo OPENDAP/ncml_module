@@ -2,7 +2,14 @@
 <Dataset name="aggUnionSimple.ncml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://xml.opendap.org/ns/DAP2" xsi:schemaLocation="http://xml.opendap.org/ns/DAP2 http://xml.opendap.org/dap/dap2.xsd">
     <Attribute name="NC_GLOBAL" type="Container">
         <Attribute name="title" type="String">
+            <value>COADS 1-degree Equatorial Enhanced</value>
             <value>Union cldc and lflx</value>
+        </Attribute>
+        <Attribute name="history" type="String">
+            <value></value>
+        </Attribute>
+        <Attribute name="Conventions" type="String">
+            <value>COARDS</value>
         </Attribute>
     </Attribute>
     <Attribute name="DODS_EXTRA" type="Container">
