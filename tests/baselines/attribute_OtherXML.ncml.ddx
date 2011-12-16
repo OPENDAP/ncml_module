@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <Dataset name="attribute_OtherXML.ncml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://xml.opendap.org/ns/DAP2" xsi:schemaLocation="http://xml.opendap.org/ns/DAP2 http://xml.opendap.org/dap/dap2.xsd">
-    <Attribute name="TestOtherXML" type="OtherXML">
+    <Attribute name="NC_GLOBAL" type="Container">
+        <Attribute name="TestOtherXML" type="OtherXML">
     <Domain xmlns="http://www.opengis.net/wcs/1.1" xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:gml="http://www.opengis.net/gml/3.2">
       <SpatialDomain>
         <ows:BoundingBox crs="urn:ogc:def:crs:EPSG::4326">
@@ -16,5 +17,6 @@
     <SupportedFormat xmlns="http://www.opengis.net/wcs/1.1">netcdf-cf1.0</SupportedFormat>
     <SupportedFormat xmlns="http://www.opengis.net/wcs/1.1">dap2.0</SupportedFormat>
   </Attribute>
+    </Attribute>
     <dataBLOB href=""/>
 </Dataset>

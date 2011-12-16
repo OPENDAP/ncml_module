@@ -1,5 +1,6 @@
 Attributes {
-    OtherXML eml://ecoinformatics.org/eml-2.0.1 "
+    NC_GLOBAL {
+        OtherXML eml://ecoinformatics.org/eml-2.0.1 "
     
     <creator xmlns=\"\">
       <organizationName>Australian Commonwealth Scientific and Research Organization
@@ -16,6 +17,7 @@ Attributes {
       <keyword>Chlorophyll</keyword>
     </keywordSet>
   ";
+    }
     chlor {
         OtherXML eml://ecoinformatics.org/eml-2.0.1 "
       

@@ -72,7 +72,7 @@ AT_CLEANUP
 dnl Run the besstandlone on the filename for the response type
 dnl and compare stdout to the baseline of name filename.{dds,ddx,dods,das}.
 dnl ncml_filename is expected to be the basename as the datadir is added.
-dnl $1 == { true | xfail } (Expected fail flag, 'xfail' if it is expected to fail)
+dnl $1 == [xfail] (Optional fail flag, 'xfail' if it is expected to fail)
 dnl $2 == ncml_filename
 dnl $3 == {das | dds | dods | ddx }
 m4_define([AT_RUN_BES_AND_COMPARE_BASELINE],
@@ -119,25 +119,25 @@ AT_CLEANUP
 dnl Syntactic sugar for each response
 
 dnl $1 == ncml_input_basename
-dnl $2 == [{ true | false }] (Expected fail flag, 'xfail' if it is expected to fail)
+dnl $2 == [xfail] (Optional fail flag, 'xfail' if it is expected to fail)
 m4_define([AT_CHECK_DAS],
 [AT_RUN_BES_AND_COMPARE_BASELINE([$2], [$1], [das])
 ])
 
 dnl $1 == ncml_input_basename
-dnl $2 == [{ true | false }] (Expected fail flag, 'xfail' if it is expected to fail)
+dnl $2 == [xfail] (Optional fail flag, 'xfail' if it is expected to fail)
 m4_define([AT_CHECK_DDS],
 [AT_RUN_BES_AND_COMPARE_BASELINE([$2], [$1], [dds])
 ])
 
 dnl $1 == ncml_input_basename
-dnl $2 == [{ true | false }] (Expected fail flag, 'xfail' if it is expected to fail)
+dnl $2 == [xfail] (Optional fail flag, 'xfail' if it is expected to fail)
 m4_define([AT_CHECK_DDX],
 [AT_RUN_BES_AND_COMPARE_BASELINE([$2], [$1], [ddx])
 ])
 
 dnl $1 == ncml_input_basename
-dnl $2 == [{ true | false }] (Expected fail flag, 'xfail' if it is expected to fail)
+dnl $2 == [xfail] (Optional fail flag, 'xfail' if it is expected to fail)
 m4_define([AT_CHECK_DATADDS],
 [AT_RUN_BES_AND_COMPARE_BASELINE([$2], [$1], [dods])
 ])
