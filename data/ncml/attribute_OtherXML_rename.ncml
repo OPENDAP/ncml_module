@@ -4,6 +4,8 @@
 	location="data/ncml/attribute_OtherXML.ncml"> 
 
   <!-- Just use the original example and rename it -->
+  
+  <!-- -->
   <attribute name="RenamedOtherXML" orgName="TestOtherXML" type="OtherXML"/>
   
 </netcdf>

@@ -317,11 +317,14 @@ namespace ncml_module
   void
   NCMLUtil::hackGlobalAttributesForDAP2(libdap::AttrTable &global_attributes, const std::string &global_container_name)
   {
+      if (global_container_name.empty())
+          return;
+
       // Cases: 1. only containers at the top --> return
       //        2. only simple attrs at the top --> move them into one container
       //        3. mixture of simple and containers --> move the simples into a new container
       //        4. mixture ...  and global_container_name exists --> move simples into that container
-#if 1
+
       // Look at the top-level container and see if it has any simple attributes.
       // If it is empty or has only containers, do nothing.
       bool simple_attribute_found = false;
@@ -374,12 +377,13 @@ namespace ncml_module
           ++i;
       }
 
-      // Now delete the simple attributes we just moved
+      // Now delete the simple attributes we just moved; they are not deleted in the
+      // above loop because deleting things in a container invalidates iterators
       i = global_attributes.attr_begin();
       while (i != global_attributes.attr_end()) {
           if (!global_attributes.is_container(i)) {
               global_attributes.del_attr(global_attributes.get_name(i));
-              //  delete invalidates iterators
+              //  delete invalidates iterators; must restart the loop
               i = global_attributes.attr_begin();
           }
           else {
@@ -388,7 +392,6 @@ namespace ncml_module
       }
 
       return;
-#endif
   }
 
   void

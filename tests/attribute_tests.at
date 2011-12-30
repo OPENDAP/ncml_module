@@ -39,8 +39,8 @@ AT_CHECK_DATADDS_GETDAP([bugs/empty_attr_string.ncml])
 dnl Check for an attribute of type OtherXML
 AT_CHECK_ALL_DAP_RESPONSES([attribute_OtherXML.ncml])
 
-dnl Make sure we can rename an existing OtherXML attribute... Different codebranch...
-AT_CHECK_DDX([attribute_OtherXML_rename.ncml])
+dnl Make sure we can rename an existing OtherXML attribute... Different code branch...
+AT_CHECK_DDX_ALT_CONF([attribute_OtherXML_rename.ncml])
 
 dnl Make sure if the OtherXML contains <attribute> element that we don't end parse early
 dnl but wait for the depth to be finished...
