@@ -131,7 +131,8 @@ NCML_HDRS = \
 libncml_module_la_SOURCES = $(NCML_SRCS) $(BES_SRCS) $(NCML_HDRS) $(BES_HDRS)
 libncml_module_la_CPPFLAGS = $(ICU_CPPFLAGS) $(BES_CPPFLAGS) $(DAP_CFLAGS) 
 libncml_module_la_LDFLAGS = -avoid-version -module 
-libncml_module_la_LIBADD =   $(ICU_LIBS) $(BES_DAP_LIBS) $(DAP_LIBS)
+libncml_module_la_LIBADD =   $(ICU_LIBS) $(BES_DAP_LIBS) 
+#$(DAP_LIBS)
 
 EXTRA_PROGRAMS = 
 

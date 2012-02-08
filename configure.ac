@@ -53,9 +53,13 @@ AC_CHECK_FUNCS([strchr isdigit])
 dnl Checks for specific libraries
 AC_CHECK_LIBDAP([3.11.0],
  [
+  LIBS="$LIBS $DAP_SERVER_LIBS"
+  CPPFLAGS="$CPPFLAGS $DAP_CFLAGS"
+ ],
+dnl [
 dnl  LIBS="$LIBS $DAP_LIBS"
 dnl  CPPFLAGS="$CPPFLAGS $DAP_CFLAGS"
- ],
+dnl ],
  [ AC_MSG_ERROR([Cannot find expected version of libdap])
 ])
 
