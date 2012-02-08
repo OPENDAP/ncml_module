@@ -1,3 +1,18 @@
+2012-02-07  James Gallagher <jgallagher@opendap.org>
+
+	 Build fixes for CentOS 6; no longer links with libdapclient
+
+2012-01-11  James Gallagher <jgallagher@opendap.org>
+
+	Updates for Hyrax 1.8
+
+	M    ncml_module.spec
+	M    configure.ac
+	M    NEWS
+	M    ChangeLog
+	M    INSTALL
+	M    README
+
 2012-01-03  James Gallagher <jgallagher@opendap.org>
 
 	Hacked the tests - forgot to update SVN - fixed now, I hope.
@@ -8,15 +23,17 @@
 
 2011-12-30  James Gallagher <jgallagher@opendap.org>
 
-	Fixes for the broken test - ticket 1868 - where top-level attributes were
-	not renamed correctly. The problem was that the tests were being run using the
-	new option to dump all the those attributes in a container named NC_GLOBAL.
-	I modified the tests so that we can use different configuration files - useful
-	I think. I also verified that the test could be rewritten to rename the
-	attribute if it was added NC_GLOBAL using the nested notation our ncml handler
-	supports. I also fixed an issue with the way the option to trigger the
-	new behavior was working - if the attribute was not set the default was to
-	make the NC_GLOBAL container, which was not correct.
+	Fixes for the broken test - ticket 1868 - where top-level
+	attributes were not renamed correctly. The problem was that the
+	tests were being run using the new option to dump all the those
+	attributes in a container named NC_GLOBAL.  I modified the tests
+	so that we can use different configuration files - useful I
+	think. I also verified that the test could be rewritten to rename
+	the attribute if it was added NC_GLOBAL using the nested notation
+	our ncml handler supports. I also fixed an issue with the way the
+	option to trigger the new behavior was working - if the attribute
+	was not set the default was to make the NC_GLOBAL container, which
+	was not correct.
 
 	M    NCMLUtil.cc
 	M    tests/attribute_tests.at
