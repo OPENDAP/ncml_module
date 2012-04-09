@@ -32,6 +32,8 @@
 
 #include <fstream>
 #include <cerrno>
+#include <cstdlib>
+#include <cstring>
 
 using std::ofstream ;
 using std::endl ;
