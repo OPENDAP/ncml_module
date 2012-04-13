@@ -1,9 +1,9 @@
 Attributes {
+    Decoy {
+    }
     A {
     }
     B {
-    }
-    Decoy {
     }
     A_expected {
     }

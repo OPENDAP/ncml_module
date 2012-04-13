@@ -1,5 +1,6 @@
 Attributes {
-    OtherXML TestOtherXML "
+    NC_GLOBAL {
+        OtherXML TestOtherXML "
     <Domain xmlns=\"http://www.opengis.net/wcs/1.1\" xmlns:ows=\"http://www.opengis.net/ows/1.1\" xmlns:gml=\"http://www.opengis.net/gml/3.2\">
       <SpatialDomain>
         <ows:BoundingBox crs=\"urn:ogc:def:crs:EPSG::4326\">
@@ -15,4 +16,5 @@ Attributes {
     <SupportedFormat xmlns=\"http://www.opengis.net/wcs/1.1\">netcdf-cf1.0</SupportedFormat>
     <SupportedFormat xmlns=\"http://www.opengis.net/wcs/1.1\">dap2.0</SupportedFormat>
   ";
+    }
 }

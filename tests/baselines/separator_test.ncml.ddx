@@ -1,9 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Dataset name="separator_test.ncml"
-xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-xmlns="http://xml.opendap.org/ns/DAP2"
-xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/dap2.xsd">
-
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<Dataset name="separator_test.ncml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://xml.opendap.org/ns/DAP2" xsi:schemaLocation="http://xml.opendap.org/ns/DAP2 http://xml.opendap.org/dap/dap2.xsd">
     <Attribute name="NC_GLOBAL" type="Container">
         <Attribute name="foo" type="Int32">
             <value>1</value>
@@ -31,7 +27,7 @@ xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/d
             <value>http://www.opendap.org</value>
         </Attribute>
         <Attribute name="zork" type="String">
-            <value>I am a string without a specified separator so won&apos;t get separated into an array.</value>
+            <value>I am a string without a specified separator so won't get separated into an array.</value>
         </Attribute>
         <Attribute name="enchanter" type="String">
             <value>Each</value>
@@ -41,7 +37,6 @@ xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/d
             <value>Token</value>
         </Attribute>
     </Attribute>
-
     <String name="sorcerer"/>
     <Array name="grue">
         <String/>
@@ -51,6 +46,6 @@ xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/d
         <String/>
         <dimension size="3"/>
     </Array>
-
     <dataBLOB href=""/>
 </Dataset>
+

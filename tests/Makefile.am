@@ -30,10 +30,10 @@ TEST_FILES = 	aggregations.at \
 		variable_rename.at 
 
 EXTRA_DIST = testsuite.at $(TEST_FILES) $(srcdir)/package.m4 $(TESTSUITE) atlocal.in \
-	template.bescmd.in bes.conf.in baselines
+	template.bescmd.in bes.conf.in bes_no_nc_global.conf.in  baselines
 
-noinst_DATA = bes.conf
-DISTCLEANFILES = bes.conf
+noinst_DATA = bes.conf bes_no_nc_global.conf
+DISTCLEANFILES = bes.conf bes_no_nc_global.conf
 
 check-local: atconfig atlocal $(TESTSUITE)
 	$(SHELL) '$(TESTSUITE)' $(TESTSUITEFLAGS)
@@ -78,5 +78,14 @@ bes.conf: bes.conf.in ../config.status
 		-e "s%[@]abs_top_srcdir[@]%${canonical_abs_top_srcdir}%" \
 		-e "s%[@]abs_top_builddir[@]%${abs_top_builddir}%" \
 		-e "s%[@]bindir[@]%${bindir}%" $< > bes.conf
+
+bes_no_nc_global.conf: bes_no_nc_global.conf.in ../config.status
+	sed -e "s%[@]pkgdatadir[@]%${pkgdatadir}%" \
+		-e "s%[@]sysconfdir[@]%${sysconfdir}%" \
+		-e "s%[@]beslibdir[@]%${BES_MODULE_DIR}%" \
+		-e "s%[@]datadir[@]%${datadir}%" \
+		-e "s%[@]abs_top_srcdir[@]%${canonical_abs_top_srcdir}%" \
+		-e "s%[@]abs_top_builddir[@]%${abs_top_builddir}%" \
+		-e "s%[@]bindir[@]%${bindir}%" $< > bes_no_nc_global.conf
 
 

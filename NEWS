@@ -1,4 +1,17 @@
+Version 1.2.2
 
+Build fix for CentOS 6.
+
+Version 1.2.1
+
+Fixes for Grids so that their Map vectors now appear as top-level
+variables to mimic the 'shared dimensions' hack used to make older
+netcdf-based clients work.
+
+Added a new configuration parameter to address the question about just 
+what to do with top-level (global) attributes. The parameter is named
+NCML.GlobalAttributesContainerName and if present and set to a value, 
+a container of that name will be used to hold all of the top-level attributes.
 
 Version 1.2.0
 

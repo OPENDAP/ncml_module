@@ -92,7 +92,7 @@ public: // data rep
        * content of the element:
        * i.e. <attribute name="foo" type="String" value="bar"/> == <attribute name="foo" type="String">bar</attribute>
        *
-       * If the named attribute is found, we modify it to have the new type and value (essentially removing the old one and readding it).
+       * If the named attribute is found, we modify it to have the new type and value (essentially removing the old one and reading it).
        *
        * For vector-valued atomics, we assume whitespace is the separator for the values.  If attribute@separator is non-empty,
        * we use it to split the values.

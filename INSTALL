@@ -1,7 +1,5 @@
 
-$Id: INSTALL $
-
-Updated for version 1.2.0
+Updated for version 1.2.1
 
 ---------------------------------------------------------------------------
 Installation instructions for the OPeNDAP NcML Data Handling Module 
@@ -23,10 +21,6 @@ NOTES
 ---------------------------------------------------------------------------
 INTRO
 
-The NcML Module is a new module for Hyrax 1.6.  Since it is new,
-there may be issues on some operating systems on which we have not yet
-tested.
-
 If you encounter any build problems after making sure you have
 followed the BUILD REQUIREMENTS section, please send e-mail with as
 much information about your operating system and the problem as you
@@ -41,7 +35,7 @@ BUILDING THE SOFTWARE
 0) Please read the BUILD REQUIREMENTS and NOTES sections of this file
    (below) before reporting problems.  
 
-   This module is designed to work with Hyrax 1.6 and will not work
+   This module is designed to work with Hyrax 1.6+ and will not work
    with older versions!  Make sure you have a working installation of
    Hyrax 1.6 before beginning this installation!
 

@@ -1,11 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Dataset name="attribute_OtherXML_Attribute.ncml"
-xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-xmlns="http://xml.opendap.org/ns/DAP2"
-xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/dap2.xsd">
-
-    <Attribute name="TestOtherXML" type="OtherXML">
-        
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<Dataset name="attribute_OtherXML_Attribute.ncml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://xml.opendap.org/ns/DAP2" xsi:schemaLocation="http://xml.opendap.org/ns/DAP2 http://xml.opendap.org/dap/dap2.xsd">
+    <Attribute name="NC_GLOBAL" type="Container">
+        <Attribute name="TestOtherXML" type="OtherXML">
     <Root xmlns="http://www.some_place_that_uses_attribute.com">
       <SomeElement>
 	<variable> 
@@ -15,9 +11,7 @@ xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/d
 	</variable>
       </SomeElement>
     </Root>
-  
+  </Attribute>
     </Attribute>
-
-
     <dataBLOB href=""/>
 </Dataset>

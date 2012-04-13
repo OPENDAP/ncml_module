@@ -1,4 +1,6 @@
 Attributes {
+    day {
+    }
     V {
     }
     W {
@@ -6,7 +8,5 @@ Attributes {
     V_expected {
     }
     W_expected {
-    }
-    day {
     }
 }

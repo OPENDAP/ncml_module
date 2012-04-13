@@ -50,6 +50,7 @@ namespace libdap
   class Constructor;
   class DDS;
   class DAS;
+  class AttrTable;
 }
 
 class BESDapResponse;
@@ -160,6 +161,8 @@ namespace ncml_module
      * @return the DDS* contained in the response object, or NULL if incorrect response type.
      */
     static libdap::DDS* getDDSFromEitherResponse(BESDapResponse* response);
+
+    static void hackGlobalAttributesForDAP2(libdap::AttrTable &global_attributes, const std::string &global_container_name);
 
     /** Currently BaseType::set_name only sets in BaseType.  Unfortunately, the DDS transmission
      * for Vector subclasses uses the name of the template BaseType* describing the variable,

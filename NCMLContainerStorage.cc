@@ -61,7 +61,7 @@ NCMLContainerStorage::~NCMLContainerStorage()
 void
 NCMLContainerStorage::add_container( const string &s_name,
 				     const string &r_name,
-				     const string &type )
+				     const string &/*type*/ )
 {
     BESContainer *c = new NCMLContainer( s_name, r_name ) ;
     BESContainerStorageVolatile::add_container( c ) ;

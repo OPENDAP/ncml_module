@@ -1,10 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Dataset name="var_array_auto_double_1.ncml"
-xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-xmlns="http://xml.opendap.org/ns/DAP2"
-xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/dap2.xsd">
-
-
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<Dataset name="var_array_auto_double_1.ncml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://xml.opendap.org/ns/DAP2" xsi:schemaLocation="http://xml.opendap.org/ns/DAP2 http://xml.opendap.org/dap/dap2.xsd">
     <Array name="MyAutoDoubleArray">
         <Attribute name="Description" type="String">
             <value>Testing autogeneration of values with start and increment</value>
@@ -12,6 +7,6 @@ xsi:schemaLocation="http://xml.opendap.org/ns/DAP2  http://xml.opendap.org/dap/d
         <Float64/>
         <dimension name="time" size="10"/>
     </Array>
-
     <dataBLOB href=""/>
 </Dataset>
+

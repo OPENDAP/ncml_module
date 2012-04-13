@@ -1,5 +1,6 @@
 Attributes {
-    OtherXML eml%3a//ecoinformatics.org/eml-2.0.1 "
+    NC_GLOBAL {
+        OtherXML eml://ecoinformatics.org/eml-2.0.1 "
     
     <creator xmlns=\"\">
       <organizationName>Australian Commonwealth Scientific and Research Organization
@@ -16,8 +17,9 @@ Attributes {
       <keyword>Chlorophyll</keyword>
     </keywordSet>
   ";
+    }
     chlor {
-        OtherXML eml%3a//ecoinformatics.org/eml-2.0.1 "
+        OtherXML eml://ecoinformatics.org/eml-2.0.1 "
       
       <attributeDefinition xmlns=\"\">chlor is level of chlorophyll a in mg m^-3 as measured by the
 	satellite-borne CZCS sensor (From OtherXML, via NcML)</attributeDefinition>
@@ -38,7 +40,7 @@ Attributes {
       <cellGeometry xmlns=\"\">pixel</cellGeometry>
     ";
         time {
-            OtherXML eml%3a//ecoinformatics.org/eml-2.0.1 "
+            OtherXML eml://ecoinformatics.org/eml-2.0.1 "
 	<temporalCoverage xmlns=\"\">
 	  <rangeOfDates>
 	    <beginDate>

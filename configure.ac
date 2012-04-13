@@ -4,11 +4,16 @@
 
 AC_PREREQ(2.61)
 
-AC_INIT(ncml_module, 1.2.0, support@opendap.org)
+AC_INIT(ncml_module, 1.2.2, support@opendap.org)
 AC_CONFIG_AUX_DIR([conf])
 AC_CONFIG_MACRO_DIR([conf])
 
 AM_INIT_AUTOMAKE
+
+# The handler is a shared object library, so we don't normally need
+# the static lib. Override this default by specifying `--enable-static',
+# which can make running unit tests with valgrind far more pleasant. 
+AM_DISABLE_STATIC
 
 PACKAGE_MAJOR_VERSION=`echo $PACKAGE_VERSION | sed 's@^\([[0-9]]\)*\.\([[0-9]]*\)\.\([[0-9]]*\)$@\1@'`
 PACKAGE_MINOR_VERSION=`echo $PACKAGE_VERSION | sed 's@^\([[0-9]]\)*\.\([[0-9]]*\)\.\([[0-9]]*\)$@\2@'`
@@ -48,9 +53,13 @@ AC_CHECK_FUNCS([strchr isdigit])
 dnl Checks for specific libraries
 AC_CHECK_LIBDAP([3.11.0],
  [
+  LIBS="$LIBS $DAP_SERVER_LIBS"
+  CPPFLAGS="$CPPFLAGS $DAP_CFLAGS"
+ ],
+dnl [
 dnl  LIBS="$LIBS $DAP_LIBS"
 dnl  CPPFLAGS="$CPPFLAGS $DAP_CFLAGS"
- ],
+dnl ],
  [ AC_MSG_ERROR([Cannot find expected version of libdap])
 ])
 

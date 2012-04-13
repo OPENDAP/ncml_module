@@ -224,14 +224,17 @@ namespace ncml_module
 
     if ( isUnionAggregation() )
       {
+        BESDEBUG("ncml2", "  AggregationElement::handleEnd; isUnionAggregation" << endl);
         processUnion();
       }
     else if ( isJoinNewAggregation() )
       {
+        BESDEBUG("ncml2", "  AggregationElement::handleEnd; isJoinNewAggregation" << endl);
         processJoinNew();
       }
     else if ( isJoinExistingAggregation() )
       {
+        BESDEBUG("ncml2", "  AggregationElement::handleEnd; isJoinExistingAggregation" << endl);
         processJoinExisting();
       }
     else if (_type == "forecastModelRunCollection" ||
@@ -465,7 +468,14 @@ namespace ncml_module
       }
 
     // Union any non-aggregated variables from the template dataset into the aggregated dataset
-    AggregationUtil::unionAllVariablesInto(pAggDDS, *pTemplateDDS);
+    // Because we want the joinExistingaggregation to build up the Coordinate Variables (CVs)
+    // in the order they are declared in the NCML file, we need to track the current position
+    // where the last one was inserted. We can do that with a field in the AggregationUtil
+    // class. Here we reset that field so that it starts at position 0. 12.13.11 jhrg
+    AggregationUtil::resetCVInsertionPosition();
+
+    // Union any non-aggregated variables from the template dataset into the aggregated dataset
+    AggregationUtil::unionAllVariablesInto(pAggDDS, *pTemplateDDS, /*add_at_top = */true);
   }
 
 #if 0
@@ -561,14 +571,20 @@ namespace ncml_module
   void
   AggregationElement::unionAddAllRequiredNonAggregatedVariablesFrom(const DDS& templateDDS)
   {
+    // Union any non-aggregated variables from the template dataset into the aggregated dataset
+    // Because we want the joinExistingaggregation to build up the Coordinate Variables (CVs)
+    // in the order they are declared in the NCML file, we need to track the current position
+    // where the last one was inserted. We can do that with a field in the AggregationUtil
+    // class. Here we reset that field so that it starts at position 0. 12.13.11 jhrg
+    AggregationUtil::resetCVInsertionPosition();
+
+
     // If we didn't get a variable agg for a joinExisting, then union them all.
     if (isJoinExistingAggregation())
       {
         if (!gotVariableAggElement())
           {
-            AggregationUtil::unionAllVariablesInto(
-                    getParentDataset()->getDDS(),
-                    templateDDS);
+            AggregationUtil::unionAllVariablesInto(getParentDataset()->getDDS(), templateDDS, /*add_at_top = */true);
           }
         else
           {
@@ -577,11 +593,9 @@ namespace ncml_module
       } // if isJoinExistingAggregation
 
     else if (isJoinNewAggregation())
-      // joinNew requires the lsit of vars, so for this one just union them all in as well.
+      // joinNew requires the list of vars, so for this one just union them all in as well.
     {
-      AggregationUtil::unionAllVariablesInto(
-                getParentDataset()->getDDS(),
-                templateDDS);
+      AggregationUtil::unionAllVariablesInto(getParentDataset()->getDDS(), templateDDS, /*add_at_top = */true);
     }
   }
 
@@ -875,7 +889,7 @@ namespace ncml_module
   void
   AggregationElement::getParamsForJoinAggOnVariable(
       JoinAggParams* pOutParams,
-      const DDS& aggOutputDDS,
+      const DDS& /*aggOutputDDS*/,
       const std::string& varName,
       const DDS& templateDDS)
   {
@@ -897,6 +911,13 @@ namespace ncml_module
         "Didn't find a DimensionElement with the aggregation dimName=" + _dimName );
     pOutParams->_pAggDim = &(pDim->getDimension());
 
+#if 0
+    // I don't follow the logic here. I think we should be able to add attributes to
+    // variables that already exist. This may be intended to protect against removing
+    // the variable on which the aggregation is performed 'over' (e.g., time) with a
+    // different variable. But it has the affect of also prohibiting that addition of
+    // an attribute on that variable. I'm removing it for now. jhrg 10/17/11
+
     // Be sure the name isn't taken in the output DDS.
     BaseType* pExists = AggregationUtil::getVariableNoRecurse(aggOutputDDS, varName);
     NCML_ASSERT_MSG(!pExists,
@@ -904,6 +925,7 @@ namespace ncml_module
         + varName
         + ") already exists in the "
         " output aggregation DDS!  What happened?!");
+#endif
 
     // Get a vector of lazy loaders
     // We will transfer AGM ownership to the calls so do not need to delete them.
@@ -1150,6 +1172,8 @@ namespace ncml_module
 
     // OK, either pCV is valid or we've unwound out by this point.
     // If a coordinate axis type was specified, we need to add it now.
+    //
+    // This fiddles with the attribute for the CV. jhrg 10/17/11
     if (!_coordinateAxisType.empty())
       {
         addCoordinateAxisType(*pCV, _coordinateAxisType);
@@ -1435,6 +1459,7 @@ namespace ncml_module
 
     // Add the new one, which will copy it (argh! we need to fix this in libdap!)
     // OPTIMIZE  use non copy add when available.
+    BESDEBUG("ncml", "Adding CV: " << pNewArrCV->name() << endl);
     pDDS->add_var(pNewArrCV.get()); // use raw ptr for the copy.
 
     // Pull out the copy we just added and hand it back
@@ -1469,8 +1494,29 @@ namespace ncml_module
 
     // Add it to the DDS, which will make a copy
     // (TODO change this when we add noncopy add_var to DDS)
+    //
+    // Fix. This will append the variable to the DDS; we need these CVs to be
+    // prefixes to the Grids (so that old versions of the netCDF library will
+    // recognize them. jhrg 10/17/11
+    BESDEBUG("ncml2", "AggregationElement::createAndAddCoordinateVariableForNewDimension: " << pNewCV->name());
+#if 0
     dds.add_var(pNewCV.get());
+#else
+    // This provides a way to remember where the last CV was inserted and adds
+    // this one after it. That provides the behavior that all of the CVs are
+    // added at the beginning of the DDS but in the order they appear in the NCML.
+    // That will translate into a greater chance of success for users, I think ...
+    //
+    // See also similar code in AggregationUtil::addCopyOfVariableIfNameIsAvailable.
+    // jhrg 10/17/11
+    static int last_added = 0;
+    DDS::Vars_iter pos = dds.var_begin();
+    for (int i = 0; i < last_added; ++i)
+        ++pos;
 
+    dds.insert_var(pos, pNewCV.get());
+    ++last_added;
+#endif
     // Grab the copy back out and set to our expected result.
     Array* pCV = static_cast<Array*>( AggregationUtil::getVariableNoRecurse(
           dds,
@@ -1754,7 +1800,7 @@ namespace ncml_module
         rAT.del_attr(COORDINATE_AXIS_TYPE_ATTR);
       }
 
-    BESDEBUG("ncml", "Adding attribute to the aggregation variable " << rCV.name() <<
+    BESDEBUG("ncml3", "Adding attribute to the aggregation variable " << rCV.name() <<
         " Attr is " << COORDINATE_AXIS_TYPE_ATTR <<
         " = " << cat <<
         endl);

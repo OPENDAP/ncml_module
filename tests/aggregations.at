@@ -1,4 +1,4 @@
-dnl Test suite containing tests that don't fit another file
+dnl Test suite containing tests that do not fit another file
 AT_BANNER([------------------  AGGREGATION TESTS -----------------------])
 
 dnl Here we try to change the values of an existing variable, which is disallowed in this version
@@ -28,9 +28,9 @@ dnl----------------- Dimensions ---------------------------
 dnl Test example virtual datasets with dimensions.
 
 dnl Check that a union with correct matching dimensions works
-dnl Technically, there's nothing to check since the dims are used 
+dnl Technically, there is nothing to check since the dims are used 
 dnl inside the child datasets to generate data, and not otherwise...
-dnl Only shared would technically need to match, but DAP2 doesn't have them yet...
+dnl Only shared would technically need to match, but DAP2 does not have them yet...
 AT_CHECK_ALL_DAP_RESPONSES([agg/union_with_dimensions.ncml])
 AT_CHECK_DATADDS_GETDAP([agg/union_with_dimensions.ncml])
 

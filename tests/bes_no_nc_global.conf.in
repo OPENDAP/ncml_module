@@ -74,7 +74,6 @@ BES.module.h5=@beslibdir@/libhdf5_module.so
 BES.module.fonc=@beslibdir@/libfonc_module.so
 BES.module.ncml=@abs_top_builddir@/.libs/libncml_module.so
 
-
 #-----------------------------------------------------------------------#
 # Setting the data location
 #-----------------------------------------------------------------------#
@@ -275,5 +274,9 @@ BES.DefaultResponseMethod=POST
 #                                                                       #
 #-----------------------------------------------------------------------#
 NCML.TempDirectory=/tmp
-NCML.GlobalAttributesContainerName=NC_GLOBAL
-
+# 
+# This conf file lets us run tests without the global attributes being
+# moved into the NC_GLOBAL container (which the bes.conf file configures
+# the handler to use).
+#
+# NCML.GlobalAttributesContainerName=NC_GLOBAL

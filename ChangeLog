@@ -1,3 +1,182 @@
+2012-02-07  James Gallagher <jgallagher@opendap.org>
+
+	 Build fixes for CentOS 6; no longer links with libdapclient
+
+2012-01-11  James Gallagher <jgallagher@opendap.org>
+
+	Updates for Hyrax 1.8
+
+	M    ncml_module.spec
+	M    configure.ac
+	M    NEWS
+	M    ChangeLog
+	M    INSTALL
+	M    README
+
+2012-01-03  James Gallagher <jgallagher@opendap.org>
+
+	Hacked the tests - forgot to update SVN - fixed now, I hope.
+
+	A    tests/bes_no_nc_global.conf.in
+	M    tests/bes.conf.in
+	M    tests/Makefile.am
+
+2011-12-30  James Gallagher <jgallagher@opendap.org>
+
+	Fixes for the broken test - ticket 1868 - where top-level
+	attributes were not renamed correctly. The problem was that the
+	tests were being run using the new option to dump all the those
+	attributes in a container named NC_GLOBAL.  I modified the tests
+	so that we can use different configuration files - useful I
+	think. I also verified that the test could be rewritten to rename
+	the attribute if it was added NC_GLOBAL using the nested notation
+	our ncml handler supports. I also fixed an issue with the way the
+	option to trigger the new behavior was working - if the attribute
+	was not set the default was to make the NC_GLOBAL container, which
+	was not correct.
+
+	M    NCMLUtil.cc
+	M    tests/attribute_tests.at
+	M    tests/testsuite.at
+	M    data/ncml/attribute_OtherXML_rename.ncml
+	M    NCMLRequestHandler.cc
+
+2011-12-16  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	ncml_handler: Updated test baselines
+
+2011-12-16  James Gallagher <jgallagher@opendap.org>
+
+	More baselines fixed.
+
+2011-12-16  James Gallagher <jgallagher@opendap.org>
+
+	More baseline updates for ticket 1849.
+
+	M    tests/baselines/agg/joinExisting_load_ncoords.ncml.ddx
+	M    tests/baselines/agg/joinExist_scan.ncml.das
+	M    tests/baselines/agg/joinExisting_load_ncoords.ncml.das
+
+2011-12-16  James Gallagher <jgallagher@opendap.org>
+
+	Baseline fixes to match the lastest set of bug fixes in the code. These
+	adress ticket 1849 mostly.
+
+	M    tests/baselines/agg/joinExisting_nc.ncml.das
+	M    tests/baselines/agg/multi_nested_unions.ncml.ddx
+	M    tests/baselines/agg/virtual_union.ncml.das
+	M    tests/baselines/agg/joinExisting_simple_grid.ncml.ddx
+	M    tests/baselines/agg/aggUnionSimple.ncml.das
+	M    tests/baselines/agg/union_with_dimensions.ncml.ddx
+	M    tests/baselines/agg/joinExisting_nc.ncml.ddx
+	M    tests/baselines/agg/virtual_union.ncml.ddx
+	M    tests/baselines/agg/multi_nested_unions.ncml.das
+	M    tests/baselines/agg/aggUnionSimple.ncml.ddx
+	M    tests/baselines/agg/joinExisting_simple_grid.ncml.das
+	M    tests/baselines/sample_virtual_dataset.ncml.ddx
+	M    tests/baselines/sample_virtual_dataset.ncml.das
+
+2011-12-15  James Gallagher <jgallagher@opendap.org>
+
+	Working on tickets 1849, 51 and 52. Partial check in. The
+	following tests fail for the listed/suspected reasons: These all
+	have to do with the OtherXML attribute type: 39 41 43 44 47 58 60
+
+	Only difference is the order of the NC_GLOBAL and other containers: 318 320 354
+
+	Fixed, bad baseline 356 359 361 369 371 375 560 562 565 567
+
+	I think these are still broken 581 585 586 587
+
+	Fixed, bad baseline, but double check 589 591 593 failed
+
+2011-12-13  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	ncml_handler: Fixing tests etc.
+
+2011-12-13  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	ncml_handler: Fixing tests etc.
+
+2011-12-13  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	ncml_handler: Fixing tests etc.
+
+2011-12-13  James Gallagher <jgallagher@opendap.org>
+
+	Added a method to AggregationUtil so that the ordering of the
+	Coordinate Variables can be controlled. I was using a static int
+	and while this worked for the first call, subsequent calls were
+	trying to insert the CVs in places that did not exist. See the
+	method: void AggregationUtil::resetCVInsertionPosition() for more
+	information.
+
+2011-12-13  Nathan Potter <ndp@coas.oregonstate.edu>
+
+	ncml_handler: Fixing tests etc.
+
+2011-11-25  Patrick West <pwest@ucar.edu>
+
+	cstdlib is needed for mktemp on Ubuntu. cstring is needed for strerror on
+	Ubuntu
+	M    NCMLContainer.cc
+
+2011-11-16  James Gallagher <jgallagher@opendap.org>
+
+	Updated for the change in libdap where Attribute names are no longer escaped
+	using the id2www() function.
+
+	M    tests/baselines/bugs/attr_name_is_url_bug.ncml.das
+
+2011-10-23  James Gallagher <jgallagher@opendap.org>
+
+	Fixed ticket 1803 - now when a Grid is built the handler adds
+	top-level arrays for the 'coordinate variables' in the correct
+	order and at the 'top' of the DDS. This is quite complex and
+	really a hack; it will need to be revisited so that DAP 3.3+
+	clients _don't_ get this stuff, but that will be easy enough since
+	it involves just not doing the hacky bits. Later... Fixed some DDX
+	tests to work with the new libdap code.
+
+2011-09-21  James Gallagher <jgallagher@opendap.org>
+
+	Hyrax 1.8
+
+2011-06-30  Patrick West <pwest@ucar.edu>
+
+	Merge hyrax 1.7 branch to trunk
+
+2011-05-12  Patrick West <pwest@ucar.edu>
+
+	Forgot to add this new class.
+	A    NCMLContainer.cc
+	A    NCMLContainer.h
+
+2011-05-12  Patrick West <pwest@ucar.edu>
+
+	XML document passed in, saved temporarily, then deleted.
+	M    NCMLContainerStorage.cc
+	M    tests/bes.conf.in
+	M    ncml.conf.in
+	M    NCMLModule.cc
+	M    NCMLContainerStorage.h
+	M    Makefile.am
+
+2011-05-11  Patrick West <pwest@ucar.edu>
+
+	First pass at passing NCML using setContainer. This version saves the
+	NCML document permanently. Not going to use this, but want to save the
+	code.
+	A    NCMLContainerStorage.cc
+	M    tests/bes.conf.in
+	M    ncml.conf.in
+	M    NCMLModule.cc
+	A    NCMLContainerStorage.h
+	M    Makefile.am
+
+;; Local Variables:
+;; coding: utf-8
+;; End:
 2011-04-20  James Gallagher <jgallagher@opendap.org>
 
 	Hyrax 1.7 release
