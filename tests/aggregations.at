@@ -265,12 +265,16 @@ dnl ---- Heterogeneous format joinNew test
 dnl Make sure that a joinNew aggregation on data with mixed file
 dnl formats but valid data structure works
 dnl Just check the dods which is most important for this test.
-AT_RUN_BES_AND_COMPARE([agg/joinNew_mixed_formats.ncml],[dods],[agg/joinNew_mixed_grid_arr_hslab_0],[[ dsp_band_1.dsp_band_1[0][512][0:1023] ]])
-AT_RUN_BES_AND_COMPARE([agg/joinNew_mixed_formats.ncml],[dods],[agg/joinNew_mixed_grid_arr_hslab_1],[[ dsp_band_1.dsp_band_1[1][512][0:1023] ]])
+
+dnl I commented out three tests because they seem to rely on DSP which 
+dnl we're not supporting anymore. jhrg 12/31/12
+
+dnl AT_RUN_BES_AND_COMPARE([agg/joinNew_mixed_formats.ncml],[dods],[agg/joinNew_mixed_grid_arr_hslab_0],[[ dsp_band_1.dsp_band_1[0][512][0:1023] ]])
+dnl AT_RUN_BES_AND_COMPARE([agg/joinNew_mixed_formats.ncml],[dods],[agg/joinNew_mixed_grid_arr_hslab_1],[[ dsp_band_1.dsp_band_1[1][512][0:1023] ]])
 
 dnl Test slices through the heterogeneous formats in one agg by small chunk from each outer dim entry
 dnl dsp_band_1.dsp_band_1[0:3][512][500:600]
-AT_RUN_BES_AND_COMPARE([agg/joinNew_mixed_formats.ncml],[dods],[agg/joinNew_mixed_grid_arr_hslab_0123],[[ dsp_band_1.dsp_band_1[0:3][512][500:600] ]])
+dnl AT_RUN_BES_AND_COMPARE([agg/joinNew_mixed_formats.ncml],[dods],[agg/joinNew_mixed_grid_arr_hslab_0123],[[ dsp_band_1.dsp_band_1[0:3][512][500:600] ]])
 
 
 dnl ****************************************************************************
