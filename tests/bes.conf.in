@@ -35,43 +35,17 @@ BES.LogVerbose=no
 # modules to load, includes data modules and command modules            #
 #-----------------------------------------------------------------------#
 
-# Notes: 
-# 1. When the handlers are built, the handler's 'make' builds the
-# handler executable for Server3 and the shared object module for
-# Hyrax. The Hyrax shared object modules are installed (using 'make
-# install') in<prefix>/lib/bes. Make sure you point to the Hyrax
-# modules and not the Server3 'handlers'. The Hyrax modules all have
-# '_module' in their names.
-# 2. The commands that the BES responds to are also provided by modules,
-# so make sure that those are loaded in as well. Two modules are
-# required for use with Hyrax, the dap and cmd modules.
-# 3. If you want ascii, info, and html responses provided by the bes, just
-# as in the Server3 handlers, then include the ascii, usage, and www
-# modules.
-# 4. Order matters. Include the dap, cmd, ascii, usage, www first before
-# including handler modules like nc, hdf4, ff.
-# 
-# Here's an example of the configuration for three handlers (Netcdf,
-# hdf4 and FreeForm) and the DAP basic and command modules:
-#
-# BES.modules=dap,cmd,ascii,usage,www,nc,h4,ff
-# BES.module.dap=@libdir@/bes/libdap_module.so
-# BES.module.cmd=@libdir@/bes/libdap_xml_module.so
-# BES.module.ascii=@libdir@/bes/libascii_module.so
-# BES.module.usage=@libdir@/bes/libusage_module.so
-# BES.module.www=@libdir@/bes/libwww_module.so
-# BES.module.nc=@libdir@/bes/libnc_module.so
-# BES.module.h4=@libdir@/bes/libhdf4_module.so
-# BES.module.ff=@libdir@/bes/libff_module.so
-# BES.module.csv=@libdir@/bes/libcsv_module.so
 
-BES.modules=dap,cmd,nc,h4,h5,fonc,ncml
+BES.modules=dap,cmd,nc,h4,h5,ncml
+# Commented out the Fileout NetCDF handler since it's not used for any 
+# of the tests. If it fails to build, all of the tests fail. jhrg 5/20/13
+# fonc,
 BES.module.dap=@beslibdir@/libdap_module.so
 BES.module.cmd=@beslibdir@/libdap_xml_module.so
 BES.module.nc=@beslibdir@/libnc_module.so
 BES.module.h4=@beslibdir@/libhdf4_module.so
 BES.module.h5=@beslibdir@/libhdf5_module.so
-BES.module.fonc=@beslibdir@/libfonc_module.so
+# BES.module.fonc=@beslibdir@/libfonc_module.so
 BES.module.ncml=@abs_top_builddir@/.libs/libncml_module.so
 
 
