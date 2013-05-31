@@ -118,8 +118,6 @@ Attributes {
         Float32 dsp_cal_coeffs 0.125, -4;
         Float32 scale_factor 0.125;
         Float32 add_off -4;
-        filename {
-        }
         dsp_band_1 {
             Byte dsp_PixelType 1;
             Byte dsp_PixelSize 2;
@@ -141,6 +139,8 @@ Attributes {
                 String name "lon";
                 String long_name "longitude";
             }
+        }
+        filename {
         }
         lat {
             dim_0 {

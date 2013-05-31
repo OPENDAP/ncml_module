@@ -117,9 +117,6 @@ Attributes {
         Float32 scale_factor 0.125;
         Float32 add_off -4;
         String Info "This is metadata on the Grid itself.";
-        filename {
-            String Info "Filename with timestamp";
-        }
         dsp_band_1 {
             Byte dsp_PixelType 1;
             Byte dsp_PixelSize 2;
@@ -141,6 +138,9 @@ Attributes {
                 String long_name "longitude";
             }
             String units "Temp (packed)";
+        }
+        filename {
+            String Info "Filename with timestamp";
         }
         lat {
             dim_0 {
