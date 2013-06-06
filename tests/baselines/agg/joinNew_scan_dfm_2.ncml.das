@@ -49,14 +49,14 @@ Attributes {
         String coordsys "geographic";
     }
     CGusfc {
+        fileTime {
+            String _CoordinateAxisType "Time";
+        }
         CGusfc {
             Float32 _FillValue -1.00000003e+32;
             Float32 missing_value -1.00000003e+32;
             Int32 numberOfObservations 303;
             Float32 actual_range -0.287640005, 0.276320010;
-        }
-        fileTime {
-            String _CoordinateAxisType "Time";
         }
         time {
             String long_name "End Time";
