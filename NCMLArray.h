@@ -150,7 +150,7 @@ public: // Instance methods
 
     // OK, not that we have it, we need to copy the attribute table and the prototype variable
     set_attr_table(from.get_attr_table());
-    add_var(from.var()->ptr_duplicate());
+    add_var(from.var()->ptr_duplicate()); // TODO This make leak memory
 
     // add all the dimensions
     Array::Dim_iter endIt = from.dim_end();
