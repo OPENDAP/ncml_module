@@ -30,6 +30,12 @@
 // Authors:
 //      pcw       Patrick West <pwest@ucar.edu>
 
+#include "config.h"
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
 #include <fstream>
 #include <cerrno>
 #include <cstdlib>
