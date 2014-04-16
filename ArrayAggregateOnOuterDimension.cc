@@ -40,7 +40,7 @@
 static const string DEBUG_CHANNEL("agg_util");
 
 // Local flag for whether to print constraints, to help debugging
-static const bool PRINT_CONSTRAINTS = true;
+// unused jhrg 4/16/14 static const bool PRINT_CONSTRAINTS = true;
 
 namespace agg_util
 {

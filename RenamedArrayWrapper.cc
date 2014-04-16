@@ -344,10 +344,10 @@ namespace ncml_module
   }
 
   unsigned int
-  RenamedArrayWrapper::width()
+  RenamedArrayWrapper::width(bool constrained)
   {
     syncConstraints();
-    return _pArray->width();
+    return _pArray->width(constrained);
   }
 
   unsigned int

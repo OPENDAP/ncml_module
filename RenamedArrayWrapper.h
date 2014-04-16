@@ -145,7 +145,7 @@ namespace ncml_module
         bool print_decl_p = true);
 
 
-    virtual unsigned int width();
+    virtual unsigned int width(bool constrained = false);
     virtual unsigned int buf2val(void **val);
     virtual unsigned int val2buf(void *val, bool reuse = false);
 

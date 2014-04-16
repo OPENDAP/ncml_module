@@ -37,7 +37,7 @@
 using libdap::Array;
 using libdap::Grid;
 
-static const bool PRINT_CONSTRAINTS = true;
+// unused jhrg 4/16/14 static const bool PRINT_CONSTRAINTS = true;
 static const string DEBUG_CHANNEL("ncml:2");
 
 namespace agg_util

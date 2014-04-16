@@ -63,247 +63,233 @@ using namespace ncml_module;
 bool NCMLRequestHandler::_global_attributes_container_name_set = false;
 string NCMLRequestHandler::_global_attributes_container_name = "";
 
-
-NCMLRequestHandler::NCMLRequestHandler( const string &name )
-    : BESRequestHandler( name )
+NCMLRequestHandler::NCMLRequestHandler(const string &name) :
+		BESRequestHandler(name)
 {
-    add_handler( DAS_RESPONSE, NCMLRequestHandler::ncml_build_das ) ;
-    add_handler( DDS_RESPONSE, NCMLRequestHandler::ncml_build_dds ) ;
-    add_handler( DATA_RESPONSE, NCMLRequestHandler::ncml_build_data ) ;
-    add_handler( VERS_RESPONSE, NCMLRequestHandler::ncml_build_vers ) ;
-    add_handler( HELP_RESPONSE, NCMLRequestHandler::ncml_build_help ) ;
+	add_handler(DAS_RESPONSE, NCMLRequestHandler::ncml_build_das);
+	add_handler(DDS_RESPONSE, NCMLRequestHandler::ncml_build_dds);
+	add_handler(DATA_RESPONSE, NCMLRequestHandler::ncml_build_data);
+	add_handler(VERS_RESPONSE, NCMLRequestHandler::ncml_build_vers);
+	add_handler(HELP_RESPONSE, NCMLRequestHandler::ncml_build_help);
 
-    // Look for the SHowSharedDims property, if it has not been set
-    if (NCMLRequestHandler::_global_attributes_container_name_set == false) {
-        bool key_found = false;
-        string value;
-        TheBESKeys::TheKeys()->get_value("NCML.GlobalAttributesContainerName", value, key_found);
-        if (key_found) {
-            // It was set in the conf file
-            NCMLRequestHandler::_global_attributes_container_name_set = true;
+	// Look for the SHowSharedDims property, if it has not been set
+	if (NCMLRequestHandler::_global_attributes_container_name_set == false) {
+		bool key_found = false;
+		string value;
+		TheBESKeys::TheKeys()->get_value("NCML.GlobalAttributesContainerName", value, key_found);
+		if (key_found) {
+			// It was set in the conf file
+			NCMLRequestHandler::_global_attributes_container_name_set = true;
 
-            NCMLRequestHandler::_global_attributes_container_name = value;
-        }
-    }
+			NCMLRequestHandler::_global_attributes_container_name = value;
+		}
+	}
 }
 
 NCMLRequestHandler::~NCMLRequestHandler()
 {
 }
 
+#if 0
+// Not used. jhrg 4/16/14
+
 // This is the original example from Patrick or James for loading local file within the BES...
 // Still used by DataDDS call, but the other callbacks use DDSLoader
 // to get a brandy new DDX response.
 // @see DDSLoader
-bool
-NCMLRequestHandler::ncml_build_redirect( BESDataHandlerInterface &dhi, const string& location )
+bool NCMLRequestHandler::ncml_build_redirect(BESDataHandlerInterface &dhi, const string& location)
 {
-    // The current container in dhi is a reference to the ncml file.
-    // Need to parse the ncml file here and get the list of locations
-    // that we will be using. Any constraints defined?
+	// The current container in dhi is a reference to the ncml file.
+	// Need to parse the ncml file here and get the list of locations
+	// that we will be using. Any constraints defined?
 
-    // do this for each of the locations retrieved from the ncml file.
-    // If there are more than one locations in the ncml then we can't
-    // set the context for dap_format to dap2. This will create a
-    // structure for each of the locations in the resulting dap object.
-    string sym_name = dhi.container->get_symbolic_name() ;
-    BESContainerStorageList *store_list = BESContainerStorageList::TheList() ;
-    BESContainerStorage *store = store_list->find_persistence( "catalog" ) ;
-    if( !store )
-    {
-	throw BESInternalError( "couldn't find the catalog storage",
-				__FILE__, __LINE__ ) ;
-    }
-    // this will throw an exception if the location isn't found in the
-    // catalog. Might want to catch this. Wish the add returned the
-    // container object created. Might want to change it.
-    string new_sym = sym_name + "_location1" ;
-    store->add_container( new_sym, location, "" ) ;
+	// do this for each of the locations retrieved from the ncml file.
+	// If there are more than one locations in the ncml then we can't
+	// set the context for dap_format to dap2. This will create a
+	// structure for each of the locations in the resulting dap object.
+	string sym_name = dhi.container->get_symbolic_name();
+	BESContainerStorageList *store_list = BESContainerStorageList::TheList();
+	BESContainerStorage *store = store_list->find_persistence("catalog");
+	if (!store) {
+		throw BESInternalError("couldn't find the catalog storage", __FILE__, __LINE__);
+	}
+	// this will throw an exception if the location isn't found in the
+	// catalog. Might want to catch this. Wish the add returned the
+	// container object created. Might want to change it.
+	string new_sym = sym_name + "_location1";
+	store->add_container(new_sym, location, "");
 
-    BESContainer *container = store->look_for( new_sym ) ;
-    if( !container )
-    {
-	throw BESInternalError( "couldn't find the container" + sym_name,
-				__FILE__, __LINE__ ) ;
-    }
-    BESContainer *ncml_container = dhi.container ;
-    dhi.container = container ;
+	BESContainer *container = store->look_for(new_sym);
+	if (!container) {
+		throw BESInternalError("couldn't find the container" + sym_name, __FILE__, __LINE__);
+	}
+	BESContainer *ncml_container = dhi.container;
+	dhi.container = container;
 
-    // this will throw an exception if there is a problem building the
-    // response for this container. Might want to catch this
-    BESRequestHandlerList::TheList()->execute_current( dhi ) ;
+	// this will throw an exception if there is a problem building the
+	// response for this container. Might want to catch this
+	BESRequestHandlerList::TheList()->execute_current(dhi);
 
-    // clean up
-    dhi.container = ncml_container ;
-    store->del_container( new_sym ) ;
+	// clean up
+	dhi.container = ncml_container;
+	store->del_container(new_sym);
 
-    return true;
+	return true;
 }
+#endif
 
 // Here we load the DDX response with by hijacking the current dhi via DDSLoader
 // and hand it to our parser to load the ncml, load the DDX for the location,
 // apply ncml transformations to it, then return the modified DDS.
-bool
-NCMLRequestHandler::ncml_build_das( BESDataHandlerInterface &dhi )
+bool NCMLRequestHandler::ncml_build_das(BESDataHandlerInterface &dhi)
 {
-    string filename = dhi.container->access();
+	string filename = dhi.container->access();
 
-    // Any exceptions winding through here will cause the loader and parser dtors
-    // to clean up dhi state, etc.
-    DDSLoader loader(dhi);
-    NCMLParser parser(loader);
-    auto_ptr<BESDapResponse> loaded_bdds = parser.parse(filename, DDSLoader::eRT_RequestDDX);
+	// Any exceptions winding through here will cause the loader and parser dtors
+	// to clean up dhi state, etc.
+	DDSLoader loader(dhi);
+	NCMLParser parser(loader);
+	auto_ptr<BESDapResponse> loaded_bdds = parser.parse(filename, DDSLoader::eRT_RequestDDX);
 
-    if (!(loaded_bdds.get()))
-      {
-        throw BESInternalError("Null BESDDSResponse in ncml DAS handler.", __FILE__, __LINE__);
-      }
+	if (!(loaded_bdds.get())) {
+		throw BESInternalError("Null BESDDSResponse in ncml DAS handler.", __FILE__, __LINE__);
+	}
 
-    // Now fill in the desired DAS response object from the DDS
-    DDS* dds = NCMLUtil::getDDSFromEitherResponse(loaded_bdds.get());
-    VALID_PTR(dds);
-    BESResponseObject *response = dhi.response_handler->get_response_object();
-    BESDASResponse *bdas = dynamic_cast < BESDASResponse * >(response);
-    VALID_PTR(bdas);
+	// Now fill in the desired DAS response object from the DDS
+	DDS* dds = NCMLUtil::getDDSFromEitherResponse(loaded_bdds.get());
+	VALID_PTR(dds);
+	BESResponseObject *response = dhi.response_handler->get_response_object();
+	BESDASResponse *bdas = dynamic_cast<BESDASResponse *>(response);
+	VALID_PTR(bdas);
 
-    // Copy the modified DDS attributes into the DAS response object!
-    DAS *das = bdas->get_das();
-    BESDEBUG("ncml", "Creating DAS response from the DDS/X..." << endl);
+	// Copy the modified DDS attributes into the DAS response object!
+	DAS *das = bdas->get_das();
+	BESDEBUG("ncml", "Creating DAS response from the DDS/X..." << endl);
 
-    if (dds->get_dap_major() < 4)
-        NCMLUtil::hackGlobalAttributesForDAP2(dds->get_attr_table(),
-                                              NCMLRequestHandler::get_global_attributes_container_name());
+	if (dds->get_dap_major() < 4)
+		NCMLUtil::hackGlobalAttributesForDAP2(dds->get_attr_table(),
+				NCMLRequestHandler::get_global_attributes_container_name());
 
-    NCMLUtil::populateDASFromDDS(das, *dds);
+	NCMLUtil::populateDASFromDDS(das, *dds);
 
-    // loaded_bdds destroys itself.
-    return true ;
+	// loaded_bdds destroys itself.
+	return true;
 }
 
-bool
-NCMLRequestHandler::ncml_build_dds( BESDataHandlerInterface &dhi )
+bool NCMLRequestHandler::ncml_build_dds(BESDataHandlerInterface &dhi)
 {
-    string filename = dhi.container->access();
+	string filename = dhi.container->access();
 
-    // Any exceptions winding through here will cause the loader and parser dtors
-    // to clean up dhi state, etc.
-    auto_ptr<BESDapResponse> loaded_bdds(0);
-    {
-      DDSLoader loader(dhi);
-      NCMLParser parser(loader);
-      loaded_bdds = parser.parse(filename, DDSLoader::eRT_RequestDDX);
-    }
-    if (!loaded_bdds.get())
-      {
-        throw BESInternalError("Null BESDDSResonse in ncml DDS handler.", __FILE__, __LINE__);
-      }
+	// Any exceptions winding through here will cause the loader and parser dtors
+	// to clean up dhi state, etc.
+	auto_ptr<BESDapResponse> loaded_bdds(0);
+	{
+		DDSLoader loader(dhi);
+		NCMLParser parser(loader);
+		loaded_bdds = parser.parse(filename, DDSLoader::eRT_RequestDDX);
+	}
+	if (!loaded_bdds.get()) {
+		throw BESInternalError("Null BESDDSResonse in ncml DDS handler.", __FILE__, __LINE__);
+	}
 
-    // Poke the handed down original response object with the loaded and modified one.
-    DDS* dds = NCMLUtil::getDDSFromEitherResponse(loaded_bdds.get());
-    VALID_PTR(dds);
-    BESResponseObject *response =
-      dhi.response_handler->get_response_object();
-    BESDDSResponse *bdds_out = dynamic_cast < BESDDSResponse * >(response);
-    VALID_PTR(bdds_out);
-    DDS *dds_out = bdds_out->get_dds();
-    VALID_PTR(dds_out);
+	// Poke the handed down original response object with the loaded and modified one.
+	DDS* dds = NCMLUtil::getDDSFromEitherResponse(loaded_bdds.get());
+	VALID_PTR(dds);
+	BESResponseObject *response = dhi.response_handler->get_response_object();
+	BESDDSResponse *bdds_out = dynamic_cast<BESDDSResponse *>(response);
+	VALID_PTR(bdds_out);
+	DDS *dds_out = bdds_out->get_dds();
+	VALID_PTR(dds_out);
 
-    if (dds->get_dap_major() < 4)
-        NCMLUtil::hackGlobalAttributesForDAP2(dds->get_attr_table(),
-                                              NCMLRequestHandler::get_global_attributes_container_name());
+	if (dds->get_dap_major() < 4)
+		NCMLUtil::hackGlobalAttributesForDAP2(dds->get_attr_table(),
+				NCMLRequestHandler::get_global_attributes_container_name());
 
-    // If we just use DDS::operator=, we get into trouble with copied
-    // pointers, bashing of the dataset name, etc etc so I specialize the copy for now.
-    NCMLUtil::copyVariablesAndAttributesInto(dds_out, *dds);
+	// If we just use DDS::operator=, we get into trouble with copied
+	// pointers, bashing of the dataset name, etc etc so I specialize the copy for now.
+	NCMLUtil::copyVariablesAndAttributesInto(dds_out, *dds);
 
-    // Apply constraints to the result
-    dhi.data[POST_CONSTRAINT] = dhi.container->get_constraint();
+	// Apply constraints to the result
+	dhi.data[POST_CONSTRAINT] = dhi.container->get_constraint();
 
-    // Also copy in the name of the original ncml request
-    // TODO @HACK Not sure I want just the basename for the filename,
-    // but since the DDS/DataDDS response fills the dataset name with it,
-    // Our bes-testsuite fails since we get local path info in the dataset name.
-    dds_out->filename(name_path(filename));
-    dds_out->set_dataset_name(name_path(filename));
+	// Also copy in the name of the original ncml request
+	// TODO @HACK Not sure I want just the basename for the filename,
+	// but since the DDS/DataDDS response fills the dataset name with it,
+	// Our bes-testsuite fails since we get local path info in the dataset name.
+	dds_out->filename(name_path(filename));
+	dds_out->set_dataset_name(name_path(filename));
 
-    return true;
+	return true;
 }
 
-bool
-NCMLRequestHandler::ncml_build_data( BESDataHandlerInterface &dhi )
+bool NCMLRequestHandler::ncml_build_data(BESDataHandlerInterface &dhi)
 {
-  string filename = dhi.container->access();
-  BESResponseObject* theResponse = dhi.response_handler->get_response_object();
-  // it better be a data response!
-  BESDataDDSResponse* dataResponse = dynamic_cast < BESDataDDSResponse * >(theResponse);
-  NCML_ASSERT_MSG(dataResponse, "NCMLRequestHandler::ncml_build_data(): expected BESDataDDSResponse* but didnt get it!!");
+	string filename = dhi.container->access();
+	BESResponseObject* theResponse = dhi.response_handler->get_response_object();
+	// it better be a data response!
+	BESDataDDSResponse* dataResponse = dynamic_cast<BESDataDDSResponse *>(theResponse);
+	NCML_ASSERT_MSG(dataResponse,
+			"NCMLRequestHandler::ncml_build_data(): expected BESDataDDSResponse* but didn't get it!!");
 
-  // Block it up to force cleanup of DHI.
-  {
-    DDSLoader loader(dhi);
-    NCMLParser parser(loader);
-    parser.parseInto(filename, DDSLoader::eRT_RequestDataDDS, dataResponse);
-  }
+	// Block it up to force cleanup of DHI.
+	{
+		DDSLoader loader(dhi);
+		NCMLParser parser(loader);
+		parser.parseInto(filename, DDSLoader::eRT_RequestDataDDS, dataResponse);
+	}
 
-  DDS* dds = NCMLUtil::getDDSFromEitherResponse(dataResponse);
-  VALID_PTR(dds);
+	DDS* dds = NCMLUtil::getDDSFromEitherResponse(dataResponse);
+	VALID_PTR(dds);
 
-  // Apply constraints to the result
-  dhi.data[POST_CONSTRAINT] = dhi.container->get_constraint();
+	// Apply constraints to the result
+	dhi.data[POST_CONSTRAINT] = dhi.container->get_constraint();
 
-  // Also copy in the name of the original ncml request
-  // TODO @HACK Not sure I want just the basename for the filename,
-  // but since the DDS/DataDDS response fills the dataset name with it,
-  // Our bes-testsuite fails since we get local path info in the dataset name.
-  dds->filename(name_path(filename));
-  dds->set_dataset_name(name_path(filename));
-  return true;
+	// Also copy in the name of the original ncml request
+	// TODO @HACK Not sure I want just the basename for the filename,
+	// but since the DDS/DataDDS response fills the dataset name with it,
+	// Our bes-testsuite fails since we get local path info in the dataset name.
+	dds->filename(name_path(filename));
+	dds->set_dataset_name(name_path(filename));
+	return true;
 }
 
-bool
-NCMLRequestHandler::ncml_build_vers( BESDataHandlerInterface &dhi )
+bool NCMLRequestHandler::ncml_build_vers(BESDataHandlerInterface &dhi)
 {
-    BESVersionInfo *info = dynamic_cast<BESVersionInfo *>(dhi.response_handler->get_response_object() ) ;
-    if (!info)
-    	throw InternalErr(__FILE__, __LINE__, "Expected a BESVersionInfo instance");
-    info->add_module( PACKAGE_NAME, PACKAGE_VERSION ) ;
-    return true ;
+	BESVersionInfo *info = dynamic_cast<BESVersionInfo *>(dhi.response_handler->get_response_object());
+	if (!info) throw InternalErr(__FILE__, __LINE__, "Expected a BESVersionInfo instance");
+	info->add_module(PACKAGE_NAME, PACKAGE_VERSION);
+	return true;
 }
 
-bool
-NCMLRequestHandler::ncml_build_help( BESDataHandlerInterface &dhi )
+bool NCMLRequestHandler::ncml_build_help(BESDataHandlerInterface &dhi)
 {
-    BESInfo *info = dynamic_cast<BESInfo *>(dhi.response_handler->get_response_object());
-    if (!info)
-    	throw InternalErr(__FILE__, __LINE__, "Expected a BESVersionInfo instance");
+	BESInfo *info = dynamic_cast<BESInfo *>(dhi.response_handler->get_response_object());
+	if (!info) throw InternalErr(__FILE__, __LINE__, "Expected a BESVersionInfo instance");
 
-    // This is an example. If you had a help file you could load it like
-    // this and if your handler handled the following responses.
-    map<string,string> attrs ;
-    attrs["name"] = PACKAGE_NAME ;
-    attrs["version"] = PACKAGE_VERSION ;
-    list<string> services ;
-    BESServiceRegistry::TheRegistry()->services_handled( ncml_module::ModuleConstants::NCML_NAME, services );
-    if( services.size() > 0 )
-    {
-	string handles = BESUtil::implode( services, ',' ) ;
-	attrs["handles"] = handles ;
-    }
-    info->begin_tag( "module", &attrs ) ;
-    //info->add_data_from_file( "NCML.Help", "NCML Help" ) ;
-    info->add_data("Please consult the online documentation at " + ncml_module::ModuleConstants::DOC_WIKI_URL);
-    info->end_tag( "module" ) ;
+	// This is an example. If you had a help file you could load it like
+	// this and if your handler handled the following responses.
+	map<string, string> attrs;
+	attrs["name"] = PACKAGE_NAME;
+	attrs["version"] = PACKAGE_VERSION;
+	list<string> services;
+	BESServiceRegistry::TheRegistry()->services_handled(ncml_module::ModuleConstants::NCML_NAME, services);
+	if (services.size() > 0) {
+		string handles = BESUtil::implode(services, ',');
+		attrs["handles"] = handles;
+	}
+	info->begin_tag("module", &attrs);
+	//info->add_data_from_file( "NCML.Help", "NCML Help" ) ;
+	info->add_data("Please consult the online documentation at " + ncml_module::ModuleConstants::DOC_WIKI_URL);
+	info->end_tag("module");
 
-    return true ;
+	return true;
 }
 
-void
-NCMLRequestHandler::dump( ostream &strm ) const
+void NCMLRequestHandler::dump(ostream &strm) const
 {
-    strm << BESIndent::LMarg << "NCMLRequestHandler::dump - ("
-			     << (void *)this << ")" << endl ;
-    BESIndent::Indent() ;
-    BESRequestHandler::dump( strm ) ;
-    BESIndent::UnIndent() ;
+	strm << BESIndent::LMarg << "NCMLRequestHandler::dump - (" << (void *) this << ")" << endl;
+	BESIndent::Indent();
+	BESRequestHandler::dump(strm);
+	BESIndent::UnIndent();
 }
 

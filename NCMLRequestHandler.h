@@ -45,10 +45,11 @@ private: // rep
     static string   _global_attributes_container_name;
 
 private:
-
+#if 0
+    // Not used jhrg 4/16/14
     // example for loading other locations by hijacking the dhi of the ncml request.
     static bool		ncml_build_redirect( BESDataHandlerInterface &dhi, const string& location ) ;
-
+#endif
 public:
 			NCMLRequestHandler( const string &name ) ;
     virtual		~NCMLRequestHandler( void ) ;
