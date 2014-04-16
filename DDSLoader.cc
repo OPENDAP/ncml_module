@@ -63,14 +63,14 @@ long DDSLoader::_gensymID = 0L;
 // Impl
 
 DDSLoader::DDSLoader(BESDataHandlerInterface& dhi) :
-		_dhi(dhi), _hijacked(false), _filename(""), _store(0), _containerSymbol(""), _origAction(""),
+		_dhi(dhi), /*d_saved_dhi(0),*/ _hijacked(false), _filename(""), _store(0), _containerSymbol(""), _origAction(""),
 		_origActionName(""), _origContainer(0), _origResponse(0)
 {
 }
 
 // WE ONLY COPY THE DHI!  I got forced to impl this.
 DDSLoader::DDSLoader(const DDSLoader& proto) :
-		_dhi(proto._dhi), _hijacked(false), _filename(""), _store(0), _containerSymbol(""), _origAction(""),
+		_dhi(proto._dhi), /*d_saved_dhi(0),*/ _hijacked(false), _filename(""), _store(0), _containerSymbol(""), _origAction(""),
 		_origActionName(""), _origContainer(0), _origResponse(0)
 {
 }
@@ -96,6 +96,9 @@ DDSLoader::operator=(const DDSLoader& rhs)
 DDSLoader::~DDSLoader()
 {
 	ensureClean();
+#if 0
+	delete d_saved_dhi;
+#endif
 }
 
 auto_ptr<BESDapResponse> DDSLoader::load(const string& location, ResponseType type)
@@ -238,11 +241,19 @@ void DDSLoader::snapshotDHI()
 	VALID_PTR(_dhi.response_handler);
 
 	BESDEBUG( "ncml", "original dhi = " << _dhi << endl ) ;
+#if 0
+	// I tried adding a complete 'clone the dhi' method to see if that
+	// would address the problem we're seeing on OSX 10.9. It didn't but
+	// we're not done yet, so maybe this will be useful still. jhrg 4/16/14
+	d_saved_dhi = new BESDataHandlerInterface();
+	d_saved_dhi->clone(_dhi);
+#endif
 
 	// Store off the container for the original ncml file call and replace with the new one
 	_origContainer = _dhi.container;
 	_origAction = _dhi.action;
 	_origActionName = _dhi.action_name;
+
 	_origResponse = _dhi.response_handler->get_response_object();
 
 	_hijacked = true;
@@ -257,11 +268,16 @@ void DDSLoader::restoreDHI()
 		return;
 	}
 
+#if 0
+	_dhi.clone(*d_saved_dhi);
+#endif
+
 	// Restore saved state
+	_dhi.container = _origContainer;
 	_dhi.action = _origAction;
 	_dhi.action_name = _origActionName;
+
 	_dhi.response_handler->set_response_object(_origResponse);
-	_dhi.container = _origContainer;
 
 	BESDEBUG( "ncml", "restored dhi = " << _dhi << endl ) ;
 
