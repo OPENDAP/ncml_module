@@ -69,13 +69,6 @@ private:
   // Rep Invariant: the dhi state is the same on call exits as it was on call entry.
   BESDataHandlerInterface& _dhi;
 
-  #if 0
-	// I tried adding a complete 'clone the dhi' method to see if that
-	// would address the problem we're seeing on OSX 10.9. It didn't but
-	// we're not done yet, so maybe this will be useful still. jhrg 4/16/14
-  BESDataHandlerInterface *d_saved_dhi;
-#endif
-
   // whether we have actually hijacked the dhi, so restore knows.
   bool _hijacked;
 
@@ -109,7 +102,6 @@ public:
    * @param dhi DHI to hijack during load, needs to be a valid object for the scope of this object's life.
    */
   DDSLoader(BESDataHandlerInterface &dhi);
-
 
   DDSLoader(const DDSLoader& proto);
   DDSLoader& operator=(const DDSLoader&);

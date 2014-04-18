@@ -78,27 +78,55 @@ DDSLoader::DDSLoader(const DDSLoader& proto) :
 DDSLoader&
 DDSLoader::operator=(const DDSLoader& rhs)
 {
+	BESDEBUG("ncml", "DDSLoader::operator=: "  << endl);
+
 	if (&rhs == this) {
 		return *this;
 	}
 
 	// First cleanup any state
+#if 1
+	// Old comment, written in the midst of fixing bug #2176...
+    // I removed this call because ensureClean() will call restoreDHI()
+    // and then we will call the BESDataHandlerInterface::clone() method
+    // which will take the DHI from the DDSLoader passed in and clone it.
+    // ...no sense setting it twice.
+	//
+	// After the fix...
+	// Added it back in because I think it might be used after all. In many
+	// (all?) cases, the rhs._dhi is the same object as this->_dhi, so the
+	// clone() method will never get called. However, the 'saved state' of
+	// the DHI instance might be needed. It's not needed for the current
+	// operations (no tests fail when it is removed), but future versions
+	// might make use of the saved state.
+    // jhrg 4/18/14
 	ensureClean();
+#else
+	removeContainerFromStorage();
+#endif
 
 	// Now copy the dhi only, since
 	// we assume we'll be using this fresh.
 	// Normally we don't want to copy these
 	// but I got forced into it.
-	_dhi.make_copy(rhs._dhi);
+	//
+	// Update. Fix for bug #2176. With clang-503.0.40 calling
+	// BESDataHandlerInterface::make_copy() was inexplicably nulling the 'data'
+	// map member of the DHI. This was happening because the two maps were the same
+	// because the two DHI instances were the same - that is the 'rhs._dhi' field
+	// and this' _dhi field were/are one and the same. I'm going to leave this
+	// test here even though the code in BESDataHandlerInterface has been fixed to
+	// test for this case - and new copy ctor and operator=() methods added.
+	// jhrg 4/18/14
+	if (&_dhi != &rhs._dhi)
+		_dhi.make_copy(rhs._dhi);
+
 	return *this;
 }
 
 DDSLoader::~DDSLoader()
 {
 	ensureClean();
-#if 0
-	delete d_saved_dhi;
-#endif
 }
 
 auto_ptr<BESDapResponse> DDSLoader::load(const string& location, ResponseType type)
@@ -241,13 +269,6 @@ void DDSLoader::snapshotDHI()
 	VALID_PTR(_dhi.response_handler);
 
 	BESDEBUG( "ncml", "original dhi = " << _dhi << endl ) ;
-#if 0
-	// I tried adding a complete 'clone the dhi' method to see if that
-	// would address the problem we're seeing on OSX 10.9. It didn't but
-	// we're not done yet, so maybe this will be useful still. jhrg 4/16/14
-	d_saved_dhi = new BESDataHandlerInterface();
-	d_saved_dhi->clone(_dhi);
-#endif
 
 	// Store off the container for the original ncml file call and replace with the new one
 	_origContainer = _dhi.container;
@@ -267,10 +288,6 @@ void DDSLoader::restoreDHI()
 	if (!_hijacked) {
 		return;
 	}
-
-#if 0
-	_dhi.clone(*d_saved_dhi);
-#endif
 
 	// Restore saved state
 	_dhi.container = _origContainer;
