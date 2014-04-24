@@ -38,167 +38,134 @@
 
 using std::string;
 
-namespace ncml_module
+namespace ncml_module {
+
+NCMLCacheAggXMLCommand::NCMLCacheAggXMLCommand(const BESDataHandlerInterface& baseDHI) :
+		BESXMLCommand(baseDHI)
 {
+}
 
-  NCMLCacheAggXMLCommand::NCMLCacheAggXMLCommand(const BESDataHandlerInterface& baseDHI)
-  : BESXMLCommand(baseDHI)
-  {
-  }
+/* virtual */
+NCMLCacheAggXMLCommand::~NCMLCacheAggXMLCommand()
+{
+}
 
-  /* virtual */
-  NCMLCacheAggXMLCommand::~NCMLCacheAggXMLCommand()
-  {
-  }
+/* virtual */
+void NCMLCacheAggXMLCommand::parse_request(xmlNode* pNode)
+{
+	BESDEBUG(ModuleConstants::NCML_NAME, "NCMLCacheAggXMLCommand::parse_request() called...." << endl);
 
-  /* virtual */
-  void
-  NCMLCacheAggXMLCommand::parse_request(xmlNode* pNode)
-  {
-    BESDEBUG(ModuleConstants::NCML_NAME,
-        "NCMLCacheAggXMLCommand::parse_request() called...." << endl);
+	string cmdName;
+	string contentValue;
+	map<string, string> attrs;
+	BESXMLUtils::GetNodeInfo(pNode, cmdName, contentValue, attrs);
+	if (cmdName != ModuleConstants::CACHE_AGG_RESPONSE) {
+		THROW_NCML_PARSE_ERROR(-1, "Got unexpected command name=" + cmdName);
+	}
 
-    string cmdName;
-    string contentValue;
-    map<string, string> attrs ;
-    BESXMLUtils::GetNodeInfo(pNode, cmdName, contentValue, attrs) ;
-    if(cmdName != ModuleConstants::CACHE_AGG_RESPONSE)
-       {
-          THROW_NCML_PARSE_ERROR(-1,
-              "Got unexpected command name=" + cmdName);
-       }
+	if (!contentValue.empty()) {
+		THROW_NCML_PARSE_ERROR(-1, cmdName + ": should not have xml content!");
+	}
 
-    if(!contentValue.empty() )
-      {
-        THROW_NCML_PARSE_ERROR(-1,
-                    cmdName + ": should not have xml content!");
-      }
+	// Grab the filename we are to run on.
+	_dhi.data[ModuleConstants::CACHE_AGG_LOCATION_DATA_KEY] = attrs[ModuleConstants::CACHE_AGG_LOCATION_XML_ATTR];
 
-    // Grab the filename we are to run on.
-   _dhi.data[ModuleConstants::CACHE_AGG_LOCATION_DATA_KEY] =
-       attrs[ModuleConstants::CACHE_AGG_LOCATION_XML_ATTR];
+	// It had to be there, or it's an error.
+	if (_dhi.data[ModuleConstants::CACHE_AGG_LOCATION_DATA_KEY].empty()) {
+		THROW_NCML_PARSE_ERROR(-1,
+				cmdName + ": we did find the required aggregation location specified in the attribute="
+						+ ModuleConstants::CACHE_AGG_LOCATION_XML_ATTR + " and cannot continue the caching.");
+	}
 
-   // It had to be there, or it's an error.
-   if (_dhi.data[ModuleConstants::CACHE_AGG_LOCATION_DATA_KEY].empty())
-     {
-       THROW_NCML_PARSE_ERROR(-1,
-           cmdName +
-           ": we did find the required aggregation location specified in the attribute=" +
-           ModuleConstants::CACHE_AGG_LOCATION_XML_ATTR +
-           " and cannot continue the caching.");
-     }
+	string childCmdName;
+	string childContentValue;
+	map<string, string> childAttrs;
+	xmlNode *pChildNode = BESXMLUtils::GetFirstChild(pNode, childCmdName, childContentValue, childAttrs);
+	if (pChildNode) {
+		THROW_NCML_PARSE_ERROR(-1, cmdName + ": should not have child elements!");
+	}
 
-    string childCmdName ;
-    string childContentValue ;
-    map<string,string> childAttrs ;
-    xmlNode *pChildNode =
-           BESXMLUtils::GetFirstChild(pNode, childCmdName, childContentValue, childAttrs);
-    if( pChildNode )
-      {
-        THROW_NCML_PARSE_ERROR(-1,
-                        cmdName + ": should not have child elements!");
-      }
+	if (!childAttrs.empty()) {
+		THROW_NCML_PARSE_ERROR(-1, cmdName + ": should not have attributes!");
+	}
 
-    if (!childAttrs.empty())
-      {
-        THROW_NCML_PARSE_ERROR(-1,
-                        cmdName + ": should not have attributes!");
-      }
+	// Grab the response handler for this action
+	_dhi.action = ModuleConstants::CACHE_AGG_RESPONSE;
+	BESXMLCommand::set_response();
+}
 
-    // Grab the response handler for this action
-    _dhi.action = ModuleConstants::CACHE_AGG_RESPONSE ;
-    BESXMLCommand::set_response() ;
-  }
+/* virtual */
+bool NCMLCacheAggXMLCommand::has_response()
+{
+	return true;
+}
 
-  /* virtual */
-  bool NCMLCacheAggXMLCommand::has_response()
-  {
-    return true;
-  }
+/* virtual */
+void NCMLCacheAggXMLCommand::prep_request()
+{
+	BESDEBUG(ModuleConstants::NCML_NAME, "NCMLCacheAggXMLCommand::prep_request() called..." << endl);
+}
 
-  /* virtual */
-  void
-  NCMLCacheAggXMLCommand::prep_request()
-  {
-    BESDEBUG(ModuleConstants::NCML_NAME,
-        "NCMLCacheAggXMLCommand::prep_request() called..." << endl);
-  }
+/* virtual */
+void NCMLCacheAggXMLCommand::dump(ostream& strm) const
+{
+	strm << BESIndent::LMarg << "NCMLCacheAggXMLCommand::dump - (" << (void *) this << ")" << endl;
+	BESIndent::Indent();
+	BESXMLCommand::dump(strm);
+	BESIndent::UnIndent();
+}
 
-  /* virtual */
-  void
-  NCMLCacheAggXMLCommand::dump(ostream& strm) const
-  {
-    strm << BESIndent::LMarg
-         << "NCMLCacheAggXMLCommand::dump - ("
-         << (void *)this
-         << ")" << endl ;
-    BESIndent::Indent() ;
-    BESXMLCommand::dump( strm ) ;
-    BESIndent::UnIndent() ;
-  }
+/* static */
+BESXMLCommand*
+NCMLCacheAggXMLCommand::makeInstance(const BESDataHandlerInterface& baseDHI)
+{
+	return new NCMLCacheAggXMLCommand(baseDHI);
+}
 
-  /* static */
-  BESXMLCommand*
-  NCMLCacheAggXMLCommand::makeInstance(const BESDataHandlerInterface& baseDHI)
-  {
-    return new NCMLCacheAggXMLCommand(baseDHI) ;
-  }
+/////////////////////////////////////////////////////////////////////////////////////////////////
 
-  /////////////////////////////////////////////////////////////////////////////////////////////////
+NCMLCacheAggResponseHandler::NCMLCacheAggResponseHandler(const string &name) :
+		BESResponseHandler(name)
+{
+	BESDEBUG("ncml", "NCMLCacheAggResponseHandler::NCMLCacheAggResponseHandler() called..." << endl);
+}
 
+/* virtual */
+NCMLCacheAggResponseHandler::~NCMLCacheAggResponseHandler()
+{
+}
 
-  NCMLCacheAggResponseHandler::NCMLCacheAggResponseHandler(const string &name)
-  : BESResponseHandler(name)
-  {
-    BESDEBUG("ncml", "NCMLCacheAggResponseHandler::NCMLCacheAggResponseHandler() called..." << endl);
-  }
+/* virtual */
+void NCMLCacheAggResponseHandler::execute(BESDataHandlerInterface& dhi)
+{
+	BESDEBUG("ncml",
+			"NCMLCacheAggResponseHandler::execute() called for command:" << ModuleConstants::CACHE_AGG_RESPONSE << endl);
 
-  /* virtual */
-  NCMLCacheAggResponseHandler::~NCMLCacheAggResponseHandler()
-  {
-  }
+	const std::string& loc = dhi.data[ModuleConstants::CACHE_AGG_LOCATION_DATA_KEY];
+	BESDEBUG("ncml", "We got a cacheAgg request for the aggregation location = " << loc << endl);
+}
 
-  /* virtual */
-  void
-  NCMLCacheAggResponseHandler::execute(BESDataHandlerInterface& dhi)
-  {
-    BESDEBUG("ncml",
-            "NCMLCacheAggResponseHandler::execute() called for command:" <<
-            ModuleConstants::CACHE_AGG_RESPONSE
-            << endl);
+/* virtual */
+void NCMLCacheAggResponseHandler::transmit(BESTransmitter* /* pTransmitter */, BESDataHandlerInterface& /* dhi */)
+{
+	BESDEBUG("ncml",
+			"NCMLCacheAggResponseHandler::transmit() called for command: " << ModuleConstants::CACHE_AGG_RESPONSE << endl);
+}
 
-    const std::string& loc =  dhi.data[ModuleConstants::CACHE_AGG_LOCATION_DATA_KEY];
-    BESDEBUG("ncml",
-        "We got a cacheAgg request for the aggregation location = " <<
-        loc << endl);
-  }
+/* virtual */
+void NCMLCacheAggResponseHandler::dump(ostream & /* strm */) const
+{
+	BESDEBUG("ncml",
+			"NCMLCacheAggResponseHandler::dump() called for command: " << ModuleConstants::CACHE_AGG_RESPONSE << endl);
+}
 
-  /* virtual */
-  void
-  NCMLCacheAggResponseHandler::transmit(
-      BESTransmitter* /* pTransmitter */,
-      BESDataHandlerInterface& /* dhi */ )
-  {
-    BESDEBUG("ncml",
-            "NCMLCacheAggResponseHandler::transmit() called for command: " <<
-            ModuleConstants::CACHE_AGG_RESPONSE << endl);
-  }
+/* static */
+BESResponseHandler *
+NCMLCacheAggResponseHandler::makeInstance(const string &name)
+{
+	return new NCMLCacheAggResponseHandler(name);
+}
 
-  /* virtual */
-  void
-  NCMLCacheAggResponseHandler::dump( ostream & /* strm */) const
-  {
-    BESDEBUG("ncml",
-            "NCMLCacheAggResponseHandler::dump() called for command: " <<
-            ModuleConstants::CACHE_AGG_RESPONSE << endl);
-  }
-
-  /* static */
-  BESResponseHandler *
-  NCMLCacheAggResponseHandler::makeInstance(const string &name)
-  {
-    return new NCMLCacheAggResponseHandler(name);
-  }
-
-
-}; // namespace ncml_module
+}
+;
+// namespace ncml_module

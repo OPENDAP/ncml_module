@@ -1,3 +1,75 @@
+2014-04-18  James Gallagher <jgallagher@opendap.org>
+
+	svn ignores
+
+2014-04-18  James Gallagher <jgallagher@opendap.org>
+
+	svn ignores
+
+2014-04-18  James Gallagher <jgallagher@opendap.org>
+
+	fix for bug #2176
+
+2014-04-16  James Gallagher <jgallagher@opendap.org>
+
+	svn ignores
+
+2014-04-16  James Gallagher <jgallagher@opendap.org>
+
+	I added calls to the DDSLoader to 'clone' the BESDataHandlerInterface object to see if that was the source of the OSX 10.9 bug. Nope. I removed that code using the preprocessor.
+
+2014-04-16  James Gallagher <jgallagher@opendap.org>
+
+	Removed unused code; fixed warnings; still chasing the bug on OSX 10.9...
+
+2014-02-14  James Gallagher <jgallagher@opendap.org>
+
+	Added unistd.h for osx 10.9
+
+	M    NCMLContainer.cc
+
+2013-10-23  James Gallagher <jgallagher@opendap.org>
+
+	updated svn:ignore
+
+2013-10-23  James Gallagher <jgallagher@opendap.org>
+
+	updated baselines for the new escaping behavior of libdap
+
+2013-10-01  James Gallagher <jgallagher@opendap.org>
+
+	Updated the FSF address in the copyright headers
+
+2013-09-10  Nathan Potter <ndp@opendap.org>
+
+	ncml_handler: Updated ChangeLog, NEWS, INSTALL, etc. for Hyrax 1.9
+
+2013-06-06  James Gallagher <jgallagher@opendap.org>
+
+	Removed the changes I added to the trunk that corrected the tests for
+	the dap4 branch. I've moved the tests to a branch version of the ncml
+	module for the dap4 work. This way the tests work there and here too.
+
+	_M   tests
+	M    tests/baselines/agg/joinNew_grid_meta_everywhere.ncml.das
+	M    tests/baselines/agg/joinNew_scan_dfm.ncml.das
+	M    tests/baselines/agg/joinNew_grid_proj_lat.das
+	M    tests/baselines/agg/joinNew_grid_pre_metadata.ncml.das
+	M    tests/baselines/agg/joinExist_scan_ncoords.ncml.das
+	M    tests/baselines/agg/joinExist_scan.ncml.das
+	M    tests/baselines/agg/joinNew_grid_metadata.ncml.das
+	M    tests/baselines/agg/joinNew_grid_hslab_0.das
+	M    tests/baselines/agg/joinNew_scan_dfm_2.ncml.das
+	M    tests/baselines/agg/joinExisting_simple_grid.ncml.das
+	M    tests/baselines/agg/joinNew_grid_meta_2.ncml.das
+	M    tests/baselines/agg/joinNew_scan_hslab_0.das
+	M    tests/baselines/agg/joinNew_grid_arr_hslab_0.das
+	M    tests/baselines/agg/joinNew_scan_regexp_hslab_0.das
+	M    tests/baselines/agg/joinNew_grid_stride_evens.das
+
+;; Local Variables:
+;; coding: utf-8
+;; End:
 2013-06-06  James Gallagher <jgallagher@opendap.org>
 
 	Removed the changes I added to the trunk that corrected the tests for

@@ -103,7 +103,6 @@ public:
    */
   DDSLoader(BESDataHandlerInterface &dhi);
 
-
   DDSLoader(const DDSLoader& proto);
   DDSLoader& operator=(const DDSLoader&);
 
@@ -142,7 +141,7 @@ public:
 
   /** @brief Load a DDX or DataDDS response into the given pResponse object, which must be non-null.
    *
-   *  Similar to load(), but the caller passes in the resposne object to fill rather than wanting a new one.
+   *  Similar to load(), but the caller passes in the response object to fill rather than wanting a new one.
    *
    *  If type == eRT_RequestDDX, pResponse MUST have type BESDDSReponse.
    *  If type == eRT_RequestDataDDS, pResponse MUST have type BESDataDDSResponse.

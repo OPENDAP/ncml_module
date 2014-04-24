@@ -47,7 +47,8 @@ namespace libdap
 namespace agg_util
 {
   class AggMemberDataset;
-  class Dimension;
+  struct Dimension;
+  // jhrg 4/16/14 class Dimension;
 };
 
 namespace agg_util

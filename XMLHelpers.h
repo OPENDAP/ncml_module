@@ -116,7 +116,7 @@ public:
   void addAttribute(const XMLAttribute& attribute);
 
   /** If there is an attribute with localname, return its value, else return default. */
-  const string& getValueForLocalNameOrDefault(const string& localname, const string& defVal="") const;
+  const string/*& jhrg 4/16/14*/getValueForLocalNameOrDefault(const string& localname, const string& defVal="") const;
 
 
   /** These return null if the attribute was not found */

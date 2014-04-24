@@ -38,7 +38,7 @@
 
 namespace agg_util
 {
-  class Dimension;
+  struct Dimension;
 };
 
 namespace libdap

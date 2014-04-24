@@ -88,8 +88,8 @@ namespace ncml_module
   XMLAttribute::XMLAttribute(const XMLAttribute& proto)
   : localname(proto.localname)
   , prefix(proto.prefix)
-  , value(proto.value)
   , nsURI(proto.nsURI)
+  , value(proto.value)
   {
   }
 
@@ -205,7 +205,7 @@ namespace ncml_module
     _attributes.push_back(attribute);
   }
 
-  const string&
+  const string /*& returns a reference to a local temp object (the else clause). jhrg 4/16/14*/
   XMLAttributeMap::getValueForLocalNameOrDefault(const string& localname, const string& defVal/*=""*/) const
   {
     const XMLAttribute* pAttr = getAttributeByLocalName(localname);
@@ -215,6 +215,7 @@ namespace ncml_module
       }
     else
       {
+    	// Reference to a local temporary object. jhrg 4/16/14
         return defVal;
       }
   }
