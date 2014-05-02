@@ -20,7 +20,7 @@
 //
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 //
 // Please see the files COPYING and COPYRIGHT for more information on the GLPL.
 //
@@ -116,7 +116,7 @@ public:
   void addAttribute(const XMLAttribute& attribute);
 
   /** If there is an attribute with localname, return its value, else return default. */
-  const string& getValueForLocalNameOrDefault(const string& localname, const string& defVal="") const;
+  const string/*& jhrg 4/16/14*/getValueForLocalNameOrDefault(const string& localname, const string& defVal="") const;
 
 
   /** These return null if the attribute was not found */

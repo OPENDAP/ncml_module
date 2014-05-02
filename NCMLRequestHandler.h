@@ -20,7 +20,7 @@
 //
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 //
 // Please see the files COPYING and COPYRIGHT for more information on the GLPL.
 //
@@ -45,10 +45,11 @@ private: // rep
     static string   _global_attributes_container_name;
 
 private:
-
+#if 0
+    // Not used jhrg 4/16/14
     // example for loading other locations by hijacking the dhi of the ncml request.
     static bool		ncml_build_redirect( BESDataHandlerInterface &dhi, const string& location ) ;
-
+#endif
 public:
 			NCMLRequestHandler( const string &name ) ;
     virtual		~NCMLRequestHandler( void ) ;

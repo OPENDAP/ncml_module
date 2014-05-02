@@ -20,7 +20,7 @@
 //
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 //
 // Please see the files COPYING and COPYRIGHT for more information on the GLPL.
 //
@@ -33,51 +33,49 @@
 #include "BESResponseHandler.h"
 #include "BESXMLCommand.h"
 
-namespace ncml_module
-{
+namespace ncml_module {
 
-  /**
-   * The BESXMLCommand for the command to recalculate the aggregation caches.
-   */
-  class NCMLCacheAggXMLCommand : public BESXMLCommand
-  {
-  public:
-    NCMLCacheAggXMLCommand(const BESDataHandlerInterface& baseDHI);
+/**
+ * The BESXMLCommand for the command to recalculate the aggregation caches.
+ *
+ * @note This code is not currently used. jhrg 4/16/14
+ */
+class NCMLCacheAggXMLCommand: public BESXMLCommand {
+public:
+	NCMLCacheAggXMLCommand(const BESDataHandlerInterface& baseDHI);
 
-    virtual ~NCMLCacheAggXMLCommand();
+	virtual ~NCMLCacheAggXMLCommand();
 
-    virtual void parse_request(xmlNode* pNode);
+	virtual void parse_request(xmlNode* pNode);
 
-    virtual bool has_response();
+	virtual bool has_response();
 
-    virtual void prep_request();
+	virtual void prep_request();
 
-    virtual void dump(ostream& strm) const;
+	virtual void dump(ostream& strm) const;
 
-    static BESXMLCommand* makeInstance(const BESDataHandlerInterface& baseDHI);
-  }; // class NCMLCacheAggXMLCommand
+	static BESXMLCommand* makeInstance(const BESDataHandlerInterface& baseDHI);
+};
+// class NCMLCacheAggXMLCommand
 
-  /**
-   * The response handler for the NCMLCacheAggXMLCommand
-   */
-  class NCMLCacheAggResponseHandler
-  : public BESResponseHandler
-    {
-    public:
-      NCMLCacheAggResponseHandler(const string &name) ;
-      virtual ~NCMLCacheAggResponseHandler() ;
+/**
+ * The response handler for the NCMLCacheAggXMLCommand
+ */
+class NCMLCacheAggResponseHandler: public BESResponseHandler {
+public:
+	NCMLCacheAggResponseHandler(const string &name);
+	virtual ~NCMLCacheAggResponseHandler();
 
-      virtual void execute(BESDataHandlerInterface &dhi);
+	virtual void execute(BESDataHandlerInterface &dhi);
 
-      virtual void transmit(BESTransmitter *pTransmitter,
-          BESDataHandlerInterface &dhi );
+	virtual void transmit(BESTransmitter *pTransmitter, BESDataHandlerInterface &dhi);
 
-      virtual void dump( ostream &strm) const;
+	virtual void dump(ostream &strm) const;
 
-      static BESResponseHandler *makeInstance(const string &name) ;
-    }; // class NCMLCacheAggResponseHandler
+	static BESResponseHandler *makeInstance(const string &name);
+};
+// class NCMLCacheAggResponseHandler
 
-
-} // namespace ncml_module
+}// namespace ncml_module
 
 #endif /* __NCML_MODULE__NCML_CACHE_AGG_XML_COMMAND_H__ */

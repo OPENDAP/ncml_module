@@ -20,7 +20,7 @@
 //
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 //
 // Please see the files COPYING and COPYRIGHT for more information on the GLPL.
 //
@@ -88,8 +88,8 @@ namespace ncml_module
   XMLAttribute::XMLAttribute(const XMLAttribute& proto)
   : localname(proto.localname)
   , prefix(proto.prefix)
-  , value(proto.value)
   , nsURI(proto.nsURI)
+  , value(proto.value)
   {
   }
 
@@ -205,7 +205,7 @@ namespace ncml_module
     _attributes.push_back(attribute);
   }
 
-  const string&
+  const string /*& returns a reference to a local temp object (the else clause). jhrg 4/16/14*/
   XMLAttributeMap::getValueForLocalNameOrDefault(const string& localname, const string& defVal/*=""*/) const
   {
     const XMLAttribute* pAttr = getAttributeByLocalName(localname);
@@ -215,6 +215,7 @@ namespace ncml_module
       }
     else
       {
+    	// Reference to a local temporary object. jhrg 4/16/14
         return defVal;
       }
   }

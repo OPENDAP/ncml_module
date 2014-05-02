@@ -20,7 +20,7 @@
 //
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 //
 // Please see the files COPYING and COPYRIGHT for more information on the GLPL.
 //
@@ -37,7 +37,7 @@
 using libdap::Array;
 using libdap::Grid;
 
-static const bool PRINT_CONSTRAINTS = true;
+// unused jhrg 4/16/14 static const bool PRINT_CONSTRAINTS = true;
 static const string DEBUG_CHANNEL("ncml:2");
 
 namespace agg_util

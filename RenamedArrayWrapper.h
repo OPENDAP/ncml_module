@@ -20,7 +20,7 @@
 //
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 //
 // Please see the files COPYING and COPYRIGHT for more information on the GLPL.
 //
@@ -145,7 +145,7 @@ namespace ncml_module
         bool print_decl_p = true);
 
 
-    virtual unsigned int width();
+    virtual unsigned int width(bool constrained = false);
     virtual unsigned int buf2val(void **val);
     virtual unsigned int val2buf(void *val, bool reuse = false);
 

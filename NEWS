@@ -1,3 +1,11 @@
+Version 1.2.4 (22 April 2014)
+
+Bug fixes for clang vs gnu compilation 
+
+Version 1.2.3 (10 September 2013)
+
+Merged code with Hyrax 1.8 changes and repaired tests.
+
 Version 1.2.2
 
 Build fix for CentOS 6.
