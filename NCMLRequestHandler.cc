@@ -27,6 +27,13 @@
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
 #include "config.h"
+
+#include <memory>
+
+#include <DMR.h>
+#include <mime_util.h>
+#include <D4BaseTypeFactory.h>
+
 #include "NCMLRequestHandler.h"
 
 #include <BESConstraintFuncs.h>
@@ -37,8 +44,11 @@
 #include <BESDataNames.h>
 #include <BESDASResponse.h>
 #include <BESDDSResponse.h>
+#include <BESDMRResponse.h>
+
 #include <BESDebug.h>
 #include <BESInternalError.h>
+#include <BESDapError.h>
 #include <BESRequestHandlerList.h>
 #include <BESResponseHandler.h>
 #include <BESResponseNames.h>
@@ -48,9 +58,8 @@
 #include <BESVersionInfo.h>
 #include <TheBESKeys.h>
 
-#include "mime_util.h"
 #include "DDSLoader.h"
-#include <memory>
+
 #include "NCMLDebug.h"
 #include "NCMLUtil.h"
 #include "NCMLParser.h"
@@ -69,10 +78,13 @@ NCMLRequestHandler::NCMLRequestHandler(const string &name) :
 	add_handler(DAS_RESPONSE, NCMLRequestHandler::ncml_build_das);
 	add_handler(DDS_RESPONSE, NCMLRequestHandler::ncml_build_dds);
 	add_handler(DATA_RESPONSE, NCMLRequestHandler::ncml_build_data);
+
+	add_handler(DMR_RESPONSE, NCMLRequestHandler::ncml_build_dmr);
+	add_handler(DAP4DATA_RESPONSE, NCMLRequestHandler::ncml_build_dmr);
+
 	add_handler(VERS_RESPONSE, NCMLRequestHandler::ncml_build_vers);
 	add_handler(HELP_RESPONSE, NCMLRequestHandler::ncml_build_help);
 
-	// Look for the SHowSharedDims property, if it has not been set
 	if (NCMLRequestHandler::_global_attributes_container_name_set == false) {
 		bool key_found = false;
 		string value;
@@ -211,6 +223,7 @@ bool NCMLRequestHandler::ncml_build_dds(BESDataHandlerInterface &dhi)
 
 	// Apply constraints to the result
 	dhi.data[POST_CONSTRAINT] = dhi.container->get_constraint();
+	//bdds->set_constraint(dhi);
 
 	// Also copy in the name of the original ncml request
 	// TODO @HACK Not sure I want just the basename for the filename,
@@ -243,6 +256,7 @@ bool NCMLRequestHandler::ncml_build_data(BESDataHandlerInterface &dhi)
 
 	// Apply constraints to the result
 	dhi.data[POST_CONSTRAINT] = dhi.container->get_constraint();
+	//bdds->set_constraint(dhi);
 
 	// Also copy in the name of the original ncml request
 	// TODO @HACK Not sure I want just the basename for the filename,
@@ -250,6 +264,58 @@ bool NCMLRequestHandler::ncml_build_data(BESDataHandlerInterface &dhi)
 	// Our bes-testsuite fails since we get local path info in the dataset name.
 	dds->filename(name_path(filename));
 	dds->set_dataset_name(name_path(filename));
+	return true;
+}
+
+bool NCMLRequestHandler::ncml_build_dmr(BESDataHandlerInterface &dhi)
+{
+	// Because this code does not yet know how to build a DMR directly, use
+	// the DMR ctor that builds a DMR using a 'full DDS' (a DDS with attributes).
+	// First step, build the 'full DDS'
+	string data_path = dhi.container->access();
+
+	DDS *dds = 0;	// This will be deleted when loaded_bdds goes out of scope.
+	auto_ptr<BESDapResponse> loaded_bdds(0);
+	try {
+		DDSLoader loader(dhi);
+		NCMLParser parser(loader);
+		loaded_bdds = parser.parse(data_path, DDSLoader::eRT_RequestDDX);
+		if (!loaded_bdds.get()) throw BESInternalError("Null BESDDSResonse in ncml DDS handler.", __FILE__, __LINE__);
+		dds = NCMLUtil::getDDSFromEitherResponse(loaded_bdds.get());
+		VALID_PTR(dds);
+		dds->filename(data_path);
+		dds->set_dataset_name(data_path);
+	}
+	catch (InternalErr &e) {
+		throw BESDapError(e.get_error_message(), true, e.get_error_code(), __FILE__, __LINE__);
+	}
+	catch (Error &e) {
+		throw BESDapError(e.get_error_message(), false, e.get_error_code(), __FILE__, __LINE__);
+	}
+	catch (...) {
+		throw BESDapError("Caught unknown error build ** DMR response", true, unknown_error, __FILE__, __LINE__);
+	}
+
+	// Extract the DMR Response object - this holds the DMR used by the
+	// other parts of the framework.
+	BESResponseObject *response = dhi.response_handler->get_response_object();
+	BESDMRResponse &bdmr = dynamic_cast<BESDMRResponse &>(*response);
+
+	// Get the DMR made by the BES in the BES/dap/BESDMRResponseHandler, make sure there's a
+	// factory we can use and then dump the DAP2 variables and attributes in using the
+	// BaseType::transform_to_dap4() method that transforms individual variables
+	DMR *dmr = bdmr.get_dmr();
+	dmr->set_factory(new D4BaseTypeFactory);
+	dmr->build_using_dds(*dds);
+
+	// Instead of fiddling with the internal storage of the DHI object,
+	// (by setting dhi.data[DAP4_CONSTRAINT], etc., directly) use these
+	// methods to set the constraints. But, why? Ans: from Patrick is that
+	// in the 'container' mode of BES each container can have a different
+	// CE.
+	bdmr.set_dap4_constraint(dhi);
+	bdmr.set_dap4_function(dhi);
+
 	return true;
 }
 

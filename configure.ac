@@ -115,8 +115,6 @@ else]
 [fi]
 AC_SUBST([READLINK_F])
 
-OPENDAP_DEBUG_OPTION
-
 dnl The ncml_module files...
 AC_CONFIG_FILES([Makefile tests/Makefile tests/atlocal])
 AC_OUTPUT

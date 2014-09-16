@@ -29,12 +29,24 @@
 
 #include "AggregationUtil.h" // agg_util
 #include <Array.h> // libdap
+#include <D4Group.h>
+#include <Constructor.h>
+#include <D4Maps.h>
+#include <InternalErr.h>
+
 #include "GridAggregationBase.h" // agg_util
 #include "NCMLDebug.h"
 
 using libdap::Array;
 using libdap::BaseType;
 using libdap::Grid;
+#if 1
+using libdap::D4Group;
+using libdap::Constructor;
+using libdap::InternalErr;
+using libdap::D4Maps;
+using libdap::D4Map;
+#endif
 
 // Local debug flags
 static const string DEBUG_CHANNEL("agg_util");
@@ -91,7 +103,53 @@ namespace agg_util
     return *this;
   }
 
-  void
+#if 1
+BaseType *
+GridAggregationBase::transform_to_dap4(D4Group *root, Constructor *container)
+{
+	BaseType *btp = array_var()->transform_to_dap4(root, container);
+	Array *coverage = static_cast<Array*>(btp);
+	if (!coverage) throw InternalErr(__FILE__, __LINE__, "Expected an Array while transforming a Grid (coverage)");
+
+	coverage->set_parent(container);
+
+	// Next find the maps; add them to the coverage and to the container,
+	// the latter only on the condition that they are not already there.
+
+	for (Map_iter i = map_begin(), e = map_end(); i != e; ++i) {
+		btp = (*i)->transform_to_dap4(root, container);
+		Array *map = static_cast<Array*>(btp);
+		if (!map) throw InternalErr(__FILE__, __LINE__, "Expected an Array while transforming a Grid (map)");
+
+		// map must be non-null (Grids cannot contain Grids in DAP2)
+		if (map) {
+			// Only add the map/array if it not already present; given the scoping rules
+			// for DAP2 and the assumption the DDS is valid, testing for the same name
+			// is good enough.
+			if (!root->var(map->name())) {
+				map->set_parent(container);
+				container->add_var_nocopy(map);	// this adds the array to the container
+			}
+			D4Map *dap4_map = new D4Map(map->name(), map, coverage);	// bind the 'map' to the coverage
+			coverage->maps()->add_map(dap4_map);	// bind the coverage to the map
+		}
+		else {
+			throw InternalErr(__FILE__, __LINE__,
+					"transform_to_dap4() returned a null value where there can be no Grid.");
+		}
+	}
+
+	container->add_var_nocopy(coverage);
+
+	// Since a Grid (DAP2) to a Coverage (DAP4) removes a lexical scope
+	// in favor of a set of relations, Grid::transform_to_dap4() does not
+	// return a BaseType*. Callers should assume it has correctly added
+	// stuff to the container and group.
+	return 0;
+}
+#endif
+
+void
   GridAggregationBase::setShapeFrom(const libdap::Grid& constProtoSubGrid, bool addMaps)
   {
     // calls used are semantically const, but not syntactically.

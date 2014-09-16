@@ -91,9 +91,9 @@ namespace ncml_module
     // Don't need to override this, it does what we want.
     // virtual void set_name(const string &n);
 
-    virtual bool is_simple_type();
-    virtual bool is_vector_type();
-    virtual bool is_constructor_type();
+    virtual bool is_simple_type() const;
+    virtual bool is_vector_type() const;
+    virtual bool is_constructor_type() const;
 
     virtual bool synthesized_p();
     virtual void set_synthesized_p(bool state);
@@ -113,7 +113,7 @@ namespace ncml_module
     virtual void set_in_selection(bool state);
 
     virtual void set_parent(BaseType *parent);
-    virtual BaseType *get_parent();
+    virtual BaseType *get_parent() const;
 
     virtual BaseType *var(const string &name = "", bool exact_match = true,
         btp_stack *s = 0);
