@@ -9,6 +9,15 @@ AUTOMAKE_OPTIONS = foreign check-news
 
 ACLOCAL_AMFLAGS = -I conf
 
+if DAP_MODULES
+AM_CPPFLAGS = $(ICU_CPPFLAGS) -I$(top_srcdir)/dispatch -I$(top_srcdir)/dap \
+-I$(top_srcdir)/xmlcommand $(DAP_CFLAGS)
+LIBADD = $(ICU_LIBS) $(DAP_SERVER_LIBS) $(DAP_CLIENT_LIBS)
+else
+AM_CPPFLAGS = $(ICU_CPPFLAGS) $(BES_CPPFLAGS) $(DAP_CFLAGS)
+LIBADD = $(ICU_LIBS) $(BES_DAP_LIBS) 
+endif
+
 lib_besdir=$(libdir)/bes
 lib_bes_LTLIBRARIES = libncml_module.la
 
@@ -129,9 +138,9 @@ NCML_HDRS = \
 
 # ICU_CPPFLAGS and ICU_LIBS set from configure.ac check for ICU
 libncml_module_la_SOURCES = $(NCML_SRCS) $(BES_SRCS) $(NCML_HDRS) $(BES_HDRS)
-libncml_module_la_CPPFLAGS = $(ICU_CPPFLAGS) $(BES_CPPFLAGS) $(DAP_CFLAGS) 
+# libncml_module_la_CPPFLAGS = $(ICU_CPPFLAGS) $(BES_CPPFLAGS) $(DAP_CFLAGS) 
 libncml_module_la_LDFLAGS = -avoid-version -module 
-libncml_module_la_LIBADD =   $(ICU_LIBS) $(BES_DAP_LIBS) 
+libncml_module_la_LIBADD = $(LIBADD)
 #$(DAP_LIBS)
 
 EXTRA_PROGRAMS = 
@@ -180,7 +189,7 @@ install-data-local: ncml.conf
 uninstall-local:
 	rm -f $(DESTDIR)$(sysconfdir)/bes/modules/ncml.conf
 
-ncml.conf: ncml.conf.in config.status
+ncml.conf: ncml.conf.in $(top_srcdir)/config.status
 	sed -e "s%[@]bes_modules_dir[@]%${lib_besdir}%" $< > ncml.conf
 
 # Not nearly as clean as it could be, but this removes .svn directories
