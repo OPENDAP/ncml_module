@@ -18,7 +18,7 @@ $(srcdir)/package.m4: $(top_srcdir)/configure.ac
 	} >'$(srcdir)/package.m4'
 
 TESTSUITE = $(srcdir)/testsuite
-TEST_FILES = 	aggregations.at \
+TEST_FILES = aggregations.at \
 		attribute_tests.at \
 		parse_error_misc.at \
 		variable_misc.at \
@@ -29,8 +29,10 @@ TEST_FILES = 	aggregations.at \
 		variable_remove.at \
 		variable_rename.at 
 
-EXTRA_DIST = testsuite.at $(TEST_FILES) $(srcdir)/package.m4 $(TESTSUITE) atlocal.in \
-	template.bescmd.in bes.conf.in bes_no_nc_global.conf.in  baselines
+EXTRA_DIST = testsuite.at $(TEST_FILES) $(srcdir)/package.m4 \
+$(TESTSUITE) atlocal.in template.bescmd.in bes.conf.in \
+bes_no_nc_global.conf.in bes.conf.modules.in \
+bes_no_nc_global.conf.modules.in baselines
 
 noinst_DATA = bes.conf bes_no_nc_global.conf
 DISTCLEANFILES = bes.conf bes_no_nc_global.conf
@@ -66,26 +68,4 @@ $(TESTSUITE): $(srcdir)/testsuite.at $(srcdir)/package.m4 bes.conf $(TEST_FILES)
 	mv ${srcdir}/$@.tmp ${srcdir}/$@
 
 # Resolve the ../ in the path so the BES doesn't complain about them
-canonical_abs_top_srcdir =  `${READLINK_F} ${abs_top_srcdir}`
-
-# this fails on distcheck...
-#		-e "s%[@]libdir[@]%${libdir}%" 
-bes.conf: bes.conf.in ../config.status
-	sed -e "s%[@]pkgdatadir[@]%${pkgdatadir}%" \
-		-e "s%[@]sysconfdir[@]%${sysconfdir}%" \
-		-e "s%[@]beslibdir[@]%${BES_MODULE_DIR}%" \
-		-e "s%[@]datadir[@]%${datadir}%" \
-		-e "s%[@]abs_top_srcdir[@]%${canonical_abs_top_srcdir}%" \
-		-e "s%[@]abs_top_builddir[@]%${abs_top_builddir}%" \
-		-e "s%[@]bindir[@]%${bindir}%" $< > bes.conf
-
-bes_no_nc_global.conf: bes_no_nc_global.conf.in ../config.status
-	sed -e "s%[@]pkgdatadir[@]%${pkgdatadir}%" \
-		-e "s%[@]sysconfdir[@]%${sysconfdir}%" \
-		-e "s%[@]beslibdir[@]%${BES_MODULE_DIR}%" \
-		-e "s%[@]datadir[@]%${datadir}%" \
-		-e "s%[@]abs_top_srcdir[@]%${canonical_abs_top_srcdir}%" \
-		-e "s%[@]abs_top_builddir[@]%${abs_top_builddir}%" \
-		-e "s%[@]bindir[@]%${bindir}%" $< > bes_no_nc_global.conf
-
-
+# canonical_abs_top_srcdir =  `${READLINK_F} ${abs_top_srcdir}`

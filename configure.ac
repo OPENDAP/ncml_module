@@ -10,6 +10,8 @@ AC_CONFIG_MACRO_DIR([conf])
 
 AM_INIT_AUTOMAKE
 
+AM_CONDITIONAL([DAP_MODULES], [false])
+
 # The handler is a shared object library, so we don't normally need
 # the static lib. Override this default by specifying `--enable-static',
 # which can make running unit tests with valgrind far more pleasant. 
@@ -118,6 +120,6 @@ AC_SUBST([READLINK_F])
 OPENDAP_DEBUG_OPTION
 
 dnl The ncml_module files...
-AC_CONFIG_FILES([Makefile tests/Makefile tests/atlocal])
+AC_CONFIG_FILES([Makefile tests/Makefile tests/atlocal tests/bes.conf tests/bes_no_nc_glabal.conf])
 AC_OUTPUT
 
