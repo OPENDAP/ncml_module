@@ -119,7 +119,14 @@ AC_SUBST([READLINK_F])
 
 OPENDAP_DEBUG_OPTION
 
+## This sets up the special symbols used to build the bes.conf file for
+## the tests. Previously, this was done in the Makefile.am down in the
+## test directory, but building the bes.conf here works better with
+## autoconf overall and esp. with the 'modules' build. jhrg 11/19/14
+modulesdir=$BES_MODULE_DIR
+AC_SUBST(modulesdir)
+
 dnl The ncml_module files...
-AC_CONFIG_FILES([Makefile tests/Makefile tests/atlocal tests/bes.conf tests/bes_no_nc_glabal.conf])
+AC_CONFIG_FILES([Makefile tests/Makefile tests/atlocal tests/bes.conf tests/bes_no_nc_global.conf])
 AC_OUTPUT
 
