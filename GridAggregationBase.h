@@ -39,6 +39,7 @@ namespace libdap
 {
   class Array;
   class Grid;
+  class D4Group;
 };
 
 namespace agg_util
@@ -75,6 +76,9 @@ namespace agg_util
     virtual ~GridAggregationBase();
 
     GridAggregationBase& operator=(const GridAggregationBase& rhs);
+#if 1
+    BaseType *transform_to_dap4(libdap::D4Group *root, libdap::Constructor *container);
+#endif
 
     /**
      * Use the data array and maps from protoSubGrid as the initial

@@ -59,6 +59,7 @@ public:
     static bool		ncml_build_das( BESDataHandlerInterface &dhi ) ;
     static bool		ncml_build_dds( BESDataHandlerInterface &dhi ) ;
     static bool		ncml_build_data( BESDataHandlerInterface &dhi ) ;
+    static bool		ncml_build_dmr( BESDataHandlerInterface &dhi ) ;
     static bool		ncml_build_vers( BESDataHandlerInterface &dhi ) ;
     static bool		ncml_build_help( BESDataHandlerInterface &dhi ) ;
 

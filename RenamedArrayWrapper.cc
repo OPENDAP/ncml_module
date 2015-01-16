@@ -146,19 +146,19 @@ namespace ncml_module
   }
 
   bool
-  RenamedArrayWrapper::is_simple_type()
+  RenamedArrayWrapper::is_simple_type() const
   {
     return _pArray->is_simple_type();
   }
 
   bool
-  RenamedArrayWrapper::is_vector_type()
+  RenamedArrayWrapper::is_vector_type() const
   {
     return _pArray->is_vector_type();
   }
 
   bool
-  RenamedArrayWrapper::is_constructor_type()
+  RenamedArrayWrapper::is_constructor_type() const
   {
     return _pArray->is_constructor_type();
   }
@@ -244,7 +244,7 @@ namespace ncml_module
   }
 
   BaseType*
-  RenamedArrayWrapper::get_parent()
+  RenamedArrayWrapper::get_parent() const
   {
     return _pArray->get_parent();
   }
