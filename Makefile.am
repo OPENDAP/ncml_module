@@ -198,11 +198,6 @@ uninstall-local:
 ncml.conf: ncml.conf.in $(top_srcdir)/config.status
 	sed -e "s%[@]bes_modules_dir[@]%${lib_besdir}%" $< > ncml.conf
 
-# Not nearly as clean as it could be, but this removes .svn directories
-# in subdirs.
-dist-hook:
-	rm -rf `find $(distdir) -name .svn`
-
 .PHONY: docs
 docs:
 	doxygen $(srcdir)/doxy.conf
