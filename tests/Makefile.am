@@ -18,6 +18,9 @@ $(srcdir)/package.m4: $(top_srcdir)/configure.ac
 	} >'$(srcdir)/package.m4'
 
 TESTSUITE = $(srcdir)/testsuite
+# Run the tests in parallel, which speeds things up considerably.
+TESTSUITEFLAGS = -j9
+
 TEST_FILES = aggregations.at \
 		attribute_tests.at \
 		parse_error_misc.at \
