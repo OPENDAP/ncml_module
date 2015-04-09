@@ -1,3 +1,231 @@
+2015-03-31  James Gallagher  <jgallagher@opendap.org>
+
+	Added to gitignore
+
+2015-03-25  James Gallagher  <jgallagher@opendap.org>
+
+	Accommodate autoconf 2.63
+	Removed -j7 from TESTSUITEFLAGS. Can still pass them in from the
+	command line (make check TESTSUITEFLAGS=-j7).
+
+2015-03-19  James Gallagher  <jgallagher@opendap.org>
+
+	Fix for	distclean and the modules build.
+
+2015-02-19  James Gallagher  <jgallagher@opendap.org>
+
+	Tests that fail for DAP4 marked xfail
+	In the *.at files, search for FIXME DAP4 FAILURES
+	to find the specific tests. I think all of the
+	failures have to do with the errors in caching Vectors
+	when the ncml code reads all of the array data and
+	then reuses that later when the aggregation is formed.
+
+2015-01-16  James Gallagher  <jgallagher@opendap.org>
+
+	Removed dist-hook which as a hack for SVN
+
+	Merge remote-tracking branch 'origin/dap4'
+	Conflicts:
+		configure.ac
+	Fixed errors with some DAS tests where the order of attributes
+	was different for one variable after the merge with DAP4. This
+	different ordering was due to a switch in attribute internal
+	representation.
+
+2014-12-12  James Gallagher  <jgallagher@opendap.org>
+
+	Fixed configure.ac and bes.conf.in after merging with the modules branch
+
+	Merge remote-tracking branch 'origin/modules'
+
+2014-12-07  James Gallagher  <jgallagher@opendap.org>
+
+	Added module name and version info to Makefile.am
+	This change was made to support the modules build where the autoconf
+	symbols PACKAGE_NAME and _MODULE are defined by the bes configure
+	script. This meant that the version response from the bes was useless
+	since it listed every module as 'bes' and gave the bes' version
+	number.
+
+2014-12-04  James Gallagher  <jgallagher@opendap.org>
+
+	Updated	the spec file to release 2.
+
+	Updated the spec file for hyrax 1.10
+
+2014-12-01  James Gallagher  <jgallagher@opendap.org>
+
+	Added support for the bes modules build.
+
+2014-09-16  James Gallagher  <jgallagher@opendap.org>
+
+	Added some dap4 test stuff using dapreader - just a start.
+
+	Removed the old OPENDAP_DEBUG_OPTIONS macro from many configure.ac files. Fixed some param initializations; method overloads (virtual methods that lacked 'const'). Other warnings.
+
+2014-05-02  James Gallagher  <jgallagher@opendap.org>
+
+	Changes	after merging the trunk	code (H	1.9.3) to the dap4 branch. Note that the dap4 branch is using a 'branched' version of the ncml handler - all the other handlers are trunk versions.
+	_M   .
+	M    AggMemberDataset.cc
+	M    AggMemberDataset.h
+	M    AggMemberDatasetDDSWrapper.cc
+	M    AggMemberDatasetDDSWrapper.h
+	M    AggMemberDatasetSharedDDSWrapper.cc
+	M    AggMemberDatasetSharedDDSWrapper.h
+	M    AggMemberDatasetUsingLocationRef.cc
+	M    AggMemberDatasetUsingLocationRef.h
+	M    AggMemberDatasetWithDimensionCacheBase.cc
+	M    AggMemberDatasetWithDimensionCacheBase.h
+	M    AggregationElement.cc
+	M    AggregationElement.h
+	M    AggregationException.cc
+	M    AggregationException.h
+	M    AggregationUtil.cc
+	M    AggregationUtil.h
+	M    ArrayAggregateOnOuterDimension.cc
+	M    ArrayAggregateOnOuterDimension.h
+	M    ArrayAggregationBase.cc
+	M    ArrayAggregationBase.h
+	M    ArrayJoinExistingAggregation.cc
+	M    ArrayJoinExistingAggregation.h
+	M    AttributeElement.cc
+	M    AttributeElement.h
+	M    ChangeLog
+	M    DDSAccessInterface.cc
+	M    DDSAccessInterface.h
+	M    DDSLoader.cc
+	M    DDSLoader.h
+	M    Dimension.cc
+	M    Dimension.h
+	M    DimensionElement.cc
+	M    DimensionElement.h
+	M    DirectoryUtil.cc
+	M    DirectoryUtil.h
+	M    ExplicitElement.cc
+	M    ExplicitElement.h
+	M    GridAggregateOnOuterDimension.cc
+	M    GridAggregateOnOuterDimension.h
+	M    GridAggregationBase.cc
+	M    GridAggregationBase.h
+	M    GridJoinExistingAggregation.cc
+	M    GridJoinExistingAggregation.h
+	M    INSTALL
+	M    JoinExistingDimensionCacheManager.cc
+	M    JoinExistingDimensionCacheManager.h
+	M    MyBaseTypeFactory.cc
+	M    MyBaseTypeFactory.h
+	M    NCMLArray.h
+	M    NCMLBaseArray.cc
+	M    NCMLBaseArray.h
+	M    NCMLCacheAggXMLCommand.cc
+	M    NCMLCacheAggXMLCommand.h
+	M    NCMLCommonTypes.cc
+	M    NCMLCommonTypes.h
+	M    NCMLContainer.cc
+	M    NCMLContainer.h
+	M    NCMLContainerStorage.cc
+	M    NCMLContainerStorage.h
+	M    NCMLDebug.h
+	M    NCMLElement.cc
+	M    NCMLElement.h
+	M    NCMLModule.cc
+	M    NCMLModule.h
+	M    NCMLParser.cc
+	M    NCMLParser.h
+	M    NCMLRequestHandler.cc
+	M    NCMLRequestHandler.h
+	M    NCMLResponseNames.cc
+	M    NCMLResponseNames.h
+	M    NCMLUtil.cc
+	M    NCMLUtil.h
+	M    NEWS
+	M    NetcdfElement.cc
+	M    NetcdfElement.h
+	M    OtherXMLParser.cc
+	M    OtherXMLParser.h
+	M    RCObject.cc
+	M    RCObject.h
+	M    RCObjectInterface.cc
+	M    RCObjectInterface.h
+	M    README
+	M    ReadMetadataElement.cc
+	M    ReadMetadataElement.h
+	M    RemoveElement.cc
+	M    RemoveElement.h
+	M    RenamedArrayWrapper.cc
+	M    RenamedArrayWrapper.h
+	M    SaxParser.cc
+	M    SaxParser.h
+	M    SaxParserWrapper.cc
+	M    SaxParserWrapper.h
+	M    ScanElement.cc
+	M    ScanElement.h
+	M    ScopeStack.cc
+	M    ScopeStack.h
+	M    Shape.cc
+	M    Shape.h
+	M    SimpleLocationParser.cc
+	M    SimpleLocationParser.h
+	M    SimpleTimeParser.cc
+	M    SimpleTimeParser.h
+	M    ValuesElement.cc
+	M    ValuesElement.h
+	M    VariableAggElement.cc
+	M    VariableAggElement.h
+	M    VariableElement.cc
+	M    VariableElement.h
+	M    XMLHelpers.cc
+	M    XMLHelpers.h
+	_M   conf
+	M    configure.ac
+	_M   data
+	_M   data/nc/simple_test
+	_M   data/ncml/agg
+	M    ncml_module.spec
+	_M   tests
+	M    tests/baselines/agg/aggUnionSimple.ncml.das
+	M    tests/baselines/agg/aggUnionSimple.ncml.ddx
+	M    tests/baselines/agg/joinExist_scan.ncml.das
+	M    tests/baselines/agg/joinExist_scan_ncoords.ncml.das
+	M    tests/baselines/agg/joinExisting_simple_grid.ncml.das
+	M    tests/baselines/agg/joinNew_grid_arr_hslab_0.das
+	M    tests/baselines/agg/joinNew_grid_arr_hslab_0.ddx
+	M    tests/baselines/agg/joinNew_grid_hslab_0.das
+	M    tests/baselines/agg/joinNew_grid_hslab_0.ddx
+	M    tests/baselines/agg/joinNew_grid_hslab_1.das
+	M    tests/baselines/agg/joinNew_grid_hslab_1.ddx
+	M    tests/baselines/agg/joinNew_grid_hslab_2.das
+	M    tests/baselines/agg/joinNew_grid_hslab_2.ddx
+	M    tests/baselines/agg/joinNew_grid_hslab_3.das
+	M    tests/baselines/agg/joinNew_grid_hslab_3.ddx
+	M    tests/baselines/agg/joinNew_grid_meta_2.ncml.das
+	M    tests/baselines/agg/joinNew_grid_meta_2.ncml.ddx
+	M    tests/baselines/agg/joinNew_grid_meta_everywhere.ncml.das
+	M    tests/baselines/agg/joinNew_grid_meta_everywhere.ncml.ddx
+	M    tests/baselines/agg/joinNew_grid_metadata.ncml.das
+	M    tests/baselines/agg/joinNew_grid_metadata.ncml.ddx
+	M    tests/baselines/agg/joinNew_grid_pre_metadata.ncml.das
+	M    tests/baselines/agg/joinNew_grid_pre_metadata.ncml.ddx
+	M    tests/baselines/agg/joinNew_grid_proj_lat.das
+	M    tests/baselines/agg/joinNew_grid_proj_lat.ddx
+	M    tests/baselines/agg/joinNew_grid_stride_evens.das
+	M    tests/baselines/agg/joinNew_grid_stride_evens.ddx
+	M    tests/baselines/agg/joinNew_grid_stride_odds.das
+	M    tests/baselines/agg/joinNew_grid_stride_odds.ddx
+	M    tests/baselines/agg/joinNew_scan_dfm.ncml.das
+	M    tests/baselines/agg/joinNew_scan_dfm_2.ncml.das
+	M    tests/baselines/agg/joinNew_scan_hslab_0.das
+	M    tests/baselines/agg/joinNew_scan_hslab_0.ddx
+	M    tests/baselines/agg/joinNew_scan_regexp_hslab_0.das
+	M    tests/baselines/agg/joinNew_scan_regexp_hslab_0.ddx
+	M    tests/baselines/grid_attributes.ncml.das
+	M    tests/baselines/grid_attributes.ncml.ddx
+
+2014-04-23  Nathan Potter  <ndp@opendap.org>
+
+	ncml_module: Checking software version update and associated release changes.
 2014-04-18  James Gallagher <jgallagher@opendap.org>
 
 	svn ignores
