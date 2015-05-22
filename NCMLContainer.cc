@@ -52,6 +52,8 @@ using std::ios_base;
 #include <BESInternalError.h>
 #include <BESDebug.h>
 
+#include <util.h>       // libdap; for open_temp_fstream()
+
 /** @brief Creates an instances of NCMLContainer with the symbolic name
  * and the xml document string.
  *
@@ -66,45 +68,45 @@ using std::ios_base;
  * @see NCMLGatewayUtils
  */
 NCMLContainer::NCMLContainer(const string &sym_name, const string &xml_doc) :
-		BESContainer(sym_name, "", "ncml"), _xml_doc(xml_doc), _accessed(false)
+        BESContainer(sym_name, "", "ncml"), _xml_doc(xml_doc), _accessed(false)
 {
 }
 
 NCMLContainer::NCMLContainer(const NCMLContainer &copy_from) :
-		BESContainer(copy_from), _xml_doc(copy_from._xml_doc), _accessed(copy_from._accessed)
+        BESContainer(copy_from), _xml_doc(copy_from._xml_doc), _accessed(copy_from._accessed)
 {
-	// we can not make a copy of this container once the NCML document has
-	// been written to the temporary file
-	if (_accessed) {
-		string err = (string) "The Container has already been accessed, " + "can not create a copy of this container.";
-		throw BESInternalError(err, __FILE__, __LINE__);
-	}
+    // we can not make a copy of this container once the NCML document has
+    // been written to the temporary file
+    if (_accessed) {
+        string err = (string) "The Container has already been accessed, " + "can not create a copy of this container.";
+        throw BESInternalError(err, __FILE__, __LINE__);
+    }
 }
 
 void NCMLContainer::_duplicate(NCMLContainer &copy_to)
 {
-	if (copy_to._accessed) {
-		string err = (string) "The Container has already been accessed, " + "can not duplicate this resource.";
-		throw BESInternalError(err, __FILE__, __LINE__);
-	}
-	copy_to._xml_doc = _xml_doc;
-	copy_to._accessed = false;
-	BESContainer::_duplicate(copy_to);
+    if (copy_to._accessed) {
+        string err = (string) "The Container has already been accessed, " + "can not duplicate this resource.";
+        throw BESInternalError(err, __FILE__, __LINE__);
+    }
+    copy_to._xml_doc = _xml_doc;
+    copy_to._accessed = false;
+    BESContainer::_duplicate(copy_to);
 }
 
 BESContainer *
 NCMLContainer::ptr_duplicate()
 {
-	NCMLContainer *container = new NCMLContainer;
-	_duplicate(*container);
-	return container;
+    NCMLContainer *container = new NCMLContainer;
+    _duplicate(*container);
+    return container;
 }
 
 NCMLContainer::~NCMLContainer()
 {
-	if (_accessed) {
-		release();
-	}
+    if (_accessed) {
+        release();
+    }
 }
 
 /** @brief access the NCML target response by making the NCML request
@@ -114,55 +116,56 @@ NCMLContainer::~NCMLContainer()
  */
 string NCMLContainer::access()
 {
-	BESDEBUG("ncml", "accessing " << _xml_doc << endl);
-	if (!_accessed) {
-		// save the xml document to a temporary file, open it, unlink
-		// it. In release, close the file. This will remove the file if
-		// it is no longer open.
+    BESDEBUG("ncml", "accessing " << _xml_doc << endl);
+    if (!_accessed) {
+        // save the xml document to a temporary file, open it, unlink
+        // it. In release, close the file. This will remove the file if
+        // it is no longer open.
+#if 0
+        // Replaced with code that uses mkstemp() which lacks the security
+        // problems of mktemp(). jhrg 5/13/15
+        string tempfile_template = NCMLContainerStorage::NCML_TempDir + "/ncml_module_XXXXXX";
+        char *tempfile_c = mktemp((char *) tempfile_template.c_str());
 
-		string tempfile_template = "ncml_module_XXXXXX";
-#if defined(WIN32) || defined(TEST_WIN32_TEMPS)
-		char *tempfile_c = _mktemp( (char *)tempfile_template.c_str() );
-#else
-		char *tempfile_c = mktemp((char *) tempfile_template.c_str());
+        string tempfile;
+        if (tempfile_c) {
+            tempfile = tempfile_c;
+        }
+        else {
+            string err = (string) "Unable to create temporary ncml document " + _tmp_file_name;
+            throw BESInternalError(err, __FILE__, __LINE__);
+        }
+
+        _tmp_file_name = NCMLContainerStorage::NCML_TempDir + "/" + tempfile + ".ncml";
 #endif
-		string tempfile;
-		if (tempfile_c) {
-			tempfile = tempfile_c;
-		}
-		else {
-			string err = (string) "Unable to create temporary ncml document " + _tmp_file_name;
-			throw BESInternalError(err, __FILE__, __LINE__);
-		}
+        ofstream ostrm;
+        //int my_errno = 0;
+        string _tmp_file_name = libdap::open_temp_fstream(ostrm,
+                NCMLContainerStorage::NCML_TempDir + "/ncml_module_XXXXXX", ".ncml");
+        //ostrm.open(_tmp_file_name.c_str(), ios_base::out);
+        //my_errno = errno;
 
-		_tmp_file_name = NCMLContainerStorage::NCML_TempDir + "/" + tempfile + ".ncml";
+        if (!ostrm) {
+            string err = (string) "Unable to write out the ncml document " + _tmp_file_name;
+            if (errno) {
+                char *str = strerror(errno);
+                if (str) err += (string) " " + str;
+            }
+            throw BESInternalError(err, __FILE__, __LINE__);
+        }
 
-		ofstream ostrm;
-		int my_errno = 0;
+        // write out <?xml version="1.0" encoding="UTF-8"?>
+        ostrm << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << endl;
 
-		ostrm.open(_tmp_file_name.c_str(), ios_base::out);
-		my_errno = errno;
+        // then write out the r_name as the ncml document (no validation)
+        ostrm << _xml_doc << endl;
 
-		if (!ostrm) {
-			string err = (string) "Unable to write out the ncml document " + _tmp_file_name;
-			if (my_errno) {
-				char *str = strerror(my_errno);
-				if (str) err += (string) " " + str;
-			}
-			throw BESInternalError(err, __FILE__, __LINE__);
-		}
+        ostrm.close();
 
-		// write out <?xml version="1.0" encoding="UTF-8"?>
-		ostrm << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << endl;
+        _accessed = true;
+    }
 
-		// then write out the r_name as the ncml document (no validation)
-		ostrm << _xml_doc << endl;
-
-		ostrm.close();
-
-		_accessed = true;
-	}
-	return _tmp_file_name;
+    return _tmp_file_name;
 }
 
 /** @brief release the NCML cached resources
@@ -173,12 +176,12 @@ string NCMLContainer::access()
  */
 bool NCMLContainer::release()
 {
-	if (_accessed && !_tmp_file_name.empty()) {
-		unlink(_tmp_file_name.c_str());
-		_tmp_file_name = "";
-	}
-	_accessed = false;
-	return true;
+    if (_accessed && !_tmp_file_name.empty()) {
+        unlink(_tmp_file_name.c_str());
+        _tmp_file_name = "";
+    }
+    _accessed = false;
+    return true;
 }
 
 /** @brief dumps information about this object
@@ -190,15 +193,15 @@ bool NCMLContainer::release()
  */
 void NCMLContainer::dump(ostream &strm) const
 {
-	strm << BESIndent::LMarg << "NCMLContainer::dump - (" << (void *) this << ")" << endl;
-	BESIndent::Indent();
-	if (_accessed) {
-		strm << BESIndent::LMarg << "temporary file: " << _tmp_file_name << endl;
-	}
-	else {
-		strm << BESIndent::LMarg << "temporary file: not open" << endl;
-	}
-	BESContainer::dump(strm);
-	BESIndent::UnIndent();
+    strm << BESIndent::LMarg << "NCMLContainer::dump - (" << (void *) this << ")" << endl;
+    BESIndent::Indent();
+    if (_accessed) {
+        strm << BESIndent::LMarg << "temporary file: " << _tmp_file_name << endl;
+    }
+    else {
+        strm << BESIndent::LMarg << "temporary file: not open" << endl;
+    }
+    BESContainer::dump(strm);
+    BESIndent::UnIndent();
 }
 

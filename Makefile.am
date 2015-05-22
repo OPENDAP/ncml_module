@@ -11,7 +11,7 @@ ACLOCAL_AMFLAGS = -I conf
 
 # Set the module version here, in the spec file and in configure.ac
 M_NAME=ncml_moddule
-M_VER=1.2.4
+M_VER=1.2.5
 
 if DAP_MODULES
 AM_CPPFLAGS = $(ICU_CPPFLAGS) -I$(top_srcdir)/dispatch -I$(top_srcdir)/dap \
@@ -151,7 +151,11 @@ libncml_module_la_LIBADD = $(LIBADD)
 
 EXTRA_PROGRAMS = 
 
-EXTRA_DIST = COPYRIGHT COPYING ncml.conf.in ncml_module.spec data OSX_Resources
+EXTRA_DIST = COPYRIGHT COPYING ncml.conf.in data OSX_Resources
+
+if !DAP_MODULES
+EXTRA_DIST += ncml_module.spec
+endif
 
 CLEANFILES = *~ ncml.conf
 

@@ -46,10 +46,16 @@ atconfig
 atlocal
 
 ## ncml module specific files
+
+ncml.conf
+
 tests/bes.conf
 tests/bes_no_nc_global.conf
 tests/package.m4
 tests/testsuite
+tests/testsuite.dir
+tests/work_on_failing_tests
+
 
 
 
