@@ -35,6 +35,7 @@
 #include <BESDataDDSResponse.h>
 #include <BESDDSResponse.h>
 #include <BESDebug.h>
+#include <BESStopWatch.h>
 #include "DDSLoader.h" // ncml_module
 #include "DimensionElement.h"  // ncml_module
 #include <AttrTable.h> // libdap
@@ -169,47 +170,54 @@ NCMLParser::~NCMLParser()
 auto_ptr<BESDapResponse>
 NCMLParser::parse(const string& ncmlFilename,  DDSLoader::ResponseType responseType)
 {
-  // Parse into a newly created object.
-  auto_ptr<BESDapResponse> response = DDSLoader::makeResponseForType(responseType);
+	// Parse into a newly created object.
+	auto_ptr<BESDapResponse> response  = DDSLoader::makeResponseForType(responseType);
 
-  // Parse into the response.  We still got it in the auto_ptr in this scope, so we're safe
-  // on exception since the auto_ptr in this func will cleanup the memory.
-  parseInto(ncmlFilename, responseType, response.get());
+	// Parse into the response.  We still got it in the auto_ptr in this scope, so we're safe
+	// on exception since the auto_ptr in this func will cleanup the memory.
+	parseInto(ncmlFilename, responseType, response.get());
 
-  // Relinquish it to the caller
-  return response;
+	// Relinquish it to the caller
+	return response;
 }
 
 void
 NCMLParser::parseInto(const string& ncmlFilename, DDSLoader::ResponseType responseType, BESDapResponse* response)
 {
-  VALID_PTR(response);
-  NCML_ASSERT_MSG(DDSLoader::checkResponseIsValidType(responseType, response),
-        "NCMLParser::parseInto: got wrong response object for given type.");
+	BESStopWatch sw2;
+	if (BESISDEBUG( TIMING_LOG ))
+		sw2.start("NCMLParser::parseInto", ncmlFilename);
 
-  _responseType = responseType;
-  _response = response;
+	VALID_PTR(response);
+	NCML_ASSERT_MSG(DDSLoader::checkResponseIsValidType(responseType, response),
+			"NCMLParser::parseInto: got wrong response object for given type.");
 
-  if (parsing())
-    {
-      THROW_NCML_INTERNAL_ERROR("Illegal Operation: NCMLParser::parse called while already parsing!");
-    }
+	_responseType = responseType;
+	_response = response;
 
-  BESDEBUG("ncml", "Beginning NcML parse of file=" << ncmlFilename << endl);
+	if (parsing())
+	{
+		THROW_NCML_INTERNAL_ERROR("Illegal Operation: NCMLParser::parse called while already parsing!");
+	}
 
-  // In case we care.
-  _filename = ncmlFilename;
+	BESDEBUG("ncml", "Beginning NcML parse of file=" << ncmlFilename << endl);
 
-  // Invoke the libxml sax parser
-  SaxParserWrapper parser(*this);
-  parser.parse(ncmlFilename);
+	// In case we care.
+	_filename = ncmlFilename;
 
-  // Prepare for a new parse, making sure it's all cleaned up (with the exception of the _ddsResponse
-  // which where's about to send off)
-  resetParseState();
+	// Invoke the libxml sax parser
+	SaxParserWrapper parser(*this);
 
-  // we're done with it.
-  _response = 0;
+
+
+	parser.parse(ncmlFilename);
+
+	// Prepare for a new parse, making sure it's all cleaned up (with the exception of the _ddsResponse
+	// which where's about to send off)
+	resetParseState();
+
+	// we're done with it.
+	_response = 0;
 }
 
 bool

@@ -40,6 +40,7 @@
 #include <BESDataHandlerInterface.h>
 #include <BESDDSResponse.h>
 #include <BESDebug.h>
+#include <BESStopWatch.h>
 #include <BESInternalError.h>
 #include <BESResponseHandler.h>
 #include <BESResponseNames.h>
@@ -332,6 +333,10 @@ std::string DDSLoader::getNextContainerName()
 
 std::auto_ptr<BESDapResponse> DDSLoader::makeResponseForType(ResponseType type)
 {
+	//BESStopWatch sw;
+	//if (BESISDEBUG( TIMING_LOG ))
+	//	sw.start("DDSLoader::makeResponseForType");
+
 	if (type == eRT_RequestDDX) {
 		return auto_ptr<BESDapResponse>(new BESDDSResponse(new DDS(new BaseTypeFactory(), "virtual")));
 	}
