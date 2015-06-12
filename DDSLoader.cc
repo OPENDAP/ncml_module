@@ -269,7 +269,8 @@ void DDSLoader::snapshotDHI()
 {
 	VALID_PTR(_dhi.response_handler);
 
-	BESDEBUG( "ncml", "original dhi = " << _dhi << endl ) ;
+	BESDEBUG( "ncml", "DDSLoader::snapshotDHI() - Taking snapshot of DataHAndlerInterface for (action: " << _dhi.action << " action_name: " << _dhi.action_name << ")" << endl ) ;
+	BESDEBUG( "ncml_verbose", "original dhi = " << _dhi << endl ) ;
 
 	// Store off the container for the original ncml file call and replace with the new one
 	_origContainer = _dhi.container;
@@ -277,6 +278,8 @@ void DDSLoader::snapshotDHI()
 	_origActionName = _dhi.action_name;
 
 	_origResponse = _dhi.response_handler->get_response_object();
+
+	BESDEBUG( "ncml", "DDSLoader::snapshotDHI() - Replaced with DataHAndlerInterface for (action: " << _dhi.action << " action_name: " << _dhi.action_name << ")" << endl ) ;
 
 	_hijacked = true;
 }
@@ -297,7 +300,9 @@ void DDSLoader::restoreDHI()
 
 	_dhi.response_handler->set_response_object(_origResponse);
 
-	BESDEBUG( "ncml", "restored dhi = " << _dhi << endl ) ;
+	BESDEBUG( "ncml", "DDSLoader::restoreDHI() - Restored of DataHAndlerInterface for (action: " << _dhi.action << " action_name: " << _dhi.action_name << ")" << endl ) ;
+
+	BESDEBUG( "ncml_verbose", "restored dhi = " << _dhi << endl ) ;
 
 	// clear our copy of saved state
 	_origAction = "";
