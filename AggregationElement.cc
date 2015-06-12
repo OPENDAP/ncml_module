@@ -51,6 +51,8 @@
 #include "NCMLParser.h"
 #include "NetcdfElement.h"
 #include "ScanElement.h"
+#include "BESDebug.h"
+#include "BESStopWatch.h"
 #include <sstream>
 
 using agg_util::AggregationUtil;
@@ -179,6 +181,10 @@ namespace ncml_module
   void
   AggregationElement::handleBegin()
   {
+	  BESStopWatch sw;
+	  if (BESISDEBUG( TIMING_LOG ))
+		  sw.start("AggregationElement::handleBegin", "");
+
     NCML_ASSERT(!getParentDataset());
 
     // Check that the immediate parent element is netcdf since we cannot put an aggregation anywhere else.
@@ -219,35 +225,39 @@ namespace ncml_module
   void
   AggregationElement::handleEnd()
   {
-    // Handle the actual processing!!
-    BESDEBUG("ncml", "Got AggregationElement::handleEnd(): Processing the aggregation!!" << endl);
+	  BESStopWatch sw;
+	  if (BESISDEBUG( TIMING_LOG ))
+		  sw.start("AggregationElement::handleEnd", "");
 
-    if ( isUnionAggregation() )
-      {
-        BESDEBUG("ncml2", "  AggregationElement::handleEnd; isUnionAggregation" << endl);
-        processUnion();
-      }
-    else if ( isJoinNewAggregation() )
-      {
-        BESDEBUG("ncml2", "  AggregationElement::handleEnd; isJoinNewAggregation" << endl);
-        processJoinNew();
-      }
-    else if ( isJoinExistingAggregation() )
-      {
-        BESDEBUG("ncml2", "  AggregationElement::handleEnd; isJoinExistingAggregation" << endl);
-        processJoinExisting();
-      }
-    else if (_type == "forecastModelRunCollection" ||
-             _type == "forecastModelSingleRunCollection")
-      {
-        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
-            "Sorry, we do not implement the forecastModelRunCollection aggregations in this version of the NCML Module!");
-      }
-    else
-      {
-        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
-            "Unknown aggregation type=" + _type + " at scope=" + _parser->getScopeString());
-      }
+	  // Handle the actual processing!!
+	  BESDEBUG("ncml", "AggregationElement::handleEnd() - Processing the aggregation!!" << endl);
+
+	  if ( isUnionAggregation() )
+	  {
+		  BESDEBUG("ncml2", "AggregationElement::handleEnd() - isUnionAggregation" << endl);
+		  processUnion();
+	  }
+	  else if ( isJoinNewAggregation() )
+	  {
+		  BESDEBUG("ncml2", "AggregationElement::handleEnd() - isJoinNewAggregation" << endl);
+		  processJoinNew();
+	  }
+	  else if ( isJoinExistingAggregation() )
+	  {
+		  BESDEBUG("ncml2", "AggregationElement::handleEnd() - isJoinExistingAggregation" << endl);
+		  processJoinExisting();
+	  }
+	  else if (_type == "forecastModelRunCollection" ||
+			  _type == "forecastModelSingleRunCollection")
+	  {
+		  THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+				  "Sorry, we do not implement the forecastModelRunCollection aggregations in this version of the NCML Module!");
+	  }
+	  else
+	  {
+		  THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+				  "Unknown aggregation type=" + _type + " at scope=" + _parser->getScopeString());
+	  }
   }
 
   string
@@ -426,56 +436,60 @@ namespace ncml_module
   void
   AggregationElement::processJoinNew()
   {
-    // This will run any child <scan> elements to prepare them.
-    processAnyScanElements();
+	  BESStopWatch sw;
+	  if (BESISDEBUG( TIMING_LOG ))
+		  sw.start("AggregationElement::processJoinNew", "");
 
-    BESDEBUG("ncml", "AggregationElement: beginning joinNew on the following aggVars=" +
-        printAggregationVariables() << endl);
+	  // This will run any child <scan> elements to prepare them.
+	  processAnyScanElements();
 
-    // Union the dimensions of the child sets so they're available
-    BESDEBUG("ncml", "Merging dimensions from children into aggregated dataset..." << endl);
-    mergeDimensions();
+	  BESDEBUG("ncml", "AggregationElement::processJoinNew() - beginning joinNew on the following aggVars=" +
+			  printAggregationVariables() << endl);
 
-    // For now we will explicitly create the new dimension for lookups.
-    unsigned int newDimSize = _datasets.size(); // ASSUMES we find an aggVar in EVERY dataset!
-    getParentDataset()->addDimension(new DimensionElement(agg_util::Dimension(_dimName, newDimSize)));
+	  // Union the dimensions of the child sets so they're available
+	  BESDEBUG("ncml", "Merging dimensions from children into aggregated dataset..." << endl);
+	  mergeDimensions();
 
-    // We need at least one dataset, so warn.
-    if (_datasets.empty())
-      {
-        THROW_NCML_PARSE_ERROR(line(), "In joinNew aggregation we cannot have zero datasets specified!");
-      }
+	  // For now we will explicitly create the new dimension for lookups.
+	  unsigned int newDimSize = _datasets.size(); // ASSUMES we find an aggVar in EVERY dataset!
+	  getParentDataset()->addDimension(new DimensionElement(agg_util::Dimension(_dimName, newDimSize)));
 
-    // This is where the output variables go
-    DDS* pAggDDS = getParentDataset()->getDDS();
-    // The first dataset acts as the template for the remainder
-    DDS* pTemplateDDS = _datasets[0]->getDDS();
-    NCML_ASSERT_MSG(pTemplateDDS, "AggregationElement::processJoinNew(): NULL template dataset!");
+	  // We need at least one dataset, so warn.
+	  if (_datasets.empty())
+	  {
+		  THROW_NCML_PARSE_ERROR(line(), "In joinNew aggregation we cannot have zero datasets specified!");
+	  }
 
-    // First, union the template's global attribute table into the output's table.
-    AggregationUtil::unionAttrsInto( &(pAggDDS->get_attr_table()),
-                                          pTemplateDDS->get_attr_table() );
+	  // This is where the output variables go
+	  DDS* pAggDDS = getParentDataset()->getDDS();
+	  // The first dataset acts as the template for the remainder
+	  DDS* pTemplateDDS = _datasets[0]->getDDS();
+	  NCML_ASSERT_MSG(pTemplateDDS, "AggregationElement::processJoinNew() - NULL template dataset!");
 
-    // Then perform the aggregation for each variable...
-    // TODO REFACTOR OPTIMIZE We loop on variables, not the datasets.
-    // It might be more efficient to do all vars for each dataset
-    vector<string>::const_iterator endIt = _aggVars.end();
-    for (vector<string>::const_iterator it = _aggVars.begin(); it != endIt; ++it)
-      {
-        const string& varName = *it;
-        BESDEBUG("ncml", "Aggregating with joinNew on variable=" << varName << "..." << endl);
-        processJoinNewOnAggVar(pAggDDS, varName, *pTemplateDDS);
-      }
+	  // First, union the template's global attribute table into the output's table.
+	  AggregationUtil::unionAttrsInto( &(pAggDDS->get_attr_table()),
+			  pTemplateDDS->get_attr_table() );
 
-    // Union any non-aggregated variables from the template dataset into the aggregated dataset
-    // Because we want the joinExistingaggregation to build up the Coordinate Variables (CVs)
-    // in the order they are declared in the NCML file, we need to track the current position
-    // where the last one was inserted. We can do that with a field in the AggregationUtil
-    // class. Here we reset that field so that it starts at position 0. 12.13.11 jhrg
-    AggregationUtil::resetCVInsertionPosition();
+	  // Then perform the aggregation for each variable...
+	  // TODO REFACTOR OPTIMIZE We loop on variables, not the datasets.
+	  // It might be more efficient to do all vars for each dataset
+	  vector<string>::const_iterator endIt = _aggVars.end();
+	  for (vector<string>::const_iterator it = _aggVars.begin(); it != endIt; ++it)
+	  {
+		  const string& varName = *it;
+		  BESDEBUG("ncml", "AggregationElement::processJoinNew() - Aggregating with joinNew on variable=" << varName << "..." << endl);
+		  processJoinNewOnAggVar(pAggDDS, varName, *pTemplateDDS);
+	  }
 
-    // Union any non-aggregated variables from the template dataset into the aggregated dataset
-    AggregationUtil::unionAllVariablesInto(pAggDDS, *pTemplateDDS, /*add_at_top = */true);
+	  // Union any non-aggregated variables from the template dataset into the aggregated dataset
+	  // Because we want the joinExistingaggregation to build up the Coordinate Variables (CVs)
+	  // in the order they are declared in the NCML file, we need to track the current position
+	  // where the last one was inserted. We can do that with a field in the AggregationUtil
+	  // class. Here we reset that field so that it starts at position 0. 12.13.11 jhrg
+	  AggregationUtil::resetCVInsertionPosition();
+
+	  // Union any non-aggregated variables from the template dataset into the aggregated dataset
+	  AggregationUtil::unionAllVariablesInto(pAggDDS, *pTemplateDDS, /*add_at_top = */true);
   }
 
 #if 0
@@ -934,42 +948,47 @@ namespace ncml_module
 
   void
   AggregationElement::processJoinNewOnAggVar(
-      DDS* pAggDDS,
-      const std::string& varName,
-      const DDS& templateDDS)
+		  DDS* pAggDDS,
+		  const std::string& varName,
+		  const DDS& templateDDS)
   {
-    // Get the params we need to factory the actual aggregation subclass
-    JoinAggParams joinAggParams;
-    getParamsForJoinAggOnVariable(
-        &joinAggParams, // output
-        *pAggDDS,
-        varName,
-        templateDDS);
+	  BESStopWatch sw;
+	  if (BESISDEBUG( TIMING_LOG ))
+		  sw.start("AggregationElement::processJoinNewOnAggVar", "");
 
-    // Factory out the proper subtype
-    BaseType* pAggVarTemplate = joinAggParams._pAggVarTemplate;
-    if (pAggVarTemplate->type() == dods_array_c)
-      {
-        processAggVarJoinNewForArray(*pAggDDS,
-            *(static_cast<Array*>(pAggVarTemplate)),
-            *(joinAggParams._pAggDim),
-            joinAggParams._memberDatasets );
-      }
-    else if (pAggVarTemplate->type() == dods_grid_c)
-      {
-        processAggVarJoinNewForGrid(*pAggDDS,
-            *(static_cast<Grid*>(pAggVarTemplate)),
-            *(joinAggParams._pAggDim),
-            joinAggParams._memberDatasets);
-      }
-    else
-      {
-        THROW_NCML_PARSE_ERROR(line(),
-            "Got an aggregation variable not of type Array or Grid, but of: " +
-            pAggVarTemplate->type_name() +
-            " which we cannot aggregate!");
-          }
-    // Nothing else to do for this var until the call to processParentDataset() is complete.
+
+	  // Get the params we need to factory the actual aggregation subclass
+	  JoinAggParams joinAggParams;
+	  getParamsForJoinAggOnVariable(
+			  &joinAggParams, // output
+			  *pAggDDS,
+			  varName,
+			  templateDDS);
+
+	  // Factory out the proper subtype
+	  BaseType* pAggVarTemplate = joinAggParams._pAggVarTemplate;
+	  if (pAggVarTemplate->type() == dods_array_c)
+	  {
+		  processAggVarJoinNewForArray(*pAggDDS,
+				  *(static_cast<Array*>(pAggVarTemplate)),
+				  *(joinAggParams._pAggDim),
+				  joinAggParams._memberDatasets );
+	  }
+	  else if (pAggVarTemplate->type() == dods_grid_c)
+	  {
+		  processAggVarJoinNewForGrid(*pAggDDS,
+				  *(static_cast<Grid*>(pAggVarTemplate)),
+				  *(joinAggParams._pAggDim),
+				  joinAggParams._memberDatasets);
+	  }
+	  else
+	  {
+		  THROW_NCML_PARSE_ERROR(line(),
+				  "Got an aggregation variable not of type Array or Grid, but of: " +
+				  pAggVarTemplate->type_name() +
+				  " which we cannot aggregate!");
+	  }
+	  // Nothing else to do for this var until the call to processParentDataset() is complete.
   }
 
 
@@ -979,6 +998,11 @@ namespace ncml_module
       const std::string& varName,
       const DDS& templateDDS)
   {
+
+	  BESStopWatch sw;
+	  if (BESISDEBUG( TIMING_LOG ))
+		  sw.start("AggregationElement::processJoinExistingOnAggVar", "");
+
     // Get the params we need to factory the actual aggregation subclass
     JoinAggParams joinAggParams;
     getParamsForJoinAggOnVariable(
@@ -1014,283 +1038,311 @@ namespace ncml_module
 
   void
   AggregationElement::processAggVarJoinNewForArray(DDS& aggDDS,
-      const libdap::Array& arrayTemplate,
-      const agg_util::Dimension& dim,
-      const AMDList& memberDatasets )
+		  const libdap::Array& arrayTemplate,
+		  const agg_util::Dimension& dim,
+		  const AMDList& memberDatasets )
   {
-    // Use the basic array getter to read adn get from top level DDS.
-    auto_ptr<agg_util::ArrayGetterInterface>
-      arrayGetter(new agg_util::TopLevelArrayGetter());
+	  BESStopWatch sw;
+	  if (BESISDEBUG( TIMING_LOG ))
+		  sw.start("AggregationElement::processJoinExistingOnAggVar", "");
 
-    auto_ptr<ArrayAggregateOnOuterDimension> pAggArray(
-        new ArrayAggregateOnOuterDimension(
-              arrayTemplate,
-              memberDatasets,
-              arrayGetter, // will xfer ownership
-              dim)
-      );
 
-    // Make sure we xfer ownership of contained dumb ptr.
-    NCML_ASSERT_MSG(!(arrayGetter.get()), "Expected auto_ptr owner xfer, failed!");
+	  // Use the basic array getter to read adn get from top level DDS.
+	  auto_ptr<agg_util::ArrayGetterInterface>
+	  arrayGetter(new agg_util::TopLevelArrayGetter());
 
-    // This will copy, auto_ptr will clear the prototype.
-    // NOTE: add_var() makes a copy.
-    // OPTIMIZE change to add_var_no_copy when it exists.
-    BESDEBUG("ncml",
-        "Adding new ArrayAggregateOnOuterDimension with name=" <<
-        arrayTemplate.name() <<
-        " to aggregated dataset!" <<
-        endl);
+	  auto_ptr<ArrayAggregateOnOuterDimension> pAggArray(
+			  new ArrayAggregateOnOuterDimension(
+					  arrayTemplate,
+					  memberDatasets,
+					  arrayGetter, // will xfer ownership
+					  dim)
+	  );
 
-    aggDDS.add_var(pAggArray.get());
+	  // Make sure we xfer ownership of contained dumb ptr.
+	  NCML_ASSERT_MSG(!(arrayGetter.get()), "Expected auto_ptr owner xfer, failed!");
+
+	  // This will copy, auto_ptr will clear the prototype.
+	  // NOTE: add_var() makes a copy.
+	  // OPTIMIZE change to add_var_no_copy when it exists.
+	  BESDEBUG("ncml",
+			  "Adding new ArrayAggregateOnOuterDimension with name=" <<
+			  arrayTemplate.name() <<
+			  " to aggregated dataset!" <<
+			  endl);
+
+	  aggDDS.add_var(pAggArray.get());
   }
 
 
   void
   AggregationElement::processAggVarJoinNewForGrid(DDS& aggDDS,
-      const Grid& gridTemplate,
-      const agg_util::Dimension& dim,
-      const AMDList& memberDatasets )
+		  const Grid& gridTemplate,
+		  const agg_util::Dimension& dim,
+		  const AMDList& memberDatasets )
   {
-    auto_ptr<GridAggregateOnOuterDimension> pAggGrid(new GridAggregateOnOuterDimension(
-            gridTemplate,
-            dim,
-            memberDatasets,
-            _parser->getDDSLoader()
-            ));
+	  BESStopWatch sw;
+	  if (BESISDEBUG( TIMING_LOG ))
+		  sw.start("AggregationElement::processAggVarJoinNewForGrid", "");
 
-    // This will copy, auto_ptr will clear the prototype.
-    // OPTIMIZE change to add_var_no_copy when it exists.
-    BESDEBUG("ncml", "Adding new GridAggregateOnOuterDimension with name=" << gridTemplate.name() <<
-        " to aggregated dataset!" << endl);
-    aggDDS.add_var(pAggGrid.get());
+	  auto_ptr<GridAggregateOnOuterDimension> pAggGrid(new GridAggregateOnOuterDimension(
+			  gridTemplate,
+			  dim,
+			  memberDatasets,
+			  _parser->getDDSLoader()
+	  ));
 
-    // processParentDatasetCompleteForJoinNew() will
-    // make sure the correct new map vector gets added
+	  // This will copy, auto_ptr will clear the prototype.
+	  // OPTIMIZE change to add_var_no_copy when it exists.
+	  BESDEBUG("ncml", "Adding new GridAggregateOnOuterDimension with name=" << gridTemplate.name() <<
+			  " to aggregated dataset!" << endl);
+	  aggDDS.add_var(pAggGrid.get());
+
+	  // processParentDatasetCompleteForJoinNew() will
+	  // make sure the correct new map vector gets added
   }
 
   void
   AggregationElement::processAggVarJoinExistingForArray(
-      DDS& aggDDS,
-      const libdap::Array& arrayTemplate,
-      const agg_util::Dimension& dim,
-      const AMDList& memberDatasets )
+		  DDS& aggDDS,
+		  const libdap::Array& arrayTemplate,
+		  const agg_util::Dimension& dim,
+		  const AMDList& memberDatasets )
   {
-    // Use the basic array getter to read adn get from top level DDS.
-    auto_ptr<agg_util::ArrayGetterInterface> arrayGetter(
-        new agg_util::TopLevelArrayGetter() );
 
-    auto_ptr<ArrayJoinExistingAggregation> pAggArray(
-        new ArrayJoinExistingAggregation(
-              arrayTemplate,
-              memberDatasets,
-              arrayGetter, // will xfer ownership
-              dim)
-    );
+	  BESStopWatch sw;
+	  if (BESISDEBUG( TIMING_LOG ))
+		  sw.start("AggregationElement::processAggVarJoinExistingForArray", "");
 
-    // Make sure we xfer ownership of contained dumb ptr.
-    NCML_ASSERT_MSG(!(arrayGetter.get()), "Expected auto_ptr owner xfer, failed!");
+	  // Use the basic array getter to read adn get from top level DDS.
+	  auto_ptr<agg_util::ArrayGetterInterface> arrayGetter(
+			  new agg_util::TopLevelArrayGetter() );
 
-    // This will copy, auto_ptr will clear the prototype.
-    // NOTE: add_var() makes a copy.
-    // OPTIMIZE change to add_var_no_copy when it exists.
-    BESDEBUG("ncml",
-        "Adding new ArrayJoinExistingAggregation with name=" <<
-        arrayTemplate.name() <<
-        " to aggregated dataset!" <<
-        endl);
+	  auto_ptr<ArrayJoinExistingAggregation> pAggArray(
+			  new ArrayJoinExistingAggregation(
+					  arrayTemplate,
+					  memberDatasets,
+					  arrayGetter, // will xfer ownership
+					  dim)
+	  );
 
-    aggDDS.add_var(pAggArray.get());
+	  // Make sure we xfer ownership of contained dumb ptr.
+	  NCML_ASSERT_MSG(!(arrayGetter.get()), "Expected auto_ptr owner xfer, failed!");
+
+	  // This will copy, auto_ptr will clear the prototype.
+	  // NOTE: add_var() makes a copy.
+	  // OPTIMIZE change to add_var_no_copy when it exists.
+	  BESDEBUG("ncml",
+			  "Adding new ArrayJoinExistingAggregation with name=" <<
+			  arrayTemplate.name() <<
+			  " to aggregated dataset!" <<
+			  endl);
+
+	  aggDDS.add_var(pAggArray.get());
   }
 
 
   void
   AggregationElement::processAggVarJoinExistingForGrid(
-      DDS& aggDDS,
-      const Grid& gridTemplate,
-      const agg_util::Dimension& dim,
-      const AMDList& memberDatasets)
+		  DDS& aggDDS,
+		  const Grid& gridTemplate,
+		  const agg_util::Dimension& dim,
+		  const AMDList& memberDatasets)
   {
-    auto_ptr<GridJoinExistingAggregation> pAggGrid(
-        new GridJoinExistingAggregation(
-              gridTemplate,
-              memberDatasets,
-              _parser->getDDSLoader(),
-              dim));
 
-    BESDEBUG("ncml",
-          "Adding new GridJoinExistingAggregation with name=" <<
-          gridTemplate.name() <<
-          " to aggregated dataset!" <<
-          endl);
-    aggDDS.add_var(pAggGrid.get()); // will copy
+	  BESStopWatch sw;
+	  if (BESISDEBUG( TIMING_LOG ))
+		  sw.start("AggregationElement::processAggVarJoinExistingForGrid", "");
+
+	  auto_ptr<GridJoinExistingAggregation> pAggGrid(
+			  new GridJoinExistingAggregation(
+					  gridTemplate,
+					  memberDatasets,
+					  _parser->getDDSLoader(),
+					  dim));
+
+	  BESDEBUG("ncml",
+			  "Adding new GridJoinExistingAggregation with name=" <<
+			  gridTemplate.name() <<
+			  " to aggregated dataset!" <<
+			  endl);
+	  aggDDS.add_var(pAggGrid.get()); // will copy
   }
 
   void
   AggregationElement::processParentDatasetCompleteForJoinNew()
   {
-    NetcdfElement* pParentDataset = getParentDataset();
-    VALID_PTR(pParentDataset);
-    DDS* pParentDDS = pParentDataset->getDDS();
-    VALID_PTR(pParentDDS);
+	  BESStopWatch sw;
+	  if (BESISDEBUG( TIMING_LOG ))
+		  sw.start("AggregationElement::processParentDatasetCompleteForJoinNew", "");
 
-    const DimensionElement* pDim = getParentDataset()->getDimensionInLocalScope(_dimName);
-    NCML_ASSERT_MSG(pDim, "  AggregationElement::processParentDatasetCompleteForJoinNew(): "
-        " didn't find a DimensionElement with the joinNew dimName=" + _dimName );
-    const agg_util::Dimension& dim = pDim->getDimension();
+	  NetcdfElement* pParentDataset = getParentDataset();
+	  VALID_PTR(pParentDataset);
+	  DDS* pParentDDS = pParentDataset->getDDS();
+	  VALID_PTR(pParentDDS);
 
-    // See if there's an explicit or placeholder c.v. for this dimension name
-    BaseType* pBT = AggregationUtil::getVariableNoRecurse(*pParentDDS, dim.name);
-    Array* pCV = 0; // this will be a ptr to the actual (new or existing) c.v. in the *pParentDDS.
 
-    // If name totally unused, we need to create a new c.v. and add it.
-    if (!pBT)
-      {
-        pCV = createAndAddCoordinateVariableForNewDimension(*pParentDDS, dim);
-        NCML_ASSERT_MSG(pCV, "processParentDatasetCompleteForJoinNew(): "
-            "failed to create a new coordinate variable for dim=" + dim.name);
-      }
-    else // name exists: either it's explicit or deferred.
-      {
-        // See if the var we found with the dimension name is
-        // in the deferred variable list for the parent dataset:
-        VariableElement* pVarElt = pParentDataset->findVariableElementForLibdapVar(pBT);
-        // If not, then we expect explicit values so just validate it's a proper c.v. for
-        // the aggregation (the dim) and set pCV to it if so.
-        if (!pVarElt)
-          {
-            // will throw if not valid since we send true.
-            pCV = ensureVariableIsProperNewCoordinateVariable(pBT, dim, true);
-            VALID_PTR(pCV);
-          }
-        else // it was deferred, need to do some special work...
-          {
-            pCV = processDeferredCoordinateVariable(pBT, dim);
-            VALID_PTR(pCV);
-          }
-      }
+	  const DimensionElement* pDim = getParentDataset()->getDimensionInLocalScope(_dimName);
+	  NCML_ASSERT_MSG(pDim, "  AggregationElement::processParentDatasetCompleteForJoinNew(): "
+			  " didn't find a DimensionElement with the joinNew dimName=" + _dimName );
+	  const agg_util::Dimension& dim = pDim->getDimension();
 
-    // OK, either pCV is valid or we've unwound out by this point.
-    // If a coordinate axis type was specified, we need to add it now.
-    //
-    // This fiddles with the attribute for the CV. jhrg 10/17/11
-    if (!_coordinateAxisType.empty())
-      {
-        addCoordinateAxisType(*pCV, _coordinateAxisType);
-      }
+	  // See if there's an explicit or placeholder c.v. for this dimension name
+	  BaseType* pBT = AggregationUtil::getVariableNoRecurse(*pParentDDS, dim.name);
+	  Array* pCV = 0; // this will be a ptr to the actual (new or existing) c.v. in the *pParentDDS.
 
-    // For each aggVar:
-    //    If it's a Grid, add the coordinate variable as a new map vector.
-    //    If it's an Array, do nothing -- we already added the CV as a sibling to the aggvar
-    AggVarIter it;
-    AggVarIter endIt = endAggVarIter();
-    for (it = beginAggVarIter(); it != endIt; ++it)
-      {
-        const string& aggVar = *it;
-        BaseType* pBT = AggregationUtil::getVariableNoRecurse(*pParentDDS, aggVar);
-        GridAggregateOnOuterDimension* pGrid = dynamic_cast<GridAggregateOnOuterDimension*>(pBT);
-        if (pGrid)
-          {
-            // Add the given map to the Grid as a copy
-            pGrid->prepend_map(pCV, true);
-          }
-      }
+	  // If name totally unused, we need to create a new c.v. and add it.
+	  if (!pBT)
+	  {
+		  pCV = createAndAddCoordinateVariableForNewDimension(*pParentDDS, dim);
+		  NCML_ASSERT_MSG(pCV, "processParentDatasetCompleteForJoinNew(): "
+				  "failed to create a new coordinate variable for dim=" + dim.name);
+	  }
+	  else // name exists: either it's explicit or deferred.
+	  {
+		  // See if the var we found with the dimension name is
+		  // in the deferred variable list for the parent dataset:
+		  VariableElement* pVarElt = pParentDataset->findVariableElementForLibdapVar(pBT);
+		  // If not, then we expect explicit values so just validate it's a proper c.v. for
+		  // the aggregation (the dim) and set pCV to it if so.
+		  if (!pVarElt)
+		  {
+			  // will throw if not valid since we send true.
+			  pCV = ensureVariableIsProperNewCoordinateVariable(pBT, dim, true);
+			  VALID_PTR(pCV);
+		  }
+		  else // it was deferred, need to do some special work...
+		  {
+			  pCV = processDeferredCoordinateVariable(pBT, dim);
+			  VALID_PTR(pCV);
+		  }
+	  }
+
+	  // OK, either pCV is valid or we've unwound out by this point.
+	  // If a coordinate axis type was specified, we need to add it now.
+	  //
+	  // This fiddles with the attribute for the CV. jhrg 10/17/11
+	  if (!_coordinateAxisType.empty())
+	  {
+		  addCoordinateAxisType(*pCV, _coordinateAxisType);
+	  }
+
+	  // For each aggVar:
+	  //    If it's a Grid, add the coordinate variable as a new map vector.
+	  //    If it's an Array, do nothing -- we already added the CV as a sibling to the aggvar
+	  AggVarIter it;
+	  AggVarIter endIt = endAggVarIter();
+	  for (it = beginAggVarIter(); it != endIt; ++it)
+	  {
+		  const string& aggVar = *it;
+		  BaseType* pBT = AggregationUtil::getVariableNoRecurse(*pParentDDS, aggVar);
+		  GridAggregateOnOuterDimension* pGrid = dynamic_cast<GridAggregateOnOuterDimension*>(pBT);
+		  if (pGrid)
+		  {
+			  // Add the given map to the Grid as a copy
+			  pGrid->prepend_map(pCV, true);
+		  }
+	  }
   }
 
   void
   AggregationElement::processParentDatasetCompleteForJoinExisting()
   {
-    NetcdfElement* pParentDataset = getParentDataset();
-    VALID_PTR(pParentDataset);
-    DDS* pAggDDS = pParentDataset->getDDS();
-    VALID_PTR(pAggDDS);
+	  BESStopWatch sw;
+	  if (BESISDEBUG( TIMING_LOG ))
+		  sw.start("AggregationElement::processParentDatasetCompleteForJoinExisting", "");
 
-    const DimensionElement* pDim = getParentDataset()->getDimensionInLocalScope(_dimName);
-    NCML_ASSERT_MSG(pDim,
-        " Didn't find a DimensionElement with the joinExisting dimName=" + _dimName );
-    const agg_util::Dimension& dim = pDim->getDimension();
+	  NetcdfElement* pParentDataset = getParentDataset();
+	  VALID_PTR(pParentDataset);
+	  DDS* pAggDDS = pParentDataset->getDDS();
+	  VALID_PTR(pAggDDS);
 
-    // See if there's an explicit or placeholder c.v. for this dimension name
-    BaseType* pDimNameVar = AggregationUtil::getVariableNoRecurse(*pAggDDS, dim.name);
+	  const DimensionElement* pDim = getParentDataset()->getDimensionInLocalScope(_dimName);
+	  NCML_ASSERT_MSG(pDim,
+			  " Didn't find a DimensionElement with the joinExisting dimName=" + _dimName );
+	  const agg_util::Dimension& dim = pDim->getDimension();
 
-    bool placeholderExists = false;
-    Array* pCV = 0; // this will be a ptr to the actual (new or existing) c.v. in the *pParentDDS.
-    // If the c.v. exists, then process it further.
-    if (pDimNameVar)
-      {
-        // See if the var we found with the dimension name is
-        // in the deferred variable list for the parent dataset:
-        VariableElement* pVarElt = pParentDataset->findVariableElementForLibdapVar(pDimNameVar);
-        // If not, then we expect explicit values so just validate it's a proper c.v. for
-        // the aggregation (the dim) and set pCV to it if so.
-        if (!pVarElt)
-          {
-            // will throw if not valid since we send true.
-            pCV = ensureVariableIsProperNewCoordinateVariable(pDimNameVar, dim, true);
-            VALID_PTR(pCV);
-            placeholderExists = false;
-          }
-        else // it was deferred, need to do some special work below...
-          {
-            //pCV = processDeferredCoordinateVariable(pDimNameVar, dim);
-            placeholderExists = true;
-          }
-      }
+	  // See if there's an explicit or placeholder c.v. for this dimension name
+	  BaseType* pDimNameVar = AggregationUtil::getVariableNoRecurse(*pAggDDS, dim.name);
 
-    // For the scope of the next loop, this will be filled
-    // with a new aggregated map variable when we fidnt he first Grid
-    // and then pCV will refer to it until the fucntion end.
-    // If created, it will be used as the map vector for all Grid's.
-    auto_ptr<ArrayJoinExistingAggregation> pNewMap(0);
+	  bool placeholderExists = false;
+	  Array* pCV = 0; // this will be a ptr to the actual (new or existing) c.v. in the *pParentDDS.
+	  // If the c.v. exists, then process it further.
+	  if (pDimNameVar)
+	  {
+		  // See if the var we found with the dimension name is
+		  // in the deferred variable list for the parent dataset:
+		  VariableElement* pVarElt = pParentDataset->findVariableElementForLibdapVar(pDimNameVar);
+		  // If not, then we expect explicit values so just validate it's a proper c.v. for
+		  // the aggregation (the dim) and set pCV to it if so.
+		  if (!pVarElt)
+		  {
+			  // will throw if not valid since we send true.
+			  pCV = ensureVariableIsProperNewCoordinateVariable(pDimNameVar, dim, true);
+			  VALID_PTR(pCV);
+			  placeholderExists = false;
+		  }
+		  else // it was deferred, need to do some special work below...
+		  {
+			  //pCV = processDeferredCoordinateVariable(pDimNameVar, dim);
+			  placeholderExists = true;
+		  }
+	  }
 
-    // For each aggVar:
-    //    If it's a Grid, add the coordinate variable as a new map vector
-    //                    since we left it out in the actual Grid until aggregated.
-    //    If it's an Array, do nothing
-    AggVarIter it;
-    AggVarIter endIt = endAggVarIter();
-    for (it = beginAggVarIter(); it != endIt; ++it)
-      {
-        const string& aggVar = *it;
-        BaseType* pAggVar = AggregationUtil::getVariableNoRecurse(*pAggDDS, aggVar);
+	  // For the scope of the next loop, this will be filled
+	  // with a new aggregated map variable when we fidnt he first Grid
+	  // and then pCV will refer to it until the fucntion end.
+	  // If created, it will be used as the map vector for all Grid's.
+	  auto_ptr<ArrayJoinExistingAggregation> pNewMap(0);
 
-        // HACK TODO clean this downcast later when we refactor this file.
-        GridJoinExistingAggregation* pGrid = dynamic_cast<GridJoinExistingAggregation*>(pAggVar);
-        if (pGrid)
-          {
-            // If we don't find it, but we're the first Grid, then assume it's in the Grid maps
-            // and create it.  Will be reused by other Grid's.
-            // We also do this if it was a placeholder since we need to replace it!
-            if ( !pCV || placeholderExists )
-              {
-                pNewMap =
-                    pGrid->makeAggregatedOuterMapVector();
-                VALID_PTR(pNewMap.get());
+	  // For each aggVar:
+	  //    If it's a Grid, add the coordinate variable as a new map vector
+	  //                    since we left it out in the actual Grid until aggregated.
+	  //    If it's an Array, do nothing
+	  AggVarIter it;
+	  AggVarIter endIt = endAggVarIter();
+	  for (it = beginAggVarIter(); it != endIt; ++it)
+	  {
+		  const string& aggVar = *it;
+		  BaseType* pAggVar = AggregationUtil::getVariableNoRecurse(*pAggDDS, aggVar);
 
-                // If there was a placeholder, we need to
-                // grab it's metadata as a changeset and replace
-                // the variable in the DDS with the new one.
-                if (placeholderExists)
-                  {
-                    processPlaceholderCoordinateVariableForJoinExisting(*pDimNameVar,
-                        pNewMap.get());
-                  }
+		  // HACK TODO clean this downcast later when we refactor this file.
+		  GridJoinExistingAggregation* pGrid = dynamic_cast<GridJoinExistingAggregation*>(pAggVar);
+		  if (pGrid)
+		  {
+			  // If we don't find it, but we're the first Grid, then assume it's in the Grid maps
+			  // and create it.  Will be reused by other Grid's.
+			  // We also do this if it was a placeholder since we need to replace it!
+			  if ( !pCV || placeholderExists )
+			  {
+				  pNewMap =
+						  pGrid->makeAggregatedOuterMapVector();
+				  VALID_PTR(pNewMap.get());
 
-                // this will make a copy, so the auto_ptr is ok.
-                AggregationUtil::addOrReplaceVariableForName(pAggDDS, *(pNewMap.get()) );
+				  // If there was a placeholder, we need to
+				  // grab it's metadata as a changeset and replace
+				  // the variable in the DDS with the new one.
+				  if (placeholderExists)
+				  {
+					  processPlaceholderCoordinateVariableForJoinExisting(*pDimNameVar,
+							  pNewMap.get());
+				  }
 
-                // Use the new one as the coordinate variable for the maps below
-                pCV = pNewMap.get();
-              }
+				  // this will make a copy, so the auto_ptr is ok.
+				  AggregationUtil::addOrReplaceVariableForName(pAggDDS, *(pNewMap.get()) );
 
-            // It MUST exist for a Grid since we have to add it for completeness.
-            NCML_ASSERT_MSG(pCV,
-                "Expected a coordinate variable since a Grid exists... what happened?");
+				  // Use the new one as the coordinate variable for the maps below
+				  pCV = pNewMap.get();
+			  }
 
-            // Add the given map to the Grid as a copy
-            pGrid->prepend_map(pCV, true);
-          }
-      }
+			  // It MUST exist for a Grid since we have to add it for completeness.
+			  NCML_ASSERT_MSG(pCV,
+					  "Expected a coordinate variable since a Grid exists... what happened?");
+
+			  // Add the given map to the Grid as a copy
+			  pGrid->prepend_map(pCV, true);
+		  }
+	  }
   }
 
   void

@@ -152,8 +152,10 @@ static int toXMLAttributeMapNoNamespaces(XMLAttributeMap& attrMap, const xmlChar
 static void ncmlStartDocument(void* userData)
 {
   BEGIN_SAFE_PARSER_BLOCK(userData);
+  BESDEBUG("ncml", "SaxParserWrapper::ncmlStartDocument() - BEGIN"<< endl);
 
   parser.onStartDocument();
+  BESDEBUG("ncml", "SaxParserWrapper::ncmlStartDocument() - END"<< endl);
 
   END_SAFE_PARSER_BLOCK;
 }
@@ -161,8 +163,11 @@ static void ncmlStartDocument(void* userData)
 static void ncmlEndDocument(void* userData)
 {
   BEGIN_SAFE_PARSER_BLOCK(userData);
+  BESDEBUG("ncml", "SaxParserWrapper::ncmlEndDocument() -  BEGIN"<< endl);
 
   parser.onEndDocument();
+
+  BESDEBUG("ncml", "SaxParserWrapper::ncmlEndDocument() -  END"<< endl);
 
   END_SAFE_PARSER_BLOCK;
 }
@@ -214,6 +219,8 @@ ncmlSax2StartElementNs(void *userData,
   // BESDEBUG("ncml", "ncmlStartElement called for:<" << name << ">" << endl);
   BEGIN_SAFE_PARSER_BLOCK(userData);
 
+  BESDEBUG("ncml", "SaxParserWrapper::ncmlSax2StartElementNs() - localname:" << localname << endl);
+
   XMLAttributeMap attrMap;
   toXMLAttributeMapWithNamespaces(attrMap, attributes, nb_attributes);
 
@@ -244,6 +251,8 @@ ncmlSax2EndElementNs(void *userData,
 {
   BEGIN_SAFE_PARSER_BLOCK(userData);
 
+  BESDEBUG("ncml", "SaxParserWrapper::ncmlSax2EndElementNs() - localname:" << localname << endl);
+
   string localnameString = XMLUtil::xmlCharToString(localname);
   string prefixString = XMLUtil::xmlCharToString(prefix);
   string uriString = XMLUtil::xmlCharToString(URI);
@@ -257,7 +266,7 @@ static void ncmlCharacters(void* userData, const xmlChar* content, int len)
 {
   BEGIN_SAFE_PARSER_BLOCK(userData);
 
-  BESDEBUG("ncml", "ncmlCharacters: len:" << len << ", content: " << content << endl);
+  BESDEBUG("ncml", "SaxParserWrapper::ncmlCharacters() - len:" << len << ", content: " << content << endl);
 
   // len is since the content string might not be null terminated,
   // so we have to build out own and pass it up special....
@@ -278,6 +287,8 @@ static void ncmlCharacters(void* userData, const xmlChar* content, int len)
 static void ncmlWarning(void* userData, const char* msg, ...)
 {
   BEGIN_SAFE_PARSER_BLOCK(userData);
+  BESDEBUG("ncml", "SaxParserWrapper::ncmlWarning() - msg:" << msg << endl);
+
   char buffer[1024];
   va_list(args);
   va_start(args, msg);
@@ -291,6 +302,7 @@ static void ncmlWarning(void* userData, const char* msg, ...)
 static void ncmlFatalError(void* userData, const char* msg, ...)
 {
   BEGIN_SAFE_PARSER_BLOCK(userData);
+  BESDEBUG("ncml", "SaxParserWrapper::ncmlFatalError() - msg:" << msg << endl);
   char buffer[1024];
   va_list(args);
   va_start(args, msg);
