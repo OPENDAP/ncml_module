@@ -29,6 +29,8 @@
 
 #include "ArrayAggregationBase.h"
 #include "NCMLDebug.h"
+#include "BESDebug.h"
+#include "BESStopWatch.h"
 
 // BES debug channel we output to
 static const string DEBUG_CHANNEL("agg_util");
@@ -92,6 +94,10 @@ namespace agg_util
    bool
    ArrayAggregationBase::read()
    {
+	  BESStopWatch sw;
+	  if (BESISDEBUG( TIMING_LOG ))
+		  sw.start("ArrayAggregationBase::read", "");
+
      BESDEBUG_FUNC(DEBUG_CHANNEL, " function entered..." << endl);
 
      // Early exit if already done, avoid doing it twice!

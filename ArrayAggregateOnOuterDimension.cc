@@ -35,6 +35,8 @@
 // only NCML backlinks we want in this agg_util class.
 #include "NCMLDebug.h" // BESDEBUG and throw macros
 #include "NCMLUtil.h" // SAFE_DELETE, NCMLUtil::getVariableNoRecurse
+#include "BESDebug.h"
+#include "BESStopWatch.h"
 
 // BES debug channel we output to
 static const string DEBUG_CHANNEL("agg_util");
@@ -133,6 +135,10 @@ namespace agg_util
   void
   ArrayAggregateOnOuterDimension::readConstrainedGranuleArraysAndAggregateDataHook()
   {
+	  BESStopWatch sw;
+	  if (BESISDEBUG( TIMING_LOG ))
+		  sw.start("ArrayAggregateOnOuterDimension::readConstrainedGranuleArraysAndAggregateDataHook", "");
+
     // outer one is the first in iteration
      const Array::dimension& outerDim = *(dim_begin());
      BESDEBUG(DEBUG_CHANNEL,

@@ -33,6 +33,8 @@
 #include "AggregationUtil.h" // agg_util
 #include "NCMLDebug.h"
 #include <sstream>
+#include "BESDebug.h"
+#include "BESStopWatch.h"
 
 static const string DEBUG_CHANNEL(NCML_MODULE_DBG_CHANNEL_2);
 static const bool PRINT_CONSTRAINTS = true;
@@ -145,6 +147,10 @@ namespace agg_util
   void
   ArrayJoinExistingAggregation::readConstrainedGranuleArraysAndAggregateDataHook()
   {
+	  BESStopWatch sw;
+	  if (BESISDEBUG( TIMING_LOG ))
+		  sw.start("ArrayJoinExistingAggregation::readConstrainedGranuleArraysAndAggregateDataHook", "");
+
     // outer one is the first in iteration
     const Array::dimension& outerDim = *(dim_begin());
     BESDEBUG("ncml", "Aggregating datasets array with outer dimension constraints: " <<

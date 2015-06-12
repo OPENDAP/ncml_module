@@ -33,6 +33,8 @@
 #include "DDS.h" // libdap
 #include "NCMLDebug.h" // ncml_module
 #include "NCMLUtil.h" // ncml_module
+#include "BESDebug.h"
+#include "BESStopWatch.h"
 
 namespace agg_util
 {
@@ -77,16 +79,20 @@ namespace agg_util
   const libdap::DataDDS*
   AggMemberDatasetUsingLocationRef::getDataDDS()
   {
-    if (!_pDataResponse)
-      {
-        loadDataDDS();
-      }
-    DataDDS* pDDSRet = 0;
-    if (_pDataResponse)
-      {
-        pDDSRet = _pDataResponse->get_dds();
-      }
-    return pDDSRet;
+	  BESStopWatch sw;
+	  if (BESISDEBUG( TIMING_LOG ))
+		  sw.start("AggMemberDatasetUsingLocationRef::getDataDDS", "");
+
+	  if (!_pDataResponse)
+	  {
+		  loadDataDDS();
+	  }
+	  DataDDS* pDDSRet = 0;
+	  if (_pDataResponse)
+	  {
+		  pDDSRet = _pDataResponse->get_dds();
+	  }
+	  return pDDSRet;
   }
 
   /////////////////////////////// Private Helpers ////////////////////////////////////

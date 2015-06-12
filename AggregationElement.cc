@@ -181,9 +181,11 @@ namespace ncml_module
   void
   AggregationElement::handleBegin()
   {
+#if 0
 	  BESStopWatch sw;
 	  if (BESISDEBUG( TIMING_LOG ))
 		  sw.start("AggregationElement::handleBegin", "");
+#endif
 
     NCML_ASSERT(!getParentDataset());
 
@@ -225,10 +227,11 @@ namespace ncml_module
   void
   AggregationElement::handleEnd()
   {
+#if 1
 	  BESStopWatch sw;
 	  if (BESISDEBUG( TIMING_LOG ))
 		  sw.start("AggregationElement::handleEnd", "");
-
+#endif
 	  // Handle the actual processing!!
 	  BESDEBUG("ncml", "AggregationElement::handleEnd() - Processing the aggregation!!" << endl);
 

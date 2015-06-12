@@ -152,10 +152,10 @@ static int toXMLAttributeMapNoNamespaces(XMLAttributeMap& attrMap, const xmlChar
 static void ncmlStartDocument(void* userData)
 {
   BEGIN_SAFE_PARSER_BLOCK(userData);
-  BESDEBUG("ncml", "SaxParserWrapper::ncmlStartDocument() - BEGIN"<< endl);
+  // BESDEBUG("ncml", "SaxParserWrapper::ncmlStartDocument() - BEGIN"<< endl);
 
   parser.onStartDocument();
-  BESDEBUG("ncml", "SaxParserWrapper::ncmlStartDocument() - END"<< endl);
+  // BESDEBUG("ncml", "SaxParserWrapper::ncmlStartDocument() - END"<< endl);
 
   END_SAFE_PARSER_BLOCK;
 }
@@ -163,11 +163,11 @@ static void ncmlStartDocument(void* userData)
 static void ncmlEndDocument(void* userData)
 {
   BEGIN_SAFE_PARSER_BLOCK(userData);
-  BESDEBUG("ncml", "SaxParserWrapper::ncmlEndDocument() -  BEGIN"<< endl);
+  // BESDEBUG("ncml", "SaxParserWrapper::ncmlEndDocument() -  BEGIN"<< endl);
 
   parser.onEndDocument();
 
-  BESDEBUG("ncml", "SaxParserWrapper::ncmlEndDocument() -  END"<< endl);
+  // BESDEBUG("ncml", "SaxParserWrapper::ncmlEndDocument() -  END"<< endl);
 
   END_SAFE_PARSER_BLOCK;
 }
@@ -251,7 +251,7 @@ ncmlSax2EndElementNs(void *userData,
 {
   BEGIN_SAFE_PARSER_BLOCK(userData);
 
-  BESDEBUG("ncml", "SaxParserWrapper::ncmlSax2EndElementNs() - localname:" << localname << endl);
+  // BESDEBUG("ncml", "SaxParserWrapper::ncmlSax2EndElementNs() - localname:" << localname << endl);
 
   string localnameString = XMLUtil::xmlCharToString(localname);
   string prefixString = XMLUtil::xmlCharToString(prefix);
@@ -266,7 +266,7 @@ static void ncmlCharacters(void* userData, const xmlChar* content, int len)
 {
   BEGIN_SAFE_PARSER_BLOCK(userData);
 
-  BESDEBUG("ncml", "SaxParserWrapper::ncmlCharacters() - len:" << len << ", content: " << content << endl);
+  // BESDEBUG("ncml", "SaxParserWrapper::ncmlCharacters() - len:" << len << ", content: " << content << endl);
 
   // len is since the content string might not be null terminated,
   // so we have to build out own and pass it up special....
