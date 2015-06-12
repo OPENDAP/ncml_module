@@ -100,6 +100,7 @@ namespace agg_util
 		  sw.start("AggMemberDatasetUsingLocationRef::loadDataDDS", "");
 
 
+
     // We cannot load an empty location, so avoid the exception later.
     if (getLocation().empty())
       {
