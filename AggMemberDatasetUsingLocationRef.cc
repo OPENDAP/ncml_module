@@ -79,10 +79,6 @@ namespace agg_util
   const libdap::DataDDS*
   AggMemberDatasetUsingLocationRef::getDataDDS()
   {
-	  BESStopWatch sw;
-	  if (BESISDEBUG( TIMING_LOG ))
-		  sw.start("AggMemberDatasetUsingLocationRef::getDataDDS", "");
-
 	  if (!_pDataResponse)
 	  {
 		  loadDataDDS();
@@ -99,6 +95,11 @@ namespace agg_util
   void
   AggMemberDatasetUsingLocationRef::loadDataDDS()
   {
+	  BESStopWatch sw;
+	  if (BESISDEBUG( TIMING_LOG ))
+		  sw.start("AggMemberDatasetUsingLocationRef::loadDataDDS", "");
+
+
     // We cannot load an empty location, so avoid the exception later.
     if (getLocation().empty())
       {
