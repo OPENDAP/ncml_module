@@ -78,9 +78,6 @@ private:
   // Remember the store so we can pull the location out in restoreDHI on exception as well.
   BESContainerStorage* _store;
 
-  // Remember the container so we can free this too. jhrg 6/30/15
-  BESContainer *_container;
-
   // DHI state we hijack, for putting back on exception.
   std::string _containerSymbol;
   std::string _origAction;

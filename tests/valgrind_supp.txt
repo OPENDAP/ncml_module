@@ -1,5 +1,3 @@
-
-## OSX issues
 {
    CFInitialize_1
    Memcheck:Leak
@@ -62,8 +60,6 @@
    fun:_NSInitializePlatform
 }
 
-## libxml2 issues
-
 {
    SAX_1
    Memcheck:Leak
@@ -76,26 +72,6 @@
    fun:xmlCreateMemoryParserCtxt
    ...
 }
-
-{
-   libxml_mutex_1
-   Memcheck:Leak
-   match-leak-kinds: definite
-   fun:malloc
-   fun:xmlNewRMutex
-   ...
-}
-
-{
-   libxml_mutex_2
-   Memcheck:Leak
-   match-leak-kinds: definite
-   fun:malloc
-   fun:xmlNewMutex
-   ...
-}
-
-## BES isses
 
 {
    BESLog_the_log
@@ -148,58 +124,3 @@
    fun:_ZN10BESBaseApp4mainEiPPc
    ...
 }
-
-{
-   StandAloneClient::executeCommands
-   Memcheck:Leak
-   match-leak-kinds: definite
-   fun:malloc
-   fun:_Znwm
-   fun:_ZN17BESContextManager10TheManagerEv
-   fun:_ZN28BESSetContextResponseHandler7executeER23BESDataHandlerInterface
-   fun:_ZN12BESInterface25execute_data_request_planEv
-   fun:_ZN17BESBasicInterface25execute_data_request_planEv
-   fun:_ZN15BESXMLInterface25execute_data_request_planEv
-   fun:_ZN12BESInterface15execute_requestERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEE
-   fun:_ZN17BESBasicInterface15execute_requestERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEE
-   fun:_ZN15BESXMLInterface15execute_requestERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEE
-   fun:_ZN16StandAloneClient14executeCommandERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEEi
-   fun:_ZN16StandAloneClient15executeCommandsERNSt3__114basic_ifstreamIcNS0_11char_traitsIcEEEEi
-}
-
-{
-   BESInterface::execute_data_request_plan
-   Memcheck:Leak
-   match-leak-kinds: definite
-   fun:malloc
-   fun:xmlInitParserCtxt
-   fun:xmlNewParserCtxt
-   fun:xmlCreateURLParserCtxt
-   fun:_ZN11ncml_module16SaxParserWrapper11setupParserERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEE
-   fun:_ZN11ncml_module16SaxParserWrapper5parseERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEE
-   fun:_ZN11ncml_module10NCMLParser9parseIntoERKNSt3__112basic_stringIcNS1_11char_traitsIcEENS1_9allocatorIcEEEEN8agg_util9DDSLoader12ResponseTypeEP14BESDapResponse
-   fun:_ZN11ncml_module18NCMLRequestHandler15ncml_build_dataER23BESDataHandlerInterface
-   fun:_ZN21BESRequestHandlerList15execute_currentER23BESDataHandlerInterface
-   fun:_ZN21BESRequestHandlerList12execute_eachER23BESDataHandlerInterface
-   fun:_ZN22BESDataResponseHandler7executeER23BESDataHandlerInterface
-   fun:_ZN12BESInterface25execute_data_request_planEv
-}
-
-{
-   BESBasicInterface::execute_request
-   Memcheck:Leak
-   match-leak-kinds: definite
-   fun:malloc
-   fun:_Znwm
-   fun:_ZN21BESUncompressManager310TheManagerEv
-   fun:_ZN16BESFileContainer6accessEv
-   fun:_ZN21BESRequestHandlerList15execute_currentER23BESDataHandlerInterface
-   fun:_ZN21BESRequestHandlerList12execute_eachER23BESDataHandlerInterface
-   fun:_ZN22BESDataResponseHandler7executeER23BESDataHandlerInterface
-   fun:_ZN12BESInterface25execute_data_request_planEv
-   fun:_ZN17BESBasicInterface25execute_data_request_planEv
-   fun:_ZN15BESXMLInterface25execute_data_request_planEv
-   fun:_ZN12BESInterface15execute_requestERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEE
-   fun:_ZN17BESBasicInterface15execute_requestERKNSt3__112basic_stringIcNS0_11char_traitsIcEENS0_9allocatorIcEEEE
-}
-
