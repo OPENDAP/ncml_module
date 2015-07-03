@@ -188,7 +188,7 @@ void DDSLoader::loadInto(const std::string& location, ResponseType type, BESDapR
         BESDEBUG("ncml", "Before BESRequestHandlerList::TheList()->execute_current" << endl);
         BESDEBUG("ncml", "Handler name: " << BESRequestHandlerList::TheList()->get_handler_names() << endl);
 
-        BESRequestHandlerList::TheList()->execute_each(_dhi);
+        BESRequestHandlerList::TheList()->execute_current(_dhi);
 
         BESDEBUG("ncml", "After BESRequestHandlerList::TheList()->execute_current" << endl);
     }
