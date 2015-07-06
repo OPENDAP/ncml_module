@@ -133,6 +133,9 @@ void NCMLModule::terminate(const string &modname)
 	BESDEBUG(modname, "    removing " << NCML_CATALOG << " catalog" << endl);
 	BESCatalogList::TheCatalogList()->deref_catalog(NCML_CATALOG);
 
+	// Cleanup libxml2. jhrg 7/6/15
+	xmlCleanupParser();
+
 	// TERM_END
 	BESDEBUG(modname, "Done Cleaning NCML module " << modname << endl);
 }
