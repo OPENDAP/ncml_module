@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- This test and data is taken from the aggregation tutorial page at 
-http://www.unidata.ucar.edu/software/netcdf/ncml/v2.2/Aggregation.html -->
+http://www.unidata.ucar.edu/software/thredds/current/netcdf-java/ncml/Aggregation.html -->
 <netcdf title="Test of joinNew aggregation using the scan element and dateFormatMark">
   
   <aggregation type="joinNew" dimName="fileTime">
