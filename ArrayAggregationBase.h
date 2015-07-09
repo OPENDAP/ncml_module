@@ -34,9 +34,11 @@
 #include <Array.h> // libdap
 #include <memory> // std
 
-class libdap::ConstraintEvaluator;
-class libdap::DDS;
-class libdap::Marshaller;
+namespace libdap {
+    class ConstraintEvaluator;
+    class DDS;
+    class Marshaller;
+}
 
 namespace agg_util
 {
