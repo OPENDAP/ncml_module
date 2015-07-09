@@ -34,6 +34,10 @@
 #include <Array.h> // libdap
 #include <memory> // std
 
+class libdap::ConstraintEvaluator;
+class libdap::DDS;
+class libdap::Marshaller;
+
 namespace agg_util
 {
   /**
@@ -81,6 +85,8 @@ namespace agg_util
      * @return whether it works
      */
     virtual bool read();
+
+    virtual bool serialize(libdap::ConstraintEvaluator &ce, libdap::DDS &dds,  libdap::Marshaller &marshy, bool ce_eval);
 
     /**
     * Get the list of AggMemberDataset's that comprise this aggregation
