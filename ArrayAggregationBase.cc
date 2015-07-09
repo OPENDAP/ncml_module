@@ -31,6 +31,8 @@
 #include "NCMLDebug.h"
 #include "BESDebug.h"
 #include "BESStopWatch.h"
+#include "Marshaller.h"
+#include "ConstraintEvaluator.h"
 
 // BES debug channel we output to
 static const string DEBUG_CHANNEL("agg_util");
@@ -89,6 +91,19 @@ namespace agg_util
   {
     return new ArrayAggregationBase(*this);
   }
+
+  /* virtual */
+   bool
+   ArrayAggregationBase::serialize(libdap::ConstraintEvaluator &ce, libdap::DDS &dds,  libdap::Marshaller &marshy, bool ce_eval){
+		  BESStopWatch sw;
+		  if (BESISDEBUG( TIMING_LOG ))
+			  sw.start("ArrayAggregationBase::serialize", "");
+
+	   libdap::Array::serialize(ce,dds,marshy,ce_eval);
+   }
+
+
+
 
   /* virtual */
    bool

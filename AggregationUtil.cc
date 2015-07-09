@@ -40,6 +40,8 @@
 #include <DataDDS.h>
 #include <DDS.h>
 #include <Grid.h>
+#include "BESDebug.h"
+#include "BESStopWatch.h"
 
 // Outside includes (MINIMIZE THESE!)
 #include "NCMLDebug.h" // This the ONLY dependency on NCML Module I want in this class since the macros there are general it's ok...
@@ -98,6 +100,11 @@ namespace agg_util
       const std::string& debugChannel
       ) const
   {
+
+	  BESStopWatch sw;
+	  if (BESISDEBUG( TIMING_LOG ))
+		  sw.start("TopLevelArrayGetter::readAndGetArray", "");
+
     // First, look up the BaseType
     BaseType* pBT = AggregationUtil::getVariableNoRecurse(dds, name);
 
@@ -173,6 +180,10 @@ namespace agg_util
          const std::string& debugChannel
          ) const
   {
+	  BESStopWatch sw;
+	  if (BESISDEBUG( TIMING_LOG ))
+		  sw.start("TopLevelGridDataArrayGetter::readAndGetArray", "");
+
     // First, look up the BaseType
     BaseType* pBT = AggregationUtil::getVariableNoRecurse(dds, name);
 
@@ -274,6 +285,11 @@ namespace agg_util
                const std::string& debugChannel
                ) const
   {
+
+	  BESStopWatch sw;
+	  if (BESISDEBUG( TIMING_LOG ))
+		  sw.start("TopLevelGridMapArrayGetter::readAndGetArray", "");
+
     // First, look up the Grid the map is in
     BaseType* pBT = AggregationUtil::getVariableNoRecurse(dds, _gridName);
 
@@ -1012,6 +1028,11 @@ namespace agg_util
       const std::string& debugChannel
       )
   {
+
+	  BESStopWatch sw;
+	  if (BESISDEBUG( TIMING_LOG ))
+		  sw.start("AggregationUtil::addDatasetArrayDataToAggregationOutputArray", "");
+
     const libdap::DataDDS* pDataDDS = dataset.getDataDDS();
     NCML_ASSERT_MSG(pDataDDS, "GridAggregateOnOuterDimension::read(): Got a null DataDDS "
         "while loading dataset = " + dataset.getLocation() );
@@ -1025,12 +1046,15 @@ namespace agg_util
     NCML_ASSERT_MSG(pDatasetArray, "In aggregation member dataset, failed to get the array! "
           "Dataset location = " + dataset.getLocation());
 
+
     // Make sure that the data was read in or I dunno what went on.
     if (!pDatasetArray->read_p())
       {
         NCML_ASSERT_MSG(pDatasetArray->read_p(),
             "AggregationUtil::addDatasetArrayDataToAggregationOutputArray: pDatasetArray was not read_p()!");
       }
+
+
 
     // Make sure it matches the prototype or somthing went wrong
     if (!AggregationUtil::doTypesMatch(constrainedTemplateArray, *pDatasetArray))
@@ -1061,8 +1085,9 @@ namespace agg_util
             "though their shapes matched. Logic problem.");
       }
 
-    // FINALLY, we get to stream the data!
-    oOutputArray.set_value_slice_from_row_major_vector(*pDatasetArray, atIndex);
+
+	// FINALLY, we get to stream the data!
+	oOutputArray.set_value_slice_from_row_major_vector(*pDatasetArray, atIndex);
   }
 
   void

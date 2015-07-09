@@ -79,6 +79,7 @@ namespace agg_util
   const libdap::DataDDS*
   AggMemberDatasetUsingLocationRef::getDataDDS()
   {
+
 	  if (!_pDataResponse)
 	  {
 		  loadDataDDS();
