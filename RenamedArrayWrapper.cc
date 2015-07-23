@@ -38,6 +38,8 @@
 #include "NCMLUtil.h"
 #include <sstream>
 #include <vector>
+#include "BESDebug.h"
+#include "BESStopWatch.h"
 
 using namespace libdap;
 using std::ostringstream;
@@ -583,25 +585,42 @@ namespace ncml_module
 
   bool
   RenamedArrayWrapper::serialize(ConstraintEvaluator &eval, DDS &dds,
-      Marshaller &m, bool ce_eval /* = true */)
+		  Marshaller &m, bool ce_eval /* = true */)
   {
-    BESDEBUG("ncml", "RenamedArrayWrapper::serialize(): Doing the magic for renamed read()!!" << endl);
-    // Push them down if we need to.
-    syncConstraints();
 
-    // If not read in, read it in with the orgName and these constraints.
-    if (!_pArray->read_p())
-      {
-        withOrgName();
-        _pArray->read();
-        set_read_p(true);
-      }
+	  BESStopWatch sw;
+	  if (BESISDEBUG( TIMING_LOG ))
+		  sw.start("RenamedArrayWrapper::serialize","");
 
-    // Now we're back to the new name for printing purposes.
-    withNewName();
+	  BESDEBUG("ncml", "RenamedArrayWrapper::serialize(): Doing the magic for renamed read()!!" << endl);
+	  // Push them down if we need to.
+	  syncConstraints();
 
-    // So call the actual serialize, which should hopefully respect read_p() being set!!
-    return _pArray->serialize(eval, dds, m, ce_eval);
+	  if(true){
+		  BESStopWatch sw_read;
+		  if (BESISDEBUG( TIMING_LOG ))
+			  sw_read.start("RenamedArrayWrapper::serialize() calling libdap::Array::read() block","");
+
+		  // If not read in, read it in with the orgName and these constraints.
+		  if (!_pArray->read_p())
+		  {
+			  withOrgName();
+			  _pArray->read();
+			  set_read_p(true);
+		  }
+
+
+	  }
+
+	  // Now we're back to the new name for printing purposes.
+	  withNewName();
+
+	  BESStopWatch sw_serialize;
+	  if (BESISDEBUG( TIMING_LOG ))
+		  sw_serialize.start("RenamedArrayWrapper::serialize() calling libdap::Array::serialize() block","");
+
+	  // So call the actual serialize, which should hopefully respect read_p() being set!!
+	  return _pArray->serialize(eval, dds, m, ce_eval);
   }
 
   bool

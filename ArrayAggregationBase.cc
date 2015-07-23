@@ -93,14 +93,22 @@ namespace agg_util
   }
 
   /* virtual */
-   bool
-   ArrayAggregationBase::serialize(libdap::ConstraintEvaluator &ce, libdap::DDS &dds,  libdap::Marshaller &marshy, bool ce_eval){
-		  BESStopWatch sw;
-		  if (BESISDEBUG( TIMING_LOG ))
-			  sw.start("ArrayAggregationBase::serialize", "");
+  bool
+  ArrayAggregationBase::serialize(libdap::ConstraintEvaluator &ce, libdap::DDS &dds,  libdap::Marshaller &marshy, bool ce_eval){
+	  BESStopWatch sw;
+	  if (BESISDEBUG( TIMING_LOG ))
+		  sw.start("ArrayAggregationBase::serialize("+name()+")", "");
 
-	   libdap::Array::serialize(ce,dds,marshy,ce_eval);
-   }
+	  libdap::Array::serialize(ce,dds,marshy,ce_eval);
+
+	  // BESDEBUG_FUNC(DEBUG_CHANNEL, "Serialization completed. Releasing in memory data." << endl);
+	  if (BESISDEBUG( "clear_local_data" )){
+		  BESDEBUG("clear_local_data", "ArrayAggregationBase::serialize() - Serialization completed. Calling clear_local_data()" << endl);
+		  clear_local_data();
+	  }
+
+	  return true;
+  }
 
 
 
@@ -111,7 +119,8 @@ namespace agg_util
    {
 	  BESStopWatch sw;
 	  if (BESISDEBUG( TIMING_LOG ))
-		  sw.start("ArrayAggregationBase::read", "");
+		  sw.start("ArrayAggregationBase::read(" + name() +")", "");
+
 
      BESDEBUG_FUNC(DEBUG_CHANNEL, " function entered..." << endl);
 
