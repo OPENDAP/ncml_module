@@ -101,9 +101,8 @@ namespace agg_util
 
 	  libdap::Array::serialize(ce,dds,marshy,ce_eval);
 
-	  // BESDEBUG_FUNC(DEBUG_CHANNEL, "Serialization completed. Releasing in memory data." << endl);
 	  if (BESISDEBUG( "clear_local_data" )){
-		  BESDEBUG("clear_local_data", "ArrayAggregationBase::serialize() - Serialization completed. Calling clear_local_data()" << endl);
+		  BESDEBUG_FUNC("clear_local_data", "ArrayAggregationBase::serialize() - Serialization of '"+name()+"' completed. Calling clear_local_data()" << endl);
 		  clear_local_data();
 	  }
 
