@@ -555,10 +555,10 @@ namespace ncml_module
   RenamedArrayWrapper::read()
   {
     // Read using the old name....
-    withOrgName();
+    //withOrgName();
     bool ret = _pArray->read();
     set_read_p(true); // get us too
-    withNewName();
+    //withNewName();
     return ret;
   }
 
@@ -571,37 +571,46 @@ namespace ncml_module
     // If not read in, read it in with the orgName and these constraints.
     if (!_pArray->read_p())
       {
-        withOrgName();
+        //withOrgName();
         _pArray->read();
         set_read_p(true);
       }
 
     // Now we're back to the new name for intern_data purposes.
-    withNewName();
+    //withNewName();
     _pArray->intern_data(eval, dds);
   }
 
   bool
   RenamedArrayWrapper::serialize(ConstraintEvaluator &eval, DDS &dds,
-      Marshaller &m, bool ce_eval /* = true */)
+		  Marshaller &m, bool ce_eval /* = true */)
   {
-    BESDEBUG("ncml", "RenamedArrayWrapper::serialize(): Doing the magic for renamed read()!!" << endl);
-    // Push them down if we need to.
-    syncConstraints();
+	  // BESDEBUG("ncml_rename", "RenamedArrayWrapper::serialize(): Doing the magic for renamed read()!!" << endl);
+	  // Push them down if we need to.
+	  syncConstraints();
 
-    // If not read in, read it in with the orgName and these constraints.
-    if (!_pArray->read_p())
-      {
-        withOrgName();
-        _pArray->read();
-        set_read_p(true);
-      }
+	  //string no_preload_tag = "no_preload_for_renamed_arrays";
+	  if (BESISDEBUG( "no_preload_for_renamed_arrays" ) || 1){
+		  // BESDEBUG("no_preload_for_renamed_arrays", "RenamedArrayWrapper::serialize() - !!!!! Skipping preload of renamed array orgName: '" << _orgName << "' newName: '" << name()  << "'" << endl);
+		  BESDEBUG("ncml_rename", "RenamedArrayWrapper::serialize() - !!!!! SKIPPING preload of renamed array orgName: '" << _orgName << "' newName: '" << name()  << "'" << endl);
+		  // withOrgName();
+	  }
+	  else {
+		  BESDEBUG("ncml_rename", "RenamedArrayWrapper::serialize() - Preloading renamed array orgName: '" << _orgName << "' newName: '" << name()  << "'" << endl);
 
-    // Now we're back to the new name for printing purposes.
-    withNewName();
+		  // If not read in, read it in with the orgName and these constraints.
+		  if (!_pArray->read_p())
+		  {
+			  //withOrgName();
+			  _pArray->read();
+			  set_read_p(true);
+		  }
 
-    // So call the actual serialize, which should hopefully respect read_p() being set!!
-    return _pArray->serialize(eval, dds, m, ce_eval);
+		  // Now we're back to the new name for printing purposes.
+		  //withNewName();
+	  }
+	  // So call the actual serialize, which should hopefully respect read_p() being set!!
+	  return _pArray->serialize(eval, dds, m, ce_eval);
   }
 
   bool
