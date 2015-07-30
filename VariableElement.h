@@ -149,6 +149,8 @@ namespace ncml_module
      * Assumes: !_orgName.empty()
      * On exit, the scope of p will be the renamed variable.
      */
+    void processRenameVariableDataWorker(NCMLParser& p, libdap::BaseType* pOrgVar);
+
     void processRenameVariable(NCMLParser& p);
 
     /**

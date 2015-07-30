@@ -289,6 +289,37 @@ namespace ncml_module
     enterScope(p, pVar);
   }
 
+
+
+  void
+  VariableElement::processRenameVariableDataWorker(NCMLParser& p, BaseType* pOrgVar)
+  {
+
+	  if(pOrgVar->is_vector_type()){
+	      // If the variable is an Array, we need to wrap it in a RenamedArrayWrapper
+	      // so that it finds its data correctly.
+	      // This will remove the old one and replace our wrapper under the new _name if it's an Array subclass!
+	      pOrgVar = replaceArrayIfNeeded(p, pOrgVar, _name);
+	  }
+	  else if (pOrgVar->is_constructor_type()){
+		  // If the variable is a constructor then we are going to have to some special things so that any child variables
+		  // can be read after renaming
+
+	  }
+	  else if (pOrgVar->is_simple_type()){
+	      // If it's a simple type then force it to read or we won't find the new name in the source
+		  // dataset when it comes time to serialize.
+          pOrgVar->read();
+	  }
+
+
+      // This is safe whether we converted it or not.  Rename!
+      NCMLUtil::setVariableNameProperly(pOrgVar, _name);
+  }
+
+
+
+
   void
   VariableElement::processRenameVariable(NCMLParser& p)
   {
