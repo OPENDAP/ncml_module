@@ -78,7 +78,7 @@ namespace ncml_module
 
     // OVERRIDES OF ALL VIRTUALS!
 
-#if 0
+#if 1
     virtual void add_constraint(Dim_iter i, int start, int stride, int stop);
     virtual void reset_constraint();
 

@@ -97,12 +97,11 @@ namespace ncml_module
   ////////////////////////////////////////////////////////////////////////////////////////////////////////
   /// Wrappers
 
-#if 0
+#if 1
   void
   RenamedArrayWrapper::add_constraint(Dim_iter i, int start, int stride, int stop)
   {
-    // Make sure the dimensions all match before we add and resync.
-    syncConstraints();
+    // Set the constraint on the dimension and then sync the wrapped array to the new constraint.
     Array::add_constraint(i, start, stride, stop);
     syncConstraints();
   }
@@ -110,10 +109,7 @@ namespace ncml_module
   void
   RenamedArrayWrapper::reset_constraint()
   {
-    // must keep our copy and the wrappee in sync since
-    // they could be used at both levels.
     Array::reset_constraint();
-    syncConstraints(); // make sure dims all match
     _pArray->reset_constraint();
   }
 
@@ -121,7 +117,6 @@ namespace ncml_module
   RenamedArrayWrapper::clear_constraint()
   {
     Array::clear_constraint();
-    syncConstraints(); // make dims match
     _pArray->clear_constraint();
   }
 #endif
@@ -375,14 +370,14 @@ namespace ncml_module
   unsigned int
   RenamedArrayWrapper::buf2val(void **val)
   {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->buf2val(val);
   }
 
   unsigned int
   RenamedArrayWrapper::val2buf(void *val, bool reuse /* = false */)
   {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->val2buf(val, reuse);
   }
 
@@ -390,175 +385,175 @@ namespace ncml_module
   bool
   RenamedArrayWrapper::set_value(dods_byte *val, int sz)
   {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->set_value(val, sz);
   }
 
   bool
   RenamedArrayWrapper::set_value(vector<dods_byte> &val, int sz)
   {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->set_value(val, sz);
   }
 
   bool
   RenamedArrayWrapper::set_value(dods_int16 *val, int sz)
   {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->set_value(val, sz);
   }
 
   bool
   RenamedArrayWrapper::set_value(vector<dods_int16> &val, int sz)
   {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->set_value(val, sz);
   }
 
   bool
   RenamedArrayWrapper::set_value(dods_uint16 *val, int sz)
   {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->set_value(val, sz);
   }
 
   bool
   RenamedArrayWrapper::set_value(vector<dods_uint16> &val, int sz)
   {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->set_value(val, sz);
   }
 
   bool
   RenamedArrayWrapper::set_value(dods_int32 *val, int sz)
   {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->set_value(val, sz);
   }
 
   bool
   RenamedArrayWrapper::set_value(vector<dods_int32> &val, int sz)
   {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->set_value(val, sz);
   }
 
   bool
   RenamedArrayWrapper::set_value(dods_uint32 *val, int sz)
   {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->set_value(val, sz);
   }
 
   bool
   RenamedArrayWrapper::set_value(vector<dods_uint32> &val, int sz)
   {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->set_value(val, sz);
   }
 
   bool
   RenamedArrayWrapper::set_value(dods_float32 *val, int sz)
   {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->set_value(val, sz);
   }
 
   bool
   RenamedArrayWrapper::set_value(vector<dods_float32> &val, int sz)
   {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->set_value(val, sz);
   }
 
   bool
   RenamedArrayWrapper::set_value(dods_float64 *val, int sz)
   {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->set_value(val, sz);
   }
 
   bool
   RenamedArrayWrapper::set_value(vector<dods_float64> &val, int sz)
   {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->set_value(val, sz);
   }
 
   bool
   RenamedArrayWrapper::set_value(string *val, int sz)
   {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->set_value(val, sz);
   }
 
   bool
   RenamedArrayWrapper::set_value(vector<string> &val, int sz)
   {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->set_value(val, sz);
   }
 
   void
   RenamedArrayWrapper::value(dods_byte *b) const
   {
-    syncConstraints();
+    //syncConstraints();
     _pArray->value(b);
   }
 
   void
   RenamedArrayWrapper::value(dods_int16 *b) const
   {
-    syncConstraints();
+    //syncConstraints();
     _pArray->value(b);
   }
 
   void
   RenamedArrayWrapper::value(dods_uint16 *b) const
   {
-    syncConstraints();
+    //syncConstraints();
     _pArray->value(b);
   }
 
   void
   RenamedArrayWrapper::value(dods_int32 *b) const
   {
-    syncConstraints();
+    //syncConstraints();
     _pArray->value(b);
   }
 
   void
   RenamedArrayWrapper::value(dods_uint32 *b) const
   {
-    syncConstraints();
+    //syncConstraints();
     _pArray->value(b);
   }
 
   void
   RenamedArrayWrapper::value(dods_float32 *b) const
   {
-    syncConstraints();
+    //syncConstraints();
     _pArray->value(b);
   }
 
   void
   RenamedArrayWrapper::value(dods_float64 *b) const
   {
-    syncConstraints();
+    //syncConstraints();
     _pArray->value(b);
   }
 
   void
   RenamedArrayWrapper::value(vector<string> &b) const
   {
-    syncConstraints();
+    //syncConstraints();
     _pArray->value(b);
   }
 
   void*
   RenamedArrayWrapper::value()
   {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->value();
   }
 
@@ -580,7 +575,7 @@ namespace ncml_module
   bool
   RenamedArrayWrapper::read()
   {
-	    syncConstraints();
+	    //syncConstraints();
 	    return  _pArray->read();
   }
 
@@ -651,7 +646,7 @@ namespace ncml_module
 		  Marshaller &m, bool ce_eval /* = true */)
   {
 	  BESDEBUG("ncml_rename", "RenamedArrayWrapper::serialize(): Doing the magic for renamed read()!!" << endl);
-	  syncConstraints();
+	  //syncConstraints();
 	  return _pArray->serialize(eval, dds, m, ce_eval);
   }
 
@@ -660,7 +655,7 @@ namespace ncml_module
   RenamedArrayWrapper::deserialize(UnMarshaller &um, DDS *dds, bool reuse /* = false */)
   {
     // I *think* this should work
-    syncConstraints();
+    //syncConstraints();
     return _pArray->deserialize(um, dds, reuse);
   }
 
