@@ -97,6 +97,7 @@ namespace ncml_module
   ////////////////////////////////////////////////////////////////////////////////////////////////////////
   /// Wrappers
 
+#if 0
   void
   RenamedArrayWrapper::add_constraint(Dim_iter i, int start, int stride, int stop)
   {
@@ -123,6 +124,7 @@ namespace ncml_module
     syncConstraints(); // make dims match
     _pArray->clear_constraint();
   }
+#endif
 
   string
   RenamedArrayWrapper::toString()
@@ -144,6 +146,7 @@ namespace ncml_module
   {
     strm << toString();
   }
+#if 0
 
   bool
   RenamedArrayWrapper::is_simple_type() const
@@ -182,6 +185,7 @@ namespace ncml_module
   {
     return _pArray->element_count(leaves);
   }
+#endif
 
   bool
   RenamedArrayWrapper::read_p()
@@ -192,7 +196,7 @@ namespace ncml_module
   void
   RenamedArrayWrapper::set_read_p(bool state)
   {
-    BaseType::set_read_p(state);
+//    BaseType::set_read_p(state);
     _pArray->set_read_p(state);
   }
 
@@ -205,9 +209,10 @@ namespace ncml_module
   void
   RenamedArrayWrapper::set_send_p(bool state)
   {
-    BaseType::set_send_p(state);
+//    BaseType::set_send_p(state);
     _pArray->set_send_p(state);
   }
+#if 0
 
   /** We don't keep our own... */
   AttrTable&
@@ -248,6 +253,7 @@ namespace ncml_module
   {
     return _pArray->get_parent();
   }
+#endif
 
   BaseType*
   RenamedArrayWrapper::var(const string &name /*  = "" */,
@@ -269,6 +275,7 @@ namespace ncml_module
     _pArray->add_var(bt, part);
   }
 
+#if 0
   bool
   RenamedArrayWrapper::check_semantics(string &msg, bool all /* = false*/)
   {
@@ -280,6 +287,7 @@ namespace ncml_module
   {
     return _pArray->ops(b, op);
   }
+#endif
 
 #if FILE_METHODS // from libdap/BaseType.h, whether to include FILE* methods
   void
@@ -319,6 +327,7 @@ namespace ncml_module
   }
 #endif // FILE_METHODS
 
+#if 0
   void
   RenamedArrayWrapper::print_decl(ostream &out,
       string space /* = "    "*/,
@@ -343,12 +352,25 @@ namespace ncml_module
     withOrgName();
   }
 
+  void
+  RenamedArrayWrapper::print_val(ostream &out,
+      string space /* = ""*/,
+      bool print_decl_p /* = true*/)
+  {
+    syncConstraints();
+    withNewName();
+    print_val(out, space, print_decl_p);
+    withOrgName();
+  }
+
+
   unsigned int
   RenamedArrayWrapper::width(bool constrained)
   {
     syncConstraints();
     return _pArray->width(constrained);
   }
+#endif
 
   unsigned int
   RenamedArrayWrapper::buf2val(void **val)
@@ -364,16 +386,6 @@ namespace ncml_module
     return _pArray->val2buf(val, reuse);
   }
 
-  void
-  RenamedArrayWrapper::print_val(ostream &out,
-      string space /* = ""*/,
-      bool print_decl_p /* = true*/)
-  {
-    syncConstraints();
-    withNewName();
-    print_val(out, space, print_decl_p);
-    withOrgName();
-  }
 
   bool
   RenamedArrayWrapper::set_value(dods_byte *val, int sz)
@@ -550,18 +562,29 @@ namespace ncml_module
     return _pArray->value();
   }
 
+#if 0
   // DO THE REAL WORK
   bool
   RenamedArrayWrapper::read()
   {
     // Read using the old name....
-    //withOrgName();
+    withOrgName();
     bool ret = _pArray->read();
     set_read_p(true); // get us too
-    //withNewName();
+    withNewName();
     return ret;
   }
+#endif
 
+  // DO THE REAL WORK
+  bool
+  RenamedArrayWrapper::read()
+  {
+	    syncConstraints();
+	    return  _pArray->read();
+  }
+
+#if 0
   void
   RenamedArrayWrapper::intern_data(ConstraintEvaluator &eval, DDS &dds)
   {
@@ -580,7 +603,16 @@ namespace ncml_module
     //withNewName();
     _pArray->intern_data(eval, dds);
   }
+#endif
+  void
+  RenamedArrayWrapper::intern_data(ConstraintEvaluator &eval, DDS &dds)
+  {
+    _pArray->intern_data(eval, dds);
+  }
 
+
+
+#if 0
   bool
   RenamedArrayWrapper::serialize(ConstraintEvaluator &eval, DDS &dds,
 		  Marshaller &m, bool ce_eval /* = true */)
@@ -612,6 +644,17 @@ namespace ncml_module
 	  // So call the actual serialize, which should hopefully respect read_p() being set!!
 	  return _pArray->serialize(eval, dds, m, ce_eval);
   }
+#endif
+
+  bool
+  RenamedArrayWrapper::serialize(ConstraintEvaluator &eval, DDS &dds,
+		  Marshaller &m, bool ce_eval /* = true */)
+  {
+	  BESDEBUG("ncml_rename", "RenamedArrayWrapper::serialize(): Doing the magic for renamed read()!!" << endl);
+	  syncConstraints();
+	  return _pArray->serialize(eval, dds, m, ce_eval);
+  }
+
 
   bool
   RenamedArrayWrapper::deserialize(UnMarshaller &um, DDS *dds, bool reuse /* = false */)
@@ -647,6 +690,7 @@ namespace ncml_module
     _orgName = "";
   }
 
+#if 0
   void
   RenamedArrayWrapper::withNewName()
   {
@@ -658,6 +702,7 @@ namespace ncml_module
   {
     NCMLUtil::setVariableNameProperly(_pArray, _orgName);
   }
+#endif
 
   void
   RenamedArrayWrapper::syncConstraints()

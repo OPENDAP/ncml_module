@@ -78,18 +78,20 @@ namespace ncml_module
 
     // OVERRIDES OF ALL VIRTUALS!
 
+#if 0
     virtual void add_constraint(Dim_iter i, int start, int stride, int stop);
     virtual void reset_constraint();
 
     /** @deprecated */
     virtual void clear_constraint();
-
+#endif
     virtual string toString();
     virtual string toString() const;
     virtual void dump(ostream &strm) const ;
 
     // Don't need to override this, it does what we want.
     // virtual void set_name(const string &n);
+#if 0
 
     virtual bool is_simple_type() const;
     virtual bool is_vector_type() const;
@@ -98,13 +100,16 @@ namespace ncml_module
     virtual bool synthesized_p();
     virtual void set_synthesized_p(bool state);
 
+
     virtual int element_count(bool leaves = false);
+#endif
 
     virtual bool read_p();
     virtual void set_read_p(bool state);
 
     virtual bool send_p();
     virtual void set_send_p(bool state);
+#if 0
 
     virtual libdap::AttrTable& get_attr_table();
     virtual void set_attr_table(const libdap::AttrTable &at);
@@ -114,15 +119,18 @@ namespace ncml_module
 
     virtual void set_parent(BaseType *parent);
     virtual BaseType *get_parent() const;
+#endif
 
     virtual BaseType *var(const string &name = "", bool exact_match = true,
         btp_stack *s = 0);
     virtual BaseType *var(const string &name, btp_stack &s);
     virtual void add_var(BaseType *bt, Part part = nil);
 
-    virtual bool read();
+
+#if 0
     virtual bool check_semantics(string &msg, bool all = false);
     virtual bool ops(BaseType *b, int op);
+#endif
 
 #if FILE_METHODS // from BaseType.h, whether we include FILE* methods
     virtual void print_decl(FILE *out, string space = "    ",
@@ -135,6 +143,7 @@ namespace ncml_module
             bool print_decl_p = true);
 #endif // FILE_METHODS
 
+#if 0
     virtual void print_decl(ostream &out, string space = "    ",
         bool print_semi = true,
         bool constraint_info = false,
@@ -144,15 +153,12 @@ namespace ncml_module
     virtual void print_val(ostream &out, string space = "",
         bool print_decl_p = true);
 
-
     virtual unsigned int width(bool constrained = false);
+#endif
+
     virtual unsigned int buf2val(void **val);
     virtual unsigned int val2buf(void *val, bool reuse = false);
 
-    virtual void intern_data(ConstraintEvaluator &eval, DDS &dds);
-    virtual bool serialize(ConstraintEvaluator &eval, DDS &dds,
-        Marshaller &m, bool ce_eval = true);
-    virtual bool deserialize(UnMarshaller &um, DDS *dds, bool reuse = false);
 
     virtual bool set_value(dods_byte *val, int sz);
     virtual bool set_value(vector<dods_byte> &val, int sz);
@@ -181,6 +187,12 @@ namespace ncml_module
     virtual void value(vector<string> &b) const;
     virtual void *value();
 
+    virtual bool read();
+    virtual void intern_data(ConstraintEvaluator &eval, DDS &dds);
+    virtual bool serialize(ConstraintEvaluator &eval, DDS &dds,
+        Marshaller &m, bool ce_eval = true);
+    virtual bool deserialize(UnMarshaller &um, DDS *dds, bool reuse = false);
+
   private: // Private methods
 
     /** Copy the local privates from proto */
@@ -189,11 +201,13 @@ namespace ncml_module
     /** Clean local rep */
     void destroy();
 
+#if 0
     /** Set the wrapped array to have name() == this->name() for now. */
     void withNewName();
 
     /** Set the wrapped array to have name() == this->_orgName for now */
     void withOrgName();
+#endif
 
     /** Force the local shape (including constraints) into the wrapped array.
      * We use this helper in almost every function, but feel this is OK
