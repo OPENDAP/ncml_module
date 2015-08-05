@@ -596,7 +596,7 @@ namespace ncml_module
 	  // Push them down if we need to.
 	  syncConstraints();
 
-	  if(true){
+	  if(true){ // This test is simply an artifice to create scope for the BESStopWatch sw_read to get destroyed.
 		  BESStopWatch sw_read;
 		  if (BESISDEBUG( TIMING_LOG ))
 			  sw_read.start("RenamedArrayWrapper::serialize() calling libdap::Array::read() block","");
