@@ -44,6 +44,8 @@ namespace ncml_module
   class NCMLBaseArray : public libdap::Array
   {
   public: // class methods
+
+#if 0
     /**
      * Make a new NCMLArray<T> from the given proto, using the Array interface.
      * It uses the underlying proto.var() BaseType to figure out the type parameter T
@@ -60,6 +62,7 @@ namespace ncml_module
      * error, we copy the data into our NCMLArray<T> in order to handle the constraints ourselves.
      */
     static auto_ptr< NCMLBaseArray > createFromArray(const libdap::Array& proto);
+#endif
 
   public:  // Instance methods
     NCMLBaseArray();

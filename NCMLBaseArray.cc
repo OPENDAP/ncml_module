@@ -36,6 +36,8 @@
 namespace ncml_module
 {
 
+
+#if 0
   /**
     * Make a new NCMLArray<T> from the given proto, using the Array interface.
     * It uses the underlying proto.var() BaseType to figure out the type parameter T
@@ -73,6 +75,8 @@ namespace ncml_module
 
      return pNewArray; // relinquish
    }
+#endif
+
 
   NCMLBaseArray::NCMLBaseArray()
   : Array("", 0)
