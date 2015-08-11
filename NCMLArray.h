@@ -67,6 +67,7 @@ namespace ncml_module
    * super Array shape.  It forces read_p() to ALWAYS be false to force a call of this->read()
    * prior to any serialization of super Vector's data buffer.
    *
+   *
    * In a read() call, if constraints have been applied to the Array superclass, this class
    * will effect the Vector superclass data buffer (Vector._buf) in order to calculate
    * and store the constrained data into Vector._buf so serialize() passes the constrained
@@ -78,6 +79,12 @@ namespace ncml_module
    * We use a template on the underlying data type stored, such as dods_byte, dods_int32, etc.
    * Note that this can ALSO be std::string, in which case Vector does special processing.  We
    * need to be aware of this in processing data.
+   *
+   * NOTE: I examined the way this class is used and I think that, in fact, it is only currently used
+   * for new variable arrays (in which the data is provided in the source ncml file) and NEVER for
+   * existing arrays (which would mean massive copying of data). Now I may well be wrong about this
+   * assessment, but at the moment that what it looks like to me. ndp - 8/7/15
+   *
    */
 template <typename T>
 class NCMLArray : public NCMLBaseArray

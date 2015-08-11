@@ -38,6 +38,9 @@ namespace ncml_module
 
 
 #if 0
+// I blocked this off because it's not being actively used and it's premise (massive data copying) is pretty much a
+// problem for the handler if it is used. ndp 8/7/15
+
   /**
     * Make a new NCMLArray<T> from the given proto, using the Array interface.
     * It uses the underlying proto.var() BaseType to figure out the type parameter T
