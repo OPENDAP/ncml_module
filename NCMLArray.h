@@ -311,7 +311,7 @@ protected:
                 "NCMLArray<T>:: we don't have unconstrained values cached, caching from Vector now..." << endl);
             unsigned int spaceSize = _noConstraints->getUnconstrainedSpaceSize();
 
-#if 0
+#if 1
             ostringstream oss;
             oss << " length(): " << length() << " spaceSize: "<< spaceSize;
             // These must match or we're not getting all the data and the caller messed up.
