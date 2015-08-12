@@ -310,10 +310,15 @@ protected:
             BESDEBUG("ncml",
                 "NCMLArray<T>:: we don't have unconstrained values cached, caching from Vector now..." << endl);
             unsigned int spaceSize = _noConstraints->getUnconstrainedSpaceSize();
+
+#if 0
+            ostringstream oss;
+            oss << " length(): " << length() << " spaceSize: "<< spaceSize;
             // These must match or we're not getting all the data and the caller messed up.
             NCML_ASSERT_MSG(static_cast<unsigned int>(length()) == spaceSize,
-                "NCMLArray expected superclass Vector length() to be the same as unconstrained space size, but it wasn't!");
+                "NCMLArray expected superclass Vector length() to be the same as unconstrained space size, but it wasn't! "+oss.str() );
             // Make new default storage with enough space for all the data.
+#endif
             _allValues = new vector<T>(spaceSize);
             NCML_ASSERT(_allValues->size() == spaceSize); // the values should all be default for T().
             // Grab the address of the start of the vector memory block.
