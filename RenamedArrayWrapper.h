@@ -32,37 +32,36 @@
 #include "config.h"
 #include <Array.h>
 #include <vector>
+
 using std::vector;
 using std::string;
+
 using namespace libdap;
 
-namespace libdap
-{
-  class DDS;
-  class Marshaller;
-  class UnMarshaller;
+namespace libdap {
+class DDS;
+class Marshaller;
+class UnMarshaller;
 }
 
-namespace ncml_module
-{
-  /**
-   * @brief A Decorator Pattern for wrapping a libdap::Array in order to change its
-   * name efficiently in the face of buggy subclasses we cannot change
-   *
-   * Unfortunately, this is needed to get around problems with subclasses requiring the old name for lazy loads
-   * even though set_name was called.  This causes them to exception, which is bad.
-   * In particular, NCArray doesn't handle  set_name properly and will fail to serialize.
-   *
-   * Rather than seek out and make changes to fix these bugs, the temporary solution will be to
-   * wrap the Array to rename in this class.
-   * Almost all virtual functions will be passed through to the wrapped array,
-   * which will retain its original name for purposes of read(), but will be forced
-   * to use the new name when serializing.
-   *
-   */
-  class RenamedArrayWrapper : public libdap::Array
-  {
-  public:
+namespace ncml_module {
+/**
+ * @brief A Decorator Pattern for wrapping a libdap::Array in order to change its
+ * name efficiently in the face of buggy subclasses we cannot change
+ *
+ * Unfortunately, this is needed to get around problems with subclasses requiring the old name for lazy loads
+ * even though set_name was called.  This causes them to exception, which is bad.
+ * In particular, NCArray doesn't handle  set_name properly and will fail to serialize.
+ *
+ * Rather than seek out and make changes to fix these bugs, the temporary solution will be to
+ * wrap the Array to rename in this class.
+ * Almost all virtual functions will be passed through to the wrapped array,
+ * which will retain its original name for purposes of read(), but will be forced
+ * to use the new name when serializing.
+ *
+ */
+class RenamedArrayWrapper: public libdap::Array {
+public:
     RenamedArrayWrapper();
     RenamedArrayWrapper(const RenamedArrayWrapper& proto);
 
@@ -78,18 +77,20 @@ namespace ncml_module
 
     // OVERRIDES OF ALL VIRTUALS!
 
+#if 1
     virtual void add_constraint(Dim_iter i, int start, int stride, int stop);
     virtual void reset_constraint();
 
     /** @deprecated */
     virtual void clear_constraint();
-
+#endif
     virtual string toString();
     virtual string toString() const;
-    virtual void dump(ostream &strm) const ;
+    virtual void dump(ostream &strm) const;
 
     // Don't need to override this, it does what we want.
     // virtual void set_name(const string &n);
+#if 0
 
     virtual bool is_simple_type() const;
     virtual bool is_vector_type() const;
@@ -99,12 +100,14 @@ namespace ncml_module
     virtual void set_synthesized_p(bool state);
 
     virtual int element_count(bool leaves = false);
+#endif
 
     virtual bool read_p();
     virtual void set_read_p(bool state);
 
     virtual bool send_p();
     virtual void set_send_p(bool state);
+#if 0
 
     virtual libdap::AttrTable& get_attr_table();
     virtual void set_attr_table(const libdap::AttrTable &at);
@@ -114,15 +117,16 @@ namespace ncml_module
 
     virtual void set_parent(BaseType *parent);
     virtual BaseType *get_parent() const;
+#endif
 
-    virtual BaseType *var(const string &name = "", bool exact_match = true,
-        btp_stack *s = 0);
+    virtual BaseType *var(const string &name = "", bool exact_match = true, btp_stack *s = 0);
     virtual BaseType *var(const string &name, btp_stack &s);
     virtual void add_var(BaseType *bt, Part part = nil);
 
-    virtual bool read();
+#if 0
     virtual bool check_semantics(string &msg, bool all = false);
     virtual bool ops(BaseType *b, int op);
+#endif
 
 #if FILE_METHODS // from BaseType.h, whether we include FILE* methods
     virtual void print_decl(FILE *out, string space = "    ",
@@ -130,11 +134,12 @@ namespace ncml_module
         bool constraint_info = false,
         bool constrained = false);
     virtual void print_xml(FILE *out, string space = "    ",
-            bool constrained = false);
+        bool constrained = false);
     virtual void print_val(FILE *out, string space = "",
-            bool print_decl_p = true);
+        bool print_decl_p = true);
 #endif // FILE_METHODS
 
+#if 0
     virtual void print_decl(ostream &out, string space = "    ",
         bool print_semi = true,
         bool constraint_info = false,
@@ -144,15 +149,11 @@ namespace ncml_module
     virtual void print_val(ostream &out, string space = "",
         bool print_decl_p = true);
 
-
     virtual unsigned int width(bool constrained = false);
+#endif
+
     virtual unsigned int buf2val(void **val);
     virtual unsigned int val2buf(void *val, bool reuse = false);
-
-    virtual void intern_data(ConstraintEvaluator &eval, DDS &dds);
-    virtual bool serialize(ConstraintEvaluator &eval, DDS &dds,
-        Marshaller &m, bool ce_eval = true);
-    virtual bool deserialize(UnMarshaller &um, DDS *dds, bool reuse = false);
 
     virtual bool set_value(dods_byte *val, int sz);
     virtual bool set_value(vector<dods_byte> &val, int sz);
@@ -181,7 +182,13 @@ namespace ncml_module
     virtual void value(vector<string> &b) const;
     virtual void *value();
 
-  private: // Private methods
+    virtual bool read();
+    virtual void intern_data(ConstraintEvaluator &eval, DDS &dds);
+    virtual bool serialize(ConstraintEvaluator &eval, DDS &dds, Marshaller &m, bool ce_eval = true);
+    virtual bool deserialize(UnMarshaller &um, DDS *dds, bool reuse = false);
+
+private:
+    // Private methods
 
     /** Copy the local privates from proto */
     void copyLocalRepFrom(const RenamedArrayWrapper& proto);
@@ -189,11 +196,13 @@ namespace ncml_module
     /** Clean local rep */
     void destroy();
 
+#if 0
     /** Set the wrapped array to have name() == this->name() for now. */
     void withNewName();
 
     /** Set the wrapped array to have name() == this->_orgName for now */
     void withOrgName();
+#endif
 
     /** Force the local shape (including constraints) into the wrapped array.
      * We use this helper in almost every function, but feel this is OK
@@ -204,16 +213,20 @@ namespace ncml_module
      *    compared to other calls and should amortize
      * 3) It's not clear how often this class will be used.
      **/
-    void syncConstraints() const { const_cast<RenamedArrayWrapper*>(this)->syncConstraints(); }
+    void syncConstraints() const
+    {
+        const_cast<RenamedArrayWrapper*>(this)->syncConstraints();
+    }
     void syncConstraints();
 
-  private: // Data rep
+private:
+    // Data rep
 
     /** the Array we are decorating.  WE OWN THIS MEMORY once it is passed in and must
      * clean it up on destroy() */
     libdap::Array* _pArray;
     string _orgName; // the original, underlying name of the array, cached.
-  };
+};
 
 }
 
