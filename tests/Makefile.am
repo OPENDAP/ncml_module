@@ -45,7 +45,7 @@ bes_no_nc_global.conf: $(BES_NO_NC_GLOBAL_CONF_IN) $(top_srcdir)/configure.ac
 	sed -e "s%[@]abs_top_srcdir[@]%$$clean_abs_top_srcdir%" \
 		-e "s%[@]abs_top_builddir[@]%${abs_top_builddir}%" $< > bes_no_nc_global.conf
 
-check-local: atconfig atlocal $(TESTSUITE)
+check-local: atconfig atlocal $(srcdir)/package.m4 $(TESTSUITE)
 	$(SHELL) '$(TESTSUITE)' $(TESTSUITEFLAGS)
 
 # Technically, we don't need this target now, but it might be useful
@@ -59,9 +59,9 @@ installcheck-local: atconfig atlocal
 # $(TESTSUITEFLAGS)
 
 clean-local:
-	test ! -f '$(TESTSUITE)' || \
-	$(SHELL) '$(TESTSUITE)' --clean
-
+	test ! -f '$(TESTSUITE)' || $(SHELL) '$(TESTSUITE)' --clean
+	-rm $(srcdir)/package.m4
+	
 distclean-local:
 	-rm atconfig
 	-rm bes.conf
