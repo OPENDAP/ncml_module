@@ -34,35 +34,30 @@
 #include <string>
 #include <vector>
 
-namespace libdap
-{
-  class Array;
-  class BaseType;
-  class Constructor;
-  class DataDDS;
-  class DDS;
-  class Grid;
-};
+namespace libdap {
+class Array;
+class BaseType;
+class Constructor;
+class DataDDS;
+class DDS;
+class Grid;
+}
 
-namespace agg_util
-{
-  class AggMemberDataset;
-  struct Dimension;
-  // jhrg 4/16/14 class Dimension;
-};
+namespace agg_util {
+class AggMemberDataset;
+struct Dimension;   // jhrg 4/16/14 class Dimension;
+}
 
-namespace agg_util
-{
+namespace agg_util {
 
-  /**
-   * Helper class hierarchy for acquiring variable of a certain type
-   * from a DDS.  Will be passed into a
-   * static helper function within AggregationUtil.
-   */
+/**
+ * Helper class hierarchy for acquiring variable of a certain type
+ * from a DDS.  Will be passed into a
+ * static helper function within AggregationUtil.
+ */
 
-  /** Interface class for the functor */
-  struct ArrayGetterInterface
-  {
+/** Interface class for the functor */
+struct ArrayGetterInterface {
     virtual ~ArrayGetterInterface();
 
     /** Virtual constructor idiom */
@@ -85,23 +80,19 @@ namespace agg_util
      * @param debugChannel  if !empty(), the channel to print
      *            out debug information.
      *  */
-    virtual libdap::Array* readAndGetArray(
-        const std::string& name,
-        const libdap::DataDDS& dds,
-        const libdap::Array* const pConstraintTemplate,
-        const std::string& debugChannel
-        ) const = 0;
-  }; // class ArrayGetterInterface
+    virtual libdap::Array* readAndGetArray(const std::string& name, const libdap::DataDDS& dds,
+        const libdap::Array* const pConstraintTemplate, const std::string& debugChannel) const = 0;
+};
+// class ArrayGetterInterface
 
-  /** Concrete impl that simply finds the
-   * Array by looking for a variable of the
-   * given name at the top level of the DDS
-   * (i.e. doesn't recurse using field notation!)
-   * and making sure it
-   * is of the proper type.
-   */
-  struct TopLevelArrayGetter : public ArrayGetterInterface
-  {
+/** Concrete impl that simply finds the
+ * Array by looking for a variable of the
+ * given name at the top level of the DDS
+ * (i.e. doesn't recurse using field notation!)
+ * and making sure it
+ * is of the proper type.
+ */
+struct TopLevelArrayGetter: public ArrayGetterInterface {
     TopLevelArrayGetter();
     virtual ~TopLevelArrayGetter();
 
@@ -113,16 +104,12 @@ namespace agg_util
      * @throw AggregationException if not found or if found but
      *          cannot be cast properly into an Array*
      */
-    virtual libdap::Array* readAndGetArray(
-            const std::string& name,
-            const libdap::DataDDS& dds,
-            const libdap::Array* const pConstraintTemplate,
-            const std::string& debugChannel
-            ) const;
-  }; // class TopLevelArrayGetter
+    virtual libdap::Array* readAndGetArray(const std::string& name, const libdap::DataDDS& dds,
+        const libdap::Array* const pConstraintTemplate, const std::string& debugChannel) const;
+};
+// class TopLevelArrayGetter
 
-  struct TopLevelGridDataArrayGetter : public ArrayGetterInterface
-  {
+struct TopLevelGridDataArrayGetter: public ArrayGetterInterface {
     TopLevelGridDataArrayGetter();
     virtual ~TopLevelGridDataArrayGetter();
 
@@ -139,58 +126,55 @@ namespace agg_util
      * @param debugChannel if !empty() the channel to print to.
      * @return the read in Array* or 0 if not found.
      */
-    virtual libdap::Array* readAndGetArray(
-            const std::string& name,
-            const libdap::DataDDS& dds,
-            const libdap::Array* const pConstraintTemplate,
-            const std::string& debugChannel
-            ) const;
-  }; // class TopLevelGridDataArrayGetter
+    virtual libdap::Array* readAndGetArray(const std::string& name, const libdap::DataDDS& dds,
+        const libdap::Array* const pConstraintTemplate, const std::string& debugChannel) const;
+};
+// class TopLevelGridDataArrayGetter
 
-  struct TopLevelGridMapArrayGetter : public ArrayGetterInterface
+struct TopLevelGridMapArrayGetter: public ArrayGetterInterface {
+    TopLevelGridMapArrayGetter(const std::string& gridName);
+    virtual ~TopLevelGridMapArrayGetter();
+
+    virtual TopLevelGridMapArrayGetter* clone() const;
+
+    /**
+     * Find's the Array using name as the name of a map to find
+     * within a top level Grid names in the constructor!
+     * @throw AggregationException if not found or illegal shape.
+     * @param name name of the Grid to find the Array in.
+     * @param dds  DDS to search
+     * @param pConstraintTemplate  template for constraints
+     * @param debugChannel if !empty() the channel to print to.
+     * @return the read in Array* or 0 if not found.
+     */
+    virtual libdap::Array* readAndGetArray(const std::string& name, const libdap::DataDDS& dds,
+        const libdap::Array* const pConstraintTemplate, const std::string& debugChannel) const;
+
+    // The name of the Grid within which the desired map is contained.
+    const string _gridName;
+};
+// class TopLevelGridMapArrayGetter
+
+/**
+ *   A static class for encapsulating the aggregation functionality on libdap.
+ *   This class should have references to libdap and STL, but should NOT
+ *   contain any references to other ncml_module classes.  This will allow us to
+ *   potentially package the aggregation functionality into its own lib
+ *   or perhaps roll it into libdap.
+ */
+class AggregationUtil {
+private:
+    // This is a static class for now...
+    AggregationUtil()
     {
-      TopLevelGridMapArrayGetter(const std::string& gridName);
-      virtual ~TopLevelGridMapArrayGetter();
-
-      virtual TopLevelGridMapArrayGetter* clone() const;
-
-      /**
-       * Find's the Array using name as the name of a map to find
-       * within a top level Grid names in the constructor!
-       * @throw AggregationException if not found or illegal shape.
-       * @param name name of the Grid to find the Array in.
-       * @param dds  DDS to search
-       * @param pConstraintTemplate  template for constraints
-       * @param debugChannel if !empty() the channel to print to.
-       * @return the read in Array* or 0 if not found.
-       */
-      virtual libdap::Array* readAndGetArray(
-              const std::string& name,
-              const libdap::DataDDS& dds,
-              const libdap::Array* const pConstraintTemplate,
-              const std::string& debugChannel
-              ) const;
-
-      // The name of the Grid within which the desired map is contained.
-      const string _gridName;
-    }; // class TopLevelGridMapArrayGetter
-
-  /**
-   *   A static class for encapsulating the aggregation functionality on libdap.
-   *   This class should have references to libdap and STL, but should NOT
-   *   contain any references to other ncml_module classes.  This will allow us to
-   *   potentially package the aggregation functionality into its own lib
-   *   or perhaps roll it into libdap.
-   */
-  class AggregationUtil
-  {
-  private: // This is a static class for now...
-    AggregationUtil() {}
-    ~AggregationUtil() {}
+    }
+    ~AggregationUtil()
+    {
+    }
 
     static int d_last_added_cv_position;
 
-  public:
+public:
 
     // Typedefs
     typedef std::vector<const libdap::DDS*> ConstDDSList;
@@ -201,9 +185,7 @@ namespace agg_util
      * ends up in pOutputUnion.  Not that named containers are considered as a unit, so we do not recurse into
      * their children.
      */
-    static void performUnionAggregation(
-        libdap::DDS* pOutputUnion,
-        const ConstDDSList& datasetsInOrder);
+    static void performUnionAggregation(libdap::DDS* pOutputUnion, const ConstDDSList& datasetsInOrder);
 
     /**
      * Merge any attributes in tableToMerge whose names do not already exist within *pOut into pOut.
@@ -245,7 +227,8 @@ namespace agg_util
      *
      * @return whether pOutDDS changed (ie name was free).
      */
-    static bool addCopyOfVariableIfNameIsAvailable(libdap::DDS* pOutDDS, const libdap::BaseType& varProto, bool add_at_top = false);
+    static bool addCopyOfVariableIfNameIsAvailable(libdap::DDS* pOutDDS, const libdap::BaseType& varProto,
+        bool add_at_top = false);
 
     /**
      * If a variable with the name varProto.name() doesn't exist, add a copy of varProto to
@@ -273,7 +256,8 @@ namespace agg_util
      *         to LibdapType*, else NULL.
      * @see findVariableAtDDSTopLevel()
      */
-    template <class LibdapType> static LibdapType* findTypedVariableAtDDSTopLevel(const libdap::DDS& dds, const string& name);
+    template<class LibdapType> static LibdapType* findTypedVariableAtDDSTopLevel(const libdap::DDS& dds,
+        const string& name);
 
     /**
      *  Basic joinNew aggregation into pJoinedArray on the array of inputs fromVars.
@@ -299,11 +283,8 @@ namespace agg_util
      * @param fromVars          the input Array's the first of which will be the "template"
      * @param copyData          whether to copy the data from the Array's in fromVars or just create the shape.
      */
-    static void produceOuterDimensionJoinedArray(libdap::Array* pJoinedArray,
-          const std::string& joinedArrayName,
-          const std::string& newOuterDimName,
-          const std::vector<libdap::Array*>& fromVars,
-          bool copyData);
+    static void produceOuterDimensionJoinedArray(libdap::Array* pJoinedArray, const std::string& joinedArrayName,
+        const std::string& newOuterDimName, const std::vector<libdap::Array*>& fromVars, bool copyData);
 
     /**
      * Scan all the arrays in _arrays_ using the first as a template
@@ -330,16 +311,14 @@ namespace agg_util
      * @param collectVarName  the name of the variable to find at top level DDS in datasetsInOrder
      * @param datasetsInOrder the datasets to search for the Array's within.
      */
-    static unsigned int collectVariableArraysInOrder(
-          std::vector<libdap::Array*>& varArrays,
-          const std::string& collectVarName,
-          const ConstDDSList& datasetsInOrder);
+    static unsigned int collectVariableArraysInOrder(std::vector<libdap::Array*>& varArrays,
+        const std::string& collectVarName, const ConstDDSList& datasetsInOrder);
 
     /**
-      * @return whether this is a 1D Array whose dimension name is the same as its variable name.
-      * We consider this to define a "coordinate variable" in the sense of an NCML dataset
-      * and will use it as a Grid map vector.
-    */
+     * @return whether this is a 1D Array whose dimension name is the same as its variable name.
+     * We consider this to define a "coordinate variable" in the sense of an NCML dataset
+     * and will use it as a Grid map vector.
+     */
     static bool couldBeCoordinateVariable(libdap::BaseType* pBT);
 
     /**
@@ -363,10 +342,8 @@ namespace agg_util
      * @exception if there is not enough storage in pAggArray to collect all the data.
      * @exception on any problems will a read() call on any Array in varArrays.
      */
-    static void joinArrayData(libdap::Array* pAggArray,
-        const std::vector<libdap::Array*>& varArrays,
-        bool reserveStorage=true,
-        bool clearDataAfterUse=false);
+    static void joinArrayData(libdap::Array* pAggArray, const std::vector<libdap::Array*>& varArrays,
+        bool reserveStorage = true, bool clearDataAfterUse = false);
 
     /** Print out the dimensions name and size for the given Array into os */
     static void printDimensions(std::ostream& os, const libdap::Array& fromArray);
@@ -386,52 +363,43 @@ namespace agg_util
     static void printConstraintsToDebugChannel(const std::string& debugChannel, const libdap::Array& fromArray);
 
     /**
-        * Copy the constraints from the from Array into the pToArray
-        * in Dim_iter order.
-        *
-        * if skipFirstFromDim, the first dimension of fromArray will be skipped,
-        * for the case of copying from a joinNew aggregated array to a
-        * granule subset array
-        *
-        * if skipFirstToDim the first dimension of toArray will be skipped,
-        * for the case where presumably both first dims are skipped for a
-        * joinExisting aggregation where constraints on outer dim will be
-        * calculated by the caller.
-        *
-        * @param pToArray array to put constraints into
-        * @param fromArray array to take constraints from
-        * @param skipFirstFromDim whether the first dim of fromArray is aggregated and
-        *                  should be skipped.
-        * @param skipFirstToDim whether the first dim of toArray is aggregated and
-        *                  should be skipped.
-        */
-    static void transferArrayConstraints(
-    		libdap::Array* pToArray,
-    		const libdap::Array& fromArray,
-    		bool skipFirstFromDim,
-    		bool skipFirstToDim,
-    		bool printDebug = false,
-    		const std::string& debugChannel = "agg_util");
+     * Copy the constraints from the from Array into the pToArray
+     * in Dim_iter order.
+     *
+     * if skipFirstFromDim, the first dimension of fromArray will be skipped,
+     * for the case of copying from a joinNew aggregated array to a
+     * granule subset array
+     *
+     * if skipFirstToDim the first dimension of toArray will be skipped,
+     * for the case where presumably both first dims are skipped for a
+     * joinExisting aggregation where constraints on outer dim will be
+     * calculated by the caller.
+     *
+     * @param pToArray array to put constraints into
+     * @param fromArray array to take constraints from
+     * @param skipFirstFromDim whether the first dim of fromArray is aggregated and
+     *                  should be skipped.
+     * @param skipFirstToDim whether the first dim of toArray is aggregated and
+     *                  should be skipped.
+     */
+    static void transferArrayConstraints(libdap::Array* pToArray, const libdap::Array& fromArray, bool skipFirstFromDim,
+        bool skipFirstToDim, bool printDebug = false, const std::string& debugChannel = "agg_util");
 
     /**
-    * Return the variable in dds top level (no recursing, no fully qualified name dot notation)
-    * if it exists, else 0.
-    * The name IS ALLOWED to contain a dot '.', but this is interpreted as PART OF THE NAME
-    * and not as a field separator!
-    */
-    static libdap::BaseType* getVariableNoRecurse(
-        const libdap::DDS& dds,
-        const std::string& name);
+     * Return the variable in dds top level (no recursing, no fully qualified name dot notation)
+     * if it exists, else 0.
+     * The name IS ALLOWED to contain a dot '.', but this is interpreted as PART OF THE NAME
+     * and not as a field separator!
+     */
+    static libdap::BaseType* getVariableNoRecurse(const libdap::DDS& dds, const std::string& name);
 
     /**
-    * Return the variable in dds top level (no recursing, no fully qualified name dot notation)
-    * if it exists, else 0.
-    * The name IS ALLOWED to contain a dot '.', but this is interpreted as PART OF THE NAME
-    * and not as a field separator!
-    */
-    static libdap::BaseType* getVariableNoRecurse(
-        const libdap::Constructor& varContainer,
-        const std::string& name);
+     * Return the variable in dds top level (no recursing, no fully qualified name dot notation)
+     * if it exists, else 0.
+     * The name IS ALLOWED to contain a dot '.', but this is interpreted as PART OF THE NAME
+     * and not as a field separator!
+     */
+    static libdap::BaseType* getVariableNoRecurse(const libdap::Constructor& varContainer, const std::string& name);
 
     /**
      * If pBT is an Array type, cast and return it as the Array.
@@ -446,25 +414,24 @@ namespace agg_util
     static const libdap::Array* findMapByName(const libdap::Grid& inGrid, const std::string& findName);
 
     /**
-    * Load the given dataset's DataDDS.
-    * Find the aggVar of the given name in it, must be Array.
-    * Transfer the constraints from the local template to it.
-    * Call read() on it.
-    * Stream the data into oOutputArray's output buffer
-    * at the element index nextElementIndex.
-    *
-    * @param oOutputArray  the Array to output the data into
-    * @param atIndex  where in the output buffer of rOutputArray
-    *                          to stream it (note: not byte, element!)
-    * @param constrainedTemplateArray  the Array to use as the template for the
-    *                       constraints on loading the dataset.
-    * @param name the name of the aggVar to find in the DDS
-    * @param dataset the dataset to load for this element.
-    * @param arrayGetter  the class to use to get the member Array by name from DDS
-    * @param debugChannel if not empty(), BESDEBUG channel to use
-    */
-    static void addDatasetArrayDataToAggregationOutputArray(
-        libdap::Array& oOutputArray, // output location
+     * Load the given dataset's DataDDS.
+     * Find the aggVar of the given name in it, must be Array.
+     * Transfer the constraints from the local template to it.
+     * Call read() on it.
+     * Stream the data into oOutputArray's output buffer
+     * at the element index nextElementIndex.
+     *
+     * @param oOutputArray  the Array to output the data into
+     * @param atIndex  where in the output buffer of rOutputArray
+     *                          to stream it (note: not byte, element!)
+     * @param constrainedTemplateArray  the Array to use as the template for the
+     *                       constraints on loading the dataset.
+     * @param name the name of the aggVar to find in the DDS
+     * @param dataset the dataset to load for this element.
+     * @param arrayGetter  the class to use to get the member Array by name from DDS
+     * @param debugChannel if not empty(), BESDEBUG channel to use
+     */
+    static void addDatasetArrayDataToAggregationOutputArray(libdap::Array& oOutputArray, // output location
         unsigned int atIndex, // oOutputArray[atIndex] will be where data put
         const libdap::Array& constrainedTemplateArray, // for copying constraints
         const string& varName, // top level var to find in dataset DDS
@@ -481,58 +448,52 @@ namespace agg_util
      * @param pIntoVar  the var whose AttrTable is the output
      * @param fromVar the var to use as changes to the output
      */
-    static void gatherMetadataChangesFrom(
-        libdap::BaseType* pIntoVar,
-        const libdap::BaseType& fromVar);
+    static void gatherMetadataChangesFrom(libdap::BaseType* pIntoVar, const libdap::BaseType& fromVar);
 
-  }; // class AggregationUtil
+};
+// class AggregationUtil
 
-  /**
-   * For each ptr element pElt in vecToClear, delete pElt and remove it
-   * from vecToClear.
-   * On exit, vecToClear.empty() and all ptrs it used to contain have been delete'd.
-   * @param vecToClear
-   */
-  template <typename T>
-  void clearVectorAndDeletePointers(std::vector<T*>& vecToClear)
-  {
-    while (!vecToClear.empty())
-      {
+/**
+ * For each ptr element pElt in vecToClear, delete pElt and remove it
+ * from vecToClear.
+ * On exit, vecToClear.empty() and all ptrs it used to contain have been delete'd.
+ * @param vecToClear
+ */
+template<typename T>
+void clearVectorAndDeletePointers(std::vector<T*>& vecToClear)
+{
+    while (!vecToClear.empty()) {
         T* pElt = vecToClear.back();
         delete pElt;
         vecToClear.pop_back();
-      }
-  }
+    }
+}
 
-  /** Assumes T has unref() */
-  template <class T>
-  void clearAndUnrefAllElements(std::vector<T*>& vecToClear)
-   {
-     while (!vecToClear.empty())
-       {
-         T* pElt = vecToClear.back();
-         pElt->unref();
-         vecToClear.pop_back();
-       }
-   }
+/** Assumes T has unref() */
+template<class T>
+void clearAndUnrefAllElements(std::vector<T*>& vecToClear)
+{
+    while (!vecToClear.empty()) {
+        T* pElt = vecToClear.back();
+        pElt->unref();
+        vecToClear.pop_back();
+    }
+}
 
-  /** Assumes T has ref() */
-  template <class T>
-  void appendVectorOfRCObject(std::vector<T*>& intoVec,
-       const std::vector<T*>& fromVec)
-  {
+/** Assumes T has ref() */
+template<class T>
+void appendVectorOfRCObject(std::vector<T*>& intoVec, const std::vector<T*>& fromVec)
+{
     class std::vector<T*>::const_iterator it;
     class std::vector<T*>::const_iterator endIt = fromVec.end();
-    for (it = fromVec.begin(); it != endIt; ++it)
-       {
-         T* pElt = *it;
-         if (pElt)
-           {
-             pElt->ref();
-           }
-         intoVec.push_back(pElt);
-       }
-   }
+    for (it = fromVec.begin(); it != endIt; ++it) {
+        T* pElt = *it;
+        if (pElt) {
+            pElt->ref();
+        }
+        intoVec.push_back(pElt);
+    }
+}
 
 }
 

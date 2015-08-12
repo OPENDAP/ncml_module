@@ -31,24 +31,23 @@
 
 #include "AggMemberDatasetWithDimensionCacheBase.h" // super
 
-namespace agg_util
-{
-  // fdecls
-  class DDSAccessInterface;
+namespace agg_util {
 
-  /**
-   * class AggMemberDatasetDDSWrapper: concrete subclass of AggMemberDataset
-   * designed to hold a weak reference to an object containing
-   * a DataDDS (DDSAccessInterface).
-   *
-   * Compare to AggMemberDatasetSharedDDSWrapper which use a ref-counted
-   * DDSAccessRCInterface.  The weak one doesn't use ref counting in
-   * order to avoid circular ref dependencies.
-   *
-   */
-  class AggMemberDatasetDDSWrapper : public AggMemberDatasetWithDimensionCacheBase
-  {
-  public:
+// fdecls
+class DDSAccessInterface;
+
+/**
+ * class AggMemberDatasetDDSWrapper: concrete subclass of AggMemberDataset
+ * designed to hold a weak reference to an object containing
+ * a DataDDS (DDSAccessInterface).
+ *
+ * Compare to AggMemberDatasetSharedDDSWrapper which use a ref-counted
+ * DDSAccessRCInterface.  The weak one doesn't use ref counting in
+ * order to avoid circular ref dependencies.
+ *
+ */
+class AggMemberDatasetDDSWrapper: public AggMemberDatasetWithDimensionCacheBase {
+public:
     AggMemberDatasetDDSWrapper();
     AggMemberDatasetDDSWrapper(const DDSAccessInterface* pDDSHolder);
     virtual ~AggMemberDatasetDDSWrapper();
@@ -63,10 +62,9 @@ namespace agg_util
      */
     virtual const libdap::DataDDS* getDataDDS();
 
-  private:
+private:
 
-    void cleanup() throw();
-
+    void cleanup() throw ();
 
     void copyRepFrom(const AggMemberDatasetDDSWrapper& rhs);
 
@@ -74,8 +72,11 @@ namespace agg_util
 
     const DDSAccessInterface* _pDDSHolder;
 
-  }; // class AggMemberDatasetDDSWrapper
+};
+// class AggMemberDatasetDDSWrapper
 
-}; // namespace agg_util
+}
+;
+// namespace agg_util
 
 #endif /* __AGG_UTIL__AGG_MEMBER_DATASET_DDS_WRAPPER_H__ */

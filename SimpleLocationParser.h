@@ -33,23 +33,21 @@
 #include "SaxParser.h"
 #include "XMLHelpers.h"
 
-namespace ncml_module
-{
-  /**
-   * @brief SaxParser implementation that just grabs the netcdf@location attribute and returns it.
-   *
-   * @see parseAndGetLocation()
-   *
-   * Currently will still process the entire file.  TODO maybe find a way to early exit?
-   *
-   * @author Michael Johnson <m.johnson@opendap.org>
-   */
-  class SimpleLocationParser : public SaxParser
-  {
-  private:
+namespace ncml_module {
+/**
+ * @brief SaxParser implementation that just grabs the netcdf@location attribute and returns it.
+ *
+ * @see parseAndGetLocation()
+ *
+ * Currently will still process the entire file.  TODO maybe find a way to early exit?
+ *
+ * @author Michael Johnson <m.johnson@opendap.org>
+ */
+class SimpleLocationParser: public SaxParser {
+private:
     std::string _location;
 
-  public:
+public:
     SimpleLocationParser();
     virtual ~SimpleLocationParser();
 
@@ -61,18 +59,26 @@ namespace ncml_module
     std::string parseAndGetLocation(const std::string& filename);
 
     /////////////// Interface SaxParser
-    virtual void onStartDocument() {  }
-    virtual void onEndDocument() {  }
+    virtual void onStartDocument()
+    {
+    }
+    virtual void onEndDocument()
+    {
+    }
 
     /** We only use this get the the nedcdf@location attribute out */
     virtual void onStartElement(const std::string& name, const XMLAttributeMap& attrs);
 
-    virtual void onEndElement(const std::string& /* name */) {  }
-    virtual void onCharacters(const std::string& /* content */) {  };
+    virtual void onEndElement(const std::string& /* name */)
+    {
+    }
+    virtual void onCharacters(const std::string& /* content */)
+    {
+    }
 
     virtual void onParseWarning(std::string msg);
     virtual void onParseError(std::string msg);
-  };
+};
 
 }
 

@@ -33,47 +33,45 @@
 #include <map>
 #include <string>
 
-namespace agg_util
-{
+namespace agg_util {
 
-  /**
-   * Helper class to parse in very simple string
-   * specifications of times and return it as an
-   * (approximate) duration in seconds.
-   * By approximate, we use a month to be 31 days
-   * and a year to be 365 days for purposes of
-   * converting to seconds.
-   *
-   * We only can parse strings of the form "%d %unit"
-   * where %d stands for a number and %unit stands
-   * for a single basic time unit in this list.
-   * We give the unit and then the strings that can be
-   * used to represent it.
-   *
-   * seconds: { s, second, seconds }
-   * minutes: { m, min, mins }
-   * hours: { h, hour, hours }
-   * days: { day, days }
-   * weeks: { week, weeks}
-   * months: { month, months }  [note: month considered 31 days!]
-   * years: { year, years }
-   *
-   * For example:
-   *
-   * "1 min"
-   * "3 s"
-   * "5 hours"
-   * "3 days"
-   * "10 seconds"
-   * "5 years"
-   * "1 month"
-   *
-   *
-   * TODO This probably should be tested using CPPUnit
-   */
-  class SimpleTimeParser
-  {
-  public:
+/**
+ * Helper class to parse in very simple string
+ * specifications of times and return it as an
+ * (approximate) duration in seconds.
+ * By approximate, we use a month to be 31 days
+ * and a year to be 365 days for purposes of
+ * converting to seconds.
+ *
+ * We only can parse strings of the form "%d %unit"
+ * where %d stands for a number and %unit stands
+ * for a single basic time unit in this list.
+ * We give the unit and then the strings that can be
+ * used to represent it.
+ *
+ * seconds: { s, second, seconds }
+ * minutes: { m, min, mins }
+ * hours: { h, hour, hours }
+ * days: { day, days }
+ * weeks: { week, weeks}
+ * months: { month, months }  [note: month considered 31 days!]
+ * years: { year, years }
+ *
+ * For example:
+ *
+ * "1 min"
+ * "3 s"
+ * "5 hours"
+ * "3 days"
+ * "10 seconds"
+ * "5 years"
+ * "1 month"
+ *
+ *
+ * TODO This probably should be tested using CPPUnit
+ */
+class SimpleTimeParser {
+public:
     SimpleTimeParser();
     ~SimpleTimeParser();
 
@@ -88,7 +86,7 @@ namespace agg_util
      */
     static bool parseIntoSeconds(long& seconds, const std::string& duration);
 
-  private:
+private:
 
     /** helper to fill in the _sParseTable with parse entries */
     static void initParseTable();
@@ -101,9 +99,9 @@ namespace agg_util
     static const long _sSecsInMonth; // we use 31 days to calc this one
     static const long _sSecsInYear; // and 365 days this one
 
-    static std::map< std::string, long > _sParseTable; // Map from units string to secs
+    static std::map<std::string, long> _sParseTable; // Map from units string to secs
     static bool _sInited;  // has the table been created yet?
-  };
+};
 
 }
 

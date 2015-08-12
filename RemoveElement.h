@@ -31,18 +31,16 @@
 
 #include "NCMLElement.h"
 
-namespace ncml_module
-{
-  // FDecls
-  class NCMLParser;
+namespace ncml_module {
+// FDecls
+class NCMLParser;
 
-  /** Concrete subclass for the <remove> NcML element */
-  class RemoveElement : public NCMLElement
-  {
-  private:
+/** Concrete subclass for the <remove> NcML element */
+class RemoveElement: public NCMLElement {
+private:
     RemoveElement& operator=(const RemoveElement&); // disallow
 
-  public:
+public:
     RemoveElement();
     RemoveElement(const RemoveElement& proto);
     virtual ~RemoveElement();
@@ -59,7 +57,7 @@ namespace ncml_module
     static const std::string _sTypeName;
     static const vector<string> _sValidAttributes;
 
-  private:
+private:
 
     /** @brief Remove the object at current parse scope with \c name.
      *
@@ -85,10 +83,11 @@ namespace ncml_module
 
     static vector<string> getValidAttributes();
 
-  private: // data rep
+private:
+    // data rep
     std::string _name;
     std::string _type;
-  };
+};
 
 }
 

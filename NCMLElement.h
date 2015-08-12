@@ -41,29 +41,27 @@ using agg_util::RCPtr;
 using agg_util::RCObject;
 using agg_util::RCObjectPool;
 
-namespace ncml_module
-{
-  // FDecls
-  class NCMLParser;
+namespace ncml_module {
+// FDecls
+class NCMLParser;
 
-  /**
-   *  @brief Base class for NcML element concrete classes
-   *
-   *  Base class to define an NcML element for polymorphic dispatch
-   *  in the NCMLParser.  These concrete elements classes will be
-   *  made friends of the NCMLParser in order to split the monolithic
-   *  parser into chunks with specific functionality.
-   *
-   *  New concrete subclasses MUST be entered in the factory or they cannot
-   *  be created.
-   *
-   *  We subclass RCObject since we sometimes need to keep elements
-   *  around longer than just the SAX parser stack and need to keep track of
-   *  whether other objects need to hang onto strong references to them.
-   */
-  class NCMLElement : public agg_util::RCObject
-  {
-  public:
+/**
+ *  @brief Base class for NcML element concrete classes
+ *
+ *  Base class to define an NcML element for polymorphic dispatch
+ *  in the NCMLParser.  These concrete elements classes will be
+ *  made friends of the NCMLParser in order to split the monolithic
+ *  parser into chunks with specific functionality.
+ *
+ *  New concrete subclasses MUST be entered in the factory or they cannot
+ *  be created.
+ *
+ *  We subclass RCObject since we sometimes need to keep elements
+ *  around longer than just the SAX parser stack and need to keep track of
+ *  whether other objects need to hang onto strong references to them.
+ */
+class NCMLElement: public agg_util::RCObject {
+public:
 
     /**
      *  Factory class for the NcML elements.
@@ -72,55 +70,56 @@ namespace ncml_module
      *  static const string& ConcreteClassName::getTypeName();
      *  static ConcreteClassName* ConcreteClassName::makeInstance(const AttrMap& attrs);
      * */
-    class Factory
-    {
+    class Factory {
     public:
-      Factory();
-      ~Factory();
+        Factory();
+        ~Factory();
 
-      /**
-       * Create an element of the proper type with the given AttrMap
-       * for its defined attributes.
-       * @return the new element or NULL if eltTypeName had to prototype.
-       * @param eltTypeName element type name
-       * @param attrs the map of the attributes defined for the element
-       * @param parser  the parser which is creating the element.
-       */
-      RCPtr<NCMLElement> makeElement(const std::string& eltTypeName, const XMLAttributeMap& attrs, NCMLParser& parser);
-
-    private: // Interface
-
-      /** Add the initial prototypes to this so we are ready to rumble */
-      void initialize();
+        /**
+         * Create an element of the proper type with the given AttrMap
+         * for its defined attributes.
+         * @return the new element or NULL if eltTypeName had to prototype.
+         * @param eltTypeName element type name
+         * @param attrs the map of the attributes defined for the element
+         * @param parser  the parser which is creating the element.
+         */
+        RCPtr<NCMLElement> makeElement(const std::string& eltTypeName, const XMLAttributeMap& attrs,
+            NCMLParser& parser);
 
     private:
-      // Possible prototypes we can create from.  Uses getTypeName() for match.
-      typedef std::vector<const NCMLElement*> ProtoList;
+        // Interface
 
-      /** Add the prototype subclass as an element we can factory up!
-       * Used by createTheFactory to create the initial factory.
-       * If a prototype with type name == proto->getTypeName() already
-       * exists in the factory, proto will replace it.
-       */
-      void addPrototype(const NCMLElement* proto);
+        /** Add the initial prototypes to this so we are ready to rumble */
+        void initialize();
 
-      /** Return the iterator for the prototype for elementTypeName, or _protos.end() if not found. */
-      ProtoList::iterator findPrototype(const std::string& elementTypeName);
+    private:
+        // Possible prototypes we can create from.  Uses getTypeName() for match.
+        typedef std::vector<const NCMLElement*> ProtoList;
 
-      ProtoList _protos;
+        /** Add the prototype subclass as an element we can factory up!
+         * Used by createTheFactory to create the initial factory.
+         * If a prototype with type name == proto->getTypeName() already
+         * exists in the factory, proto will replace it.
+         */
+        void addPrototype(const NCMLElement* proto);
+
+        /** Return the iterator for the prototype for elementTypeName, or _protos.end() if not found. */
+        ProtoList::iterator findPrototype(const std::string& elementTypeName);
+
+        ProtoList _protos;
     };
 
-  protected:
+protected:
     // Abstract: Only subclasses can create these
     explicit NCMLElement(NCMLParser* p);
 
     NCMLElement(const NCMLElement& proto);
 
-  private:
+private:
     // Disallow assignment for now
     NCMLElement& operator=(const NCMLElement& rhs);
 
-  public:
+public:
     virtual ~NCMLElement();
 
     void setParser(NCMLParser* p);
@@ -148,11 +147,8 @@ namespace ncml_module
      * If throwOnError is set, we throw a parse error instead of returning.
      * @return whether all attributes are in the valid set if not throw
      */
-    virtual bool validateAttributes(const XMLAttributeMap& attrs,
-        const vector<string>& validAttrs,
-        vector<string>* pInvalidAttrs = 0,
-        bool printInvalid = true,
-        bool throwOnError = true);
+    virtual bool validateAttributes(const XMLAttributeMap& attrs, const vector<string>& validAttrs,
+        vector<string>* pInvalidAttrs = 0, bool printInvalid = true, bool throwOnError = true);
 
     /** Handle a begin on this element.
      * Called after creation and it is assumed the
@@ -185,23 +181,22 @@ namespace ncml_module
     /** @return whether all the attributes in attrMap are in validAttrs.
      * If pInvalidAttributes, fill it in with all the illegal attributes.
      */
-    static bool areAllAttributesValid(const XMLAttributeMap& attrMap,
-        const std::vector<string>& validAttrs,
-        std::vector<string>* pInvalidAttributes=0);
+    static bool areAllAttributesValid(const XMLAttributeMap& attrMap, const std::vector<string>& validAttrs,
+        std::vector<string>* pInvalidAttributes = 0);
 
-  protected: // data rep
+protected:
+    // data rep
     NCMLParser* _parser;
-  };
+};
 
 }
 
 /** Output obj.toString() to the stream */
 inline std::ostream &
-operator<<( std::ostream &strm, const ncml_module::NCMLElement &obj )
+operator<<(std::ostream &strm, const ncml_module::NCMLElement &obj)
 {
     strm << obj.toString();
-    return strm ;
+    return strm;
 }
-
 
 #endif /* __NCML_MODULE__NCMLELEMENT_H__ */

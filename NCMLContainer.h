@@ -35,7 +35,7 @@
 
 #include <string>
 
-using std::string ;
+using std::string;
 
 #include "BESContainer.h"
 
@@ -43,37 +43,37 @@ using std::string ;
  *
  * The real name of a NCMLContainer is the actual NCML request. When the
  * access method is called the NCML request is made, the response cached if
- * successfull, and the target response returned as the real container that
+ * Successful, and the target response returned as the real container that
  * a data handler would then open.
  *
  * @see NCMLContainerStorage
  */
-class NCMLContainer : public BESContainer
-{
+class NCMLContainer: public BESContainer {
 private:
-    string			_xml_doc ;
-    bool			_accessed ;
-    string			_tmp_file_name ;
+    string _xml_doc;
+    bool _accessed;
+    string _tmp_file_name;
 
-				NCMLContainer()
-				    : BESContainer(), _accessed( false ) {}
+    NCMLContainer() :
+        BESContainer(), _accessed(false)
+    {
+    }
 protected:
-    void			_duplicate( NCMLContainer &copy_to ) ;
+    void _duplicate(NCMLContainer &copy_to);
 public:
-    				NCMLContainer( const string &sym_name,
-					       const string &real_name ) ;
+    NCMLContainer(const string &sym_name, const string &real_name);
 
-				NCMLContainer( const NCMLContainer &copy_from ) ;
+    NCMLContainer(const NCMLContainer &copy_from);
 
-    virtual			~NCMLContainer() ;
+    virtual ~NCMLContainer();
 
-    virtual BESContainer *	ptr_duplicate( ) ;
+    virtual BESContainer * ptr_duplicate();
 
-    virtual string		access() ;
+    virtual string access();
 
-    virtual bool		release() ;
+    virtual bool release();
 
-    virtual void		dump( ostream &strm ) const ;
+    virtual void dump(ostream &strm) const;
 };
 
 #endif // NCMLContainer_h_

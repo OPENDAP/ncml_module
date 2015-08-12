@@ -39,92 +39,88 @@
 
 using libdap::Array;
 
-namespace ncml_module
-{
-  /** @brief A wrapper class for a vector of Array::dimension structs.
-   *
-   * We add functionality for equality, getting space sizes for
-   * constrained and unconstrained cases, and a way to get
-   * row major absolute indices into a linear array rep of a multi-dimensional array
-   * (as C stores them).
-   *
-   * Shape::IndexIterator: We also add an iterator for generating the full set of index tuples
-   * for all the points in a given Shape (constrained or not) using a row major order memory traversal
-   * (i.e. for the case of no constraints, we should advance linearly one element at a time through the memory
-   * when looking up an index tuple). Leftmost component of the tuple varies fastest.  Again,
-   * these iterator work if there is a constraint on the dataset as well, generating one index tuple
-   * for each entry in the defined hyperslab, also in row major order so that the constrained
-   * elements can be shoved into a Vector _buf for shipping off the hyperslab.
-   */
-  class Shape
-  {
-  public:
+namespace ncml_module {
+/** @brief A wrapper class for a vector of Array::dimension structs.
+ *
+ * We add functionality for equality, getting space sizes for
+ * constrained and unconstrained cases, and a way to get
+ * row major absolute indices into a linear array rep of a multi-dimensional array
+ * (as C stores them).
+ *
+ * Shape::IndexIterator: We also add an iterator for generating the full set of index tuples
+ * for all the points in a given Shape (constrained or not) using a row major order memory traversal
+ * (i.e. for the case of no constraints, we should advance linearly one element at a time through the memory
+ * when looking up an index tuple). Leftmost component of the tuple varies fastest.  Again,
+ * these iterator work if there is a constraint on the dataset as well, generating one index tuple
+ * for each entry in the defined hyperslab, also in row major order so that the constrained
+ * elements can be shoved into a Vector _buf for shipping off the hyperslab.
+ */
+class Shape {
+public:
     // Indices into the space of the shape.
     typedef std::vector<unsigned int> IndexTuple;
 
-  public: // Inner Classes
+public:
+    // Inner Classes
 
-       /** A custom iterator that enumerates all the points in the space
-        * defined by a Shape in row major order.  It ALSO handles constraints
-        * on the Shape and will return the enumeration of only the points
-        * in the constraint hyperslab, starting with the start index on
-        * all dimensions and incrementing the rightmost dimensions fastest */
-       class IndexIterator
-       : public std::iterator < std::forward_iterator_tag, IndexTuple >
-       {
-       public:
-         /** isEnd is only set by Shape for creating an end() iterator... */
-         IndexIterator(); // for uninitialized.  Don't use it!
-         IndexIterator(const Shape& shape, bool isEnd=false);
-         IndexIterator(const IndexIterator& proto);
-         ~IndexIterator();
-         IndexIterator& operator=(const IndexIterator& rhs);
-         bool operator==(const IndexIterator& rhs) const;
-
-         inline bool operator!=(const IndexIterator& rhs) const
-         {
-           return (! ((*this) == rhs));
-          }
-
-         inline IndexIterator& operator++() //prefix
-         {
-           advanceCurrent();
-           return *this;
-         }
-
-         inline IndexIterator operator++(int) // postfix...
-         {
-           // Copy it, this is why prefix increment is preferred in STL...
-           Shape::IndexIterator tmp(*this);
-           ++(*this);
-           return tmp;
-         }
-
-         // don't mutate the return, we use it to compute next element!
-         inline const Shape::IndexTuple& operator*()
-         {
-           NCML_ASSERT_MSG(!_end, "Can't reference end iterator!");
-           return _current;
-         }
-
-       private:
-         /** If !_end,  Advance the iterator by one point.  If there are no more points, it sets _end to true. */
-         void advanceCurrent();
-
-         /** Set the _current tuple to be the start value for all dimensions */
-         void setCurrentToStart();
-
-       private:
-         const Shape* _shape; // the shape of the space we are iterating on.  It cannot change during an iteration!
-         IndexTuple _current; // the current point.
-         bool _end; // set to true when we reach the end since there's no other way to tell if we're at start or end.
-       }; // class IndexIterator
-
+    /** A custom iterator that enumerates all the points in the space
+     * defined by a Shape in row major order.  It ALSO handles constraints
+     * on the Shape and will return the enumeration of only the points
+     * in the constraint hyperslab, starting with the start index on
+     * all dimensions and incrementing the rightmost dimensions fastest */
+    class IndexIterator: public std::iterator<std::forward_iterator_tag, IndexTuple> {
     public:
-      friend class IndexIterator;
+        /** isEnd is only set by Shape for creating an end() iterator... */
+        IndexIterator(); // for uninitialized.  Don't use it!
+        IndexIterator(const Shape& shape, bool isEnd = false);
+        IndexIterator(const IndexIterator& proto);
+        ~IndexIterator();
+        IndexIterator& operator=(const IndexIterator& rhs);
+        bool operator==(const IndexIterator& rhs) const;
 
+        inline bool operator!=(const IndexIterator& rhs) const
+        {
+            return (!((*this) == rhs));
+        }
 
-  public:
+        inline IndexIterator& operator++() //prefix
+        {
+            advanceCurrent();
+            return *this;
+        }
+
+        inline IndexIterator operator++(int) // postfix...
+        {
+            // Copy it, this is why prefix increment is preferred in STL...
+            Shape::IndexIterator tmp(*this);
+            ++(*this);
+            return tmp;
+        }
+
+        // don't mutate the return, we use it to compute next element!
+        inline const Shape::IndexTuple& operator*()
+        {
+            NCML_ASSERT_MSG(!_end, "Can't reference end iterator!");
+            return _current;
+        }
+
+    private:
+        /** If !_end,  Advance the iterator by one point.  If there are no more points, it sets _end to true. */
+        void advanceCurrent();
+
+        /** Set the _current tuple to be the start value for all dimensions */
+        void setCurrentToStart();
+
+    private:
+        const Shape* _shape; // the shape of the space we are iterating on.  It cannot change during an iteration!
+        IndexTuple _current; // the current point.
+        bool _end; // set to true when we reach the end since there's no other way to tell if we're at start or end.
+    }; // class IndexIterator
+
+public:
+    friend class IndexIterator;
+
+public:
     /** The empty shape, with no dimensions.  Not valid for anything useful except IndexIterator */
     Shape();
     Shape(const Shape& proto);
@@ -141,7 +137,7 @@ namespace ncml_module
     /** @return !(*this == rhs) */
     bool operator!=(const Shape& rhs) const
     {
-      return !(*this == rhs);
+        return !(*this == rhs);
     }
 
     /** Are there constraints on the dimension? */
@@ -152,7 +148,7 @@ namespace ncml_module
 
     inline unsigned int getNumDimensions() const
     {
-      return _dims.size();
+        return _dims.size();
     }
 
     /** Helper:
@@ -162,23 +158,21 @@ namespace ncml_module
     /** Get the product of all the dimension sizes */
     inline unsigned int getUnconstrainedSpaceSize() const
     {
-      unsigned int size = 1;
-      for (unsigned int i=0; i<_dims.size(); ++i)
-        {
-          size *= _dims[i].size;
+        unsigned int size = 1;
+        for (unsigned int i = 0; i < _dims.size(); ++i) {
+            size *= _dims[i].size;
         }
-      return size;
+        return size;
     }
 
     /** Get the production of all dimension c_sizes. */
     inline unsigned int getConstrainedSpaceSize() const
     {
-      unsigned int c_size = 1;
-      for (unsigned int i=0; i<_dims.size(); ++i)
-        {
-          c_size *= _dims[i].c_size;
+        unsigned int c_size = 1;
+        for (unsigned int i = 0; i < _dims.size(); ++i) {
+            c_size *= _dims[i].c_size;
         }
-      return c_size;
+        return c_size;
     }
 
     /** Return the row major linear index into a slowest varying dimension first
@@ -197,7 +191,7 @@ namespace ncml_module
      * @exception If the dimensionality of indices does not match the dimensionality of _dims.
      * @exception If any index in indices is out of bounds for the matching dimension in _dims.
      */
-    unsigned int getRowMajorIndex(const IndexTuple& indices, bool validate=true) const;
+    unsigned int getRowMajorIndex(const IndexTuple& indices, bool validate = true) const;
 
     /**
      * Create a forward iterator that returns IndexTuple's in a row major order
@@ -229,20 +223,21 @@ namespace ncml_module
      */
     bool validateIndices(const IndexTuple& indices) const;
 
+private:
+    // Methods
 
-  private: // Methods
-
-  private:
+private:
     std::vector<Array::dimension> _dims;
 
-  }; // class Shape
+};
+// class Shape
 
-} // namespace ncml_module
+}// namespace ncml_module
 
 inline std::ostream &
 operator<<(std::ostream &strm, const ncml_module::Shape& shape)
 {
     shape.print(strm);
-    return strm ;
+    return strm;
 }
 #endif /* __NCML_MODULE__SHAPE_H__ */

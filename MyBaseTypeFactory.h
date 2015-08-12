@@ -36,37 +36,35 @@
 #include "Array.h"
 #include "BaseType.h" // need the Type enum...
 
-
-namespace libdap
-{
-  class BaseTypeFactory;
+namespace libdap {
+class BaseTypeFactory;
 }
 
-namespace ncml_module
-{
-  /**
-   * @brief Wrapper for the BaseTypeFactory that lets us create by type name.
-   *
-   * The regular BaseTypeFactory doesn't have a factory method by type name,
-   * so this wrapper will add the desired functionality.  It is a static class
-   * rather than a subclass.
-   *
-   * Note that we can create normal libdap::Array by name, but this is deprecated
-   * since it fails with constraints.  We have added
-   * special functionality for Array<T> to define an NCMLArray<T> as the return type.
-   * This allows hyperslab constraints to work.
-   */
-  class MyBaseTypeFactory
-  {
-  protected: // static class for now
+namespace ncml_module {
+/**
+ * @brief Wrapper for the BaseTypeFactory that lets us create by type name.
+ *
+ * The regular BaseTypeFactory doesn't have a factory method by type name,
+ * so this wrapper will add the desired functionality.  It is a static class
+ * rather than a subclass.
+ *
+ * Note that we can create normal libdap::Array by name, but this is deprecated
+ * since it fails with constraints.  We have added
+ * special functionality for Array<T> to define an NCMLArray<T> as the return type.
+ * This allows hyperslab constraints to work.
+ */
+class MyBaseTypeFactory {
+protected:
+    // static class for now
     MyBaseTypeFactory();
     virtual ~MyBaseTypeFactory();
 
-  private: // disallow copies
+private:
+    // disallow copies
     MyBaseTypeFactory(const MyBaseTypeFactory& rhs);
     MyBaseTypeFactory& operator=(const MyBaseTypeFactory& rhs);
 
-  public:
+public:
 
     static libdap::Type getType(const string& name);
 
@@ -99,14 +97,15 @@ namespace ncml_module
      * @param name the name to give the new Array
      * @param addTemplateVar  whether to create and add the template var so that var() is non-null.
      */
-    static std::auto_ptr<libdap::Array> makeArrayTemplateVariable(const string& type, const string& name, bool addTemplateVar);
+    static std::auto_ptr<libdap::Array> makeArrayTemplateVariable(const string& type, const string& name,
+        bool addTemplateVar);
 
-
-  private: //data rep
+private:
+    //data rep
 
     // Singleton factory we will use to create variables by type name
     static libdap::BaseTypeFactory* _spFactory;
-  };
+};
 
 }
 

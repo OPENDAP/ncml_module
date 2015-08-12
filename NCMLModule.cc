@@ -46,7 +46,7 @@
 #include <BESInternalError.h>
 
 #include "NCMLModule.h"
-#include "NCMLCacheAggXMLCommand.h"
+//#include "NCMLCacheAggXMLCommand.h"
 #include "NCMLRequestHandler.h"
 #include "NCMLResponseNames.h"
 #include "NCMLContainerStorage.h"
@@ -58,138 +58,138 @@ static const char* const NCML_CATALOG = "catalog";
 
 void NCMLModule::initialize(const string &modname)
 {
-	BESDEBUG(modname, "Initializing NCML Module " << modname << endl);
+    BESDEBUG(modname, "Initializing NCML Module " << modname << endl);
 
-	BESDEBUG(modname, "    adding " << modname << " request handler" << endl);
-	BESRequestHandlerList::TheList()->add_handler(modname, new NCMLRequestHandler(modname));
+    BESDEBUG(modname, "    adding " << modname << " request handler" << endl);
+    BESRequestHandlerList::TheList()->add_handler(modname, new NCMLRequestHandler(modname));
 
-	// If new commands are needed, then let's declare this once here. If
-	// not, then you can remove this line.
+    // If new commands are needed, then let's declare this once here. If
+    // not, then you can remove this line.
 #if 0
-	// Not used. jhrg 4/16/14
-	addCommandAndResponseHandlers(modname);
+    // Not used. jhrg 4/16/14
+    addCommandAndResponseHandlers(modname);
 #endif
-	// Dap services
-	BESDEBUG(modname, modname << " handles dap services" << endl);
-	BESDapService::handle_dap_service(modname);
+    // Dap services
+    BESDEBUG(modname, modname << " handles dap services" << endl);
+    BESDapService::handle_dap_service(modname);
 
-	BESDEBUG(modname, "    adding " << NCML_CATALOG << " catalog" << endl);
-	if (!BESCatalogList::TheCatalogList()->ref_catalog(NCML_CATALOG)) {
-		BESCatalogList::TheCatalogList()->add_catalog(new BESCatalogDirectory(NCML_CATALOG));
-	}
-	else {
-		BESDEBUG(modname, "    catalog already exists, skipping" << endl);
-	}
+    BESDEBUG(modname, "    adding " << NCML_CATALOG << " catalog" << endl);
+    if (!BESCatalogList::TheCatalogList()->ref_catalog(NCML_CATALOG)) {
+        BESCatalogList::TheCatalogList()->add_catalog(new BESCatalogDirectory(NCML_CATALOG));
+    }
+    else {
+        BESDEBUG(modname, "    catalog already exists, skipping" << endl);
+    }
 
-	BESDEBUG(modname, "    adding catalog container storage " << NCML_CATALOG << endl);
-	if (!BESContainerStorageList::TheList()->ref_persistence(NCML_CATALOG)) {
-		BESContainerStorageCatalog *csc = new BESContainerStorageCatalog(NCML_CATALOG);
-		BESContainerStorageList::TheList()->add_persistence(csc);
-	}
-	else {
-		BESDEBUG(modname, "    storage already exists, skipping" << endl);
-	}
+    BESDEBUG(modname, "    adding catalog container storage " << NCML_CATALOG << endl);
+    if (!BESContainerStorageList::TheList()->ref_persistence(NCML_CATALOG)) {
+        BESContainerStorageCatalog *csc = new BESContainerStorageCatalog(NCML_CATALOG);
+        BESContainerStorageList::TheList()->add_persistence(csc);
+    }
+    else {
+        BESDEBUG(modname, "    storage already exists, skipping" << endl);
+    }
 
-	BESDEBUG(modname, "    adding " << modname << " container storage" << endl);
-	BESContainerStorageList::TheList()->add_persistence(new NCMLContainerStorage(modname));
+    BESDEBUG(modname, "    adding " << modname << " container storage" << endl);
+    BESContainerStorageList::TheList()->add_persistence(new NCMLContainerStorage(modname));
 
-	string key = "NCML.TempDirectory";
-	BESDEBUG( modname, "    checking " << key << " parameter" << endl );
-	string val;
-	bool found = false;
-	TheBESKeys::TheKeys()->get_value(key, val, found);
-	if (!found || val.empty() || val == "/") {
-		string err = (string) "The parameter " + key + " must be set to use the NCML module";
-		throw BESInternalError(err, __FILE__, __LINE__);
-	}
-	NCMLContainerStorage::NCML_TempDir = val;
+    string key = "NCML.TempDirectory";
+    BESDEBUG(modname, "    checking " << key << " parameter" << endl);
+    string val;
+    bool found = false;
+    TheBESKeys::TheKeys()->get_value(key, val, found);
+    if (!found || val.empty() || val == "/") {
+        string err = (string) "The parameter " + key + " must be set to use the NCML module";
+        throw BESInternalError(err, __FILE__, __LINE__);
+    }
+    NCMLContainerStorage::NCML_TempDir = val;
 
-	BESDEBUG(modname, "    adding NCML debug context" << endl);
-	BESDebug::Register(modname);
+    BESDEBUG(modname, "    adding NCML debug context" << endl);
+    BESDebug::Register(modname);
 
-	BESDEBUG(modname, "Done Initializing NCML Module " << modname << endl);
+    BESDEBUG(modname, "Done Initializing NCML Module " << modname << endl);
 }
 
 void NCMLModule::terminate(const string &modname)
 {
-	BESDEBUG(modname, "Cleaning NCML module " << modname << endl);
+    BESDEBUG(modname, "Cleaning NCML module " << modname << endl);
 
-	BESDEBUG(modname, "    removing " << modname << " request handler" << endl);
-	BESRequestHandler *rh = BESRequestHandlerList::TheList()->remove_handler(modname);
-	if (rh) delete rh;
+    BESDEBUG(modname, "    removing " << modname << " request handler" << endl);
+    BESRequestHandler *rh = BESRequestHandlerList::TheList()->remove_handler(modname);
+    if (rh) delete rh;
 
-	// If new commands were added, remove them here.
+    // If new commands were added, remove them here.
 #if 0
-	// Not used. jhrg 4/16/14
-	removeCommandAndResponseHandlers();
+    // Not used. jhrg 4/16/14
+    removeCommandAndResponseHandlers();
 #endif
 
-	BESDEBUG(modname, "    removing catalog container storage" << NCML_CATALOG << endl);
-	BESContainerStorageList::TheList()->deref_persistence(NCML_CATALOG);
+    BESDEBUG(modname, "    removing catalog container storage" << NCML_CATALOG << endl);
+    BESContainerStorageList::TheList()->deref_persistence(NCML_CATALOG);
 
-	BESDEBUG( modname, "    removing ncml container storage" << endl );
-	BESContainerStorageList::TheList()->deref_persistence(modname);
+    BESDEBUG(modname, "    removing ncml container storage" << endl);
+    BESContainerStorageList::TheList()->deref_persistence(modname);
 
-	BESDEBUG(modname, "    removing " << NCML_CATALOG << " catalog" << endl);
-	BESCatalogList::TheCatalogList()->deref_catalog(NCML_CATALOG);
+    BESDEBUG(modname, "    removing " << NCML_CATALOG << " catalog" << endl);
+    BESCatalogList::TheCatalogList()->deref_catalog(NCML_CATALOG);
 
-	// Cleanup libxml2. jhrg 7/6/15
-	xmlCleanupParser();
+    // Cleanup libxml2. jhrg 7/6/15
+    xmlCleanupParser();
 
-	// TERM_END
-	BESDEBUG(modname, "Done Cleaning NCML module " << modname << endl);
+    // TERM_END
+    BESDEBUG(modname, "Done Cleaning NCML module " << modname << endl);
 }
 
 extern "C" {
 BESAbstractModule *maker()
 {
-	return new NCMLModule;
+    return new NCMLModule;
 }
 }
 
 void NCMLModule::dump(ostream &strm) const
 {
-	strm << BESIndent::LMarg << "NCMLModule::dump - (" << (void *) this << ")" << endl;
+    strm << BESIndent::LMarg << "NCMLModule::dump - (" << (void *) this << ")" << endl;
 }
 
 #if 0
 // Not used. jhrg 4/16/14
 void NCMLModule::addCommandAndResponseHandlers(const string& modname)
 {
-	BESDEBUG(modname, "Adding module extensions..." << endl);
-	addCacheAggCommandAndResponseHandlers(modname);
-	BESDEBUG(modname, "... done adding module extensions." << endl);
+    BESDEBUG(modname, "Adding module extensions..." << endl);
+    addCacheAggCommandAndResponseHandlers(modname);
+    BESDEBUG(modname, "... done adding module extensions." << endl);
 }
 
 void NCMLModule::addCacheAggCommandAndResponseHandlers(const string& modname)
 {
-	string cmdName = ModuleConstants::CACHE_AGG_RESPONSE;
+    string cmdName = ModuleConstants::CACHE_AGG_RESPONSE;
 
-	BESDEBUG( modname, "    adding "
-			<< cmdName
-			<< " response handler" << endl );
-	BESResponseHandlerList::TheList()->add_handler(cmdName, NCMLCacheAggResponseHandler::makeInstance);
+    BESDEBUG( modname, "    adding "
+        << cmdName
+        << " response handler" << endl );
+    BESResponseHandlerList::TheList()->add_handler(cmdName, NCMLCacheAggResponseHandler::makeInstance);
 
-	BESDEBUG(modname, "    adding " << cmdName << " command" << endl );
-	BESXMLCommand::add_command(cmdName, NCMLCacheAggXMLCommand::makeInstance);
+    BESDEBUG(modname, "    adding " << cmdName << " command" << endl );
+    BESXMLCommand::add_command(cmdName, NCMLCacheAggXMLCommand::makeInstance);
 }
 
 void NCMLModule::removeCommandAndResponseHandlers()
 {
-	BESDEBUG(ModuleConstants::NCML_NAME, "Removing module extensions..." << endl);
-	removeCacheAggCommandAndResponseHandlers();
-	BESDEBUG(ModuleConstants::NCML_NAME, "... done removing module extensions." << endl);
+    BESDEBUG(ModuleConstants::NCML_NAME, "Removing module extensions..." << endl);
+    removeCacheAggCommandAndResponseHandlers();
+    BESDEBUG(ModuleConstants::NCML_NAME, "... done removing module extensions." << endl);
 }
 
 void NCMLModule::removeCacheAggCommandAndResponseHandlers()
 {
-	string cmdName = ModuleConstants::CACHE_AGG_RESPONSE;
+    string cmdName = ModuleConstants::CACHE_AGG_RESPONSE;
 
-	BESDEBUG( ModuleConstants::NCML_NAME, "    removing " << cmdName
-			<< " response handler" << endl );
-	BESResponseHandlerList::TheList()->remove_handler(cmdName);
+    BESDEBUG( ModuleConstants::NCML_NAME, "    removing " << cmdName
+        << " response handler" << endl );
+    BESResponseHandlerList::TheList()->remove_handler(cmdName);
 
-	BESDEBUG( ModuleConstants::NCML_NAME, "    removing " << cmdName << " command" << endl );
-	BESXMLCommand::del_command(cmdName);
+    BESDEBUG( ModuleConstants::NCML_NAME, "    removing " << cmdName << " command" << endl );
+    BESXMLCommand::del_command(cmdName);
 }
 #endif

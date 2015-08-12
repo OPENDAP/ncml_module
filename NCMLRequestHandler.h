@@ -33,40 +33,43 @@
 #include "BESRequestHandler.h"
 #include "BESDDSResponse.h"
 
-namespace ncml_module
-{
+namespace ncml_module {
 /**
  * Handler for AIS Using NCML
  */
-class NCMLRequestHandler : public BESRequestHandler
-{
-private: // rep
-    static bool     _global_attributes_container_name_set ;
-    static string   _global_attributes_container_name;
+class NCMLRequestHandler: public BESRequestHandler {
+private:
+    // rep
+    static bool _global_attributes_container_name_set;
+    static string _global_attributes_container_name;
 
 private:
 #if 0
     // Not used jhrg 4/16/14
     // example for loading other locations by hijacking the dhi of the ncml request.
-    static bool		ncml_build_redirect( BESDataHandlerInterface &dhi, const string& location ) ;
+    static bool ncml_build_redirect( BESDataHandlerInterface &dhi, const string& location );
 #endif
 public:
-			NCMLRequestHandler( const string &name ) ;
-    virtual		~NCMLRequestHandler( void ) ;
+    NCMLRequestHandler(const string &name);
+    virtual ~NCMLRequestHandler(void);
 
-    virtual void	dump( ostream &strm ) const ;
+    virtual void dump(ostream &strm) const;
 
-    static bool		ncml_build_das( BESDataHandlerInterface &dhi ) ;
-    static bool		ncml_build_dds( BESDataHandlerInterface &dhi ) ;
-    static bool		ncml_build_data( BESDataHandlerInterface &dhi ) ;
-    static bool		ncml_build_dmr( BESDataHandlerInterface &dhi ) ;
-    static bool		ncml_build_vers( BESDataHandlerInterface &dhi ) ;
-    static bool		ncml_build_help( BESDataHandlerInterface &dhi ) ;
+    static bool ncml_build_das(BESDataHandlerInterface &dhi);
+    static bool ncml_build_dds(BESDataHandlerInterface &dhi);
+    static bool ncml_build_data(BESDataHandlerInterface &dhi);
+    static bool ncml_build_dmr(BESDataHandlerInterface &dhi);
+    static bool ncml_build_vers(BESDataHandlerInterface &dhi);
+    static bool ncml_build_help(BESDataHandlerInterface &dhi);
 
-    static string get_global_attributes_container_name() { return _global_attributes_container_name; }
+    static string get_global_attributes_container_name()
+    {
+        return _global_attributes_container_name;
+    }
 
-}; // class NCMLRequestHandler
-} // namespace ncml_module
+};
+// class NCMLRequestHandler
+}// namespace ncml_module
 
 #endif // NCMLRequestHandler.h
 

@@ -32,90 +32,76 @@
 #include "NCMLParser.h"
 #include "NCMLUtil.h"
 
-namespace ncml_module
+namespace ncml_module {
+
+const string ReadMetadataElement::_sTypeName = "readMetadata";
+const vector<string> ReadMetadataElement::_sValidAttributes = vector<string>();
+
+ReadMetadataElement::ReadMetadataElement() :
+    RCObjectInterface(), NCMLElement(0)
 {
+}
 
-  const string ReadMetadataElement::_sTypeName = "readMetadata";
-  const vector<string> ReadMetadataElement::_sValidAttributes = vector<string>();
+ReadMetadataElement::ReadMetadataElement(const ReadMetadataElement& proto) :
+    RCObjectInterface(), NCMLElement(proto)
+{
+}
 
-  ReadMetadataElement::ReadMetadataElement()
-  : RCObjectInterface()
-  , NCMLElement(0)
-  {
-  }
+ReadMetadataElement::~ReadMetadataElement()
+{
+}
 
-  ReadMetadataElement::ReadMetadataElement(const ReadMetadataElement& proto)
-  : RCObjectInterface()
-  , NCMLElement(proto)
-  {
-  }
-
-  ReadMetadataElement::~ReadMetadataElement()
-  {
-  }
-
-  const string&
-  ReadMetadataElement::getTypeName() const
-  {
+const string&
+ReadMetadataElement::getTypeName() const
+{
     return _sTypeName;
-  }
+}
 
-  ReadMetadataElement*
-  ReadMetadataElement::clone() const
-  {
+ReadMetadataElement*
+ReadMetadataElement::clone() const
+{
     return new ReadMetadataElement(*this);
-  }
+}
 
-  void
-  ReadMetadataElement::setAttributes(const XMLAttributeMap&  attrs)
-  {
+void ReadMetadataElement::setAttributes(const XMLAttributeMap& attrs)
+{
     // make sure that none are specifed, basically.  We'll list them out in here if we get any
     // which is why this rather than check map size and throw.
     validateAttributes(attrs, _sValidAttributes);
-  }
+}
 
-  void
-  ReadMetadataElement::handleBegin()
-  {
-    if (!_parser->isScopeNetcdf())
-        {
-          THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
-              "Got <readMetadata/> while not within <netcdf>");
-        }
+void ReadMetadataElement::handleBegin()
+{
+    if (!_parser->isScopeNetcdf()) {
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(), "Got <readMetadata/> while not within <netcdf>");
+    }
     NetcdfElement* dataset = _parser->getCurrentDataset();
     VALID_PTR(dataset);
 
     // Like Highlander, there can be only one!
-    if (dataset->getProcessedMetadataDirective())
-      {
-      THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
-          "Got " + toString() +
-          " element but we already got a metadata directive"
-          " for the current dataset!  Only one may be specified.");
-      }
+    if (dataset->getProcessedMetadataDirective()) {
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Got " + toString() + " element but we already got a metadata directive"
+                " for the current dataset!  Only one may be specified.");
+    }
     dataset->setProcessedMetadataDirective();
-  }
+}
 
-  void
-  ReadMetadataElement::handleContent(const string& content)
-  {
-    if (!NCMLUtil::isAllWhitespace(content))
-      {
+void ReadMetadataElement::handleContent(const string& content)
+{
+    if (!NCMLUtil::isAllWhitespace(content)) {
         THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
             "Got non-whitespace for element content and didn't expect it."
-            " Element=" + toString() + " content=\"" +
-            content + "\"");
-      }
-  }
+                " Element=" + toString() + " content=\"" + content + "\"");
+    }
+}
 
-  void
-  ReadMetadataElement::handleEnd()
-  {
-  }
+void ReadMetadataElement::handleEnd()
+{
+}
 
-  string
-  ReadMetadataElement::toString() const
-  {
+string ReadMetadataElement::toString() const
+{
     return "<" + _sTypeName + ">";
-  }
+}
 }

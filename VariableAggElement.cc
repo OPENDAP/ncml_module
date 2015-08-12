@@ -32,106 +32,90 @@
 #include "NCMLParser.h"
 #include "NCMLUtil.h"
 
-namespace ncml_module
+namespace ncml_module {
+const string VariableAggElement::_sTypeName = "variableAgg";
+const vector<string> VariableAggElement::_sValidAttributes = getValidAttributes();
+
+VariableAggElement::VariableAggElement() :
+    RCObjectInterface(), NCMLElement(0), _name("")
 {
-  const string VariableAggElement::_sTypeName = "variableAgg";
-  const vector<string> VariableAggElement::_sValidAttributes = getValidAttributes();
+}
 
-  VariableAggElement::VariableAggElement()
-  : RCObjectInterface()
-  , NCMLElement(0)
-  , _name("")
-  {
-  }
+VariableAggElement::VariableAggElement(const VariableAggElement& proto) :
+    RCObjectInterface(), NCMLElement(proto), _name(proto._name)
+{
+}
 
-  VariableAggElement::VariableAggElement(const VariableAggElement& proto)
-  : RCObjectInterface()
-  , NCMLElement(proto)
-  , _name(proto._name)
-  {
-  }
-
-  VariableAggElement::~VariableAggElement()
-  {
+VariableAggElement::~VariableAggElement()
+{
     _name.clear();
-  }
+}
 
-  const string&
-  VariableAggElement::getTypeName() const
-  {
-     return _sTypeName;
-  }
+const string&
+VariableAggElement::getTypeName() const
+{
+    return _sTypeName;
+}
 
-  VariableAggElement*
-  VariableAggElement::clone() const
-  {
+VariableAggElement*
+VariableAggElement::clone() const
+{
     return new VariableAggElement(*this);
-  }
+}
 
-  void
-  VariableAggElement::setAttributes(const XMLAttributeMap& attrs)
-  {
+void VariableAggElement::setAttributes(const XMLAttributeMap& attrs)
+{
     validateAttributes(attrs, _sValidAttributes);
     _name = attrs.getValueForLocalNameOrDefault("name", "");
-  }
+}
 
-  void
-  VariableAggElement::handleBegin()
-  {
+void VariableAggElement::handleBegin()
+{
     VALID_PTR(_parser);
 
     // Make sure the name is not empty or this is uselss.
-    if (_name.empty())
-      {
+    if (_name.empty()) {
         THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
             "Cannot have variableAgg@name empty! Scope=" + _parser->getScopeString());
-      }
+    }
 
     // Also make sure we are the direct child of an aggregation or it's an error as well!
-    if (!_parser->isScopeAggregation())
-      {
-        THROW_NCML_PARSE_ERROR(
-            _parser->getParseLineNumber(),
-            "Got a variableAgg element not as a direct child of an aggregation!  elt=" + toString() +
-            " at scope=" + _parser->getScopeString() );
-      }
+    if (!_parser->isScopeAggregation()) {
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
+            "Got a variableAgg element not as a direct child of an aggregation!  elt=" + toString() + " at scope="
+                + _parser->getScopeString());
+    }
 
     AggregationElement& parentAgg = getParentAggregation();
     parentAgg.addAggregationVariable(_name);
     parentAgg.setVariableAggElement(); // let the agg know we're adding to it.
-  }
+}
 
-  void
-  VariableAggElement::handleEnd()
-  {
-  }
+void VariableAggElement::handleEnd()
+{
+}
 
-  string
-  VariableAggElement::toString() const
-  {
-    return (string("<") + _sTypeName +
-      printAttributeIfNotEmpty("name", _name) +
-      "/>");
-  }
+string VariableAggElement::toString() const
+{
+    return (string("<") + _sTypeName + printAttributeIfNotEmpty("name", _name) + "/>");
+}
 
-  AggregationElement&
-  VariableAggElement::getParentAggregation() const
-  {
+AggregationElement&
+VariableAggElement::getParentAggregation() const
+{
     AggregationElement* pAgg = dynamic_cast<AggregationElement*>(_parser->getCurrentElement());
-    NCML_ASSERT_MSG(pAgg,
-        "VariableAggElement::getParentAggregation(): "
+    NCML_ASSERT_MSG(pAgg, "VariableAggElement::getParentAggregation(): "
         "Expected current top of stack was AggregationElement*, but it wasn't!  Logic error!");
     return *pAgg;
-  }
+}
 
-  /////////////////// PRIVATE BELOW
+/////////////////// PRIVATE BELOW
 
-  vector<string>
-  VariableAggElement::getValidAttributes()
-  {
+vector<string> VariableAggElement::getValidAttributes()
+{
     vector<string> validAttrs;
     validAttrs.reserve(1);
     validAttrs.push_back("name");
     return validAttrs;
-  }
+}
 }

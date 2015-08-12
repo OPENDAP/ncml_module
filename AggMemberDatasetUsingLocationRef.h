@@ -35,40 +35,34 @@
 
 class BESDataDDSResponse;
 
-namespace libdap
-{
-  class DataDDS;
-  class DDS;
-};
+namespace libdap {
+class DataDDS;
+class DDS;
+}
 
 using libdap::DataDDS;
 using libdap::DDS;
 
-namespace agg_util
-{
+namespace agg_util {
 
-  /**
-   * class AggMemberDatasetUsingLocationRef:
-   * Concrete subclass of AggMemberDataset for lazy-loading
-   * a location (file) if the DataDDS for the given dataset is needed.
-   *
-   * Note: assignment and copy construction do not copy any loaded
-   * DataDDS, merely the location.  Therefore, if getDataDDS() is
-   * used for one of these and modified, a copy of this will see
-   * the ORIGINAL dataset (will reload it) and NOT any changes to
-   * the version it copied from!
-   *
-   * TODO Consider if we want to change the above by using an
-   * external reference count on the loaded object state...
-   */
-  class AggMemberDatasetUsingLocationRef
-  : public agg_util::AggMemberDatasetWithDimensionCacheBase
-  {
-  public:
+/**
+ * class AggMemberDatasetUsingLocationRef:
+ * Concrete subclass of AggMemberDataset for lazy-loading
+ * a location (file) if the DataDDS for the given dataset is needed.
+ *
+ * Note: assignment and copy construction do not copy any loaded
+ * DataDDS, merely the location.  Therefore, if getDataDDS() is
+ * used for one of these and modified, a copy of this will see
+ * the ORIGINAL dataset (will reload it) and NOT any changes to
+ * the version it copied from!
+ *
+ * TODO Consider if we want to change the above by using an
+ * external reference count on the loaded object state...
+ */
+class AggMemberDatasetUsingLocationRef: public agg_util::AggMemberDatasetWithDimensionCacheBase {
+public:
 
-    AggMemberDatasetUsingLocationRef(
-        const std::string& locationToLoad,
-        const agg_util::DDSLoader& loaderToUse);
+    AggMemberDatasetUsingLocationRef(const std::string& locationToLoad, const agg_util::DDSLoader& loaderToUse);
 
     AggMemberDatasetUsingLocationRef(const AggMemberDatasetUsingLocationRef& proto);
     AggMemberDatasetUsingLocationRef& operator=(const AggMemberDatasetUsingLocationRef& rhs);
@@ -81,22 +75,24 @@ namespace agg_util
      */
     virtual const libdap::DataDDS* getDataDDS();
 
-  private: // helpers
+private:
+    // helpers
 
     /** Load the given location as a data response so that we have a valid DataDDS
-    * for streaming data from */
+     * for streaming data from */
     void loadDataDDS();
 
     /** copy the local data rep from rhs */
     void copyRepFrom(const AggMemberDatasetUsingLocationRef& rhs);
 
-    void cleanup() throw();
+    void cleanup() throw ();
 
 private:
     DDSLoader _loader; // for loading
     BESDataDDSResponse* _pDataResponse; // holds our loaded DDS
 
-  }; // class AggMemberDatasetUsingLocationRef
+};
+// class AggMemberDatasetUsingLocationRef
 
 }
 

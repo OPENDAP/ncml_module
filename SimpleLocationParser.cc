@@ -36,45 +36,39 @@
 using namespace std;
 using namespace ncml_module;
 
-
-SimpleLocationParser::SimpleLocationParser()
-: _location("")
+SimpleLocationParser::SimpleLocationParser() :
+    _location("")
 {
 }
 
 SimpleLocationParser::~SimpleLocationParser()
 {
-  _location = "";
+    _location = "";
 }
 
-string
-SimpleLocationParser::parseAndGetLocation(const string& filename)
+string SimpleLocationParser::parseAndGetLocation(const string& filename)
 {
-  SaxParserWrapper parser(*this);
-  parser.parse(filename);
-  std::string ret = _location;
-  _location = "";
-  return ret;
+    SaxParserWrapper parser(*this);
+    parser.parse(filename);
+    std::string ret = _location;
+    _location = "";
+    return ret;
 }
 
-void
-SimpleLocationParser::onStartElement(const string& name, const XMLAttributeMap& attrs)
+void SimpleLocationParser::onStartElement(const string& name, const XMLAttributeMap& attrs)
 {
-  if (name == "netcdf")
-    {
-      _location = attrs.getValueForLocalNameOrDefault("location", "");
+    if (name == "netcdf") {
+        _location = attrs.getValueForLocalNameOrDefault("location", "");
     }
 }
 
-void
-SimpleLocationParser::onParseWarning(std::string msg)
+void SimpleLocationParser::onParseWarning(std::string msg)
 {
-  BESDEBUG("ncml", "Parse Warning:" << msg << endl);
+    BESDEBUG("ncml", "Parse Warning:" << msg << endl);
 }
 
-void
-SimpleLocationParser::onParseError(std::string msg)
+void SimpleLocationParser::onParseError(std::string msg)
 {
-  BESDEBUG("ncml", "Parse Error:" << msg << endl);
-  // we'll just get an empty location out and handle it upstairs.
+    BESDEBUG("ncml", "Parse Error:" << msg << endl);
+    // we'll just get an empty location out and handle it upstairs.
 }

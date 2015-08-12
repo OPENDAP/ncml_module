@@ -31,38 +31,35 @@
 
 #include "NCMLElement.h"
 
-namespace libdap
-{
-  class BaseType;
+namespace libdap {
+class BaseType;
 }
 
-namespace ncml_module
-{
+namespace ncml_module {
 
-  /**
-   * @brief Concrete class for NcML <variable> element
-   *
-   * This class handles the processing of <variable> elements
-   * in the NcML.
-   *
-   * The class handles all processing of variables, including
-   * setting lexical scope in the parser to the variable's attribute table,
-   * renaming variables, and creating new variables.
-   *
-   * _isNewVariable specifies if the variable was created new in this NcML parse, or
-   *    was just a lexical scope.
-   * _gotValues specifies if the variable had a contained <values> element processed on it yet.
-   *
-   * On handleEnd(), if _isNewVariable && !_gotValues, a parse error is thrown.
-   *
-   * It is also an error to specify a second <values> element if _gotValues.
-   */
-  class VariableElement : public NCMLElement
-  {
-  private:
+/**
+ * @brief Concrete class for NcML <variable> element
+ *
+ * This class handles the processing of <variable> elements
+ * in the NcML.
+ *
+ * The class handles all processing of variables, including
+ * setting lexical scope in the parser to the variable's attribute table,
+ * renaming variables, and creating new variables.
+ *
+ * _isNewVariable specifies if the variable was created new in this NcML parse, or
+ *    was just a lexical scope.
+ * _gotValues specifies if the variable had a contained <values> element processed on it yet.
+ *
+ * On handleEnd(), if _isNewVariable && !_gotValues, a parse error is thrown.
+ *
+ * It is also an error to specify a second <values> element if _gotValues.
+ */
+class VariableElement: public NCMLElement {
+private:
     VariableElement& operator=(const VariableElement& rhs); // disallow
 
-  public:
+public:
     static const string _sTypeName;
     static const vector<string> _sValidAttributes;
 
@@ -79,22 +76,22 @@ namespace ncml_module
 
     const std::string name() const
     {
-      return _name;
+        return _name;
     }
 
     const std::string type() const
     {
-      return _type;
+        return _type;
     }
 
     const std::string shape() const
     {
-      return _shape;
+        return _shape;
     }
 
     const std::string orgName() const
     {
-      return _orgName;
+        return _orgName;
     }
 
     /** @return whether this variable was created and added as a new variable in this parse */
@@ -108,15 +105,15 @@ namespace ncml_module
     /** Called once we set the values from ValuesElement so we are aware. */
     void setGotValues();
 
-  private:
+private:
 
-   /**
-    * Handle the beginning of the variable element.
-    * If _type=="" we assume we just want to match any type and traverse down.
-    * If _type is specified, we assume we want to typecheck.
-    * Pushes the variable onto the scope stack.
-    * The parser's attribute table becomes this variable's table.
-    */
+    /**
+     * Handle the beginning of the variable element.
+     * If _type=="" we assume we just want to match any type and traverse down.
+     * If _type is specified, we assume we want to typecheck.
+     * Pushes the variable onto the scope stack.
+     * The parser's attribute table becomes this variable's table.
+     */
     void processBegin(NCMLParser& p);
 
     /**
@@ -252,7 +249,7 @@ namespace ncml_module
 
     static vector<string> getValidAttributes();
 
-  private:
+private:
     string _name;
     string _type;
     string _shape; // empty() => existing var (shape implicit) or if new var, then scalar (rank 0).
@@ -268,7 +265,7 @@ namespace ncml_module
 
     // true once we get a valid <values> element with values in it.  Used for parse error checking
     bool _gotValues;
-  };
+};
 
 }
 

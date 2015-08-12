@@ -31,22 +31,19 @@
 
 #include "RCObjectInterface.h"
 
-namespace libdap
-{
-  class DDS;
-};
+namespace libdap {
+class DDS;
+}
 
-namespace agg_util
-{
-  /**
-   * Interface class for any object that can contains a DDS.
-   * Useful for avoiding module back-dependencies
-   * since we do not want agg_util dependencies back to
-   * ncml_module, e.g.
-   */
-  class DDSAccessInterface
-  {
-  public:
+namespace agg_util {
+/**
+ * Interface class for any object that can contains a DDS.
+ * Useful for avoiding module back-dependencies
+ * since we do not want agg_util dependencies back to
+ * ncml_module, e.g.
+ */
+class DDSAccessInterface {
+public:
 
     virtual ~DDSAccessInterface() = 0;
 
@@ -56,19 +53,16 @@ namespace agg_util
      * and should NOT be deleted or stored outside the lifetime of this!
      * If the object doesn't have a valid DDS currently, NULL is returned.
      * @return alias to the DDS that the object is containing, or NULL if none.
-    */
+     */
     virtual const libdap::DDS* getDDS() const = 0;
-  };
+};
 
-  /** Mixture interface for when we a
-   * reference-counted DDS container */
-  class DDSAccessRCInterface
-    : public virtual RCObjectInterface
-    , public virtual DDSAccessInterface
-  {
-  public:
-      virtual ~DDSAccessRCInterface() = 0;
-  };
+/** Mixture interface for when we a
+ * reference-counted DDS container */
+class DDSAccessRCInterface: public virtual RCObjectInterface, public virtual DDSAccessInterface {
+public:
+    virtual ~DDSAccessRCInterface() = 0;
+};
 
 }
 

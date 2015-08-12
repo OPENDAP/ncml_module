@@ -32,27 +32,21 @@
 #include "AggMemberDataset.h"
 #include <vector>
 
-namespace libdap
-{
-  class BaseType;
-};
+namespace libdap {
+class BaseType;
+}
 
-namespace agg_util
-{
+namespace agg_util {
 
-  class AggMemberDatasetWithDimensionCacheBase
-    : public agg_util::AggMemberDataset
-  {
-  public:
+class AggMemberDatasetWithDimensionCacheBase: public AggMemberDataset {
+public:
     AggMemberDatasetWithDimensionCacheBase(const std::string& location);
 
-    AggMemberDatasetWithDimensionCacheBase(
-            const AggMemberDatasetWithDimensionCacheBase& proto);
+    AggMemberDatasetWithDimensionCacheBase(const AggMemberDatasetWithDimensionCacheBase& proto);
 
     virtual ~AggMemberDatasetWithDimensionCacheBase();
 
-    AggMemberDatasetWithDimensionCacheBase& operator=(
-        const AggMemberDatasetWithDimensionCacheBase& rhs);
+    AggMemberDatasetWithDimensionCacheBase& operator=(const AggMemberDatasetWithDimensionCacheBase& rhs);
 
     /* This will stay pure virtual for subclasses */
     /* virtual const libdap::DataDDS* getDataDDS() = 0; */
@@ -67,11 +61,12 @@ namespace agg_util
     virtual void saveDimensionCache(std::ostream& ostr);
     virtual void loadDimensionCache(std::istream& istr);
 
-  private: // Helper Functions
+private:
+    // Helper Functions
 
     /** Check the _dimensionCache for the dimension with name
      * and return ptr to the location, else NULL.
-    */
+     */
     Dimension* findDimension(const std::string& dimName);
 
     /** Go through the dimensions for the variable if it has them
@@ -84,10 +79,11 @@ namespace agg_util
     void saveDimensionCacheInternal(std::ostream& ostr);
     void loadDimensionCacheInternal(std::istream& istr);
 
-  private: // Data Rep
+private:
+    // Data Rep
     std::vector<Dimension> _dimensionCache;
 
-  };
+};
 
 }
 

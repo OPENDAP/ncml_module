@@ -32,91 +32,80 @@
 #include "NCMLUtil.h"
 #include "NetcdfElement.h"
 
-namespace ncml_module
+namespace ncml_module {
+
+const string ExplicitElement::_sTypeName = "explicit";
+const vector<string> ExplicitElement::_sValidAttributes = vector<string>(); // init to the empty vector... we should have none in here!
+
+ExplicitElement::ExplicitElement() :
+    NCMLElement(0)
 {
+}
 
-  const string ExplicitElement::_sTypeName = "explicit";
-  const vector<string> ExplicitElement::_sValidAttributes = vector<string>(); // init to the empty vector... we should have none in here!
+ExplicitElement::ExplicitElement(const ExplicitElement& /* proto */) :
+    RCObjectInterface(), NCMLElement(0)
+{
+}
 
-  ExplicitElement::ExplicitElement()
-  :NCMLElement(0)
-  {
-  }
+ExplicitElement::~ExplicitElement()
+{
+}
 
-  ExplicitElement::ExplicitElement(const ExplicitElement& /* proto */)
-  : RCObjectInterface()
-  , NCMLElement(0)
-  {
-  }
-
-  ExplicitElement::~ExplicitElement()
-  {
-  }
-
-  const string&
-  ExplicitElement::getTypeName() const
-  {
+const string&
+ExplicitElement::getTypeName() const
+{
     return _sTypeName;
-  }
+}
 
-  ExplicitElement*
-  ExplicitElement::clone() const
-  {
+ExplicitElement*
+ExplicitElement::clone() const
+{
     return new ExplicitElement(*this);
-  }
+}
 
-  void
-  ExplicitElement::setAttributes(const XMLAttributeMap& attrs )
-  {
+void ExplicitElement::setAttributes(const XMLAttributeMap& attrs)
+{
     // make sure that none are specifed, basically.  We'll list them out in here if we get any
     // which is why this rather than check map size and throw.
     validateAttributes(attrs, _sValidAttributes);
-  }
+}
 
-  void
-  ExplicitElement::handleBegin()
-  {
+void ExplicitElement::handleBegin()
+{
     NCMLParser& p = *_parser;
-    if (!p.isScopeNetcdf())
-        {
-          THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
-              "Got <explicit/> while not a direct child of a <netcdf>");
-        }
+    if (!p.isScopeNetcdf()) {
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(), "Got <explicit/> while not a direct child of a <netcdf>");
+    }
     // this applies to the current dataset
     NetcdfElement* dataset = p.getCurrentDataset();
     VALID_PTR(dataset);
 
-    if (dataset->getProcessedMetadataDirective())
-      {
+    if (dataset->getProcessedMetadataDirective()) {
         THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
-            "Got " + toString() +
-            " element but we already got a metadata directive for the current dataset!  Only one may be specified.");
-      }
+            "Got " + toString()
+                + " element but we already got a metadata directive for the current dataset!  Only one may be specified.");
+    }
 
     dataset->setProcessedMetadataDirective();
     VALID_PTR(dataset->getDDS());
     p.clearAllAttrTables(dataset->getDDS());
-  }
+}
 
-  void
-  ExplicitElement::handleContent(const string& content)
-  {
-    if (!NCMLUtil::isAllWhitespace(content))
-      {
+void ExplicitElement::handleContent(const string& content)
+{
+    if (!NCMLUtil::isAllWhitespace(content)) {
         THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
-            "Got non-whitespace for element content and didn't expect it.  Element=" + toString() + " content=\"" +
-            content + "\"");
-      }
-  }
+            "Got non-whitespace for element content and didn't expect it.  Element=" + toString() + " content=\""
+                + content + "\"");
+    }
+}
 
-  void
-  ExplicitElement::handleEnd()
-  {
-  }
+void ExplicitElement::handleEnd()
+{
+}
 
-  string
-  ExplicitElement::toString() const
-  {
+string ExplicitElement::toString() const
+{
     return "<" + _sTypeName + ">";
-  }
+}
 }

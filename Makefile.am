@@ -57,8 +57,6 @@ NCML_SRCS = \
 		JoinExistingDimensionCacheManager.cc \
 		MyBaseTypeFactory.cc \
 		NCMLBaseArray.cc \
-		NCMLCacheAggXMLCommand.cc \
-		NCMLCommonTypes.cc \
 		NCMLElement.cc \
 		NCMLModule.cc \
 		NCMLParser.cc \
@@ -86,6 +84,9 @@ NCML_SRCS = \
 		NCMLContainer.cc \
 		XMLHelpers.cc 
 
+# NCMLCacheAggXMLCommand.cc
+# NCMLCommonTypes.cc
+
 NCML_HDRS = \
 		AggMemberDataset.h \
 		AggMemberDatasetDDSWrapper.h \
@@ -112,8 +113,6 @@ NCML_HDRS = \
 		MyBaseTypeFactory.h \
 		NCMLArray.h \
 		NCMLBaseArray.h \
-		NCMLCacheAggXMLCommand.h \
-		NCMLCommonTypes.h \
 		NCMLDebug.h \
 		NCMLElement.h \
 		NCMLModule.h \
@@ -141,6 +140,10 @@ NCML_HDRS = \
 		NCMLContainerStorage.h \
 		NCMLContainer.h \
 		XMLHelpers.h
+
+# NCMLCacheAggXMLCommand.h
+# NCMLCommonTypes.h
+
 
 # ICU_CPPFLAGS and ICU_LIBS set from configure.ac check for ICU
 libncml_module_la_SOURCES = $(NCML_SRCS) $(BES_SRCS) $(NCML_HDRS) $(BES_HDRS)

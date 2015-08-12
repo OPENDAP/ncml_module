@@ -37,23 +37,20 @@
 
 using std::string;
 
-namespace libdap
-{
-  class Array;
-  class BaseType;
+namespace libdap {
+class Array;
+class BaseType;
 }
 
-namespace ncml_module
-{
-  class NCMLParser;
-  class VariableElement;
+namespace ncml_module {
+class NCMLParser;
+class VariableElement;
 
-  class ValuesElement : public NCMLElement
-  {
-  private:
+class ValuesElement: public NCMLElement {
+private:
     ValuesElement& operator=(const ValuesElement& rhs); // disallow
 
-  public:
+public:
     static const string _sTypeName;
     static const vector<string> _sValidAttributes;
 
@@ -68,13 +65,17 @@ namespace ncml_module
     virtual void handleEnd();
     virtual string toString() const;
 
-  private: // Methods
+private:
+    // Methods
 
     /** @return true if we have a non-empty start and/or increment.
      * This means that we DO NOT expect non-whitespace content
      * and that we need to auto-generate the values for the given variable!
      */
-    bool shouldAutoGenerateValues() const { return ((!_start.empty()) && (!_increment.empty())); }
+    bool shouldAutoGenerateValues() const
+    {
+        return ((!_start.empty()) && (!_increment.empty()));
+    }
 
     /** @brief Name says it all
      *  If _start or _increment cannot be successfully parsed into the type of pVar,
@@ -119,7 +120,6 @@ namespace ncml_module
      */
     void setVectorVariableValuesFromTokens(NCMLParser& p, libdap::BaseType& var);
 
-
     /** @brief Template to parse the start and increment attributes and generate values for them.
      *  Generate the correct number of points using _start and _increment for the given DAPType.
      *  Use these to set the value on pArray
@@ -129,7 +129,7 @@ namespace ncml_module
      *
      *  @exception if the start or increment cannot be parsed correctly.
      */
-    template <typename DAPType> void generateAndSetVectorValues(NCMLParser& p, libdap::Array* pArray);
+    template<typename DAPType> void generateAndSetVectorValues(NCMLParser& p, libdap::Array* pArray);
 
     /** @brief Autogenerate uniform interval numeric values from _start and _increment into variable
      *
@@ -147,7 +147,7 @@ namespace ncml_module
      * @param var the simple type var (scalar) of subclass type DAPType
      * @param valueAsToken the unparsed token version of the value.  Will be read using streams.
      */
-    template <class DAPType, typename ValueType> void setScalarValue(libdap::BaseType& var, const string& valueAsToken);
+    template<class DAPType, typename ValueType> void setScalarValue(libdap::BaseType& var, const string& valueAsToken);
 
     /** Parameterized set function to parse an array of value tokens for a given DAP type and then set the values into
      * an Array variable.
@@ -159,7 +159,7 @@ namespace ncml_module
      * ASSUMES: the number of tokens matches the length of the Vector super.
      * ASSUMES: pArray->dimensions() == 1!  This ONLY works for 1D arrays now!
      */
-    template <typename DAPType> void setVectorValues(libdap::Array* pArray, const std::vector<string>& valueTokens);
+    template<typename DAPType> void setVectorValues(libdap::Array* pArray, const std::vector<string>& valueTokens);
 
     /** Special case for parsing char's instead of bytes. */
     void parseAndSetCharValue(libdap::BaseType& var, const string& valueAsToken);
@@ -189,7 +189,8 @@ namespace ncml_module
 
     static vector<string> getValidAttributes();
 
-  private: // Data Rep
+private:
+    // Data Rep
     string _start;
     string _increment;
     string _separator; // defaults to whitespace
@@ -201,7 +202,7 @@ namespace ncml_module
     std::string _accumulated_content;
     // Temp to tokenize the content on handleContent()
     std::vector<string> _tokens;
-  };
+};
 
 }
 

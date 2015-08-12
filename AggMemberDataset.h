@@ -34,39 +34,36 @@
 #include <string>
 #include <vector>
 
-namespace libdap
-{
-  class DataDDS;
-  class DDS;
-};
+namespace libdap {
+class DataDDS;
+class DDS;
+}
 
 using libdap::DataDDS;
 using libdap::DDS;
 
-namespace agg_util
-{
-  /**
-   * Abstract helper superclass for allowing lazy access to the DataDDS
-   * for an aggregation. This is used during a read() if the dataset
-   * is needed in an aggregation.
-   *
-   * Note: This inherits from RCObject so is a ref-counted object to avoid
-   * making excessive copies of it and especially of any contained DDS.
-   *
-   * Currently, there are two concrete subclasses:
-   *
-   * o AggMemberDatasetUsingLocationRef: to load an external location
-   *            into a DataDDS as needed
-   *            (laxy eval so not loaded unless in the output of read() )
-   *
-   * o AggMemberDatasetDDSWrapper: to hold a pre-loaded DataDDS for the
-   *            case of virtual or pre-loaded datasets
-   *            (data declared in NcML file, nested aggregations, e.g.)
-   *            In this case, getLocation() is presumed empty().
-  */
-  class AggMemberDataset : public RCObject
-  {
-  public:
+namespace agg_util {
+/**
+ * Abstract helper superclass for allowing lazy access to the DataDDS
+ * for an aggregation. This is used during a read() if the dataset
+ * is needed in an aggregation.
+ *
+ * Note: This inherits from RCObject so is a ref-counted object to avoid
+ * making excessive copies of it and especially of any contained DDS.
+ *
+ * Currently, there are two concrete subclasses:
+ *
+ * o AggMemberDatasetUsingLocationRef: to load an external location
+ *            into a DataDDS as needed
+ *            (lazy eval so not loaded unless in the output of read() )
+ *
+ * o AggMemberDatasetDDSWrapper: to hold a pre-loaded DataDDS for the
+ *            case of virtual or pre-loaded datasets
+ *            (data declared in NcML file, nested aggregations, e.g.)
+ *            In this case, getLocation() is presumed empty().
+ */
+class AggMemberDataset: public RCObject {
+public:
     AggMemberDataset(const std::string& location);
     virtual ~AggMemberDataset();
 
@@ -150,13 +147,16 @@ namespace agg_util
     /** Load the values in the dimension cache from the input stream */
     virtual void loadDimensionCache(std::istream& istr) = 0;
 
-  private: // data rep
+private:
+    // data rep
     std::string _location; // non-empty location from which to load DataDDS
-  };
+};
 
-  // List is ref-counted ptrs to AggMemberDataset concrete subclasses.
-  typedef std::vector< RCPtr<AggMemberDataset> > AMDList;
+// List is ref-counted ptrs to AggMemberDataset concrete subclasses.
+typedef std::vector<RCPtr<AggMemberDataset> > AMDList;
 
-}; // namespace agg_util
+}
+;
+// namespace agg_util
 
 #endif /* __AGG_UTIL__AGG_MEMBER_DATASET_H__ */

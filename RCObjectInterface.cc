@@ -29,9 +29,10 @@
 
 #include "RCObjectInterface.h"
 
-namespace agg_util
+namespace agg_util {
+
+RCObjectInterface::~RCObjectInterface()
 {
-  RCObjectInterface::~RCObjectInterface()
-  {
-  }
-};
+}
+
+}

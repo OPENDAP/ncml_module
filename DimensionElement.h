@@ -32,32 +32,31 @@
 #include "Dimension.h"
 #include "NCMLElement.h"
 
-namespace ncml_module
-{
-  class NCMLParser;
+namespace ncml_module {
 
-  /**
-   * @brief Class for parsing and representing <dimension> elements.
-   *
-   * In the initial version of the module, we will not be supporting
-   * many of the attributes.  In particular, we currently support:
-   *
-   * dimension@name:    the name of the dimension, which must be unique in
-   *                    the current containing netcdf element (we don't
-   *                    handle group namespaces yet).
-   *
-   * dimension@length:  the size of this dimension as an unsigned int.
-   *
-   * The other attributes, namely one of { orgName, isUnlimited,
-   * isVariableLength, isShared } will not be supported in this version
-   * of the module.
-   */
-  class DimensionElement : public ncml_module::NCMLElement
-  {
-  private:
+class NCMLParser;
+
+/**
+ * @brief Class for parsing and representing <dimension> elements.
+ *
+ * In the initial version of the module, we will not be supporting
+ * many of the attributes.  In particular, we currently support:
+ *
+ * dimension@name:    the name of the dimension, which must be unique in
+ *                    the current containing netcdf element (we don't
+ *                    handle group namespaces yet).
+ *
+ * dimension@length:  the size of this dimension as an unsigned int.
+ *
+ * The other attributes, namely one of { orgName, isUnlimited,
+ * isVariableLength, isShared } will not be supported in this version
+ * of the module.
+ */
+class DimensionElement: public NCMLElement {
+private:
     DimensionElement& operator=(const DimensionElement& rhs); // disallow
 
-  public:
+public:
     static const string _sTypeName;
     static const vector<string> _sValidAttributes;
 
@@ -80,15 +79,21 @@ namespace ncml_module
     bool checkDimensionsMatch(const DimensionElement& rhs) const;
 
     const string& name() const;
-    const string& length() const { return _length; }
+    const string& length() const
+    {
+        return _length;
+    }
 
     /** Parsed version of length() */
     unsigned int getLengthNumeric() const;
     unsigned int getSize() const;
 
-    const agg_util::Dimension& getDimension() const { return _dim; }
+    const agg_util::Dimension& getDimension() const
+    {
+        return _dim;
+    }
 
-  private:
+private:
 
     /** Fill in _dim from our string _length and other attrs.
      * @exception Throws BESSyntaxUserError if the token in _length
@@ -106,7 +111,7 @@ namespace ncml_module
      */
     static vector<string> getValidAttributes();
 
-  private:
+private:
     // string _name; // within _dim
     string _length; // unparsed size
     string _orgName; // unused
@@ -116,7 +121,7 @@ namespace ncml_module
 
     // the actual parsed values from above...
     agg_util::Dimension _dim;
-  };
+};
 
 }
 

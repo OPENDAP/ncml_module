@@ -32,17 +32,19 @@
 
 #include "BESAbstractModule.h"
 
-namespace ncml_module
-{
-class NCMLModule : public BESAbstractModule
-{
+namespace ncml_module {
+class NCMLModule: public BESAbstractModule {
 public:
-    				NCMLModule() {}
-    virtual		    	~NCMLModule() {}
-    virtual void		initialize( const string &modname ) ;
-    virtual void		terminate( const string &modname ) ;
+    NCMLModule()
+    {
+    }
+    virtual ~NCMLModule()
+    {
+    }
+    virtual void initialize(const string &modname);
+    virtual void terminate(const string &modname);
 
-    virtual void		dump( ostream &strm ) const ;
+    virtual void dump(ostream &strm) const;
 
 private:
     // Helpers for initialize(), added the handlers under the given modname
@@ -53,7 +55,8 @@ private:
     void removeCommandAndResponseHandlers();
     void removeCacheAggCommandAndResponseHandlers();
 
-} ; // class NCMLModule
-} // namespace ncml_module
+};
+// class NCMLModule
+}// namespace ncml_module
 #endif // I_NCMLModule_H
 

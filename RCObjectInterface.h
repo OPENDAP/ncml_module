@@ -31,40 +31,37 @@
 
 #include <string>
 
-namespace agg_util
-{
+namespace agg_util {
 
-  /**
-   * Interface class for a reference counted object.
-   */
-  class RCObjectInterface
-  {
-  public:
+/**
+ * Interface class for a reference counted object.
+ */
+class RCObjectInterface {
+public:
 
     virtual ~RCObjectInterface() = 0;
 
     /** Increase the reference count by one.
-    * const since we do not consider the ref count part of the semantic constness of the rep */
+     * const since we do not consider the ref count part of the semantic constness of the rep */
     virtual int ref() const = 0;
 
     /** Decrease the reference count by one.  If it goes from 1 to 0,
-    * delete this and this is no longer valid.
-    * @return the new ref count.  If it is 0, the called knows the
-    * object was deleted.
-    *
-    * It is illegal to unref() an object with a count of 0.  We don't
-    * throw to allow use in dtors, so the caller is to not do it!
-    *
-    * const since the reference count is not part of the semantic constness of the rep
-    */
-    virtual int unref() const throw() = 0;
+     * delete this and this is no longer valid.
+     * @return the new ref count.  If it is 0, the called knows the
+     * object was deleted.
+     *
+     * It is illegal to unref() an object with a count of 0.  We don't
+     * throw to allow use in dtors, so the caller is to not do it!
+     *
+     * const since the reference count is not part of the semantic constness of the rep
+     */
+    virtual int unref() const throw () = 0;
 
     /** Get the current reference count */
     virtual int getRefCount() const = 0;
 
     /** @return a string with the refcount and memory address  */
     virtual std::string toString() const = 0;
-
 
     /** If the object is in an auto-delete pool,
      * remove it from the pool and force it to only delete
@@ -74,8 +71,9 @@ namespace agg_util
      */
     virtual void removeFromPool() const = 0;
 
-  }; // class RCObjectInterface
+};
+// class RCObjectInterface
 
-} // namespace agg_util
+}// namespace agg_util
 
 #endif /* __AGG_UTIL__RCOBJECT_INTERFACE_H__ */

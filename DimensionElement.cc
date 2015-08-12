@@ -36,73 +36,55 @@
 using std::string;
 using std::stringstream;
 
-namespace ncml_module
+namespace ncml_module {
+// the parse name of the element
+const string DimensionElement::_sTypeName = "dimension";
+const vector<string> DimensionElement::_sValidAttributes = getValidAttributes();
+
+DimensionElement::DimensionElement() :
+    NCMLElement(0), _length("0"), _orgName(""), _isUnlimited(""), _isShared(""), _isVariableLength(""), _dim()
 {
-  // the parse name of the element
-  const string DimensionElement::_sTypeName = "dimension";
-  const vector<string> DimensionElement::_sValidAttributes = getValidAttributes();
+}
 
-  DimensionElement::DimensionElement()
-  : NCMLElement(0)
-  , _length("0")
-  , _orgName("")
-  , _isUnlimited("")
-  , _isShared("")
-  , _isVariableLength("")
-  , _dim()
-  {
-  }
+DimensionElement::DimensionElement(const DimensionElement& proto) :
+    RCObjectInterface(), NCMLElement(proto), _length(proto._length), _orgName(proto._orgName), _isUnlimited(
+        proto._isUnlimited), _isShared(proto._isShared), _isVariableLength(proto._isVariableLength), _dim(proto._dim)
+{
+}
 
-  DimensionElement::DimensionElement(const DimensionElement& proto)
-  : RCObjectInterface()
-  , NCMLElement(proto)
-  , _length(proto._length)
-  , _orgName(proto._orgName)
-  , _isUnlimited(proto._isUnlimited)
-  , _isShared(proto._isShared)
-  , _isVariableLength(proto._isVariableLength)
-  , _dim(proto._dim)
-  {
-  }
-
-  DimensionElement::DimensionElement(const agg_util::Dimension& dim)
-  : NCMLElement(0)
-  , _length("0")
-  , _orgName("")
-  , _isUnlimited("")
-  , _isShared("")
-  , _isVariableLength("")
-  , _dim(dim)
-  {
+DimensionElement::DimensionElement(const agg_util::Dimension& dim) :
+    NCMLElement(0), _length("0"), _orgName(""), _isUnlimited(""), _isShared(""), _isVariableLength(""), _dim(dim)
+{
     // Set string to match the int size
     ostringstream oss;
     oss << dim.size;
     _length = oss.str();
-  }
+}
 
-  DimensionElement::~DimensionElement()
-  {
-  }
+DimensionElement::~DimensionElement()
+{
+}
 
-  const string& DimensionElement::getTypeName() const
-  {
+const string& DimensionElement::getTypeName() const
+{
     return _sTypeName;
-  }
+}
 
-  DimensionElement*
-  DimensionElement::clone() const
-  {
+DimensionElement*
+DimensionElement::clone() const
+{
     return new DimensionElement(*this);
-  }
+}
 
-  void
-  DimensionElement::setAttributes(const XMLAttributeMap& attrs)
-  {
+void DimensionElement::setAttributes(const XMLAttributeMap& attrs)
+{
     _dim.name = attrs.getValueForLocalNameOrDefault("name");
     _length = attrs.getValueForLocalNameOrDefault("length");
     _orgName = attrs.getValueForLocalNameOrDefault("orgName");
-    _isUnlimited = attrs.getValueForLocalNameOrDefault("isUnlimited");;
-    _isShared = attrs.getValueForLocalNameOrDefault("isShared");;
+    _isUnlimited = attrs.getValueForLocalNameOrDefault("isUnlimited");
+    ;
+    _isShared = attrs.getValueForLocalNameOrDefault("isShared");
+    ;
     _isVariableLength = attrs.getValueForLocalNameOrDefault("isVariableLength");
 
     // First check that we didn't get any typos...
@@ -113,21 +95,20 @@ namespace ncml_module
 
     // Final validation for things we implemented
     validateOrThrow();
-  }
+}
 
-  void DimensionElement::handleBegin()
-  {
+void DimensionElement::handleBegin()
+{
     BESDEBUG("ncml", "DimensionElement::handleBegin called...");
 
     // Make sure we're placed at a valid parse location.
     // Direct child of <netcdf> only now since we dont handle <group>
-    if (!_parser->isScopeNetcdf())
-      {
+    if (!_parser->isScopeNetcdf()) {
         THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
-            "Got dimension element = " + toString() +
-            " at an invalid parse location.  Expected it as a direct child of <netcdf> element only." +
-            " scope=" + _parser->getScopeString());
-      }
+            "Got dimension element = " + toString()
+                + " at an invalid parse location.  Expected it as a direct child of <netcdf> element only." + " scope="
+                + _parser->getScopeString());
+    }
 
     // This will be the scope we're to be added...
     NetcdfElement* dataset = _parser->getCurrentDataset();
@@ -135,38 +116,32 @@ namespace ncml_module
 
     // Make sure the name is unique at this parse level or exception.
     const DimensionElement* pExistingDim = dataset->getDimensionInLocalScope(name());
-    if (pExistingDim)
-      {
+    if (pExistingDim) {
         THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
-            "Tried at add dimension " + toString() +
-            " but a dimension with name=" + name() +
-            " already exists in this scope=" + _parser->getScopeString());
-      }
+            "Tried at add dimension " + toString() + " but a dimension with name=" + name()
+                + " already exists in this scope=" + _parser->getScopeString());
+    }
 
     // The dataset will maintain a strong reference to us while we're needed.
     dataset->addDimension(this);
-  }
+}
 
-  void
-  DimensionElement::handleContent(const string& content)
-  {
+void DimensionElement::handleContent(const string& content)
+{
     // BESDEBUG("ncml", "DimensionElement::handleContent called...");
-    if (!NCMLUtil::isAllWhitespace(content))
-      {
+    if (!NCMLUtil::isAllWhitespace(content)) {
         THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
             "Got illegal (non-whitespace) content in element " + toString());
-      }
-  }
+    }
+}
 
-  void
-  DimensionElement::handleEnd()
-  {
+void DimensionElement::handleEnd()
+{
     // BESDEBUG("ncml", "DimensionElement::handleEnd called...");
-  }
+}
 
-  string
-  DimensionElement::toString() const
-  {
+string DimensionElement::toString() const
+{
     string ret = "<" + _sTypeName + " ";
     ret += NCMLElement::printAttributeIfNotEmpty("name", name());
     ret += NCMLElement::printAttributeIfNotEmpty("length", _length);
@@ -176,86 +151,69 @@ namespace ncml_module
     ret += NCMLElement::printAttributeIfNotEmpty("orgName", _orgName);
     ret += " >";
     return ret;
-  }
+}
 
-  bool
-  DimensionElement::checkDimensionsMatch(const DimensionElement& rhs) const
-  {
-    return ( (this->name() == rhs.name()) &&
-             (this->getSize() == rhs.getSize()) );
-  }
+bool DimensionElement::checkDimensionsMatch(const DimensionElement& rhs) const
+{
+    return ((this->name() == rhs.name()) && (this->getSize() == rhs.getSize()));
+}
 
-  const string&
-  DimensionElement::name() const
-  {
+const string&
+DimensionElement::name() const
+{
     return _dim.name;
-  }
+}
 
-  unsigned int
-  DimensionElement::getLengthNumeric() const
-  {
+unsigned int DimensionElement::getLengthNumeric() const
+{
     return _dim.size;
-  }
+}
 
-  unsigned int
-  DimensionElement::getSize() const
-  {
+unsigned int DimensionElement::getSize() const
+{
     return getLengthNumeric();
-  }
+}
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////// PRIVATE IMPL
 
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////// PRIVATE IMPL
-
-  void
-  DimensionElement::parseAndCacheDimension()
-  {
+void DimensionElement::parseAndCacheDimension()
+{
     stringstream sis;
     sis.str(_length);
     sis >> _dim.size;
-    if (sis.fail())
-      {
+    if (sis.fail()) {
         THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
             "Element " + toString() + " failed to parse the length attribute into a proper unsigned int!");
-      }
+    }
 
     // @TODO set the _dim.isSizeConstant from the isVariableLength, etc once we know how to use them for aggs
     _dim.isSizeConstant = true;
 
-    if (_isShared == "true")
-      {
+    if (_isShared == "true") {
         _dim.isShared = true;
-      }
-    else if (_isShared == "false")
-      {
+    }
+    else if (_isShared == "false") {
         _dim.isShared = false;
-      }
-    else if (!_isShared.empty())
-      {
-        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
-            "dimension@isShared did not have value in {true,false}.");
-      }
+    }
+    else if (!_isShared.empty()) {
+        THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(), "dimension@isShared did not have value in {true,false}.");
+    }
 
-  }
+}
 
-  void
-  DimensionElement::validateOrThrow()
-  {
+void DimensionElement::validateOrThrow()
+{
     // Perhaps we want to warn in BESDEBUG rather than error, but I'd rather be explicit for now.
-    if (!_isShared.empty() ||
-        !_isUnlimited.empty() ||
-        !_isVariableLength.empty() ||
-        !_orgName.empty() )
-      {
+    if (!_isShared.empty() || !_isUnlimited.empty() || !_isVariableLength.empty() || !_orgName.empty()) {
         THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
             "Dimension element " + toString() + " has unexpected unimplemented attributes. "
-            "This version of the module only handles name and length.");
-      }
-  }
+                "This version of the module only handles name and length.");
+    }
+}
 
-  vector<string>
-  DimensionElement::getValidAttributes()
-  {
+vector<string> DimensionElement::getValidAttributes()
+{
     vector<string> validAttrs;
     validAttrs.reserve(10);
     validAttrs.push_back("name");
@@ -265,5 +223,5 @@ namespace ncml_module
     validAttrs.push_back("isShared");
     validAttrs.push_back("orgName");
     return validAttrs;
-  }
+}
 }

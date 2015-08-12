@@ -35,11 +35,11 @@
 
 #include <list>
 
-using std::list ;
+using std::list;
 
 #include "BESContainerStorageVolatile.h"
 
-class BESCatalogUtils ;
+class BESCatalogUtils;
 
 /** @brief implementation of BESContainerStorageVolatile that represents a
  * list of NCML requests
@@ -51,19 +51,16 @@ class BESCatalogUtils ;
  * @see BESContainerStorageVolatile
  * @see NCMLContainer
  */
-class NCMLContainerStorage : public BESContainerStorageVolatile
-{
+class NCMLContainerStorage: public BESContainerStorageVolatile {
 public:
-    static string		NCML_TempDir ;
+    static string NCML_TempDir;
 
-    				NCMLContainerStorage( const string &n ) ;
-    virtual			~NCMLContainerStorage() ;
+    NCMLContainerStorage(const string &n);
+    virtual ~NCMLContainerStorage();
 
-    virtual void		add_container( const string &s_name,
-                                               const string &r_name,
-					       const string &type ) ;
+    virtual void add_container(const string &s_name, const string &r_name, const string &type);
 
-    virtual void		dump( ostream &strm ) const ;
+    virtual void dump(ostream &strm) const;
 };
 
 #endif // NCMLContainerStorage_h_

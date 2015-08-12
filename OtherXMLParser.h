@@ -31,28 +31,26 @@
 
 #include "SaxParser.h" // super
 
-namespace ncml_module
-{
-  class NCMLParser;
+namespace ncml_module {
+class NCMLParser;
 }
 
-namespace ncml_module
-{
+namespace ncml_module {
 
-  /**
-   * Class used to handle parsing in an attribute of type=="OtherXML"
-   * which basically just has to keep appending the elements and content into a string
-   * until the containing <attribute> element is closed.
-   * Subclass of SaxParser so the NCMLParser can just hand off calls to it and it can
-   * do what it needs to do, as well as give a proper error.
-   */
-  class OtherXMLParser : public SaxParser
-  {
-  private: // Disallow copy and assign
+/**
+ * Class used to handle parsing in an attribute of type=="OtherXML"
+ * which basically just has to keep appending the elements and content into a string
+ * until the containing <attribute> element is closed.
+ * Subclass of SaxParser so the NCMLParser can just hand off calls to it and it can
+ * do what it needs to do, as well as give a proper error.
+ */
+class OtherXMLParser: public SaxParser {
+private:
+    // Disallow copy and assign
     explicit OtherXMLParser(const OtherXMLParser& proto);
     OtherXMLParser& operator=(const OtherXMLParser& rhs);
 
-  public:
+public:
     explicit OtherXMLParser(NCMLParser& p);
     virtual ~OtherXMLParser();
 
@@ -80,24 +78,19 @@ namespace ncml_module
     virtual void onEndElement(const std::string& name);
     virtual void onCharacters(const std::string& content);
 
-    virtual void onStartElementWithNamespace(
-           const std::string& localname ,
-           const std::string& prefix,
-           const std::string& uri,
-           const XMLAttributeMap& attributes,
-           const XMLNamespaceMap& namespaces);
+    virtual void onStartElementWithNamespace(const std::string& localname, const std::string& prefix,
+        const std::string& uri, const XMLAttributeMap& attributes, const XMLNamespaceMap& namespaces);
 
-     virtual void onEndElementWithNamespace(
-           const std::string& localname,
-           const std::string& prefix,
-           const std::string& uri);
+    virtual void onEndElementWithNamespace(const std::string& localname, const std::string& prefix,
+        const std::string& uri);
 
     // Implemented to add explanation that the error occured
     // within the OtherXML parse and not the NCMLParser.
     virtual void onParseWarning(std::string msg);
     virtual void onParseError(std::string msg);
 
-  private: // helpers
+private:
+    // helpers
 
     // Add "<prefix:localname " or "<localname " to _otherXML
     void appendOpenStartElementTag(const std::string& localname, const std::string& prefix);
@@ -120,11 +113,12 @@ namespace ncml_module
     // Decrease the depth checking for underflow and throw internal exception if so.
     void popDepth();
 
-  private: // Data rep
+private:
+    // Data rep
     NCMLParser& _rParser; // ref to the enclosing parser so we can get to its state if need be.
     int _depth; // how many opened elements not closed yet, used to see if the subtree parse is complete
     std::string _otherXML; // The current string with all the parsed elements and content appended into it
-  };
+};
 }
 
 #endif /* __NCML_MODULE__OTHER_XML_PARSER_H__ */

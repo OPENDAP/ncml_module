@@ -31,21 +31,19 @@
 
 #include "NCMLElement.h"
 
-namespace ncml_module
-{
+namespace ncml_module {
 
-  /**
-   * @brief Concrete class for NcML <readMetadata> element
-   *
-   * This element is the default, so is basically a noop.  It
-   * directs the parser to use the underlying metadata in the source
-   * dataset.
-   */
-  class ReadMetadataElement : public NCMLElement
-  {
-  private:
+/**
+ * @brief Concrete class for NcML <readMetadata> element
+ *
+ * This element is the default, so is basically a noop.  It
+ * directs the parser to use the underlying metadata in the source
+ * dataset.
+ */
+class ReadMetadataElement: public NCMLElement {
+private:
     ReadMetadataElement& operator=(const ReadMetadataElement&); //disallow
-  public:
+public:
     ReadMetadataElement();
     ReadMetadataElement(const ReadMetadataElement& proto);
     virtual ~ReadMetadataElement();
@@ -59,7 +57,7 @@ namespace ncml_module
 
     static const string _sTypeName;
     static const vector<string> _sValidAttributes; // will be empty
-  };
+};
 
 }
 

@@ -35,77 +35,65 @@ using std::map;
 using std::string;
 using std::istringstream;
 
-namespace agg_util
+namespace agg_util {
+const long SimpleTimeParser::_sSecsInMin = 60L;
+const long SimpleTimeParser::_sSecsInHour = 60L * SimpleTimeParser::_sSecsInMin;
+const long SimpleTimeParser::_sSecsInDay = 24L * SimpleTimeParser::_sSecsInHour;
+const long SimpleTimeParser::_sSecsInWeek = 7L * SimpleTimeParser::_sSecsInDay;
+const long SimpleTimeParser::_sSecsInMonth = 31L * SimpleTimeParser::_sSecsInDay;
+const long SimpleTimeParser::_sSecsInYear = 365L * SimpleTimeParser::_sSecsInDay;
+
+map<string, long> SimpleTimeParser::_sParseTable = std::map<string, long>();
+bool SimpleTimeParser::_sInited = false;
+
+SimpleTimeParser::SimpleTimeParser()
 {
-  const long SimpleTimeParser::_sSecsInMin = 60L;
-  const long SimpleTimeParser::_sSecsInHour = 60L * SimpleTimeParser::_sSecsInMin;
-  const long SimpleTimeParser::_sSecsInDay = 24L * SimpleTimeParser::_sSecsInHour;
-  const long SimpleTimeParser::_sSecsInWeek = 7L * SimpleTimeParser::_sSecsInDay;
-  const long SimpleTimeParser::_sSecsInMonth = 31L * SimpleTimeParser::_sSecsInDay;
-  const long SimpleTimeParser::_sSecsInYear = 365L * SimpleTimeParser::_sSecsInDay;
+}
 
-  map< string, long > SimpleTimeParser::_sParseTable = std::map<string,long>();
-  bool SimpleTimeParser::_sInited = false;
+SimpleTimeParser::~SimpleTimeParser()
+{
+}
 
-  SimpleTimeParser::SimpleTimeParser()
-  {
-  }
-
-  SimpleTimeParser::~SimpleTimeParser()
-  {
-  }
-
-  bool
-  SimpleTimeParser::parseIntoSeconds(long& seconds, const string& duration)
-  {
+bool SimpleTimeParser::parseIntoSeconds(long& seconds, const string& duration)
+{
     bool success = true;
 
-    if (!_sInited)
-      {
+    if (!_sInited) {
         initParseTable();
-      }
+    }
 
     istringstream iss;
     iss.str(duration);
     iss >> seconds;
-    if (iss.fail())
-      {
+    if (iss.fail()) {
         success = false;
-      }
+    }
     else // we got the numerical portion, now parse the units.
-      {
+    {
         string units;
         iss >> units;
-        if (iss.fail())
-          {
+        if (iss.fail()) {
             success = false;
-          }
-        else
-          {
-            std::map< std::string, long >::iterator foundIt = _sParseTable.find(units);
-            if (foundIt == _sParseTable.end())
-              {
+        }
+        else {
+            std::map<std::string, long>::iterator foundIt = _sParseTable.find(units);
+            if (foundIt == _sParseTable.end()) {
                 success = false;
-              }
-            else
-              {
+            }
+            else {
                 seconds *= foundIt->second;
-              }
-          }
-      }
+            }
+        }
+    }
 
-    if (!success)
-      {
+    if (!success) {
         seconds = -1;
-      }
+    }
     return success;
-  }
+}
 
-
-
-  void
-  SimpleTimeParser::initParseTable()
-  {
+void SimpleTimeParser::initParseTable()
+{
     /*
      * seconds: { s, sec, secs, second, seconds }
      * minutes: { m, min, mins, minute, minutes }
@@ -128,22 +116,22 @@ namespace agg_util
     _sParseTable["minutes"] = _sSecsInMin;
 
     _sParseTable["h"] = _sSecsInHour;
-    _sParseTable["hour"] =  _sSecsInHour;
-    _sParseTable["hours"] =  _sSecsInHour;
+    _sParseTable["hour"] = _sSecsInHour;
+    _sParseTable["hours"] = _sSecsInHour;
 
-    _sParseTable["day"] =  _sSecsInDay;
-    _sParseTable["days"] =  _sSecsInDay;
+    _sParseTable["day"] = _sSecsInDay;
+    _sParseTable["days"] = _sSecsInDay;
 
     _sParseTable["week"] = _sSecsInWeek;
     _sParseTable["weeks"] = _sSecsInWeek;
 
-    _sParseTable["month"] =  _sSecsInMonth;
-    _sParseTable["months"] =  _sSecsInMonth;
+    _sParseTable["month"] = _sSecsInMonth;
+    _sParseTable["months"] = _sSecsInMonth;
 
-    _sParseTable["year"] =  _sSecsInYear;
-    _sParseTable["years"] =  _sSecsInYear;
+    _sParseTable["year"] = _sSecsInYear;
+    _sParseTable["years"] = _sSecsInYear;
 
     _sInited = true;
-  }
+}
 
 }

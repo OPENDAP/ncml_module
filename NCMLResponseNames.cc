@@ -29,18 +29,18 @@
 
 #include "NCMLResponseNames.h"
 
-namespace ncml_module
-{
+namespace ncml_module {
 
-  const std::string ModuleConstants::NCML_NAME = "ncml";
+const std::string ModuleConstants::NCML_NAME = "ncml";
 
-  const std::string ModuleConstants::DOC_WIKI_URL =
-      "http://docs.opendap.org/index.php/BES_-_Modules_-_NcML_Module";
+const std::string ModuleConstants::DOC_WIKI_URL = "http://docs.opendap.org/index.php/BES_-_Modules_-_NcML_Module";
 
-  const std::string ModuleConstants::CACHE_AGG_RESPONSE = "cacheAgg";
+const std::string ModuleConstants::CACHE_AGG_RESPONSE = "cacheAgg";
 
-  const std::string ModuleConstants::CACHE_AGG_LOCATION_DATA_KEY = "cacheAgg_location";
-  const std::string ModuleConstants::CACHE_AGG_LOCATION_XML_ATTR = "location";
+const std::string ModuleConstants::CACHE_AGG_LOCATION_DATA_KEY = "cacheAgg_location";
+const std::string ModuleConstants::CACHE_AGG_LOCATION_XML_ATTR = "location";
 
-}; // namespace ncml_module
+}
+;
+// namespace ncml_module
 

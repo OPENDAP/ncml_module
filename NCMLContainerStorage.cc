@@ -33,7 +33,7 @@
 #include "NCMLContainerStorage.h"
 #include "NCMLContainer.h"
 
-string NCMLContainerStorage::NCML_TempDir ;
+string NCMLContainerStorage::NCML_TempDir;
 
 /** @brief create an instance of this persistent store with the given name.
  *
@@ -42,8 +42,8 @@ string NCMLContainerStorage::NCML_TempDir ;
  * @param n name of this persistent store
  * @see NCMLContainer
  */
-NCMLContainerStorage::NCMLContainerStorage( const string &n )
-    : BESContainerStorageVolatile( n )
+NCMLContainerStorage::NCMLContainerStorage(const string &n) :
+    BESContainerStorageVolatile(n)
 {
 }
 
@@ -58,13 +58,10 @@ NCMLContainerStorage::~NCMLContainerStorage()
  * @param type ignored. The type of the target response is determined by the
  * NCML request with the format parameter
  */
-void
-NCMLContainerStorage::add_container( const string &s_name,
-				     const string &r_name,
-				     const string &/*type*/ )
+void NCMLContainerStorage::add_container(const string &s_name, const string &r_name, const string &/*type*/)
 {
-    BESContainer *c = new NCMLContainer( s_name, r_name ) ;
-    BESContainerStorageVolatile::add_container( c ) ;
+    BESContainer *c = new NCMLContainer(s_name, r_name);
+    BESContainerStorageVolatile::add_container(c);
 }
 
 /** @brief dumps information about this object
@@ -74,13 +71,11 @@ NCMLContainerStorage::add_container( const string &s_name,
  *
  * @param strm C++ i/o stream to dump the information to
  */
-void
-NCMLContainerStorage::dump( ostream &strm ) const
+void NCMLContainerStorage::dump(ostream &strm) const
 {
-    strm << BESIndent::LMarg << "NCMLContainerStorage::dump - ("
-			     << (void *)this << ")" << endl ;
-    BESIndent::Indent() ;
-    BESContainerStorageVolatile::dump( strm ) ;
-    BESIndent::UnIndent() ;
+    strm << BESIndent::LMarg << "NCMLContainerStorage::dump - (" << (void *) this << ")" << endl;
+    BESIndent::Indent();
+    BESContainerStorageVolatile::dump(strm);
+    BESIndent::UnIndent();
 }
 

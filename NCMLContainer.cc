@@ -68,12 +68,12 @@ using std::ios_base;
  * @see NCMLGatewayUtils
  */
 NCMLContainer::NCMLContainer(const string &sym_name, const string &xml_doc) :
-        BESContainer(sym_name, "", "ncml"), _xml_doc(xml_doc), _accessed(false)
+    BESContainer(sym_name, "", "ncml"), _xml_doc(xml_doc), _accessed(false)
 {
 }
 
 NCMLContainer::NCMLContainer(const NCMLContainer &copy_from) :
-        BESContainer(copy_from), _xml_doc(copy_from._xml_doc), _accessed(copy_from._accessed)
+    BESContainer(copy_from), _xml_doc(copy_from._xml_doc), _accessed(copy_from._accessed)
 {
     // we can not make a copy of this container once the NCML document has
     // been written to the temporary file
@@ -141,7 +141,7 @@ string NCMLContainer::access()
         ofstream ostrm;
         //int my_errno = 0;
         string _tmp_file_name = libdap::open_temp_fstream(ostrm,
-                NCMLContainerStorage::NCML_TempDir + "/ncml_module_XXXXXX", ".ncml");
+            NCMLContainerStorage::NCML_TempDir + "/ncml_module_XXXXXX", ".ncml");
         //ostrm.open(_tmp_file_name.c_str(), ios_base::out);
         //my_errno = errno;
 

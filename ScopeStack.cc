@@ -31,135 +31,110 @@
 #include "BESDebug.h"
 #include "BESInternalError.h"
 
-namespace ncml_module
+namespace ncml_module {
+/* static */
+/*  enum ScopeType { GLOBAL=0, VARIABLE_ATOMIC, VARIABLE_CONSTRUCTOR, ATTRIBUTE_ATOMIC, ATTRIBUTE_CONTAINER, NUM_SCOPE_TYPES}; */
+// Make sure these match!
+const string ScopeStack::Entry::sTypeStrings[NUM_SCOPE_TYPES] = { "<GLOBAL>", "<Variable_Atomic>",
+    "<Variable_Constructor>", "<Attribute_Atomic>", "<Attribute_Container>", };
+
+ScopeStack::Entry::Entry(ScopeType theType, const string& theName) :
+    type(theType), name(theName)
 {
-  /* static */
-  /*  enum ScopeType { GLOBAL=0, VARIABLE_ATOMIC, VARIABLE_CONSTRUCTOR, ATTRIBUTE_ATOMIC, ATTRIBUTE_CONTAINER, NUM_SCOPE_TYPES}; */
-  // Make sure these match!
-  const string ScopeStack::Entry::sTypeStrings[NUM_SCOPE_TYPES] =
-    {
-        "<GLOBAL>",
-        "<Variable_Atomic>",
-        "<Variable_Constructor>",
-        "<Attribute_Atomic>",
-        "<Attribute_Container>",
-    };
-
-  ScopeStack::Entry::Entry(ScopeType theType, const string& theName)
-  : type(theType)
-  , name(theName)
-  {
-    if (theType < 0 || theType >= NUM_SCOPE_TYPES)
-      {
-        BESDEBUG("ncml", "ScopeStack::Entry(): Invalid scope type = " << theType << " for scope name=" << theName << endl);
+    if (theType < 0 || theType >= NUM_SCOPE_TYPES) {
+        BESDEBUG("ncml",
+            "ScopeStack::Entry(): Invalid scope type = " << theType << " for scope name=" << theName << endl);
         throw BESInternalError("Invalid Scope Type!", __FILE__, __LINE__);
-      }
-  }
+    }
+}
 
-  /////////// ScopeStack impl
+/////////// ScopeStack impl
 
-  ScopeStack::ScopeStack()
-  : _scope(0)
-  {
-  }
+ScopeStack::ScopeStack() :
+    _scope(0)
+{
+}
 
-  ScopeStack::~ScopeStack()
-  {
+ScopeStack::~ScopeStack()
+{
     _scope.clear();
     _scope.resize(0);
-  }
+}
 
-  void
-  ScopeStack::clear()
-  {
+void ScopeStack::clear()
+{
     _scope.clear();
-  }
+}
 
-  void
-  ScopeStack::pop()
-  {
+void ScopeStack::pop()
+{
     _scope.pop_back();
-  }
+}
 
-  const ScopeStack::Entry&
-  ScopeStack::top() const
-  {
+const ScopeStack::Entry&
+ScopeStack::top() const
+{
     return _scope.back();
-  }
+}
 
-  bool
-  ScopeStack::empty() const
-  {
+bool ScopeStack::empty() const
+{
     return _scope.empty();
-  }
+}
 
-  int
-  ScopeStack::size() const
-  {
+int ScopeStack::size() const
+{
     return _scope.size();
-  }
+}
 
-  string
-  ScopeStack::getScopeString() const
-  {
+string ScopeStack::getScopeString() const
+{
     string scope("");
     vector<Entry>::const_iterator iter;
-    for(iter = _scope.begin(); iter != _scope.end(); iter++ )
-      {
-        if (iter != _scope.begin())
-          {
+    for (iter = _scope.begin(); iter != _scope.end(); iter++) {
+        if (iter != _scope.begin()) {
             scope.append(".");  // append scoping operator if not first entry
-          }
+        }
         scope.append((*iter).name);
-      }
+    }
     return scope;
-  }
+}
 
-  string
-  ScopeStack::getTypedScopeString() const
-  {
+string ScopeStack::getTypedScopeString() const
+{
     string scope("");
     vector<Entry>::const_iterator iter;
-    for(iter = _scope.begin(); iter != _scope.end(); iter++ )
-      {
-        if (iter != _scope.begin())
-          {
+    for (iter = _scope.begin(); iter != _scope.end(); iter++) {
+        if (iter != _scope.begin()) {
             scope.append(".");  // append scoping operator if not first entry
-          }
+        }
         scope.append((*iter).getTypedName());
-      }
+    }
     return scope;
-  }
+}
 
-  bool
-  ScopeStack::isCurrentScope(ScopeType type) const
-  {
-    if (_scope.empty() && type == GLOBAL)
-      {
+bool ScopeStack::isCurrentScope(ScopeType type) const
+{
+    if (_scope.empty() && type == GLOBAL) {
         return true;
-      }
-    else if (_scope.empty())
-      {
+    }
+    else if (_scope.empty()) {
         return false;
-      }
-    else
-      {
+    }
+    else {
         return (_scope.back().type == type);
-      }
-  }
+    }
+}
 
-  /////////////////////////// Non public
+/////////////////////////// Non public
 
-  void
-  ScopeStack::push(const Entry& entry)
-  {
-    if (entry.type == GLOBAL)
-      {
-       BESDEBUG("ncml", "Logic error: can't push a GLOBAL scope type, ignoring." << endl);
-      }
-    else
-      {
+void ScopeStack::push(const Entry& entry)
+{
+    if (entry.type == GLOBAL) {
+        BESDEBUG("ncml", "Logic error: can't push a GLOBAL scope type, ignoring." << endl);
+    }
+    else {
         _scope.push_back(entry);
-      }
-  }
+    }
+}
 }

@@ -29,14 +29,15 @@
 
 #include "DDSAccessInterface.h"
 
-namespace agg_util
+namespace agg_util {
+DDSAccessInterface::~DDSAccessInterface()
 {
-  DDSAccessInterface::~DDSAccessInterface()
-  {
-  }
+}
 
-  DDSAccessRCInterface::~DDSAccessRCInterface()
-  {
-  }
+DDSAccessRCInterface::~DDSAccessRCInterface()
+{
+}
 
-}; // namespace agg_util
+}
+
+// namespace agg_util

@@ -46,231 +46,169 @@ using libdap::DDS;
 
 static const string DEBUG_CHANNEL("agg_util");
 
-namespace agg_util
+namespace agg_util {
+
+// Used to init the DimensionCache below with an estimated number of dimensions
+static const unsigned int DIMENSION_CACHE_INITIAL_SIZE = 4;
+
+AggMemberDatasetWithDimensionCacheBase::AggMemberDatasetWithDimensionCacheBase(const std::string& location) :
+    AggMemberDataset(location), _dimensionCache(DIMENSION_CACHE_INITIAL_SIZE)
 {
+}
 
-  // Used to init the DimensionCache below with an estimated number of dimensions
-  static const unsigned int DIMENSION_CACHE_INITIAL_SIZE = 4;
-
-  AggMemberDatasetWithDimensionCacheBase::AggMemberDatasetWithDimensionCacheBase(
-      const std::string& location)
-  : AggMemberDataset(location)
-  , _dimensionCache(DIMENSION_CACHE_INITIAL_SIZE)
-  {
-  }
-
-  /* virtual */
-  AggMemberDatasetWithDimensionCacheBase::~AggMemberDatasetWithDimensionCacheBase()
-  {
+/* virtual */
+AggMemberDatasetWithDimensionCacheBase::~AggMemberDatasetWithDimensionCacheBase()
+{
     _dimensionCache.clear();
     _dimensionCache.resize(0);
-  }
+}
 
-  AggMemberDatasetWithDimensionCacheBase::AggMemberDatasetWithDimensionCacheBase(
-          const AggMemberDatasetWithDimensionCacheBase& proto)
-  : RCObjectInterface()
-  , AggMemberDataset(proto)
-  , _dimensionCache(proto._dimensionCache)
-  {
-  }
+AggMemberDatasetWithDimensionCacheBase::AggMemberDatasetWithDimensionCacheBase(
+    const AggMemberDatasetWithDimensionCacheBase& proto) :
+    RCObjectInterface(), AggMemberDataset(proto), _dimensionCache(proto._dimensionCache)
+{
+}
 
-  AggMemberDatasetWithDimensionCacheBase&
-  AggMemberDatasetWithDimensionCacheBase::operator=(
-      const AggMemberDatasetWithDimensionCacheBase& rhs)
-  {
-    if (&rhs != this)
-      {
+AggMemberDatasetWithDimensionCacheBase&
+AggMemberDatasetWithDimensionCacheBase::operator=(const AggMemberDatasetWithDimensionCacheBase& rhs)
+{
+    if (&rhs != this) {
         AggMemberDataset::operator=(rhs);
         _dimensionCache.clear();
         _dimensionCache = rhs._dimensionCache;
-      }
+    }
     return *this;
-  }
+}
 
-  /* virtual */
-  unsigned int
-  AggMemberDatasetWithDimensionCacheBase::getCachedDimensionSize(
-      const std::string& dimName) const
-  {
-    Dimension* pDim =
-        const_cast<AggMemberDatasetWithDimensionCacheBase*>(this)->findDimension(dimName);
-    if (pDim)
-      {
+/* virtual */
+unsigned int AggMemberDatasetWithDimensionCacheBase::getCachedDimensionSize(const std::string& dimName) const
+{
+    Dimension* pDim = const_cast<AggMemberDatasetWithDimensionCacheBase*>(this)->findDimension(dimName);
+    if (pDim) {
         return pDim->size;
-      }
-    else
-      {
+    }
+    else {
         std::ostringstream oss;
-        oss << __PRETTY_FUNCTION__
-            << " Dimension "
-            << dimName
-            << " was not found in the cache!";
+        oss << __PRETTY_FUNCTION__ << " Dimension " << dimName << " was not found in the cache!";
         throw DimensionNotFoundException(oss.str());
-      }
-  }
+    }
+}
 
-  /* virtual */
-  bool
-  AggMemberDatasetWithDimensionCacheBase::isDimensionCached(
-      const std::string& dimName) const
-  {
-    return bool(
-        const_cast<AggMemberDatasetWithDimensionCacheBase*>(this)->findDimension(dimName)
-        );
-  }
+/* virtual */
+bool AggMemberDatasetWithDimensionCacheBase::isDimensionCached(const std::string& dimName) const
+{
+    return bool(const_cast<AggMemberDatasetWithDimensionCacheBase*>(this)->findDimension(dimName));
+}
 
-  /* virtual */
-  void
-  AggMemberDatasetWithDimensionCacheBase::setDimensionCacheFor(
-      const Dimension& dim,
-      bool throwIfFound)
-  {
+/* virtual */
+void AggMemberDatasetWithDimensionCacheBase::setDimensionCacheFor(const Dimension& dim, bool throwIfFound)
+{
     Dimension* pExistingDim = findDimension(dim.name);
-    if (pExistingDim)
-      {
-        if (!throwIfFound)
-          {
+    if (pExistingDim) {
+        if (!throwIfFound) {
             *pExistingDim = dim;
-          }
-        else
-          {
+        }
+        else {
             std::ostringstream msg;
-            msg << __PRETTY_FUNCTION__ <<
-                " Dimension name="
-                << dim.name
+            msg << __PRETTY_FUNCTION__ << " Dimension name=" << dim.name
                 << " already exists and we were asked to set uniquely!";
             throw AggregationException(msg.str());
-          }
-      }
-    else
-      {
+        }
+    }
+    else {
         _dimensionCache.push_back(dim);
-      }
-  }
+    }
+}
 
-  /* virtual */
-  void
-  AggMemberDatasetWithDimensionCacheBase::fillDimensionCacheByUsingDataDDS()
-  {
+/* virtual */
+void AggMemberDatasetWithDimensionCacheBase::fillDimensionCacheByUsingDataDDS()
+{
     // Get the dds
     DataDDS* pDDS = const_cast<DataDDS*>(getDataDDS());
     VALID_PTR(pDDS);
 
     // Recursive add on all of them
-    for (DataDDS::Vars_iter it = pDDS->var_begin();
-        it != pDDS->var_end();
-        ++it)
-      {
+    for (DataDDS::Vars_iter it = pDDS->var_begin(); it != pDDS->var_end(); ++it) {
         BaseType* pBT = *it;
         VALID_PTR(pBT);
         addDimensionsForVariableRecursive(*pBT);
-      }
-  }
+    }
+}
 
-  /* virtual */
-  void
-  AggMemberDatasetWithDimensionCacheBase::flushDimensionCache()
-  {
+/* virtual */
+void AggMemberDatasetWithDimensionCacheBase::flushDimensionCache()
+{
     _dimensionCache.clear();
-  }
+}
 
-  /* virtual */
-  void
-  AggMemberDatasetWithDimensionCacheBase::saveDimensionCache(std::ostream& ostr)
-  {
+/* virtual */
+void AggMemberDatasetWithDimensionCacheBase::saveDimensionCache(std::ostream& ostr)
+{
     saveDimensionCacheInternal(ostr);
-  }
+}
 
-  /* virtual */
-  void
-  AggMemberDatasetWithDimensionCacheBase::loadDimensionCache(std::istream& istr)
-  {
+/* virtual */
+void AggMemberDatasetWithDimensionCacheBase::loadDimensionCache(std::istream& istr)
+{
     loadDimensionCacheInternal(istr);
-  }
+}
 
-  Dimension*
-  AggMemberDatasetWithDimensionCacheBase::findDimension(
-      const std::string& dimName)
-  {
+Dimension*
+AggMemberDatasetWithDimensionCacheBase::findDimension(const std::string& dimName)
+{
     Dimension* ret = 0;
-    for (vector<Dimension>::iterator it = _dimensionCache.begin();
-        it != _dimensionCache.end();
-        ++it)
-      {
-        if (it->name == dimName)
-          {
+    for (vector<Dimension>::iterator it = _dimensionCache.begin(); it != _dimensionCache.end(); ++it) {
+        if (it->name == dimName) {
             ret = &(*it);
-          }
-      }
+        }
+    }
     return ret;
-  }
+}
 
-  void
-  AggMemberDatasetWithDimensionCacheBase::addDimensionsForVariableRecursive(libdap::BaseType& var)
-  {
-    BESDEBUG_FUNC(DEBUG_CHANNEL, "Adding dimensions for variable name="
-        << var.name()
-        << endl);
+void AggMemberDatasetWithDimensionCacheBase::addDimensionsForVariableRecursive(libdap::BaseType& var)
+{
+    BESDEBUG_FUNC(DEBUG_CHANNEL, "Adding dimensions for variable name=" << var.name() << endl);
 
-    if (var.type() == libdap::dods_array_c)
-      {
-        BESDEBUG(DEBUG_CHANNEL,
-            " Adding dimensions for array variable name = "
-              << var.name()
-              << endl);
+    if (var.type() == libdap::dods_array_c) {
+        BESDEBUG(DEBUG_CHANNEL, " Adding dimensions for array variable name = " << var.name() << endl);
 
         libdap::Array& arrVar = dynamic_cast<libdap::Array&>(var);
         libdap::Array::Dim_iter it;
-        for (it = arrVar.dim_begin(); it != arrVar.dim_end(); ++it)
-          {
+        for (it = arrVar.dim_begin(); it != arrVar.dim_end(); ++it) {
             libdap::Array::dimension& dim = *it;
-            if (!isDimensionCached(dim.name))
-              {
+            if (!isDimensionCached(dim.name)) {
                 Dimension newDim(dim.name, dim.size);
                 setDimensionCacheFor(newDim, false);
 
                 BESDEBUG(DEBUG_CHANNEL,
-                    " Adding dimension: "
-                    << newDim.toString()
-                    << " to the dataset granule cache..."
-                    << endl);
-              }
-          }
-      }
+                    " Adding dimension: " << newDim.toString() << " to the dataset granule cache..." << endl);
+            }
+        }
+    }
 
     else if (var.is_constructor_type()) // then recurse
-      {
-         BESDEBUG(DEBUG_CHANNEL,
-             " Recursing on all variables for constructor variable name = "
-             << var.name()
-             << endl);
+    {
+        BESDEBUG(DEBUG_CHANNEL, " Recursing on all variables for constructor variable name = " << var.name() << endl);
 
         libdap::Constructor& containerVar = dynamic_cast<libdap::Constructor&>(var);
         libdap::Constructor::Vars_iter it;
-        for (it = containerVar.var_begin(); it != containerVar.var_end(); ++it)
-          {
-            BESDEBUG(DEBUG_CHANNEL,
-                " Recursing on variable name="
-                << (*it)->name()
-                << endl);
+        for (it = containerVar.var_begin(); it != containerVar.var_end(); ++it) {
+            BESDEBUG(DEBUG_CHANNEL, " Recursing on variable name=" << (*it)->name() << endl);
 
-            addDimensionsForVariableRecursive( *(*it) );
-          }
-      }
-  }
+            addDimensionsForVariableRecursive(*(*it));
+        }
+    }
+}
 
-  // Sort function
-  static bool sIsDimNameLessThan(const Dimension& lhs, const Dimension& rhs)
-  {
+// Sort function
+static bool sIsDimNameLessThan(const Dimension& lhs, const Dimension& rhs)
+{
     return (lhs.name < rhs.name);
-  }
+}
 
-  void
-  AggMemberDatasetWithDimensionCacheBase::saveDimensionCacheInternal(std::ostream& ostr)
-  {
-    BESDEBUG("agg_util", "Saving dimension cache for dataset location = "
-        << getLocation()
-        << " ..." << endl);
+void AggMemberDatasetWithDimensionCacheBase::saveDimensionCacheInternal(std::ostream& ostr)
+{
+    BESDEBUG("agg_util", "Saving dimension cache for dataset location = " << getLocation() << " ..." << endl);
 
     // Not really necessary, but might help with trying to read output
     std::sort(_dimensionCache.begin(), _dimensionCache.end(), sIsDimNameLessThan);
@@ -280,22 +218,18 @@ namespace agg_util
     ostr << loc << '\n';
 
     // Now save each dimension
-    unsigned int n =  _dimensionCache.size();
+    unsigned int n = _dimensionCache.size();
     ostr << n << '\n';
-    for (unsigned int i=0; i<n; ++i)
-      {
+    for (unsigned int i = 0; i < n; ++i) {
         const Dimension& dim = _dimensionCache.at(i);
         // note this assumes the dimension names don't contain spaces.
         ostr << dim.name << '\n' << dim.size << '\n';
-      }
-  }
+    }
+}
 
-  void
-  AggMemberDatasetWithDimensionCacheBase::loadDimensionCacheInternal(std::istream& istr)
-  {
-    BESDEBUG("agg_util", "Loading dimension cache for dataset location = "
-           << getLocation()
-           << " ..." << endl);
+void AggMemberDatasetWithDimensionCacheBase::loadDimensionCacheInternal(std::istream& istr)
+{
+    BESDEBUG("agg_util", "Loading dimension cache for dataset location = " << getLocation() << " ..." << endl);
 
     // Read in the location string
     std::string loc;
@@ -303,30 +237,27 @@ namespace agg_util
 
     // Make sure the location we read is the same as the location
     // for this AMD or there's an unrecoverable serialization bug
-    if (loc != getLocation())
-      {
-         stringstream ss;
-         ss << "Serialization error: the location loaded from the "
-            "dimensions cache was: \"" << loc << "\" but we expected it to be "
-            << getLocation() << "\".  Unrecoverable!";
-         THROW_NCML_INTERNAL_ERROR(ss.str());
-      }
+    if (loc != getLocation()) {
+        stringstream ss;
+        ss << "Serialization error: the location loaded from the "
+            "dimensions cache was: \"" << loc << "\" but we expected it to be " << getLocation()
+            << "\".  Unrecoverable!";
+        THROW_NCML_INTERNAL_ERROR(ss.str());
+    }
 
     unsigned int n = 0;
     istr >> n >> ws;
-    for (unsigned int i=0; i<n; ++i)
-      {
+    for (unsigned int i = 0; i < n; ++i) {
         Dimension newDim;
         istr >> newDim.name >> ws;
         istr >> newDim.size >> ws;
-        if (istr.failbit)
-          {
+        if (istr.failbit) {
             // Best we can do is throw an internal error for now.
             // Perhaps later throw something else that causes a
             // recreation of the cache
             THROW_NCML_INTERNAL_ERROR("Parsing dimension cache failed to deserialize from stream.");
-          }
-      }
-  }
+        }
+    }
+}
 
 }

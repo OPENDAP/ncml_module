@@ -32,34 +32,32 @@
 #include "NCMLElement.h"
 #include "AggMemberDataset.h"
 
-namespace agg_util
-{
-  class DirectoryUtil;
-};
+namespace agg_util {
+class DirectoryUtil;
+}
 
-namespace ncml_module
-{
-  // FDecls
-  class NetcdfElement;
-  class AggregationElement;
+namespace ncml_module {
+// FDecls
+class NetcdfElement;
+class AggregationElement;
 
-  /**
-   * Implementation of the <scan> element used to scan directories
-   * to create the set of files for an aggregation.
-   */
-  class ScanElement : public NCMLElement
-  {
-  public: // class vars
+/**
+ * Implementation of the <scan> element used to scan directories
+ * to create the set of files for an aggregation.
+ */
+class ScanElement: public NCMLElement {
+public:
+    // class vars
     // Name of the element
     static const string _sTypeName;
 
-      // All possible attributes for this element.
+    // All possible attributes for this element.
     static const vector<string> _sValidAttrs;
 
-  private:
-      ScanElement& operator=(const ScanElement& rhs); // disallow
+private:
+    ScanElement& operator=(const ScanElement& rhs); // disallow
 
-  public:
+public:
     ScanElement();
     ScanElement(const ScanElement& proto);
     virtual ~ScanElement();
@@ -111,7 +109,8 @@ namespace ncml_module
      */
     void getDatasetList(vector<NetcdfElement*>& datasets) const;
 
-  private: // internal methods
+private:
+    // internal methods
 
     /** Set the filters on scanner from the attributes we have set. */
     void setupFilters(agg_util::DirectoryUtil& scanner) const;
@@ -123,7 +122,7 @@ namespace ncml_module
     void initSimpleDateFormats(const std::string& dateFormatMark);
 
     /** delete _pDateFormat and _pISO8601 if needed. */
-    void deleteDateFormats() throw();
+    void deleteDateFormats() throw ();
 
     /** Apply the dateFormatMark and DateFormatters to the given
      * filename to extract the time.  Return this time as an
@@ -142,7 +141,8 @@ namespace ncml_module
     /** Get a humanreadable string expressing the given time theTime */
     static std::string getTimeAsString(time_t theTime);
 
-  private: // data rep
+private:
+    // data rep
     string _location;
     string _suffix;
     string _regExp;
@@ -160,7 +160,7 @@ namespace ncml_module
     // to get config.h information as well as hide the icu headers.
     struct DateFormatters;
     DateFormatters* _pDateFormatters;
-  };
+};
 
 }
 

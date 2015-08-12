@@ -33,33 +33,28 @@
 #include "ArrayAggregationBase.h" // agg_util
 #include "Dimension.h" // agg_util
 
-namespace agg_util
-{
-  class ArrayJoinExistingAggregation : public ArrayAggregationBase
-  {
-  public:
+namespace agg_util {
+class ArrayJoinExistingAggregation: public ArrayAggregationBase {
+public:
 
     /**
-    * Construct a joinNew Array aggregation given the parameters.
-    *
-    * @param granuleTemplate the Array to use as a prototype for the UNaggregated Array
-    *              It is the object for the aggVar as loaded from memberDatasets[0].
-    * @param memberDatasets  list of the member datasets forming the aggregation.
-    *                        this list will be copied internally so memberDatasets
-    *                        may be destroyed after this call (though the element
-    *                        AggMemberDataset objects will be ref()'d in our copy).
-    * @param arrayGetter  smart ptr to the algorithm for getting out the constrained
-    *                     array from each individual AMDList DataDDS.
-    *                     Ownership transferred to this (clearly).
-    * @param joinDim the outer dimension we are using (with post-aggregation
-    *                cardinality) for the joinExisting
-    *
-    */
-    ArrayJoinExistingAggregation(
-        const libdap::Array& granuleTemplate,
-        const AMDList& memberDatasets,
-        std::auto_ptr<ArrayGetterInterface>& arrayGetter,
-        const Dimension& joinDim);
+     * Construct a joinNew Array aggregation given the parameters.
+     *
+     * @param granuleTemplate the Array to use as a prototype for the UNaggregated Array
+     *              It is the object for the aggVar as loaded from memberDatasets[0].
+     * @param memberDatasets  list of the member datasets forming the aggregation.
+     *                        this list will be copied internally so memberDatasets
+     *                        may be destroyed after this call (though the element
+     *                        AggMemberDataset objects will be ref()'d in our copy).
+     * @param arrayGetter  smart ptr to the algorithm for getting out the constrained
+     *                     array from each individual AMDList DataDDS.
+     *                     Ownership transferred to this (clearly).
+     * @param joinDim the outer dimension we are using (with post-aggregation
+     *                cardinality) for the joinExisting
+     *
+     */
+    ArrayJoinExistingAggregation(const libdap::Array& granuleTemplate, const AMDList& memberDatasets,
+        std::auto_ptr<ArrayGetterInterface>& arrayGetter, const Dimension& joinDim);
 
     ArrayJoinExistingAggregation(const ArrayJoinExistingAggregation& rhs);
 
@@ -68,13 +63,14 @@ namespace agg_util
     ArrayJoinExistingAggregation& operator=(const ArrayJoinExistingAggregation& rhs);
 
     /**
-    * Virtual Constructor: Make a deep copy (clone) of the object
-    * and return it.
-    * @return ptr to the cloned object.
-    */
+     * Virtual Constructor: Make a deep copy (clone) of the object
+     * and return it.
+     * @return ptr to the cloned object.
+     */
     virtual ArrayJoinExistingAggregation* ptr_duplicate();
 
-  protected: // Subclass Interface
+protected:
+    // Subclass Interface
 
     /** IMPL of subclass hook for read() to copy granule
      * constraints properly (inner dim ones). */
@@ -85,14 +81,14 @@ namespace agg_util
      * and respecting constraints on the outer dimension */
     virtual void readConstrainedGranuleArraysAndAggregateDataHook();
 
-  private: // helpers
+private:
+    // helpers
 
     /** Duplicate just the local (this subclass) data rep */
     void duplicate(const ArrayJoinExistingAggregation& rhs);
 
     /** Clear any state from this */
-    void cleanup() throw();
-
+    void cleanup() throw ();
 
     /////////////////////////////////////////////////////////////////////////////
     // Data Rep
@@ -100,7 +96,7 @@ namespace agg_util
     /** The (outer) imension we will be joining along,
      *  with post-aggregation cardinality. */
     agg_util::Dimension _joinDim;
-  };
+};
 }
 
 #endif /* __AGG_UTIL__ARRAY_JOIN_EXISTING_AGGREGATION_H__ */

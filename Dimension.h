@@ -34,24 +34,23 @@
 #include <string>
 #include <vector>
 
-namespace agg_util
-{
-  /**
-   * Struct for holding information about a dimension of data,
-   * minimally a name and a cardinality (size).
-   *
-   * We use this class as a go-between to keep
-   * ncml_module::DimensionElement out of the agg_util::AggregationUtil
-   * dependencies.
-   *
-   * There's really no invariants on the data rep now, so I will leave it as a struct.
-   *
-   */
-  struct Dimension
-  {
-  public:
+namespace agg_util {
+/**
+ * Struct for holding information about a dimension of data,
+ * minimally a name and a cardinality (size).
+ *
+ * We use this class as a go-between to keep
+ * ncml_module::DimensionElement out of the agg_util::AggregationUtil
+ * dependencies.
+ *
+ * There's really no invariants on the data rep now, so I will leave it as a struct.
+ *
+ */
+struct Dimension {
+public:
     Dimension();
-    Dimension(const std::string& nameArg, unsigned int sizeArg, bool isSharedArg=false, bool isSizeConstantArg=true);
+    Dimension(const std::string& nameArg, unsigned int sizeArg, bool isSharedArg = false,
+        bool isSizeConstantArg = true);
     ~Dimension();
 
     /** Dump to string and return (using operator<<) */
@@ -68,19 +67,18 @@ namespace agg_util
 
     // whether the size is allowed to change or not, important for joinExisting, e.g.
     bool isSizeConstant;
-  };
+};
 
-  /** Dump to stream */
-  std::ostream& operator<<(std::ostream& os, const Dimension& dim);
+/** Dump to stream */
+std::ostream& operator<<(std::ostream& os, const Dimension& dim);
 
-  /* Read back in */
-  std::istream& operator>>(std::istream& is, Dimension& dim);
+/* Read back in */
+std::istream& operator>>(std::istream& is, Dimension& dim);
 
-  /** Container class for a table of dimensions for a given dataset */
-  class DimensionTable
-  {
-  public:
-    DimensionTable(unsigned int capacity=0);
+/** Container class for a table of dimensions for a given dataset */
+class DimensionTable {
+public:
+    DimensionTable(unsigned int capacity = 0);
     ~DimensionTable();
 
     void clear();
@@ -94,13 +92,13 @@ namespace agg_util
      * place it into pOut if pOut is non-null
      * @return whether it was found
      */
-    bool findDimension(const std::string& name, Dimension* pOut=0) const;
+    bool findDimension(const std::string& name, Dimension* pOut = 0) const;
 
     const std::vector<Dimension>& getDimensions() const;
 
-  private:
+private:
     std::vector<Dimension> _dimensions;
-  };
+};
 
 }
 

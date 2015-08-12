@@ -31,35 +31,32 @@
 
 #include "NCMLElement.h"
 
-using namespace std;
-namespace ncml_module
-{
+namespace ncml_module {
 
-  /**
-   * @brief Concrete class for NcML <explicit> element
-   *
-   * This element simply removes all the metadata from the currently loaded DDX.
-   */
-  class ExplicitElement : public NCMLElement
-  {
-  private:
+/**
+ * @brief Concrete class for NcML <explicit> element
+ *
+ * This element simply removes all the metadata from the currently loaded DDX.
+ */
+class ExplicitElement: public NCMLElement {
+private:
     ExplicitElement& operator=(const ExplicitElement& rhs); // disallow
 
-  public:
+public:
     ExplicitElement();
     ExplicitElement(const ExplicitElement& proto);
     virtual ~ExplicitElement();
-    virtual const string& getTypeName() const;
+    virtual const std::string& getTypeName() const;
     virtual ExplicitElement* clone() const; // override clone with more specific subclass
     virtual void setAttributes(const XMLAttributeMap& attrs);
     virtual void handleBegin();
-    virtual void handleContent(const string& content);
+    virtual void handleContent(const std::string& content);
     virtual void handleEnd();
-    virtual string toString() const;
+    virtual std::string toString() const;
 
-    static const string _sTypeName;
-    static const vector<string> _sValidAttributes; // will be empty, but check will work the same.
-  };
+    static const std::string _sTypeName;
+    static const std::vector<std::string> _sValidAttributes; // will be empty, but check will work the same.
+};
 
 }
 

@@ -38,12 +38,11 @@
  * functionality and allows us to treat subclasses of any type T polymorphically.
  *
  */
-namespace ncml_module
-{
+namespace ncml_module {
 
-  class NCMLBaseArray : public libdap::Array
-  {
-  public: // class methods
+class NCMLBaseArray: public libdap::Array {
+public:
+    // class methods
 
 #if 0
     /**
@@ -64,7 +63,8 @@ namespace ncml_module
     static auto_ptr< NCMLBaseArray > createFromArray(const libdap::Array& proto);
 #endif
 
-  public:  // Instance methods
+public:
+    // Instance methods
     NCMLBaseArray();
     explicit NCMLBaseArray(const std::string& name);
     explicit NCMLBaseArray(const NCMLBaseArray& proto);
@@ -144,22 +144,23 @@ namespace ncml_module
      */
     virtual void createAndSetConstrainedValueBuffer() = 0;
 
-  private:
+private:
 
     /** Copy just the variables introduced in this class */
     void copyLocalRepFrom(const NCMLBaseArray& proto);
 
     /** Destroy the data local to this class */
-    void destroy() throw();
+    void destroy() throw ();
 
-  protected: // Data rep
+protected:
+    // Data rep
     // The Shape for the case of NO constraints on the data, or null if not set yet.
-     Shape* _noConstraints;
+    Shape* _noConstraints;
 
-     // The Shape for the CURRENT dimensions in super Array, used to calculate the transmission buffer
-     // for read() and also to check if haveConstraintsChangedSinceLastRead().  Null if not set yet.
-     Shape* _currentConstraints;
-  };
+    // The Shape for the CURRENT dimensions in super Array, used to calculate the transmission buffer
+    // for read() and also to check if haveConstraintsChangedSinceLastRead().  Null if not set yet.
+    Shape* _currentConstraints;
+};
 
 }
 

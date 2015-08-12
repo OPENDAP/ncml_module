@@ -31,20 +31,18 @@
 
 #include "NCMLElement.h"
 
-namespace ncml_module
-{
-  class AggregationElement;
+namespace ncml_module {
+class AggregationElement;
 
-  /**
-   * @brief Element for the <variableAgg> element
-   * child of an <aggregation>.
-   */
-  class VariableAggElement : public NCMLElement
-  {
-  private:
+/**
+ * @brief Element for the <variableAgg> element
+ * child of an <aggregation>.
+ */
+class VariableAggElement: public NCMLElement {
+private:
     VariableAggElement& operator=(const VariableAggElement& rhs); // disallow
 
-  public:
+public:
     static const string _sTypeName;
     static const vector<string> _sValidAttributes;
 
@@ -58,18 +56,23 @@ namespace ncml_module
     virtual void handleEnd();
     virtual string toString() const;
 
-    const string& name() const { return _name; }
+    const string& name() const
+    {
+        return _name;
+    }
 
     /** Get our parent aggregation off the parser stack */
     AggregationElement& getParentAggregation() const;
 
-  private: // methods
+private:
+    // methods
 
     static vector<string> getValidAttributes();
 
-  private: // data rep
+private:
+    // data rep
     string _name;
-  };
+};
 
 }
 

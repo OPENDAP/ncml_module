@@ -34,40 +34,38 @@
 #include "DDSLoader.h"
 #include "NCMLElement.h"
 
-namespace libdap
-{
-  class BaseType;
-  class DDS;
+namespace libdap {
+class BaseType;
+class DDS;
 }
 
 class BESDapResponse;
 
-namespace ncml_module
-{
-  class AggregationElement;
-  class DimensionElement;
-  class NCMLParser;
-  class VariableElement;
+namespace ncml_module {
 
-  /**
-   * @brief Concrete class for NcML <netcdf> element
-   *
-   * This element specifies the location attribute for the local
-   * data file that we wrap and load into a DDX (DDS w/ AttrTable tree).
-   *
-   * We keep a ptr to our containing NCMLParser to help with
-   * the differences needed if we are the root dataset element or not,
-   * in particular that the response object is either passed in to us (root)
-   * or loaded brandy new if we're the child of an aggregation.
-   */
-  class NetcdfElement
-    : public NCMLElement // superclass
-    , public virtual agg_util::DDSAccessRCInterface // interface
-  {
-  private:
+class AggregationElement;
+class DimensionElement;
+class NCMLParser;
+class VariableElement;
+
+/**
+ * @brief Concrete class for NcML <netcdf> element
+ *
+ * This element specifies the location attribute for the local
+ * data file that we wrap and load into a DDX (DDS w/ AttrTable tree).
+ *
+ * We keep a ptr to our containing NCMLParser to help with
+ * the differences needed if we are the root dataset element or not,
+ * in particular that the response object is either passed in to us (root)
+ * or loaded brandy new if we're the child of an aggregation.
+ */
+class NetcdfElement: public NCMLElement, // superclass
+    public virtual agg_util::DDSAccessRCInterface // interface
+{
+private:
     NetcdfElement& operator=(const NetcdfElement& rhs); //disallow
 
-  public:
+public:
     static const string _sTypeName;
     static const vector<string> _sValidAttributes;
 
@@ -84,13 +82,31 @@ namespace ncml_module
 
     // Accessors for attributes we deal with.
     // TODO Add these as we support aggregation attributes
-    const string& location() const { return _location; }
-    const string& id() const { return _id; }
-    const string& title() const { return _title; }
-    const string& coordValue() const { return _coordValue; }
-    const string& ncoords() const { return _ncoords; }
+    const string& location() const
+    {
+        return _location;
+    }
+    const string& id() const
+    {
+        return _id;
+    }
+    const string& title() const
+    {
+        return _title;
+    }
+    const string& coordValue() const
+    {
+        return _coordValue;
+    }
+    const string& ncoords() const
+    {
+        return _ncoords;
+    }
 
-    bool hasNcoords() const { return !_ncoords.empty(); }
+    bool hasNcoords() const
+    {
+        return !_ncoords.empty();
+    }
 
     /**
      * Get the ncoords() field as a valid size.
@@ -119,12 +135,12 @@ namespace ncml_module
 
     bool getProcessedMetadataDirective() const
     {
-      return _gotMetadataDirective;
+        return _gotMetadataDirective;
     }
 
     void setProcessedMetadataDirective()
     {
-      _gotMetadataDirective = true;
+        _gotMetadataDirective = true;
     }
 
     /** Used by the NCMLParser to let us know to borrow the response
@@ -196,7 +212,7 @@ namespace ncml_module
      *
      * If agg == NULL, it always removes the strong reference to the previous, regardless of throwIfExists.
      */
-    void setChildAggregation(AggregationElement* agg, bool throwIfExists=true);
+    void setChildAggregation(AggregationElement* agg, bool throwIfExists = true);
 
     /** Return the raw pointer (or NULL) to our contained aggregation.
      * Only guaranteed valid for the life of this object.  */
@@ -212,7 +228,6 @@ namespace ncml_module
 
     /** Set my parent AggregationElement to parent. This is a weak reference.  */
     void setParentAggregation(AggregationElement* parent);
-
 
 #if 0 // not sure we need this yet
     /**
@@ -253,7 +268,6 @@ namespace ncml_module
      */
     void addVariableToValidateOnClose(libdap::BaseType* pNewVar, VariableElement* pVE);
 
-
     /**
      * Lookup the VariableElement* associated with pVarToValidate via a previous
      * addVariableToValidateOnClose() and call pVE->setGotValues() on the
@@ -267,11 +281,11 @@ namespace ncml_module
     void setVariableGotValues(libdap::BaseType* pVarToValidate, bool removeEntry);
 
     /** If a VariableElement has been associated with a new var to validate,
-      * return it.  If not, return null.
-      * @param pNewVar  the libdap variable (key) to look up
-      * @return the associated VariableElement for pNewVar, else null if not set with
-      *        addVariableToValidate.
-      */
+     * return it.  If not, return null.
+     * @param pNewVar  the libdap variable (key) to look up
+     * @return the associated VariableElement for pNewVar, else null if not set with
+     *        addVariableToValidate.
+     */
     VariableElement* findVariableElementForLibdapVar(libdap::BaseType* pNewVar);
 
     /**
@@ -286,17 +300,17 @@ namespace ncml_module
     static bool isLocationLexicographicallyLessThan(const NetcdfElement* pLHS, const NetcdfElement* pRHS);
 
     /**
-      * Compare the coordvalue fields of the two arguments and return true
-      * if lhs.coordValue() < rhs.coordValue() in a lexicographic string sense.
-      * Used for std::sort on vector<NetcdfElement*>
-      * @see isLocationLexicographicallyLessThan()
-      * @param pLHS the lefthandside of the less than  Must not be null!
-      * @param pRHS the righthandside of the less than  Must not be null!
-      * @return if pLHS->coordValue() < pRHS->coordValue() lexicographically.
-    */
+     * Compare the coordvalue fields of the two arguments and return true
+     * if lhs.coordValue() < rhs.coordValue() in a lexicographic string sense.
+     * Used for std::sort on vector<NetcdfElement*>
+     * @see isLocationLexicographicallyLessThan()
+     * @param pLHS the lefthandside of the less than  Must not be null!
+     * @param pRHS the righthandside of the less than  Must not be null!
+     * @return if pLHS->coordValue() < pRHS->coordValue() lexicographically.
+     */
     static bool isCoordValueLexicographicallyLessThan(const NetcdfElement* pLHS, const NetcdfElement* pRHS);
 
-  private:
+private:
 
     /** Ask the parser to load our location into our response object. */
     void loadLocation();
@@ -310,12 +324,12 @@ namespace ncml_module
      * Does a more context sensitive check of attributes,
      * like making sure ncoords is only specified on a child of
      * a joinExisting aggregation element.
-    */
+     */
     bool validateAttributeContextOrThrow() const;
 
     static vector<string> getValidAttributes();
 
-  private:
+private:
     string _location;
     string _id;
     string _title;
@@ -355,14 +369,15 @@ namespace ncml_module
     // We use raw DimensionElement*, but ref() them upon adding them to the vector
     // and unref() them in the dtor.
     // We won't have that many, so a vector is more efficient than a map for this.
-    std::vector< DimensionElement* > _dimensions;
+    std::vector<DimensionElement*> _dimensions;
 
     // Lazy evaluated, starts unassigned.
     // When getAggMemberDataset() is called, it is lazy-constructed
     // to weak ref the returned strong shared ptr (RCPtr).
     agg_util::WeakRCPtr<agg_util::AggMemberDataset> _pDatasetWrapper;
 
-  public: // inner classes can't be private?
+public:
+    // inner classes can't be private?
     /**
      * Inner class for keeping track of new variables created within
      * the context of this dataset for which we do not get <values>
@@ -393,96 +408,102 @@ namespace ncml_module
      * the issue to maintain integrity of the libdap variables
      * (and avoid cryptic internal errors much later down the line).
      */
-    class VariableValueValidator
-    {
+    class VariableValueValidator {
     public:
-      VariableValueValidator(NetcdfElement* pParent);
+        VariableValueValidator(NetcdfElement* pParent);
 
-      /**
-       * Will decrement the ref count of all contained
-       * VariableElement's
-       * @return
-       */
-      ~VariableValueValidator();
+        /**
+         * Will decrement the ref count of all contained
+         * VariableElement's
+         * @return
+         */
+        ~VariableValueValidator();
 
-      /** Add a validation entry for the given VariableElement and the actual variable that
-       * it has created and added to the DDS.  pVE->ref() will be called to make sure
-       * the element stays around after the parser has deref() it.
-       * @param pNewVar the actual libdap variable that was created and is
-       * currently in the DDS of this dataset (in _response).  Should not be null.
-       * @param pVE  the VariableElement that created it.  pVE->checkGotValues() will
-       * determine whether the entry has been validated.  pVE->ref() will be called to
-       * up the ref count.  Should not be null.
-       */
-      void addVariableToValidate(libdap::BaseType* pNewVar, VariableElement* pVE);
+        /** Add a validation entry for the given VariableElement and the actual variable that
+         * it has created and added to the DDS.  pVE->ref() will be called to make sure
+         * the element stays around after the parser has deref() it.
+         * @param pNewVar the actual libdap variable that was created and is
+         * currently in the DDS of this dataset (in _response).  Should not be null.
+         * @param pVE  the VariableElement that created it.  pVE->checkGotValues() will
+         * determine whether the entry has been validated.  pVE->ref() will be called to
+         * up the ref count.  Should not be null.
+         */
+        void addVariableToValidate(libdap::BaseType* pNewVar, VariableElement* pVE);
 
-      /** Remove an entry previously added under the key pVarToRemove with
-       * addVariableToValidate.  Will unref() the VariableElement portion.
-       * @param pVarToRemove
-       */
-      void removeVariableToValidate(libdap::BaseType* pVarToRemove);
+        /** Remove an entry previously added under the key pVarToRemove with
+         * addVariableToValidate.  Will unref() the VariableElement portion.
+         * @param pVarToRemove
+         */
+        void removeVariableToValidate(libdap::BaseType* pVarToRemove);
 
-      /** Lookup the VariableElement pVE associated with the given pVarToValidate
-       * and call pVE->setGotValues() on it to validate it.
-       * @param pVarToValidate a non-null variable that was entered with addVariableToValidate
-       * @exception An internal error is thrown if pVarToValidate was not already added.
-       */
-      void setVariableGotValues(libdap::BaseType* pVarToValidate);
+        /** Lookup the VariableElement pVE associated with the given pVarToValidate
+         * and call pVE->setGotValues() on it to validate it.
+         * @param pVarToValidate a non-null variable that was entered with addVariableToValidate
+         * @exception An internal error is thrown if pVarToValidate was not already added.
+         */
+        void setVariableGotValues(libdap::BaseType* pVarToValidate);
 
-      /** Make sure all the entries has had their values set else throw a
-       * parse error explaining which variable has not so the author
-       * can fix the error.  On success return true.
-       * @return whether all contained variables have values.
-       */
-      bool validate();
+        /** Make sure all the entries has had their values set else throw a
+         * parse error explaining which variable has not so the author
+         * can fix the error.  On success return true.
+         * @return whether all contained variables have values.
+         */
+        bool validate();
 
-      /** If a VariableElement has been associated with a new var to validate,
-       * return it.  If not, return null.
-       * @param pNewVar  the libdap variable (key) to look up
-       * @return the associated VariableElement for pNewVar, else null if not set with
-       *        addVariableToValidate.
-       */
-      VariableElement* findVariableElementForLibdapVar(libdap::BaseType* pNewVar);
+        /** If a VariableElement has been associated with a new var to validate,
+         * return it.  If not, return null.
+         * @param pNewVar  the libdap variable (key) to look up
+         * @return the associated VariableElement for pNewVar, else null if not set with
+         *        addVariableToValidate.
+         */
+        VariableElement* findVariableElementForLibdapVar(libdap::BaseType* pNewVar);
 
     private:
-      // disallow implicit copies
-      VariableValueValidator(const VariableValueValidator&);
-      VariableValueValidator& operator=(const VariableValueValidator&);
+        // disallow implicit copies
+        VariableValueValidator(const VariableValueValidator&);
+        VariableValueValidator& operator=(const VariableValueValidator&);
 
     public:
 
-      class VVVEntry
-      {
-      public:
-        VVVEntry() : _pNewVar(0), _pVarElt(0) { }
-        VVVEntry(libdap::BaseType* pBT, VariableElement* pVE) : _pNewVar(pBT), _pVarElt(pVE) { }
-        void clear() { _pNewVar=0; _pVarElt=0; }
-        libdap::BaseType* _pNewVar;
-        VariableElement* _pVarElt;
-      };
+        class VVVEntry {
+        public:
+            VVVEntry() :
+                _pNewVar(0), _pVarElt(0)
+            {
+            }
+            VVVEntry(libdap::BaseType* pBT, VariableElement* pVE) :
+                _pNewVar(pBT), _pVarElt(pVE)
+            {
+            }
+            void clear()
+            {
+                _pNewVar = 0;
+                _pVarElt = 0;
+            }
+            libdap::BaseType* _pNewVar;
+            VariableElement* _pVarElt;
+        };
 
+        /********************* helper functions *******************/
 
-      /********************* helper functions *******************/
-
-      /** Lookup the entry given the BaseType* it was added with and return
-       * its address within _entries, else NULL if not found.
-       * @param pVarToFind  the variable to lookup the entry for
-       * @return the associated entry else NULL if not found.
-       */
+        /** Lookup the entry given the BaseType* it was added with and return
+         * its address within _entries, else NULL if not found.
+         * @param pVarToFind  the variable to lookup the entry for
+         * @return the associated entry else NULL if not found.
+         */
     private:
-      VariableValueValidator::VVVEntry* findEntryByLibdapVar(libdap::BaseType* pVarToFind);
+        VariableValueValidator::VVVEntry* findEntryByLibdapVar(libdap::BaseType* pVarToFind);
 
-
-      // We don't expect too many entries, so a simple vector is the best way to go,
-      // avoid overhead of maps, etc.
-      vector<VVVEntry> _entries;
-      NetcdfElement* _pParent;
+        // We don't expect too many entries, so a simple vector is the best way to go,
+        // avoid overhead of maps, etc.
+        vector<VVVEntry> _entries;
+        NetcdfElement* _pParent;
     }; // class VariableValueValidator
 
-  private:
+private:
     // The actual instance we will poke from methods in NetcdfElement
     VariableValueValidator _variableValidator;
-  };
+};
 
 }
 

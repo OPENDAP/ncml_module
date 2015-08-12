@@ -37,91 +37,76 @@ using std::ostringstream;
 using std::vector;
 using std::ws;
 
-namespace agg_util
+namespace agg_util {
+Dimension::Dimension() :
+    name(""), size(0), isShared(false), isSizeConstant(false)
 {
-  Dimension::Dimension()
-  : name("")
-  , size(0)
-  , isShared(false)
-  , isSizeConstant(false)
-  {
-  }
+}
 
-  Dimension::Dimension(const string& nameArg, unsigned int sizeArg, bool isSharedArg, bool isSizeConstantArg)
-  : name(nameArg)
-  , size(sizeArg)
-  , isShared(isSharedArg)
-  , isSizeConstant(isSizeConstantArg)
-  {
-  }
+Dimension::Dimension(const string& nameArg, unsigned int sizeArg, bool isSharedArg, bool isSizeConstantArg) :
+    name(nameArg), size(sizeArg), isShared(isSharedArg), isSizeConstant(isSizeConstantArg)
+{
+}
 
-  Dimension::~Dimension()
-  {
-  }
+Dimension::~Dimension()
+{
+}
 
-  std::string
-  Dimension::toString() const
-  {
+std::string Dimension::toString() const
+{
     ostringstream oss;
     oss << *this;
     return oss.str();
-  }
+}
 
-  std::ostream& operator<<(std::ostream& os, const Dimension& dim)
-  {
+std::ostream& operator<<(std::ostream& os, const Dimension& dim)
+{
     os << dim.name << '\n';
     os << dim.size << '\n';
     return os;
-  }
+}
 
-  std::istream& operator>>(std::istream& is, Dimension& dim)
-  {
+std::istream& operator>>(std::istream& is, Dimension& dim)
+{
     dim.isShared = false;
     dim.isSizeConstant = true;
 
     getline(is, dim.name);
     is >> ws >> dim.size >> ws;
     return is;
-  }
+}
 
-  bool
-  DimensionTable::findDimension(const std::string& name, Dimension* pOut) const
-  {
+bool DimensionTable::findDimension(const std::string& name, Dimension* pOut) const
+{
     bool foundIt = false;
     vector<Dimension>::const_iterator endIt = _dimensions.end();
     vector<Dimension>::const_iterator it;
-    for (it = _dimensions.begin(); it != endIt; ++it)
-      {
-        if (it->name == name)
-          {
-            if (pOut)
-              {
+    for (it = _dimensions.begin(); it != endIt; ++it) {
+        if (it->name == name) {
+            if (pOut) {
                 *pOut = *it;
-              }
+            }
             foundIt = true;
             break;
-          }
-      }
+        }
+    }
     return foundIt;
-  }
+}
 
-  void
-  DimensionTable::addDimensionUnique(const Dimension& dim)
-  {
-    if (!findDimension(dim.name))
-      {
+void DimensionTable::addDimensionUnique(const Dimension& dim)
+{
+    if (!findDimension(dim.name)) {
         _dimensions.push_back(dim);
-      }
-    else
-      {
+    }
+    else {
         BESDEBUG("ncml", "A dimension with name=" << dim.name << " already exists.  Not adding." << endl);
-      }
-  }
+    }
+}
 
-  const std::vector<Dimension>&
-  DimensionTable::getDimensions() const
-  {
+const std::vector<Dimension>&
+DimensionTable::getDimensions() const
+{
     return _dimensions;
-  }
+}
 
 }

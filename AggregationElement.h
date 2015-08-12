@@ -36,18 +36,16 @@
 #include "NCMLElement.h"
 #include "NCMLUtil.h"
 
-namespace agg_util
-{
-  struct Dimension;
-};
+namespace agg_util {
+struct Dimension;
+}
 
-namespace libdap
-{
-  class Array;
-  class BaseType;
-  class DDS;
-  class Grid;
-};
+namespace libdap {
+class Array;
+class BaseType;
+class DDS;
+class Grid;
+}
 
 using agg_util::AggMemberDataset;
 using libdap::Array;
@@ -56,18 +54,16 @@ using libdap::DDS;
 using libdap::Grid;
 using std::auto_ptr;
 
-namespace ncml_module
-{
-  class NetcdfElement;
-  class NCMLParser;
-  class ScanElement;
+namespace ncml_module {
+class NetcdfElement;
+class NCMLParser;
+class ScanElement;
 
-  class AggregationElement : public NCMLElement
-  {
-  private:
+class AggregationElement: public NCMLElement {
+private:
     AggregationElement& operator=(const AggregationElement& rhs); // disallow
 
-  public:
+public:
     // Name of the element
     static const string _sTypeName;
 
@@ -85,14 +81,22 @@ namespace ncml_module
     virtual void handleEnd();
     virtual string toString() const;
 
-    const string& type() const { return _type; }
-    const string& dimName() const {return _dimName; }
-    const string& recheckEvery() const { return _recheckEvery; }
+    const string& type() const
+    {
+        return _type;
+    }
+    const string& dimName() const
+    {
+        return _dimName;
+    }
+    const string& recheckEvery() const
+    {
+        return _recheckEvery;
+    }
 
     bool isJoinNewAggregation() const;
     bool isUnionAggregation() const;
     bool isJoinExistingAggregation() const;
-
 
     /** Set the parent and return the old one, which could be null.
      * Should only be called on a handleBegin() call here when we know we can find it
@@ -100,8 +104,10 @@ namespace ncml_module
      * We only retain a weak reference to parent.
      */
     NetcdfElement* setParentDataset(NetcdfElement* parent);
-    NetcdfElement* getParentDataset() const { return _parent; }
-
+    NetcdfElement* getParentDataset() const
+    {
+        return _parent;
+    }
 
     /** Add a new dataset to the aggregation for the parse.
      * We now have a strong reference to it. */
@@ -148,14 +154,14 @@ namespace ncml_module
     void processParentDatasetComplete();
 
     /** If a child scan contains a dateFormatMark, then
-       * we want to add a "_CoordinateAxisType" of "Time"
-       * By setting this to a non empty() string,
-       * a new attribute _CoordinateAxisType will be
-       * added to aggregation variable in a joinNew
-       * or joinExisting aggregation.
-       * @param cat  the desired value for _CoordinateAxisType, or
-       *             "" if no attribute addition is desired.
-       */
+     * we want to add a "_CoordinateAxisType" of "Time"
+     * By setting this to a non empty() string,
+     * a new attribute _CoordinateAxisType will be
+     * added to aggregation variable in a joinNew
+     * or joinExisting aggregation.
+     * @param cat  the desired value for _CoordinateAxisType, or
+     *             "" if no attribute addition is desired.
+     */
     void setAggregationVariableCoordinateAxisType(const std::string& cat);
 
     /** Return the value set by setAggregationVariableCoordinateAxisType()
@@ -163,7 +169,8 @@ namespace ncml_module
      */
     const std::string& getAggregationVariableCoordinateAxisType() const;
 
-  private: // methods
+private:
+    // methods
 
     void processUnion();
     void processJoinNew();
@@ -195,10 +202,7 @@ namespace ncml_module
      * @param granuleList  output list with the AMD granules in it.
      * @param aggDimName  the dimension name for the aggregation
      */
-    void fillDimensionCacheForJoinExistingDimension(
-        agg_util::AMDList& granuleList,
-        const std::string& aggDimName
-        );
+    void fillDimensionCacheForJoinExistingDimension(agg_util::AMDList& granuleList, const std::string& aggDimName);
 
     /** Go see if the cache file exists using some magic */
     bool doesDimensionCacheExist() const;
@@ -259,74 +263,59 @@ namespace ncml_module
      * @param templateDDS the DDS whose top-level should be searched.
      * @param outerDimName the outer dimension name to find variables with
      */
-    void findVariablesWithOuterDimensionName(
-        vector<string>& oMatchingVars,
-        const DDS& templateDDS,
+    void findVariablesWithOuterDimensionName(vector<string>& oMatchingVars, const DDS& templateDDS,
         const string& outerDimName) const;
 
-   /** Inner helper class for holding multiple return values for next function */
-   struct JoinAggParams
-     {
-        JoinAggParams()
-        : _pAggVarTemplate(0)
-        , _pAggDim(0)
-        , _memberDatasets()
+    /** Inner helper class for holding multiple return values for next function */
+    struct JoinAggParams {
+        JoinAggParams() :
+            _pAggVarTemplate(0), _pAggDim(0), _memberDatasets()
         {
         }
 
         ~JoinAggParams()
         {
-          _pAggVarTemplate = NULL;
-          _pAggDim = NULL;
-          _memberDatasets.clear();
-          _memberDatasets.resize(0);
+            _pAggVarTemplate = NULL;
+            _pAggDim = NULL;
+            _memberDatasets.clear();
+            _memberDatasets.resize(0);
         }
 
         libdap::BaseType* _pAggVarTemplate; // template for the granule's aggVar
         const agg_util::Dimension* _pAggDim; // the aggregated dimension (with full size)
         agg_util::AMDList _memberDatasets; // the granule datasets to use
-     }; // struct JoinAggParams
+    }; // struct JoinAggParams
 
-   /** Fill in pOutParams with the parameters we need
-    * to create the appropriate concrete aggregation class.
-    *
-    * @param pOutParams  the output
-    * @param aggOutputDDS the output DDS
-    * @param varName name of the variable to get params for
-    * @param templateDDS  the dds to find the template for varName
-    */
-   void getParamsForJoinAggOnVariable(
-       JoinAggParams* pOutParams,
-       const DDS& aggOutputDDS,
-       const std::string& varName,
-       const DDS& templateDDS);
+    /** Fill in pOutParams with the parameters we need
+     * to create the appropriate concrete aggregation class.
+     *
+     * @param pOutParams  the output
+     * @param aggOutputDDS the output DDS
+     * @param varName name of the variable to get params for
+     * @param templateDDS  the dds to find the template for varName
+     */
+    void getParamsForJoinAggOnVariable(JoinAggParams* pOutParams, const DDS& aggOutputDDS, const std::string& varName,
+        const DDS& templateDDS);
 
     /** Top level call to process the joinNew for the given variable
-    * varName.  Creates the aggregation subclass of the variable type
-    * and places it into the output DDS.
-    * @param varName variable for which to create the aggregation
-    * @param pAggDDS the output DDS into which to place the new agg variable
-    * @param templateDDS the DDS to use to find the template version
-    *                     of the variable in order to determine type and shape.
-    */
-    void processJoinNewOnAggVar(
-        DDS* pAggDDS,
-        const std::string& varName,
-        const DDS& templateDDS);
+     * varName.  Creates the aggregation subclass of the variable type
+     * and places it into the output DDS.
+     * @param varName variable for which to create the aggregation
+     * @param pAggDDS the output DDS into which to place the new agg variable
+     * @param templateDDS the DDS to use to find the template version
+     *                     of the variable in order to determine type and shape.
+     */
+    void processJoinNewOnAggVar(DDS* pAggDDS, const std::string& varName, const DDS& templateDDS);
 
     /** Top level call to process the joinExisting for the given variable
-    * varName.  Creates the aggregation subclass of the variable type
-    * and places it into the output DDS.
-    * @param varName variable for which to create the aggregation
-    * @param pAggDDS the output DDS into which to place the new agg variable
-    * @param templateDDS the DDS to use to find the template version
-    *                     of the variable in order to determine type and shape.
-    */
-    void processJoinExistingOnAggVar(
-        DDS* pAggDDS,
-        const std::string& varName,
-        const DDS& templateDDS);
-
+     * varName.  Creates the aggregation subclass of the variable type
+     * and places it into the output DDS.
+     * @param varName variable for which to create the aggregation
+     * @param pAggDDS the output DDS into which to place the new agg variable
+     * @param templateDDS the DDS to use to find the template version
+     *                     of the variable in order to determine type and shape.
+     */
+    void processJoinExistingOnAggVar(DDS* pAggDDS, const std::string& varName, const DDS& templateDDS);
 
     /**
      * Create and add a new ArrayAggregateOnOuterDimension
@@ -347,12 +336,9 @@ namespace ncml_module
      * @param memberDatasets the list of dataset wrappers to
      *                       be copied in the construction of
      *                       the new aggregated variable.
-    */
-    void processAggVarJoinNewForArray(
-        DDS& aggDDS,
-        const Array& arrayTemplate,
-        const agg_util::Dimension& dim,
-        const agg_util::AMDList& memberDatasets );
+     */
+    void processAggVarJoinNewForArray(DDS& aggDDS, const Array& arrayTemplate, const agg_util::Dimension& dim,
+        const agg_util::AMDList& memberDatasets);
 
     /**
      * Create and add a new aggregated Grid subclass
@@ -378,24 +364,15 @@ namespace ncml_module
      * @param memberDatasets the list of dataset wrappers to
      *                       be copied in the construction of
      *                       the new aggregated variable.
-    */
-    void processAggVarJoinNewForGrid(
-        DDS& aggDDS,
-        const Grid& gridTemplate,
-        const agg_util::Dimension& dim,
-        const agg_util::AMDList& memberDatasets );
+     */
+    void processAggVarJoinNewForGrid(DDS& aggDDS, const Grid& gridTemplate, const agg_util::Dimension& dim,
+        const agg_util::AMDList& memberDatasets);
 
-    void processAggVarJoinExistingForArray(
-        DDS& aggDDS,
-        const libdap::Array& arrayTemplate,
-        const agg_util::Dimension& dim,
-        const agg_util::AMDList& memberDatasets );
+    void processAggVarJoinExistingForArray(DDS& aggDDS, const libdap::Array& arrayTemplate,
+        const agg_util::Dimension& dim, const agg_util::AMDList& memberDatasets);
 
-    void processAggVarJoinExistingForGrid(
-        DDS& aggDDS,
-        const Grid& gridTemplate,
-        const agg_util::Dimension& dim,
-        const agg_util::AMDList& memberDatasets );
+    void processAggVarJoinExistingForGrid(DDS& aggDDS, const Grid& gridTemplate, const agg_util::Dimension& dim,
+        const agg_util::AMDList& memberDatasets);
 
     /** Helper to pull out the DDS's for the child datasets and shove them into
      *  a vector<DDS*> for processing.
@@ -430,8 +407,7 @@ namespace ncml_module
      * @param checkDimensionMismatch  exception of set to true and mismatch
      * @param dimToSkip dimension with given name not merged if set
      */
-    void mergeDimensions(bool checkDimensionMismatch=true,
-        const std::string& dimToSkip="");
+    void mergeDimensions(bool checkDimensionMismatch = true, const std::string& dimToSkip = "");
 
     /** Called from processParentDatasetComplete() if we're a joinNew. */
     void processParentDatasetCompleteForJoinNew();
@@ -448,9 +424,8 @@ namespace ncml_module
      * @param placeholderVar  ref to the placeholder (scalar)
      * @param pNewVar  the new coordinate variable that will replace placeholderVar
      */
-    void processPlaceholderCoordinateVariableForJoinExisting(
-          const libdap::BaseType& placeholderVar,
-          libdap::Array* pNewVar);
+    void processPlaceholderCoordinateVariableForJoinExisting(const libdap::BaseType& placeholderVar,
+        libdap::Array* pNewVar);
 
     /** Make sure the variable in pBT is a valid coordinate variable for the dimension dim
      * and return it as an Array* if so.  Else throw or return null.
@@ -461,9 +436,7 @@ namespace ncml_module
      * @param dim  the dimension information to check for
      * @return pBT cast as an Array* if it is valid, else NULL.
      */
-    libdap::Array* ensureVariableIsProperNewCoordinateVariable(
-        libdap::BaseType* pBT,
-        const agg_util::Dimension& dim,
+    libdap::Array* ensureVariableIsProperNewCoordinateVariable(libdap::BaseType* pBT, const agg_util::Dimension& dim,
         bool throwIfInvalid) const;
 
     /**
@@ -489,10 +462,8 @@ namespace ncml_module
      *                          a variable with name == dim.name is found but doesn't match.
      * @return
      */
-    libdap::Array* findMatchingCoordinateVariable(
-        const DDS& dds,
-        const agg_util::Dimension& dim,
-        bool throwOnInvalidCV=true) const;
+    libdap::Array* findMatchingCoordinateVariable(const DDS& dds, const agg_util::Dimension& dim,
+        bool throwOnInvalidCV = true) const;
 
     /**
      *  Called when we find an existing variable with the same name as the dim.name
@@ -570,9 +541,12 @@ namespace ncml_module
      * @exception parse error if any datasets fail to have coordValue set.
      * @exception parse error if the first dataset coord is a number but any others are not.
      */
-    auto_ptr<libdap::Array> createCoordinateVariableForNewDimensionUsingCoordValue(const agg_util::Dimension& dim) const;
-    auto_ptr<libdap::Array> createCoordinateVariableForNewDimensionUsingCoordValueAsDouble(const agg_util::Dimension& dim) const;
-    auto_ptr<libdap::Array> createCoordinateVariableForNewDimensionUsingCoordValueAsString(const agg_util::Dimension& dim) const;
+    auto_ptr<libdap::Array> createCoordinateVariableForNewDimensionUsingCoordValue(
+        const agg_util::Dimension& dim) const;
+    auto_ptr<libdap::Array> createCoordinateVariableForNewDimensionUsingCoordValueAsDouble(
+        const agg_util::Dimension& dim) const;
+    auto_ptr<libdap::Array> createCoordinateVariableForNewDimensionUsingCoordValueAsString(
+        const agg_util::Dimension& dim) const;
 
     /**
      * For each child dataset, use its netcdf@location as the coordValue.
@@ -590,7 +564,8 @@ namespace ncml_module
     // Return the list of valid attribute names.
     static vector<string> getValidAttributes();
 
-  private: // Data rep
+private:
+    // Data rep
 
     string _type; // required oneof { union | joinNew | joinExisting | forecastModelRunCollection | forecastModelSingleRunCollection }
     string _dimName;
@@ -611,7 +586,7 @@ namespace ncml_module
     vector<string> _aggVars;
 
     // Did a variableAgg element set our _aggVars or not?
-    bool  _gotVariableAggElement;
+    bool _gotVariableAggElement;
 
     // Did we add a join existing aggregated Grid to the output yet?
     // Needed to know if we need to add an aggregated map c.v. to output.
@@ -621,7 +596,7 @@ namespace ncml_module
     // with this value on each aggVar.
     std::string _coordinateAxisType;
 
-  };
+};
 
 }
 
