@@ -32,12 +32,14 @@
 #include "AggregationException.h" // agg_util
 #include "AggregationUtil.h" // agg_util
 #include "NCMLDebug.h"
+
 #include <sstream>
+
 #include "BESDebug.h"
 #include "BESStopWatch.h"
 
 static const string DEBUG_CHANNEL(NCML_MODULE_DBG_CHANNEL_2);
-static const bool PRINT_CONSTRAINTS = true;
+static const bool PRINT_CONSTRAINTS = false;
 
 namespace agg_util {
 
@@ -95,6 +97,31 @@ ArrayJoinExistingAggregation*
 ArrayJoinExistingAggregation::ptr_duplicate()
 {
     return new ArrayJoinExistingAggregation(*this);
+}
+
+/* virtual */
+// begin modifying here for the double buffering
+bool ArrayJoinExistingAggregation::serialize(libdap::ConstraintEvaluator &eval, libdap::DDS &dds, libdap::Marshaller &m,
+    bool ce_eval)
+{
+    BESStopWatch sw;
+    if (BESISDEBUG(TIMING_LOG)) sw.start("ArrayJoinExistingAggregation::serialize", "");
+
+#if 0
+    return libdap::Array::serialize(eval, dds, m, ce_eval);
+#endif
+
+    // TODO Time out here? or in ResponseBuilder?
+    dds.timeout_on();
+
+    if (!read_p())
+        read(); // read() throws Error and InternalErr
+
+    dds.timeout_off();
+
+    bool status = libdap::Array::serialize(eval, dds, m, ce_eval);
+
+    return status;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -413,6 +413,11 @@ public:
     /** Find the given map name in the given Grid and return it if found, else NULL */
     static const libdap::Array* findMapByName(const libdap::Grid& inGrid, const std::string& findName);
 
+    // FIXME Add a comment if this works
+    static libdap::Array* readDatasetArrayDataForAggregation(const libdap::Array& constrainedTemplateArray,
+        const std::string& varName, AggMemberDataset& dataset, const ArrayGetterInterface& arrayGetter,
+        const std::string& debugChannel);
+
     /**
      * Load the given dataset's DataDDS.
      * Find the aggVar of the given name in it, must be Array.

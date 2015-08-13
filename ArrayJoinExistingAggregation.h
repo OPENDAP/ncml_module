@@ -33,7 +33,14 @@
 #include "ArrayAggregationBase.h" // agg_util
 #include "Dimension.h" // agg_util
 
+namespace libdap {
+    class ConstraintEvaluator;
+    class DDS;
+    class Marshaller;
+}
+
 namespace agg_util {
+
 class ArrayJoinExistingAggregation: public ArrayAggregationBase {
 public:
 
@@ -69,6 +76,8 @@ public:
      */
     virtual ArrayJoinExistingAggregation* ptr_duplicate();
 
+    virtual bool serialize(libdap::ConstraintEvaluator &eval, libdap::DDS &dds, libdap::Marshaller &m, bool ce_eval);
+
 protected:
     // Subclass Interface
 
@@ -97,6 +106,7 @@ private:
      *  with post-aggregation cardinality. */
     agg_util::Dimension _joinDim;
 };
+
 }
 
 #endif /* __AGG_UTIL__ARRAY_JOIN_EXISTING_AGGREGATION_H__ */

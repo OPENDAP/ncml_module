@@ -28,8 +28,8 @@
 /////////////////////////////////////////////////////////////////////////////
 
 #include "ArrayAggregateOnOuterDimension.h"
-
 #include "AggregationException.h"
+
 #include <DataDDS.h> // libdap::DataDDS
 
 // only NCML backlinks we want in this agg_util class.
@@ -42,7 +42,7 @@
 static const string DEBUG_CHANNEL("agg_util");
 
 // Local flag for whether to print constraints, to help debugging
-// unused jhrg 4/16/14 static const bool PRINT_CONSTRAINTS = true;
+static const bool PRINT_CONSTRAINTS = false;
 
 namespace agg_util {
 
@@ -86,6 +86,108 @@ ArrayAggregateOnOuterDimension::operator=(const ArrayAggregateOnOuterDimension& 
         duplicate(rhs);
     }
     return *this;
+}
+
+#define BUILD_ENTIRE_RESULT 1
+
+// begin modifying here for the double buffering
+bool ArrayAggregateOnOuterDimension::serialize(libdap::ConstraintEvaluator &eval, libdap::DDS &dds,
+    libdap::Marshaller &m, bool ce_eval)
+{
+    BESStopWatch sw;
+    if (BESISDEBUG(TIMING_LOG)) sw.start("ArrayAggregateOnOuterDimension::serialize", "");
+
+    // Only continue if we are supposed to serialize this object at all.
+    if (!(send_p() || is_in_selection())) {
+        BESDEBUG_FUNC(DEBUG_CHANNEL, "Object not in output, skipping...  name=" << name() << endl);
+        return true;
+    }
+
+    if (!read_p()) {
+        BESDEBUG_FUNC(DEBUG_CHANNEL, " function entered..." << endl);
+
+        if (PRINT_CONSTRAINTS) {
+            BESDEBUG_FUNC(DEBUG_CHANNEL, "Constraints on this Array are:" << endl);
+            printConstraints(*this);
+        }
+
+        // call subclass impl
+        transferOutputConstraintsIntoGranuleTemplateHook();
+
+        if (PRINT_CONSTRAINTS) {
+            BESDEBUG_FUNC(DEBUG_CHANNEL, "After transfer, constraints on the member template Array are: " << endl);
+            printConstraints(getGranuleTemplateArray());
+        }
+
+        // outer one is the first in iteration
+        const Array::dimension& outerDim = *(dim_begin());
+        BESDEBUG(DEBUG_CHANNEL,
+            "Aggregating datasets array with outer dimension constraints: " << " start=" << outerDim.start << " stride=" << outerDim.stride << " stop=" << outerDim.stop << endl);
+
+        // Be extra sure we have enough datasets for the given request
+        if (static_cast<unsigned int>(outerDim.size) != getDatasetList().size()) {
+            // Not sure whose fault it was, but tell the author
+            THROW_NCML_PARSE_ERROR(-1, "The new outer dimension of the joinNew aggregation doesn't "
+                " have the same size as the number of datasets in the aggregation!");
+        }
+
+#if BUILD_ENTIRE_RESULT
+        // Prepare our output buffer for our constrained length
+        reserve_value_capacity();
+#endif
+        // this index pointing into the value buffer for where to write.
+        // The buffer has a stride equal to the _pSubArrayProto->length().
+
+        // Keep this to do some error checking
+        int nextElementIndex = 0;
+
+        // Traverse the dataset array respecting hyperslab
+        for (int i = outerDim.start; i <= outerDim.stop && i < outerDim.size; i += outerDim.stride) {
+            AggMemberDataset& dataset = *((getDatasetList())[i]);
+
+            try {
+                dds.timeout_on();
+
+                Array* pDatasetArray = AggregationUtil::readDatasetArrayDataForAggregation(getGranuleTemplateArray(),
+                    name(), dataset, getArrayGetterInterface(), DEBUG_CHANNEL);
+
+                dds.timeout_off();
+
+#if BUILD_ENTIRE_RESULT
+                this->set_value_slice_from_row_major_vector(*pDatasetArray, nextElementIndex);
+#else
+                pDatasetArray->libdap::Array::serialize(eval, dds, m, ce_eval);
+
+                // instead of serialize, we need to be able to call m.put_vector(d_buf, num, d_proto->width(), *this);
+                // with 'num' set differently so that the binary data are written correctly. jhrg 8/13/15
+#endif
+            }
+            catch (agg_util::AggregationException& ex) {
+                std::ostringstream oss;
+                oss << "Got AggregationException while streaming dataset index=" << i << " data for location=\""
+                    << dataset.getLocation() << "\" The error msg was: " << std::string(ex.what());
+                THROW_NCML_PARSE_ERROR(-1, oss.str());
+            }
+
+            // Jump forward by the amount we added.
+            nextElementIndex += getGranuleTemplateArray().length();
+        }
+
+        // If we succeeded, we are at the end of the array!
+        NCML_ASSERT_MSG(nextElementIndex == length(), "Logic error:\n"
+            "ArrayAggregateOnOuterDimension::read(): "
+            "At end of aggregating, expected the nextElementIndex to be the length of the "
+            "aggregated array, but it wasn't!");
+
+        // Set the cache bit to avoid recomputing
+        set_read_p(true);
+    }
+
+#if BUILD_ENTIRE_RESULT
+    libdap::Array::serialize(eval, dds, m, ce_eval);
+#endif
+
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -144,12 +246,18 @@ void ArrayAggregateOnOuterDimension::readConstrainedGranuleArraysAndAggregateDat
         AggMemberDataset& dataset = *((getDatasetList())[i]);
 
         try {
+#if 0
             agg_util::AggregationUtil::addDatasetArrayDataToAggregationOutputArray(*this, // into the output buffer of this object
                 nextElementIndex, // into the next open slice
                 getGranuleTemplateArray(), // constraints template
                 name(), // aggvar name
                 dataset, // Dataset who's DDS should be searched
                 getArrayGetterInterface(), DEBUG_CHANNEL);
+#endif
+            Array* pDatasetArray = AggregationUtil::readDatasetArrayDataForAggregation(getGranuleTemplateArray(),
+                name(), dataset, getArrayGetterInterface(), DEBUG_CHANNEL);
+
+            this->set_value_slice_from_row_major_vector(*pDatasetArray, nextElementIndex);
         }
         catch (agg_util::AggregationException& ex) {
             std::ostringstream oss;

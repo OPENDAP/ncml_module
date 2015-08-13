@@ -37,33 +37,37 @@ using std::string;
 using std::vector;
 using libdap::Array;
 
-namespace agg_util
-{
-  /**
-   * class ArrayAggregateOnOuterDimension
-   *
-   * Array variable which contains information for performing a
-   * joinNew (new outer dimension) aggregation of an Array variable using
-   * samples of this variable in a specified list of member datasets.
-   *
-   * The list is specified as a list of RCPtr<AggMemberDataset>,
-   * i.e. reference-counted AggMemberDataset's (AMD).  The AMD is in
-   * charge of lazy-loading it's contained DataDDS as needed
-   * as well as for only loading the required data for a read() call.
-   * In other words, read() on this subclass will respect the constraints
-   * given to the superclass Array.
-   *
-   * Note: this class is designed to lazy-load the member
-   * datasets _only if there are needed for the actual serialization_
-   * at read() call time.
-   *
-   * Note: the member datasets might be external files or might be
-   * wrapped virtual datasets (specified in NcML) or nested
-   * aggregation's.
-   */
-  class ArrayAggregateOnOuterDimension: public ArrayAggregationBase
-  {
-  public:
+namespace libdap {
+    class ConstraintEvaluator;
+    class DDS;
+    class Marshaller;
+}
+
+namespace agg_util {
+/**
+ * class ArrayAggregateOnOuterDimension
+ *
+ * Array variable which contains information for performing a
+ * joinNew (new outer dimension) aggregation of an Array variable using
+ * samples of this variable in a specified list of member datasets.
+ *
+ * The list is specified as a list of RCPtr<AggMemberDataset>,
+ * i.e. reference-counted AggMemberDataset's (AMD).  The AMD is in
+ * charge of lazy-loading it's contained DataDDS as needed
+ * as well as for only loading the required data for a read() call.
+ * In other words, read() on this subclass will respect the constraints
+ * given to the superclass Array.
+ *
+ * Note: this class is designed to lazy-load the member
+ * datasets _only if there are needed for the actual serialization_
+ * at read() call time.
+ *
+ * Note: the member datasets might be external files or might be
+ * wrapped virtual datasets (specified in NcML) or nested
+ * aggregation's.
+ */
+class ArrayAggregateOnOuterDimension: public ArrayAggregationBase {
+public:
     /**
      * Construct a joinNew Array aggregation given the parameters.
      *
@@ -80,12 +84,8 @@ namespace agg_util
      * @param newDim the new outer dimension this instance will add to the proto Array template
      *
      */
-    ArrayAggregateOnOuterDimension(
-        const libdap::Array& proto,
-        const AMDList& memberDatasets,
-        std::auto_ptr<ArrayGetterInterface>& arrayGetter,
-        const Dimension& newDim
-    );
+    ArrayAggregateOnOuterDimension(const libdap::Array& proto, const AMDList& memberDatasets,
+        std::auto_ptr<ArrayGetterInterface>& arrayGetter, const Dimension& newDim);
 
     /** Construct from a copy */
     ArrayAggregateOnOuterDimension(const ArrayAggregateOnOuterDimension& proto);
@@ -107,31 +107,36 @@ namespace agg_util
      */
     ArrayAggregateOnOuterDimension& operator=(const ArrayAggregateOnOuterDimension& rhs);
 
-  protected: // Subclass Interface
+    virtual bool serialize(libdap::ConstraintEvaluator &eval, libdap::DDS &dds, libdap::Marshaller &m, bool ce_eval);
+
+protected:
+    // Subclass Interface
     /** Subclass hook for read() to copy granule constraints properly (inner dim ones). */
     virtual void transferOutputConstraintsIntoGranuleTemplateHook();
 
     /** Actually go through the constraints and stream the correctly
-    * constrained data into the superclass's output buffer for
-    * serializing out.
-    */
+     * constrained data into the superclass's output buffer for
+     * serializing out.
+     */
     virtual void readConstrainedGranuleArraysAndAggregateDataHook();
 
-  private: // Helper interface
+private:
+    // Helper interface
 
     /** Duplicate just the local (this subclass) data rep */
     void duplicate(const ArrayAggregateOnOuterDimension& rhs);
 
     /** Clear out any used memory */
-    void cleanup() throw();
+    void cleanup() throw ();
 
-  private: // Data rep
+private:
+    // Data rep
 
     // The new outer dimension description
     Dimension _newDim;
 
-
-  }; // class ArrayAggregateOnOuterDimension
+};
+// class ArrayAggregateOnOuterDimension
 
 }
 

@@ -87,8 +87,10 @@ namespace agg_util
      * @return whether it works
      */
     virtual bool read();
+#if 0
 
     virtual bool serialize(libdap::ConstraintEvaluator &ce, libdap::DDS &dds,  libdap::Marshaller &marshy, bool ce_eval);
+#endif
 
     /**
     * Get the list of AggMemberDataset's that comprise this aggregation

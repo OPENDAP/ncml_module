@@ -50,7 +50,7 @@ using libdap::D4Map;
 
 // Local debug flags
 static const string DEBUG_CHANNEL("agg_util");
-static const bool PRINT_CONSTRAINTS(true);
+static const bool PRINT_CONSTRAINTS(false);
 
 namespace agg_util
 {

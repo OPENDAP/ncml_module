@@ -38,7 +38,7 @@
 static const string DEBUG_CHANNEL("agg_util");
 
 // Local flag for whether to print constraints, to help debugging
-static const bool PRINT_CONSTRAINTS = true;
+static const bool PRINT_CONSTRAINTS = false;
 
 //using libdap::Array;
 
@@ -85,6 +85,7 @@ ArrayAggregationBase::ptr_duplicate()
     return new ArrayAggregationBase(*this);
 }
 
+#if 0
 /* virtual */
 
 // begin modifying here for the double buffering
@@ -110,6 +111,7 @@ bool ArrayAggregationBase::serialize(libdap::ConstraintEvaluator &eval, libdap::
 
     return status;
 }
+#endif
 
 /* virtual */
 
