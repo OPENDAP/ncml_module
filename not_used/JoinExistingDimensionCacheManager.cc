@@ -35,16 +35,15 @@
 namespace ncml_module
 {
 
-  JoinExistingDimensionCacheManager::JoinExistingDimensionCacheManager()
-  {
+    JoinExistingDimensionCacheManager::JoinExistingDimensionCacheManager()
+    {
 
+    }
 
-  }
+    JoinExistingDimensionCacheManager::~JoinExistingDimensionCacheManager()
+    {
 
-  JoinExistingDimensionCacheManager::~JoinExistingDimensionCacheManager()
-  {
-
-  }
+    }
 
 }
 #endif // 0

@@ -167,20 +167,15 @@ bool NCMLRequestHandler::ncml_build_das(BESDataHandlerInterface &dhi)
     NCMLParser parser(loader);
     auto_ptr<BESDapResponse> loaded_bdds = parser.parse(filename, DDSLoader::eRT_RequestDDX);
 
-    if (!(loaded_bdds.get())) {
-        throw BESInternalError("Null BESDDSResponse in ncml DAS handler.", __FILE__, __LINE__);
-    }
-
     // Now fill in the desired DAS response object from the DDS
     DDS* dds = NCMLUtil::getDDSFromEitherResponse(loaded_bdds.get());
     VALID_PTR(dds);
-    BESResponseObject *response = dhi.response_handler->get_response_object();
-    BESDASResponse *bdas = dynamic_cast<BESDASResponse *>(response);
+
+    BESDASResponse *bdas = dynamic_cast<BESDASResponse *>(dhi.response_handler->get_response_object());
     VALID_PTR(bdas);
 
     // Copy the modified DDS attributes into the DAS response object!
     DAS *das = bdas->get_das();
-    BESDEBUG("ncml", "Creating DAS response from the DDS/X..." << endl);
 
     if (dds->get_dap_major() < 4)
         NCMLUtil::hackGlobalAttributesForDAP2(dds->get_attr_table(),
@@ -194,6 +189,8 @@ bool NCMLRequestHandler::ncml_build_das(BESDataHandlerInterface &dhi)
 
 bool NCMLRequestHandler::ncml_build_dds(BESDataHandlerInterface &dhi)
 {
+#if 0
+    // original version 8/13/15
     BESStopWatch sw;
     if (BESISDEBUG(TIMING_LOG)) sw.start("NCMLRequestHandler::ncml_build_dds", dhi.data[REQUEST_ID]);
 
@@ -217,8 +214,8 @@ bool NCMLRequestHandler::ncml_build_dds(BESDataHandlerInterface &dhi)
     BESResponseObject *response = dhi.response_handler->get_response_object();
     BESDDSResponse *bdds_out = dynamic_cast<BESDDSResponse *>(response);
     VALID_PTR(bdds_out);
-    DDS *dds_out = bdds_out->get_dds();
-    VALID_PTR(dds_out);
+    DDS *dds = bdds_out->get_dds();
+    VALID_PTR(dds);
 
     if (dds->get_dap_major() < 4)
         NCMLUtil::hackGlobalAttributesForDAP2(dds->get_attr_table(),
@@ -229,15 +226,50 @@ bool NCMLRequestHandler::ncml_build_dds(BESDataHandlerInterface &dhi)
     NCMLUtil::copyVariablesAndAttributesInto(dds_out, *dds);
 
     // Apply constraints to the result
-    dhi.data[POST_CONSTRAINT] = dhi.container->get_constraint();
-    //bdds->set_constraint(dhi);
+    // See comment below. jhrg 8/12/15 dhi.data[POST_CONSTRAINT] = dhi.container->get_constraint();
+    bdds_out->set_constraint(dhi);
 
     // Also copy in the name of the original ncml request
     // TODO @HACK Not sure I want just the basename for the filename,
     // but since the DDS/DataDDS response fills the dataset name with it,
     // Our bes-testsuite fails since we get local path info in the dataset name.
-    dds_out->filename(name_path(filename));
-    dds_out->set_dataset_name(name_path(filename));
+    dds->filename(name_path(filename));
+    dds->set_dataset_name(name_path(filename));
+
+    return true;
+#endif
+
+    BESStopWatch sw;
+    if (BESISDEBUG(TIMING_LOG)) sw.start("NCMLRequestHandler::ncml_build_dds", dhi.data[REQUEST_ID]);
+
+    string filename = dhi.container->access();
+
+    // it better be a data response!
+    BESDDSResponse* ddsResponse = dynamic_cast<BESDDSResponse *>(dhi.response_handler->get_response_object());
+    NCML_ASSERT_MSG(ddsResponse,
+        "NCMLRequestHandler::ncml_build_data(): expected BESDDSResponse* but didn't get it!!");
+
+    // Block it up to force cleanup of DHI.
+    {
+        DDSLoader loader(dhi);
+        NCMLParser parser(loader);
+        parser.parseInto(filename, DDSLoader::eRT_RequestDDX, ddsResponse);
+    }
+
+    DDS *dds = ddsResponse->get_dds();
+    VALID_PTR(dds);
+
+    if (dds->get_dap_major() < 4)
+        NCMLUtil::hackGlobalAttributesForDAP2(dds->get_attr_table(),
+            NCMLRequestHandler::get_global_attributes_container_name());
+
+    // Apply constraints to the result
+    // See comment below. jhrg 8/12/15 dhi.data[POST_CONSTRAINT] = dhi.container->get_constraint();
+    ddsResponse->set_constraint(dhi);
+
+    // Also copy in the name of the original ncml request
+    dds->filename(name_path(filename));
+    dds->set_dataset_name(name_path(filename));
 
     return true;
 }
@@ -248,9 +280,9 @@ bool NCMLRequestHandler::ncml_build_data(BESDataHandlerInterface &dhi)
     if (BESISDEBUG(TIMING_LOG)) sw.start("NCMLRequestHandler::ncml_build_data", dhi.data[REQUEST_ID]);
 
     string filename = dhi.container->access();
-    BESResponseObject* theResponse = dhi.response_handler->get_response_object();
+
     // it better be a data response!
-    BESDataDDSResponse* dataResponse = dynamic_cast<BESDataDDSResponse *>(theResponse);
+    BESDataDDSResponse* dataResponse = dynamic_cast<BESDataDDSResponse *>(dhi.response_handler->get_response_object());
     NCML_ASSERT_MSG(dataResponse,
         "NCMLRequestHandler::ncml_build_data(): expected BESDataDDSResponse* but didn't get it!!");
 
@@ -261,19 +293,21 @@ bool NCMLRequestHandler::ncml_build_data(BESDataHandlerInterface &dhi)
         parser.parseInto(filename, DDSLoader::eRT_RequestDataDDS, dataResponse);
     }
 
+    // Apply constraints to the result
+
+    // [POST_CONSTRAINT] = dhi.container->get_constraint();
+    // Replaced the above with the code below. P West said, a while ago, that using set_constraint
+    // was better because BES containers would be supported. Not sure if that's a factor in this
+    // code... jhrg 8/12/15
+    dataResponse->set_constraint(dhi);
+
+    // Also copy in the name of the original ncml request
     DDS* dds = NCMLUtil::getDDSFromEitherResponse(dataResponse);
     VALID_PTR(dds);
 
-    // Apply constraints to the result
-    dhi.data[POST_CONSTRAINT] = dhi.container->get_constraint();
-    //bdds->set_constraint(dhi);
-
-    // Also copy in the name of the original ncml request
-    // TODO @HACK Not sure I want just the basename for the filename,
-    // but since the DDS/DataDDS response fills the dataset name with it,
-    // Our bes-testsuite fails since we get local path info in the dataset name.
     dds->filename(name_path(filename));
     dds->set_dataset_name(name_path(filename));
+
     return true;
 }
 
@@ -336,9 +370,7 @@ bool NCMLRequestHandler::ncml_build_vers(BESDataHandlerInterface &dhi)
 {
     BESVersionInfo *info = dynamic_cast<BESVersionInfo *>(dhi.response_handler->get_response_object());
     if (!info) throw InternalErr(__FILE__, __LINE__, "Expected a BESVersionInfo instance");
-#if 0
-    info->add_module(PACKAGE_NAME, PACKAGE_VERSION);
-#endif
+
     info->add_module(MODULE_NAME, MODULE_VERSION);
     return true;
 }
@@ -353,10 +385,7 @@ bool NCMLRequestHandler::ncml_build_help(BESDataHandlerInterface &dhi)
     map<string, string> attrs;
     attrs["name"] = MODULE_NAME;
     attrs["version"] = MODULE_VERSION;
-#if 0
-    attrs["name"] = PACKAGE_NAME;
-    attrs["version"] = PACKAGE_VERSION;
-#endif
+
     list<string> services;
     BESServiceRegistry::TheRegistry()->services_handled(ncml_module::ModuleConstants::NCML_NAME, services);
     if (services.size() > 0) {

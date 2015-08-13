@@ -36,33 +36,30 @@ using std::vector;
 using std::string;
 using namespace libdap;
 
-namespace libdap
-{
-  class DDS;
-  class Marshaller;
-  class UnMarshaller;
+namespace libdap {
+class DDS;
+class Marshaller;
+class UnMarshaller;
 }
 
-namespace ncml_module
-{
-  /**
-   * @brief A Decorator Pattern for wrapping a libdap::Array in order to change its
-   * name efficiently in the face of buggy subclasses we cannot change
-   *
-   * Unfortunately, this is needed to get around problems with subclasses requiring the old name for lazy loads
-   * even though set_name was called.  This causes them to exception, which is bad.
-   * In particular, NCArray doesn't handle  set_name properly and will fail to serialize.
-   *
-   * Rather than seek out and make changes to fix these bugs, the temporary solution will be to
-   * wrap the Array to rename in this class.
-   * Almost all virtual functions will be passed through to the wrapped array,
-   * which will retain its original name for purposes of read(), but will be forced
-   * to use the new name when serializing.
-   *
-   */
-  class RenamedArrayWrapper : public libdap::Array
-  {
-  public:
+namespace ncml_module {
+/**
+ * @brief A Decorator Pattern for wrapping a libdap::Array in order to change its
+ * name efficiently in the face of buggy subclasses we cannot change
+ *
+ * Unfortunately, this is needed to get around problems with subclasses requiring the old name for lazy loads
+ * even though set_name was called.  This causes them to exception, which is bad.
+ * In particular, NCArray doesn't handle  set_name properly and will fail to serialize.
+ *
+ * Rather than seek out and make changes to fix these bugs, the temporary solution will be to
+ * wrap the Array to rename in this class.
+ * Almost all virtual functions will be passed through to the wrapped array,
+ * which will retain its original name for purposes of read(), but will be forced
+ * to use the new name when serializing.
+ *
+ */
+class RenamedArrayWrapper: public libdap::Array {
+public:
     RenamedArrayWrapper();
     RenamedArrayWrapper(const RenamedArrayWrapper& proto);
 
@@ -86,7 +83,7 @@ namespace ncml_module
 
     virtual string toString();
     virtual string toString() const;
-    virtual void dump(ostream &strm) const ;
+    virtual void dump(ostream &strm) const;
 
     // Don't need to override this, it does what we want.
     // virtual void set_name(const string &n);
@@ -115,8 +112,7 @@ namespace ncml_module
     virtual void set_parent(BaseType *parent);
     virtual BaseType *get_parent() const;
 
-    virtual BaseType *var(const string &name = "", bool exact_match = true,
-        btp_stack *s = 0);
+    virtual BaseType *var(const string &name = "", bool exact_match = true, btp_stack *s = 0);
     virtual BaseType *var(const string &name, btp_stack &s);
     virtual void add_var(BaseType *bt, Part part = nil);
 
@@ -130,28 +126,22 @@ namespace ncml_module
         bool constraint_info = false,
         bool constrained = false);
     virtual void print_xml(FILE *out, string space = "    ",
-            bool constrained = false);
+        bool constrained = false);
     virtual void print_val(FILE *out, string space = "",
-            bool print_decl_p = true);
+        bool print_decl_p = true);
 #endif // FILE_METHODS
 
-    virtual void print_decl(ostream &out, string space = "    ",
-        bool print_semi = true,
-        bool constraint_info = false,
+    virtual void print_decl(ostream &out, string space = "    ", bool print_semi = true, bool constraint_info = false,
         bool constrained = false);
-    virtual void print_xml(ostream &out, string space = "    ",
-        bool constrained = false);
-    virtual void print_val(ostream &out, string space = "",
-        bool print_decl_p = true);
+    virtual void print_xml(ostream &out, string space = "    ", bool constrained = false);
+    virtual void print_val(ostream &out, string space = "", bool print_decl_p = true);
 
-
-    virtual unsigned int width(bool constrained = false);
+    virtual unsigned int width(bool constrained = false) const;
     virtual unsigned int buf2val(void **val);
     virtual unsigned int val2buf(void *val, bool reuse = false);
 
     virtual void intern_data(ConstraintEvaluator &eval, DDS &dds);
-    virtual bool serialize(ConstraintEvaluator &eval, DDS &dds,
-        Marshaller &m, bool ce_eval = true);
+    virtual bool serialize(ConstraintEvaluator &eval, DDS &dds, Marshaller &m, bool ce_eval = true);
     virtual bool deserialize(UnMarshaller &um, DDS *dds, bool reuse = false);
 
     virtual bool set_value(dods_byte *val, int sz);
@@ -181,7 +171,8 @@ namespace ncml_module
     virtual void value(vector<string> &b) const;
     virtual void *value();
 
-  private: // Private methods
+private:
+    // Private methods
 
     /** Copy the local privates from proto */
     void copyLocalRepFrom(const RenamedArrayWrapper& proto);
@@ -204,16 +195,20 @@ namespace ncml_module
      *    compared to other calls and should amortize
      * 3) It's not clear how often this class will be used.
      **/
-    void syncConstraints() const { const_cast<RenamedArrayWrapper*>(this)->syncConstraints(); }
+    void syncConstraints() const
+    {
+        const_cast<RenamedArrayWrapper*>(this)->syncConstraints();
+    }
     void syncConstraints();
 
-  private: // Data rep
+private:
+    // Data rep
 
     /** the Array we are decorating.  WE OWN THIS MEMORY once it is passed in and must
      * clean it up on destroy() */
     libdap::Array* _pArray;
     string _orgName; // the original, underlying name of the array, cached.
-  };
+};
 
 }
 

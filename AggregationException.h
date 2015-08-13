@@ -33,32 +33,32 @@
 #include <string>
 #include <stdexcept>
 
-namespace agg_util
-{
-  /**
-   * Exception class used by AggregationUtil and other agg_util classes
-   * to pass generic exceptions upward into more context-specific locations.
-   */
-  class AggregationException : public std::runtime_error
-  {
-  public:
+namespace agg_util {
+/**
+ * Exception class used by AggregationUtil and other agg_util classes
+ * to pass generic exceptions upward into more context-specific locations.
+ */
+class AggregationException: public std::runtime_error {
+public:
     AggregationException(const std::string& msg);
-    virtual ~AggregationException() throw();
-  }; // struct AggregationException
+    virtual ~AggregationException() throw ();
+};
+// struct AggregationException
 
-  /** Basic information subclass for cases of dimension not found in
-   * an aggregation
-   */
-  class DimensionNotFoundException : public AggregationException
-  {
-  public:
-    DimensionNotFoundException(const std::string& msg)
-    : AggregationException(msg)
+/** Basic information subclass for cases of dimension not found in
+ * an aggregation
+ */
+class DimensionNotFoundException: public AggregationException {
+public:
+    DimensionNotFoundException(const std::string& msg) :
+        AggregationException(msg)
     {
     }
 
-    virtual ~DimensionNotFoundException() throw() {}
-  };
+    virtual ~DimensionNotFoundException() throw ()
+    {
+    }
+};
 }
 
 #endif /* __AGG_UTIL__AGGREGATION_EXCEPTION_H__ */

@@ -54,7 +54,6 @@ NCML_SRCS = \
 		GridAggregationBase.cc \
 		GridAggregateOnOuterDimension.cc \
 		GridJoinExistingAggregation.cc \
-		JoinExistingDimensionCacheManager.cc \
 		MyBaseTypeFactory.cc \
 		NCMLBaseArray.cc \
 		NCMLElement.cc \
@@ -80,12 +79,13 @@ NCML_SRCS = \
 		ValuesElement.cc \
 		VariableAggElement.cc \
 		VariableElement.cc \
-		NCMLContainerStorage.cc \
-		NCMLContainer.cc \
 		XMLHelpers.cc 
 
 # NCMLCacheAggXMLCommand.cc
 # NCMLCommonTypes.cc
+# JoinExistingDimensionCacheManager.cc
+# 		NCMLContainerStorage.cc
+#		NCMLContainer.cc
 
 NCML_HDRS = \
 		AggMemberDataset.h \
@@ -109,7 +109,6 @@ NCML_HDRS = \
 		GridAggregationBase.h \
 		GridAggregateOnOuterDimension.h \
 		GridJoinExistingAggregation.h \
-		JoinExistingDimensionCacheManager.h \
 		MyBaseTypeFactory.h \
 		NCMLArray.h \
 		NCMLBaseArray.h \
@@ -137,13 +136,13 @@ NCML_HDRS = \
 		ValuesElement.h \
 		VariableAggElement.h \
 		VariableElement.h \
-		NCMLContainerStorage.h \
-		NCMLContainer.h \
 		XMLHelpers.h
 
 # NCMLCacheAggXMLCommand.h
 # NCMLCommonTypes.h
-
+# JoinExistingDimensionCacheManager.h
+# 		NCMLContainerStorage.h
+#		NCMLContainer.h
 
 # ICU_CPPFLAGS and ICU_LIBS set from configure.ac check for ICU
 libncml_module_la_SOURCES = $(NCML_SRCS) $(BES_SRCS) $(NCML_HDRS) $(BES_HDRS)

@@ -61,8 +61,7 @@ namespace agg_util
    * wrapped virtual datasets (specified in NcML) or nested
    * aggregation's.
    */
-  class ArrayAggregateOnOuterDimension
-    : public ArrayAggregationBase
+  class ArrayAggregateOnOuterDimension: public ArrayAggregationBase
   {
   public:
     /**

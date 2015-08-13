@@ -40,7 +40,9 @@ static const string DEBUG_CHANNEL("agg_util");
 // Local flag for whether to print constraints, to help debugging
 static const bool PRINT_CONSTRAINTS = true;
 
-using libdap::Array;
+//using libdap::Array;
+
+using namespace libdap;
 
 namespace agg_util {
 ArrayAggregationBase::ArrayAggregationBase(const libdap::Array& proto, const AMDList& aggMembers,
@@ -84,16 +86,35 @@ ArrayAggregationBase::ptr_duplicate()
 }
 
 /* virtual */
-bool ArrayAggregationBase::serialize(libdap::ConstraintEvaluator &ce, libdap::DDS &dds, libdap::Marshaller &marshy,
+
+// begin modifying here for the double buffering
+bool ArrayAggregationBase::serialize(libdap::ConstraintEvaluator &eval, libdap::DDS &dds, libdap::Marshaller &m,
     bool ce_eval)
 {
     BESStopWatch sw;
     if (BESISDEBUG(TIMING_LOG)) sw.start("ArrayAggregationBase::serialize", "");
 
-    return libdap::Array::serialize(ce, dds, marshy, ce_eval);
+#if 0
+    return libdap::Array::serialize(eval, dds, m, ce_eval);
+#endif
+
+    // TODO Time out here? or in ResponseBuilder?
+    dds.timeout_on();
+
+    if (!read_p())
+        read(); // read() throws Error and InternalErr
+
+    dds.timeout_off();
+
+    bool status = libdap::Array::serialize(eval, dds, m, ce_eval);
+
+    return status;
 }
 
 /* virtual */
+
+// This code probably needs to stay as it is so that modules like asciival and server functions
+// that need all of the data 'in the regular way' don't break.
 bool ArrayAggregationBase::read()
 {
     BESStopWatch sw;

@@ -46,6 +46,11 @@ using std::string;
  * Successful, and the target response returned as the real container that
  * a data handler would then open.
  *
+ * @note This code is broken - but it was never actually used. The code closes
+ * the open stream that is returned using a value-result parameter in NCMLContainer::access
+ * but it should not be doing that. Instead is should keep the stream as a field and
+ * close it in the dtor. jhrg 8/12/15
+ *
  * @see NCMLContainerStorage
  */
 class NCMLContainer: public BESContainer {

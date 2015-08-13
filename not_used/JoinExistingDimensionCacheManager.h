@@ -36,67 +36,64 @@
 
 namespace agg_util
 {
-  class AggMemberDataset;
+    class AggMemberDataset;
 };
 
 namespace ncml_module
 {
-  class JoinExistingDimensionCacheManager
-  {
-  public:
+    class JoinExistingDimensionCacheManager
+    {
+    public:
 
-    /** Create a cache manager which saves files into the specified
-     * absolute path cacheDir.
-     * Will throw if cacheDir is not a valid dir
-     * (ie write permission, exists, etc) */
-    JoinExistingDimensionCacheManager(const std::string& cacheDir);
-    ~JoinExistingDimensionCacheManager();
+        /** Create a cache manager which saves files into the specified
+         * absolute path cacheDir.
+         * Will throw if cacheDir is not a valid dir
+         * (ie write permission, exists, etc) */
+        JoinExistingDimensionCacheManager(const std::string& cacheDir);
+        ~JoinExistingDimensionCacheManager();
 
-    /** Construct a cache object to handle caching
-     * for this manager.
-     */
-    static std::auto_ptr<JoinExistingDimensionCache> makeCacheInstance(const std::string& sourceFile);
+        /** Construct a cache object to handle caching
+         * for this manager.
+         */
+        static std::auto_ptr<JoinExistingDimensionCache> makeCacheInstance(const std::string& sourceFile);
 
-  }; // class JoinExistingDimensionCacheManager
+    }; // class JoinExistingDimensionCacheManager
 
+    class JoinExistingDimensionCache
+    {
+        friend class JoinExistingDimensionCacheManager;
 
-  class JoinExistingDimensionCache
-  {
-    friend class JoinExistingDimensionCacheManager;
+    private:
+        // only the manager can make them
+        JoinExistingDimensionCache(const std::string sourcePath, const std::string& cacheDir);
 
-  private:
-    // only the manager can make them
-    JoinExistingDimensionCache(const std::string sourcePath, const std::string& cacheDir);
+    public:
+        ~JoinExistingDimensionCache();
 
-  public:
-    ~JoinExistingDimensionCache();
+        /** Is there a cache file associated with the
+         * source file?
+         * */
+        bool doesCacheFileExist() const;
 
-    /** Is there a cache file associated with the
-     * source file?
-     * */
-    bool doesCacheFileExist() const;
+        /** Check the modification times on the cache
+         * file and return whether it is newer than the
+         * source file.
+         */
+        bool isCacheFileFresh() const;
 
+        /////////////////////////////////////////////////////////////////
+    private:// data rep
 
-    /** Check the modification times on the cache
-     * file and return whether it is newer than the
-     * source file.
-     */
-    bool isCacheFileFresh() const;
+        std::string _sourceFilename;// source to be cached, set in ctor
+        std::string _cacheFilename;// cache file associated with _sourceFilename
+        std::string _tempCacheFilename;// temp name for cache file for writing it before copy
 
+        // @var Mod time for the source file
+        // @var Mod time for the cache file
 
-    /////////////////////////////////////////////////////////////////
-  private: // data rep
+        // Locks?
 
-    std::string _sourceFilename; // source to be cached, set in ctor
-    std::string _cacheFilename; // cache file associated with _sourceFilename
-    std::string _tempCacheFilename; // temp name for cache file for writing it before copy
-
-    // @var Mod time for the source file
-    // @var Mod time for the cache file
-
-    // Locks?
-
-  }; // class JoinExistingDimensionCache
+    }; // class JoinExistingDimensionCache
 
 }
 

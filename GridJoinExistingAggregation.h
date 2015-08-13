@@ -35,15 +35,11 @@
 #include "GridAggregationBase.h" // agg_util
 #include <memory>
 
-namespace agg_util
-{
-  class GridJoinExistingAggregation : public GridAggregationBase
-  {
-  public:
+namespace agg_util {
+class GridJoinExistingAggregation: public GridAggregationBase {
+public:
 
-    GridJoinExistingAggregation(const libdap::Grid& proto,
-        const AMDList& memberDatasets,
-        const DDSLoader& loaderProto,
+    GridJoinExistingAggregation(const libdap::Grid& proto, const AMDList& memberDatasets, const DDSLoader& loaderProto,
         const Dimension& joinDim);
 
     GridJoinExistingAggregation(const GridJoinExistingAggregation& proto);
@@ -63,20 +59,22 @@ namespace agg_util
      */
     auto_ptr<ArrayJoinExistingAggregation> makeAggregatedOuterMapVector() const;
 
-  protected: // subclass interface
+protected:
+    // subclass interface
 
     /** Required specialization for the read() call stack */
     virtual void transferConstraintsToSubGridHook(Grid* pSubGrid);
 
     virtual const Dimension& getAggregationDimension() const;
 
-  private: // helpers
+private:
+    // helpers
 
     /** Duplicate just the local data rep */
     void duplicate(const GridJoinExistingAggregation& rhs);
 
     /** Delete any heap memory */
-    void cleanup() throw();
+    void cleanup() throw ();
 
     /** Create the representation.
      * Replaces our data Array with an aggregating one.
@@ -86,16 +84,17 @@ namespace agg_util
      */
     void createRep(const libdap::Grid& protoSubGrid, const AMDList& granuleList);
 
-
     // Local helpers to implement transferConstraintsToSubGridHook()
     void transferConstraintsToSubGridMaps(Grid* pSubGrid);
     void transferConstraintsToSubGridArray(Grid* pSubGrid);
 
-  private: // Data Rep
+private:
+    // Data Rep
 
     Dimension _joinDim;
 
-  }; // class GridJoinExistingAggregation
-} // namespace agg_util
+};
+// class GridJoinExistingAggregation
+}// namespace agg_util
 
 #endif /* __AGG_UTIL__GRID_JOIN_EXISTING_AGGREGATION_H__ */

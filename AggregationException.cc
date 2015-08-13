@@ -28,14 +28,13 @@
 /////////////////////////////////////////////////////////////////////////////
 #include "AggregationException.h"
 
-namespace agg_util
+namespace agg_util {
+AggregationException::AggregationException(const std::string& msg) :
+    std::runtime_error(msg)
 {
-  AggregationException::AggregationException(const std::string& msg)
-  : std::runtime_error(msg)
-  {
-  }
+}
 
-  AggregationException::~AggregationException() throw()
-  {
-  }
+AggregationException::~AggregationException() throw ()
+{
+}
 } // namespace agg_util

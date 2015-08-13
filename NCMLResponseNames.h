@@ -32,6 +32,7 @@
 #include <string>
 
 namespace ncml_module {
+
 struct ModuleConstants {
     /** The name used to specify an ncml file. */
     static const std::string NCML_NAME;
@@ -51,7 +52,6 @@ struct ModuleConstants {
     static const std::string CACHE_AGG_LOCATION_DATA_KEY;
 };
 }
-;
 
 #endif // __NCML_MODULE__NCML_RESPONSE_NAMES_H_
 

@@ -49,6 +49,7 @@
 #include <BESTextInfo.h>
 #include <BESUtil.h>
 #include <BESVersionInfo.h>
+
 //#include <mime_util.h>
 #include "NCMLDebug.h"
 #include "NCMLUtil.h"
@@ -339,10 +340,6 @@ std::string DDSLoader::getNextContainerName()
 
 std::auto_ptr<BESDapResponse> DDSLoader::makeResponseForType(ResponseType type)
 {
-    //BESStopWatch sw;
-    //if (BESISDEBUG( TIMING_LOG ))
-    //	sw.start("DDSLoader::makeResponseForType");
-
     if (type == eRT_RequestDDX) {
         return auto_ptr<BESDapResponse>(new BESDDSResponse(new DDS(new BaseTypeFactory(), "virtual")));
     }
@@ -352,9 +349,6 @@ std::auto_ptr<BESDapResponse> DDSLoader::makeResponseForType(ResponseType type)
     else {
         THROW_NCML_INTERNAL_ERROR("DDSLoader::makeResponseForType() got unknown type!");
     }
-#if 0
-    return auto_ptr<BESDapResponse>(0);
-#endif
 }
 
 std::string DDSLoader::getActionForType(ResponseType type)
