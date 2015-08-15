@@ -156,30 +156,53 @@ public:
     virtual unsigned int val2buf(void *val, bool reuse = false);
 
     virtual bool set_value(dods_byte *val, int sz);
-    virtual bool set_value(vector<dods_byte> &val, int sz);
+    virtual bool set_value(dods_int8 *val, int sz);
     virtual bool set_value(dods_int16 *val, int sz);
-    virtual bool set_value(vector<dods_int16> &val, int sz);
     virtual bool set_value(dods_uint16 *val, int sz);
-    virtual bool set_value(vector<dods_uint16> &val, int sz);
     virtual bool set_value(dods_int32 *val, int sz);
-    virtual bool set_value(vector<dods_int32> &val, int sz);
     virtual bool set_value(dods_uint32 *val, int sz);
-    virtual bool set_value(vector<dods_uint32> &val, int sz);
+    virtual bool set_value(dods_int64 *val, int sz);
+    virtual bool set_value(dods_uint64 *val, int sz);
     virtual bool set_value(dods_float32 *val, int sz);
-    virtual bool set_value(vector<dods_float32> &val, int sz);
     virtual bool set_value(dods_float64 *val, int sz);
-    virtual bool set_value(vector<dods_float64> &val, int sz);
     virtual bool set_value(string *val, int sz);
+
+    virtual bool set_value(vector<dods_byte> &val, int sz);
+    virtual bool set_value(vector<dods_int8> &val, int sz);
+    virtual bool set_value(vector<dods_int16> &val, int sz);
+    virtual bool set_value(vector<dods_uint16> &val, int sz);
+    virtual bool set_value(vector<dods_int32> &val, int sz);
+    virtual bool set_value(vector<dods_uint32> &val, int sz);
+    virtual bool set_value(vector<dods_int64> &val, int sz);
+    virtual bool set_value(vector<dods_uint64> &val, int sz);
+    virtual bool set_value(vector<dods_float32> &val, int sz);
+    virtual bool set_value(vector<dods_float64> &val, int sz);
     virtual bool set_value(vector<string> &val, int sz);
 
     virtual void value(dods_byte *b) const;
+    virtual void value(dods_int8 *b) const;
     virtual void value(dods_int16 *b) const;
     virtual void value(dods_uint16 *b) const;
     virtual void value(dods_int32 *b) const;
     virtual void value(dods_uint32 *b) const;
+    virtual void value(dods_int64 *b) const;
+    virtual void value(dods_uint64 *b) const;
     virtual void value(dods_float32 *b) const;
     virtual void value(dods_float64 *b) const;
     virtual void value(vector<string> &b) const;
+
+    virtual void value(vector<unsigned int> *indices, dods_byte *b) const;
+    virtual void value(vector<unsigned int> *indices, dods_int8 *b) const;
+    virtual void value(vector<unsigned int> *indices, dods_int16 *b) const;
+    virtual void value(vector<unsigned int> *indices, dods_uint16 *b) const;
+    virtual void value(vector<unsigned int> *indices, dods_int32 *b) const;
+    virtual void value(vector<unsigned int> *indices, dods_uint32 *b) const;
+    virtual void value(vector<unsigned int> *indices, dods_int64 *b) const;
+    virtual void value(vector<unsigned int> *indices, dods_uint64 *b) const;
+    virtual void value(vector<unsigned int> *indices, dods_float32 *b) const;
+    virtual void value(vector<unsigned int> *indices, dods_float64 *b) const;
+    virtual void value(vector<unsigned int> *index, vector<string> &b) const;
+
     virtual void *value();
 
     virtual bool read();
@@ -218,6 +241,13 @@ private:
         const_cast<RenamedArrayWrapper*>(this)->syncConstraints();
     }
     void syncConstraints();
+
+
+    template <typename T> void value_worker(T *v) const;
+    template <typename T> void value_worker(vector<unsigned int> *indices, T *b) const;
+
+    template <typename T> bool set_value_worker(T *v, int sz);
+    template <typename T> bool set_value_worker(vector<T> &v, int sz);
 
 private:
     // Data rep

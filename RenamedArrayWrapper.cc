@@ -357,6 +357,44 @@ unsigned int RenamedArrayWrapper::val2buf(void *val, bool reuse /* = false */)
     return _pArray->val2buf(val, reuse);
 }
 
+template <typename T>
+bool RenamedArrayWrapper::set_value_worker(T *v, int sz)
+{
+    //syncConstraints();
+    return _pArray->set_value(v, sz);
+}
+bool RenamedArrayWrapper::set_value(dods_byte *val, int sz)    { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(dods_int8 *val, int sz)    { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(dods_int16 *val, int sz)   { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(dods_uint16 *val, int sz)  { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(dods_int32 *val, int sz)   { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(dods_uint32 *val, int sz)  { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(dods_int64 *val, int sz)   { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(dods_uint64 *val, int sz)  { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(dods_float32 *val, int sz) { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(dods_float64 *val, int sz) { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(string *val, int sz) { return set_value_worker(val,sz); }
+
+template <typename T>
+bool RenamedArrayWrapper::set_value_worker(vector<T> &v, int sz)
+{
+    //syncConstraints();
+    return _pArray->set_value(v, sz);
+}
+bool RenamedArrayWrapper::set_value(vector<dods_byte> &val, int sz)    { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(vector<dods_int8> &val, int sz)    { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(vector<dods_int16> &val, int sz)   { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(vector<dods_uint16> &val, int sz)  { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(vector<dods_int32> &val, int sz)   { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(vector<dods_uint32> &val, int sz)  { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(vector<dods_int64> &val, int sz)   { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(vector<dods_uint64> &val, int sz)  { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(vector<dods_float32> &val, int sz) { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(vector<dods_float64> &val, int sz) { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(vector<string> &val, int sz) { return set_value_worker(val,sz); }
+
+#if 0
+
 bool RenamedArrayWrapper::set_value(dods_byte *val, int sz)
 {
     //syncConstraints();
@@ -452,7 +490,29 @@ bool RenamedArrayWrapper::set_value(vector<string> &val, int sz)
     //syncConstraints();
     return _pArray->set_value(val, sz);
 }
+#endif
 
+
+template <typename T>
+void RenamedArrayWrapper::value_worker(T *v) const
+{
+    //syncConstraints();
+    _pArray->value(v);
+}
+void RenamedArrayWrapper::value(dods_byte *b) const      { value_worker(b); }
+void RenamedArrayWrapper::value(dods_int8 *b) const      { value_worker(b); }
+void RenamedArrayWrapper::value(dods_int16 *b) const     { value_worker(b); }
+void RenamedArrayWrapper::value(dods_uint16 *b) const    { value_worker(b); }
+void RenamedArrayWrapper::value(dods_int32 *b) const     { value_worker(b); }
+void RenamedArrayWrapper::value(dods_uint32 *b) const    { value_worker(b); }
+void RenamedArrayWrapper::value(dods_int64 *b) const     { value_worker(b); }
+void RenamedArrayWrapper::value(dods_uint64 *b) const    { value_worker(b); }
+void RenamedArrayWrapper::value(dods_float32 *b) const   { value_worker(b); }
+void RenamedArrayWrapper::value(dods_float64 *b) const   { value_worker(b); }
+void RenamedArrayWrapper::value(vector<string> &b) const { return _pArray->value(b); }
+
+
+#if 0
 void RenamedArrayWrapper::value(dods_byte *b) const
 {
     //syncConstraints();
@@ -500,6 +560,27 @@ void RenamedArrayWrapper::value(vector<string> &b) const
     //syncConstraints();
     _pArray->value(b);
 }
+#endif
+
+template <typename T>
+void RenamedArrayWrapper::value_worker(vector<unsigned int> *indices, T *b) const
+{
+	return _pArray->value(indices,b);
+}
+
+void RenamedArrayWrapper::value(vector<unsigned int> *indices, dods_byte *b) const      { value_worker(indices,b); };
+void RenamedArrayWrapper::value(vector<unsigned int> *indices, dods_int8 *b) const      { value_worker(indices,b); };
+void RenamedArrayWrapper::value(vector<unsigned int> *indices, dods_int16 *b) const     { value_worker(indices,b); };
+void RenamedArrayWrapper::value(vector<unsigned int> *indices, dods_uint16 *b) const    { value_worker(indices,b); };
+void RenamedArrayWrapper::value(vector<unsigned int> *indices, dods_int32 *b) const     { value_worker(indices,b); };
+void RenamedArrayWrapper::value(vector<unsigned int> *indices, dods_uint32 *b) const    { value_worker(indices,b); };
+void RenamedArrayWrapper::value(vector<unsigned int> *indices, dods_int64 *b) const     { value_worker(indices,b); };
+void RenamedArrayWrapper::value(vector<unsigned int> *indices, dods_uint64 *b) const    { value_worker(indices,b); };
+void RenamedArrayWrapper::value(vector<unsigned int> *indices, dods_float32 *b) const   { value_worker(indices,b); };
+void RenamedArrayWrapper::value(vector<unsigned int> *indices, dods_float64 *b) const   { value_worker(indices,b); };
+void RenamedArrayWrapper::value(vector<unsigned int> *indices, vector<string> &b) const { return _pArray->value(indices,b); }
+
+
 
 void*
 RenamedArrayWrapper::value()
