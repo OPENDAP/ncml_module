@@ -31,6 +31,9 @@
 #include "AggregationException.h"
 
 #include <DataDDS.h> // libdap::DataDDS
+#include <Marshaller.h>
+//#define DODS_DEBUG 1
+//#include <debug.h>
 
 // only NCML backlinks we want in this agg_util class.
 #include "NCMLDebug.h" // BESDEBUG and throw macros
@@ -88,7 +91,7 @@ ArrayAggregateOnOuterDimension::operator=(const ArrayAggregateOnOuterDimension& 
     return *this;
 }
 
-#define BUILD_ENTIRE_RESULT 1
+#define BUILD_ENTIRE_RESULT 0
 
 // begin modifying here for the double buffering
 bool ArrayAggregateOnOuterDimension::serialize(libdap::ConstraintEvaluator &eval, libdap::DDS &dds,
@@ -134,6 +137,8 @@ bool ArrayAggregateOnOuterDimension::serialize(libdap::ConstraintEvaluator &eval
 #if BUILD_ENTIRE_RESULT
         // Prepare our output buffer for our constrained length
         reserve_value_capacity();
+#else
+        m.put_vector_start(length());
 #endif
         // this index pointing into the value buffer for where to write.
         // The buffer has a stride equal to the _pSubArrayProto->length().
@@ -156,10 +161,8 @@ bool ArrayAggregateOnOuterDimension::serialize(libdap::ConstraintEvaluator &eval
 #if BUILD_ENTIRE_RESULT
                 this->set_value_slice_from_row_major_vector(*pDatasetArray, nextElementIndex);
 #else
-                pDatasetArray->libdap::Array::serialize(eval, dds, m, ce_eval);
-
-                // instead of serialize, we need to be able to call m.put_vector(d_buf, num, d_proto->width(), *this);
-                // with 'num' set differently so that the binary data are written correctly. jhrg 8/13/15
+                m.put_vector_part(pDatasetArray->get_buf(), getGranuleTemplateArray().length(), var()->width(),
+                    var()->type());
 #endif
             }
             catch (agg_util::AggregationException& ex) {
@@ -178,6 +181,10 @@ bool ArrayAggregateOnOuterDimension::serialize(libdap::ConstraintEvaluator &eval
             "ArrayAggregateOnOuterDimension::read(): "
             "At end of aggregating, expected the nextElementIndex to be the length of the "
             "aggregated array, but it wasn't!");
+
+#if !BUILD_ENTIRE_RESULT
+        m.put_vector_end();
+#endif
 
         // Set the cache bit to avoid recomputing
         set_read_p(true);

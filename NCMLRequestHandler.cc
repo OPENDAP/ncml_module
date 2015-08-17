@@ -295,7 +295,7 @@ bool NCMLRequestHandler::ncml_build_data(BESDataHandlerInterface &dhi)
 
     // Apply constraints to the result
 
-    // [POST_CONSTRAINT] = dhi.container->get_constraint();
+    // dhi.data[POST_CONSTRAINT] = dhi.container->get_constraint();
     // Replaced the above with the code below. P West said, a while ago, that using set_constraint
     // was better because BES containers would be supported. Not sure if that's a factor in this
     // code... jhrg 8/12/15
