@@ -32,8 +32,9 @@
 
 #include <DataDDS.h> // libdap::DataDDS
 #include <Marshaller.h>
-//#define DODS_DEBUG 1
-//#include <debug.h>
+
+#define DODS_DEBUG 1
+#include <debug.h>
 
 // only NCML backlinks we want in this agg_util class.
 #include "NCMLDebug.h" // BESDEBUG and throw macros
@@ -182,17 +183,18 @@ bool ArrayAggregateOnOuterDimension::serialize(libdap::ConstraintEvaluator &eval
             "At end of aggregating, expected the nextElementIndex to be the length of the "
             "aggregated array, but it wasn't!");
 
-#if !BUILD_ENTIRE_RESULT
+#if BUILD_ENTIRE_RESULT
+        libdap::Array::serialize(eval, dds, m, ce_eval);
+#else
         m.put_vector_end();
 #endif
 
         // Set the cache bit to avoid recomputing
         set_read_p(true);
     }
-
-#if BUILD_ENTIRE_RESULT
-    libdap::Array::serialize(eval, dds, m, ce_eval);
-#endif
+    else {
+        libdap::Array::serialize(eval, dds, m, ce_eval);
+    }
 
     return true;
 }
