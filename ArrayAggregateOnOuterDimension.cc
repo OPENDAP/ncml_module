@@ -178,6 +178,7 @@ bool ArrayAggregateOnOuterDimension::serialize(libdap::ConstraintEvaluator &eval
                 dds.timeout_off();
 
 #if PIPELINING
+                BESDEBUG_FUNC("ncml:pipeline", "Variable: " << name() << ", writing slice " << i << endl);
                 m.put_vector_part(pDatasetArray->get_buf(), getGranuleTemplateArray().length(), var()->width(),
                     var()->type());
 #else
