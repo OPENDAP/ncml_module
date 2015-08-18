@@ -310,8 +310,8 @@ protected:
             BESDEBUG("ncml",
                 "NCMLArray<T>:: we don't have unconstrained values cached, caching from Vector now..." << endl);
             unsigned int spaceSize = _noConstraints->getUnconstrainedSpaceSize();
-            // These must match or we're not getting all the data and the caller messed up.
-#if 1
+
+#if 0
             ostringstream oss;
             oss <<"NCMLArray expected superclass Vector length() to be the same as unconstrained space size, but it wasn't!";
             oss << "length(): " << length() << "' spaceSize: " << spaceSize;
@@ -328,10 +328,9 @@ protected:
             T* pFirstElt = &((*_allValues)[0]);
             // Now overwrite the defaults in from the buffer.
             unsigned int stored = buf2val(reinterpret_cast<void**>(&pFirstElt));
-#if 1
+
             NCML_ASSERT((stored / sizeof(T)) == spaceSize); // make sure it did what it was supposed to do.
             // OK, we have our copy now!
-#endif
         }
 
         // We ignore the current constraints since we don't worry about them until later in read().

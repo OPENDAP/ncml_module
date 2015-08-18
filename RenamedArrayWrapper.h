@@ -32,8 +32,10 @@
 #include "config.h"
 #include <Array.h>
 #include <vector>
+
 using std::vector;
 using std::string;
+
 using namespace libdap;
 
 namespace libdap {
@@ -73,7 +75,7 @@ public:
     virtual RenamedArrayWrapper* ptr_duplicate();
     RenamedArrayWrapper& operator=(const RenamedArrayWrapper& rhs);
 
-    // OVERRIDES OF ALL VIRTUALS!
+    // Specializations
 
     virtual void add_constraint(Dim_iter i, int start, int stride, int stop);
     virtual void reset_constraint();
@@ -87,6 +89,7 @@ public:
 
     // Don't need to override this, it does what we want.
     // virtual void set_name(const string &n);
+#if 0
 
     virtual bool is_simple_type() const;
     virtual bool is_vector_type() const;
@@ -96,12 +99,14 @@ public:
     virtual void set_synthesized_p(bool state);
 
     virtual int element_count(bool leaves = false);
+#endif
 
     virtual bool read_p();
     virtual void set_read_p(bool state);
 
     virtual bool send_p();
     virtual void set_send_p(bool state);
+#if 0
 
     virtual libdap::AttrTable& get_attr_table();
     virtual void set_attr_table(const libdap::AttrTable &at);
@@ -111,14 +116,16 @@ public:
 
     virtual void set_parent(BaseType *parent);
     virtual BaseType *get_parent() const;
+#endif
 
     virtual BaseType *var(const string &name = "", bool exact_match = true, btp_stack *s = 0);
     virtual BaseType *var(const string &name, btp_stack &s);
     virtual void add_var(BaseType *bt, Part part = nil);
 
-    virtual bool read();
+#if 0
     virtual bool check_semantics(string &msg, bool all = false);
     virtual bool ops(BaseType *b, int op);
+#endif
 
 #if FILE_METHODS // from BaseType.h, whether we include FILE* methods
     virtual void print_decl(FILE *out, string space = "    ",
@@ -131,45 +138,76 @@ public:
         bool print_decl_p = true);
 #endif // FILE_METHODS
 
-    virtual void print_decl(ostream &out, string space = "    ", bool print_semi = true, bool constraint_info = false,
+#if 0
+    virtual void print_decl(ostream &out, string space = "    ",
+        bool print_semi = true,
+        bool constraint_info = false,
         bool constrained = false);
-    virtual void print_xml(ostream &out, string space = "    ", bool constrained = false);
-    virtual void print_val(ostream &out, string space = "", bool print_decl_p = true);
+    virtual void print_xml(ostream &out, string space = "    ",
+        bool constrained = false);
+    virtual void print_val(ostream &out, string space = "",
+        bool print_decl_p = true);
 
-    virtual unsigned int width(bool constrained = false) const;
+    virtual unsigned int width(bool constrained = false);
+#endif
+
     virtual unsigned int buf2val(void **val);
     virtual unsigned int val2buf(void *val, bool reuse = false);
 
-    virtual void intern_data(ConstraintEvaluator &eval, DDS &dds);
-    virtual bool serialize(ConstraintEvaluator &eval, DDS &dds, Marshaller &m, bool ce_eval = true);
-    virtual bool deserialize(UnMarshaller &um, DDS *dds, bool reuse = false);
-
     virtual bool set_value(dods_byte *val, int sz);
-    virtual bool set_value(vector<dods_byte> &val, int sz);
+    virtual bool set_value(dods_int8 *val, int sz);
     virtual bool set_value(dods_int16 *val, int sz);
-    virtual bool set_value(vector<dods_int16> &val, int sz);
     virtual bool set_value(dods_uint16 *val, int sz);
-    virtual bool set_value(vector<dods_uint16> &val, int sz);
     virtual bool set_value(dods_int32 *val, int sz);
-    virtual bool set_value(vector<dods_int32> &val, int sz);
     virtual bool set_value(dods_uint32 *val, int sz);
-    virtual bool set_value(vector<dods_uint32> &val, int sz);
+    virtual bool set_value(dods_int64 *val, int sz);
+    virtual bool set_value(dods_uint64 *val, int sz);
     virtual bool set_value(dods_float32 *val, int sz);
-    virtual bool set_value(vector<dods_float32> &val, int sz);
     virtual bool set_value(dods_float64 *val, int sz);
-    virtual bool set_value(vector<dods_float64> &val, int sz);
     virtual bool set_value(string *val, int sz);
+
+    virtual bool set_value(vector<dods_byte> &val, int sz);
+    virtual bool set_value(vector<dods_int8> &val, int sz);
+    virtual bool set_value(vector<dods_int16> &val, int sz);
+    virtual bool set_value(vector<dods_uint16> &val, int sz);
+    virtual bool set_value(vector<dods_int32> &val, int sz);
+    virtual bool set_value(vector<dods_uint32> &val, int sz);
+    virtual bool set_value(vector<dods_int64> &val, int sz);
+    virtual bool set_value(vector<dods_uint64> &val, int sz);
+    virtual bool set_value(vector<dods_float32> &val, int sz);
+    virtual bool set_value(vector<dods_float64> &val, int sz);
     virtual bool set_value(vector<string> &val, int sz);
 
     virtual void value(dods_byte *b) const;
+    virtual void value(dods_int8 *b) const;
     virtual void value(dods_int16 *b) const;
     virtual void value(dods_uint16 *b) const;
     virtual void value(dods_int32 *b) const;
     virtual void value(dods_uint32 *b) const;
+    virtual void value(dods_int64 *b) const;
+    virtual void value(dods_uint64 *b) const;
     virtual void value(dods_float32 *b) const;
     virtual void value(dods_float64 *b) const;
     virtual void value(vector<string> &b) const;
+
+    virtual void value(vector<unsigned int> *indices, dods_byte *b) const;
+    virtual void value(vector<unsigned int> *indices, dods_int8 *b) const;
+    virtual void value(vector<unsigned int> *indices, dods_int16 *b) const;
+    virtual void value(vector<unsigned int> *indices, dods_uint16 *b) const;
+    virtual void value(vector<unsigned int> *indices, dods_int32 *b) const;
+    virtual void value(vector<unsigned int> *indices, dods_uint32 *b) const;
+    virtual void value(vector<unsigned int> *indices, dods_int64 *b) const;
+    virtual void value(vector<unsigned int> *indices, dods_uint64 *b) const;
+    virtual void value(vector<unsigned int> *indices, dods_float32 *b) const;
+    virtual void value(vector<unsigned int> *indices, dods_float64 *b) const;
+    virtual void value(vector<unsigned int> *index, vector<string> &b) const;
+
     virtual void *value();
+
+    virtual bool read();
+    virtual void intern_data(ConstraintEvaluator &eval, DDS &dds);
+    virtual bool serialize(ConstraintEvaluator &eval, DDS &dds, Marshaller &m, bool ce_eval = true);
+    virtual bool deserialize(UnMarshaller &um, DDS *dds, bool reuse = false);
 
 private:
     // Private methods
@@ -180,11 +218,13 @@ private:
     /** Clean local rep */
     void destroy();
 
+#if 0
     /** Set the wrapped array to have name() == this->name() for now. */
     void withNewName();
 
     /** Set the wrapped array to have name() == this->_orgName for now */
     void withOrgName();
+#endif
 
     /** Force the local shape (including constraints) into the wrapped array.
      * We use this helper in almost every function, but feel this is OK
@@ -200,6 +240,13 @@ private:
         const_cast<RenamedArrayWrapper*>(this)->syncConstraints();
     }
     void syncConstraints();
+
+
+    template <typename T> void value_worker(T *v) const;
+    template <typename T> void value_worker(vector<unsigned int> *indices, T *b) const;
+
+    template <typename T> bool set_value_worker(T *v, int sz);
+    template <typename T> bool set_value_worker(vector<T> &v, int sz);
 
 private:
     // Data rep

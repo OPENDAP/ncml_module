@@ -971,6 +971,10 @@ void AggregationUtil::addDatasetArrayDataToAggregationOutputArray(libdap::Array&
 #endif
     // FINALLY, we get to stream the data!
     oOutputArray.set_value_slice_from_row_major_vector(*pDatasetArray, atIndex);
+
+    // Now that we have sent it - let the memory go! Free! Let the bytes be freed! - ndp 08/12/2015
+    pDatasetArray->clear_local_data();
+
 }
 
 void AggregationUtil::gatherMetadataChangesFrom(BaseType* pIntoVar, const BaseType& fromVarC)

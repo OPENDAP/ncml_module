@@ -95,6 +95,6 @@ AT_ASSERT_PARSE_ERROR([new_arrays/var_array_error_15.ncml])
 
 dnl Check constraints work
 dnl FIXME DAP4 FAILURES 
-AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([new_arrays/var_array_int_1.ncml],[[ MyArray[5:1:9] ]],[new_arrays/var_array_int_1_cons_1.ncml],[xfail])
-AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([new_arrays/var_array_int_1.ncml],[[ MyArray[0:2:9] ]],[new_arrays/var_array_int_1_cons_2.ncml],[xfail])
-AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([new_arrays/var_array_int_1.ncml],[[ MyArray[5] ]],[new_arrays/var_array_int_1_cons_3.ncml],[xfail])
+AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([new_arrays/var_array_int_1.ncml],[[ MyArray[5:1:9] ]],[new_arrays/var_array_int_1_cons_1.ncml])
+AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([new_arrays/var_array_int_1.ncml],[[ MyArray[0:2:9] ]],[new_arrays/var_array_int_1_cons_2.ncml])
+AT_CHECK_ALL_DAP_RESPONSES_WITH_CONSTRAINT([new_arrays/var_array_int_1.ncml],[[ MyArray[5] ]],[new_arrays/var_array_int_1_cons_3.ncml])

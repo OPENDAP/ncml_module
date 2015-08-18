@@ -90,29 +90,26 @@ RenamedArrayWrapper::operator=(const RenamedArrayWrapper& rhs)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Wrappers
 
+#if 1
 void RenamedArrayWrapper::add_constraint(Dim_iter i, int start, int stride, int stop)
 {
-    // Make sure the dimensions all match before we add and resync.
-    syncConstraints();
+    // Set the constraint on the dimension and then sync the wrapped array to the new constraint.
     Array::add_constraint(i, start, stride, stop);
     syncConstraints();
 }
 
 void RenamedArrayWrapper::reset_constraint()
 {
-    // must keep our copy and the wrappee in sync since
-    // they could be used at both levels.
     Array::reset_constraint();
-    syncConstraints(); // make sure dims all match
     _pArray->reset_constraint();
 }
 
 void RenamedArrayWrapper::clear_constraint()
 {
     Array::clear_constraint();
-    syncConstraints(); // make dims match
     _pArray->clear_constraint();
 }
+#endif
 
 string RenamedArrayWrapper::toString()
 {
@@ -131,38 +128,46 @@ void RenamedArrayWrapper::dump(std::ostream &strm) const
 {
     strm << toString();
 }
+#if 0
 
-bool RenamedArrayWrapper::is_simple_type() const
+bool
+RenamedArrayWrapper::is_simple_type() const
 {
     return _pArray->is_simple_type();
 }
 
-bool RenamedArrayWrapper::is_vector_type() const
+bool
+RenamedArrayWrapper::is_vector_type() const
 {
     return _pArray->is_vector_type();
 }
 
-bool RenamedArrayWrapper::is_constructor_type() const
+bool
+RenamedArrayWrapper::is_constructor_type() const
 {
     return _pArray->is_constructor_type();
 }
 
-bool RenamedArrayWrapper::synthesized_p()
+bool
+RenamedArrayWrapper::synthesized_p()
 {
     return _pArray->synthesized_p();
 }
 
-void RenamedArrayWrapper::set_synthesized_p(bool state)
+void
+RenamedArrayWrapper::set_synthesized_p(bool state)
 {
     // keep us in sync, why not.
     BaseType::set_synthesized_p(state);
     _pArray->set_synthesized_p(state);
 }
 
-int RenamedArrayWrapper::element_count(bool leaves /* = false */)
+int
+RenamedArrayWrapper::element_count(bool leaves /* = false */)
 {
     return _pArray->element_count(leaves);
 }
+#endif
 
 bool RenamedArrayWrapper::read_p()
 {
@@ -171,7 +176,7 @@ bool RenamedArrayWrapper::read_p()
 
 void RenamedArrayWrapper::set_read_p(bool state)
 {
-    BaseType::set_read_p(state);
+//    BaseType::set_read_p(state);
     _pArray->set_read_p(state);
 }
 
@@ -182,9 +187,10 @@ bool RenamedArrayWrapper::send_p()
 
 void RenamedArrayWrapper::set_send_p(bool state)
 {
-    BaseType::set_send_p(state);
+//    BaseType::set_send_p(state);
     _pArray->set_send_p(state);
 }
+#if 0
 
 /** We don't keep our own... */
 AttrTable&
@@ -193,24 +199,28 @@ RenamedArrayWrapper::get_attr_table()
     return _pArray->get_attr_table();
 }
 
-void RenamedArrayWrapper::set_attr_table(const AttrTable &at)
+void
+RenamedArrayWrapper::set_attr_table(const AttrTable &at)
 {
     _pArray->set_attr_table(at);
 }
 
-bool RenamedArrayWrapper::is_in_selection()
+bool
+RenamedArrayWrapper::is_in_selection()
 {
     return _pArray->is_in_selection();
 }
 
-void RenamedArrayWrapper::set_in_selection(bool state)
+void
+RenamedArrayWrapper::set_in_selection(bool state)
 {
     BaseType::set_in_selection(state);
     _pArray->set_in_selection(state);
 }
 
 /** Keep these in sync so it doesn't matter where we get the parent from... */
-void RenamedArrayWrapper::set_parent(BaseType *parent)
+void
+RenamedArrayWrapper::set_parent(BaseType *parent)
 {
     BaseType::set_parent(parent);
     _pArray->set_parent(parent);
@@ -221,6 +231,7 @@ RenamedArrayWrapper::get_parent() const
 {
     return _pArray->get_parent();
 }
+#endif
 
 BaseType*
 RenamedArrayWrapper::var(const string &name /*  = "" */, bool exact_match /* = true */, btp_stack *s /* = 0 */)
@@ -239,15 +250,19 @@ void RenamedArrayWrapper::add_var(BaseType *bt, Part part /* = nil */)
     _pArray->add_var(bt, part);
 }
 
-bool RenamedArrayWrapper::check_semantics(string &msg, bool all /* = false*/)
+#if 0
+bool
+RenamedArrayWrapper::check_semantics(string &msg, bool all /* = false*/)
 {
     return _pArray->check_semantics(msg, all);
 }
 
-bool RenamedArrayWrapper::ops(BaseType *b, int op)
+bool
+RenamedArrayWrapper::ops(BaseType *b, int op)
 {
     return _pArray->ops(b, op);
 }
+#endif
 
 #if FILE_METHODS // from libdap/BaseType.h, whether to include FILE* methods
 void
@@ -286,8 +301,13 @@ RenamedArrayWrapper::print_val(FILE *out,
 }
 #endif // FILE_METHODS
 
-void RenamedArrayWrapper::print_decl(ostream &out, string space /* = "    "*/, bool print_semi /* = true*/,
-    bool constraint_info /* = false*/, bool constrained /* = false*/)
+#if 0
+void
+RenamedArrayWrapper::print_decl(ostream &out,
+    string space /* = "    "*/,
+    bool print_semi /* = true*/,
+    bool constraint_info /* = false*/,
+    bool constrained /* = false*/)
 {
     syncConstraints();
     withNewName();
@@ -295,7 +315,10 @@ void RenamedArrayWrapper::print_decl(ostream &out, string space /* = "    "*/, b
     withOrgName();
 }
 
-void RenamedArrayWrapper::print_xml(ostream &out, string space /* = "    " */, bool constrained /* = false */)
+void
+RenamedArrayWrapper::print_xml(ostream &out,
+    string space /* = "    " */,
+    bool constrained /* = false */)
 {
     syncConstraints();
     withNewName();
@@ -303,25 +326,10 @@ void RenamedArrayWrapper::print_xml(ostream &out, string space /* = "    " */, b
     withOrgName();
 }
 
-unsigned int RenamedArrayWrapper::width(bool constrained) const
-{
-    syncConstraints();
-    return _pArray->width(constrained);
-}
-
-unsigned int RenamedArrayWrapper::buf2val(void **val)
-{
-    syncConstraints();
-    return _pArray->buf2val(val);
-}
-
-unsigned int RenamedArrayWrapper::val2buf(void *val, bool reuse /* = false */)
-{
-    syncConstraints();
-    return _pArray->val2buf(val, reuse);
-}
-
-void RenamedArrayWrapper::print_val(ostream &out, string space /* = ""*/, bool print_decl_p /* = true*/)
+void
+RenamedArrayWrapper::print_val(ostream &out,
+    string space /* = ""*/,
+    bool print_decl_p /* = true*/)
 {
     syncConstraints();
     withNewName();
@@ -329,209 +337,349 @@ void RenamedArrayWrapper::print_val(ostream &out, string space /* = ""*/, bool p
     withOrgName();
 }
 
-bool RenamedArrayWrapper::set_value(dods_byte *val, int sz)
+unsigned int
+RenamedArrayWrapper::width(bool constrained)
 {
     syncConstraints();
+    return _pArray->width(constrained);
+}
+#endif
+
+unsigned int RenamedArrayWrapper::buf2val(void **val)
+{
+    //syncConstraints();
+    return _pArray->buf2val(val);
+}
+
+unsigned int RenamedArrayWrapper::val2buf(void *val, bool reuse /* = false */)
+{
+    //syncConstraints();
+    return _pArray->val2buf(val, reuse);
+}
+
+template <typename T>
+bool RenamedArrayWrapper::set_value_worker(T *v, int sz)
+{
+    //syncConstraints();
+    return _pArray->set_value(v, sz);
+}
+bool RenamedArrayWrapper::set_value(dods_byte *val, int sz)    { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(dods_int8 *val, int sz)    { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(dods_int16 *val, int sz)   { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(dods_uint16 *val, int sz)  { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(dods_int32 *val, int sz)   { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(dods_uint32 *val, int sz)  { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(dods_int64 *val, int sz)   { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(dods_uint64 *val, int sz)  { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(dods_float32 *val, int sz) { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(dods_float64 *val, int sz) { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(string *val, int sz) { return set_value_worker(val,sz); }
+
+template <typename T>
+bool RenamedArrayWrapper::set_value_worker(vector<T> &v, int sz)
+{
+    //syncConstraints();
+    return _pArray->set_value(v, sz);
+}
+bool RenamedArrayWrapper::set_value(vector<dods_byte> &val, int sz)    { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(vector<dods_int8> &val, int sz)    { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(vector<dods_int16> &val, int sz)   { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(vector<dods_uint16> &val, int sz)  { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(vector<dods_int32> &val, int sz)   { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(vector<dods_uint32> &val, int sz)  { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(vector<dods_int64> &val, int sz)   { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(vector<dods_uint64> &val, int sz)  { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(vector<dods_float32> &val, int sz) { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(vector<dods_float64> &val, int sz) { return set_value_worker(val,sz); }
+bool RenamedArrayWrapper::set_value(vector<string> &val, int sz) { return set_value_worker(val,sz); }
+
+#if 0
+
+bool RenamedArrayWrapper::set_value(dods_byte *val, int sz)
+{
+    //syncConstraints();
     return _pArray->set_value(val, sz);
 }
 
 bool RenamedArrayWrapper::set_value(vector<dods_byte> &val, int sz)
 {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->set_value(val, sz);
 }
 
 bool RenamedArrayWrapper::set_value(dods_int16 *val, int sz)
 {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->set_value(val, sz);
 }
 
 bool RenamedArrayWrapper::set_value(vector<dods_int16> &val, int sz)
 {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->set_value(val, sz);
 }
 
 bool RenamedArrayWrapper::set_value(dods_uint16 *val, int sz)
 {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->set_value(val, sz);
 }
 
 bool RenamedArrayWrapper::set_value(vector<dods_uint16> &val, int sz)
 {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->set_value(val, sz);
 }
 
 bool RenamedArrayWrapper::set_value(dods_int32 *val, int sz)
 {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->set_value(val, sz);
 }
 
 bool RenamedArrayWrapper::set_value(vector<dods_int32> &val, int sz)
 {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->set_value(val, sz);
 }
 
 bool RenamedArrayWrapper::set_value(dods_uint32 *val, int sz)
 {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->set_value(val, sz);
 }
 
 bool RenamedArrayWrapper::set_value(vector<dods_uint32> &val, int sz)
 {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->set_value(val, sz);
 }
 
 bool RenamedArrayWrapper::set_value(dods_float32 *val, int sz)
 {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->set_value(val, sz);
 }
 
 bool RenamedArrayWrapper::set_value(vector<dods_float32> &val, int sz)
 {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->set_value(val, sz);
 }
 
 bool RenamedArrayWrapper::set_value(dods_float64 *val, int sz)
 {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->set_value(val, sz);
 }
 
 bool RenamedArrayWrapper::set_value(vector<dods_float64> &val, int sz)
 {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->set_value(val, sz);
 }
 
 bool RenamedArrayWrapper::set_value(string *val, int sz)
 {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->set_value(val, sz);
 }
 
 bool RenamedArrayWrapper::set_value(vector<string> &val, int sz)
 {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->set_value(val, sz);
 }
+#endif
 
+
+template <typename T>
+void RenamedArrayWrapper::value_worker(T *v) const
+{
+    //syncConstraints();
+    _pArray->value(v);
+}
+void RenamedArrayWrapper::value(dods_byte *b) const      { value_worker(b); }
+void RenamedArrayWrapper::value(dods_int8 *b) const      { value_worker(b); }
+void RenamedArrayWrapper::value(dods_int16 *b) const     { value_worker(b); }
+void RenamedArrayWrapper::value(dods_uint16 *b) const    { value_worker(b); }
+void RenamedArrayWrapper::value(dods_int32 *b) const     { value_worker(b); }
+void RenamedArrayWrapper::value(dods_uint32 *b) const    { value_worker(b); }
+void RenamedArrayWrapper::value(dods_int64 *b) const     { value_worker(b); }
+void RenamedArrayWrapper::value(dods_uint64 *b) const    { value_worker(b); }
+void RenamedArrayWrapper::value(dods_float32 *b) const   { value_worker(b); }
+void RenamedArrayWrapper::value(dods_float64 *b) const   { value_worker(b); }
+void RenamedArrayWrapper::value(vector<string> &b) const { return _pArray->value(b); }
+
+
+#if 0
 void RenamedArrayWrapper::value(dods_byte *b) const
 {
-    syncConstraints();
+    //syncConstraints();
     _pArray->value(b);
 }
 
 void RenamedArrayWrapper::value(dods_int16 *b) const
 {
-    syncConstraints();
+    //syncConstraints();
     _pArray->value(b);
 }
 
 void RenamedArrayWrapper::value(dods_uint16 *b) const
 {
-    syncConstraints();
+    //syncConstraints();
     _pArray->value(b);
 }
 
 void RenamedArrayWrapper::value(dods_int32 *b) const
 {
-    syncConstraints();
+    //syncConstraints();
     _pArray->value(b);
 }
 
 void RenamedArrayWrapper::value(dods_uint32 *b) const
 {
-    syncConstraints();
+    //syncConstraints();
     _pArray->value(b);
 }
 
 void RenamedArrayWrapper::value(dods_float32 *b) const
 {
-    syncConstraints();
+    //syncConstraints();
     _pArray->value(b);
 }
 
 void RenamedArrayWrapper::value(dods_float64 *b) const
 {
-    syncConstraints();
+    //syncConstraints();
     _pArray->value(b);
 }
 
 void RenamedArrayWrapper::value(vector<string> &b) const
 {
-    syncConstraints();
+    //syncConstraints();
     _pArray->value(b);
 }
+#endif
+
+template <typename T>
+void RenamedArrayWrapper::value_worker(vector<unsigned int> *indices, T *b) const
+{
+	return _pArray->value(indices,b);
+}
+
+void RenamedArrayWrapper::value(vector<unsigned int> *indices, dods_byte *b) const      { value_worker(indices,b); };
+void RenamedArrayWrapper::value(vector<unsigned int> *indices, dods_int8 *b) const      { value_worker(indices,b); };
+void RenamedArrayWrapper::value(vector<unsigned int> *indices, dods_int16 *b) const     { value_worker(indices,b); };
+void RenamedArrayWrapper::value(vector<unsigned int> *indices, dods_uint16 *b) const    { value_worker(indices,b); };
+void RenamedArrayWrapper::value(vector<unsigned int> *indices, dods_int32 *b) const     { value_worker(indices,b); };
+void RenamedArrayWrapper::value(vector<unsigned int> *indices, dods_uint32 *b) const    { value_worker(indices,b); };
+void RenamedArrayWrapper::value(vector<unsigned int> *indices, dods_int64 *b) const     { value_worker(indices,b); };
+void RenamedArrayWrapper::value(vector<unsigned int> *indices, dods_uint64 *b) const    { value_worker(indices,b); };
+void RenamedArrayWrapper::value(vector<unsigned int> *indices, dods_float32 *b) const   { value_worker(indices,b); };
+void RenamedArrayWrapper::value(vector<unsigned int> *indices, dods_float64 *b) const   { value_worker(indices,b); };
+void RenamedArrayWrapper::value(vector<unsigned int> *indices, vector<string> &b) const { return _pArray->value(indices,b); }
+
+
 
 void*
 RenamedArrayWrapper::value()
 {
-    syncConstraints();
+    //syncConstraints();
     return _pArray->value();
 }
 
+#if 0
 // DO THE REAL WORK
-bool RenamedArrayWrapper::read()
+bool
+RenamedArrayWrapper::read()
 {
     // Read using the old name....
     withOrgName();
     bool ret = _pArray->read();
-    set_read_p(true); // get us too
+    set_read_p(true);// get us too
     withNewName();
     return ret;
 }
+#endif
 
-void RenamedArrayWrapper::intern_data(ConstraintEvaluator &eval, DDS &dds)
+// DO THE REAL WORK
+bool RenamedArrayWrapper::read()
+{
+    //syncConstraints();
+    return _pArray->read();
+}
+
+#if 0
+void
+RenamedArrayWrapper::intern_data(ConstraintEvaluator &eval, DDS &dds)
 {
     syncConstraints();
 
     // Force the correct read to be called, as with serialize...
     // If not read in, read it in with the orgName and these constraints.
-    if (!_pArray->read_p()) {
-        withOrgName();
+    if (!_pArray->read_p())
+    {
+        //withOrgName();
         _pArray->read();
         set_read_p(true);
     }
 
     // Now we're back to the new name for intern_data purposes.
-    withNewName();
+    //withNewName();
+    _pArray->intern_data(eval, dds);
+}
+#endif
+void RenamedArrayWrapper::intern_data(ConstraintEvaluator &eval, DDS &dds)
+{
     _pArray->intern_data(eval, dds);
 }
 
-bool RenamedArrayWrapper::serialize(ConstraintEvaluator &eval, DDS &dds, Marshaller &m, bool ce_eval /* = true */)
+#if 0
+bool
+RenamedArrayWrapper::serialize(ConstraintEvaluator &eval, DDS &dds,
+    Marshaller &m, bool ce_eval /* = true */)
 {
-    BESDEBUG("ncml", "RenamedArrayWrapper::serialize(): Doing the magic for renamed read()!!" << endl);
+    // BESDEBUG("ncml_rename", "RenamedArrayWrapper::serialize(): Doing the magic for renamed read()!!" << endl);
     // Push them down if we need to.
     syncConstraints();
 
-    // If not read in, read it in with the orgName and these constraints.
-    if (!_pArray->read_p()) {
-        withOrgName();
-        _pArray->read();
-        set_read_p(true);
+    //string no_preload_tag = "no_preload_for_renamed_arrays";
+    if (BESISDEBUG( "no_preload_for_renamed_arrays" ) || 1) {
+        // BESDEBUG("no_preload_for_renamed_arrays", "RenamedArrayWrapper::serialize() - !!!!! Skipping preload of renamed array orgName: '" << _orgName << "' newName: '" << name()  << "'" << endl);
+        BESDEBUG("ncml_rename", "RenamedArrayWrapper::serialize() - !!!!! SKIPPING preload of renamed array orgName: '" << _orgName << "' newName: '" << name() << "'" << endl);
+        // withOrgName();
     }
+    else {
+        BESDEBUG("ncml_rename", "RenamedArrayWrapper::serialize() - Preloading renamed array orgName: '" << _orgName << "' newName: '" << name() << "'" << endl);
 
-    // Now we're back to the new name for printing purposes.
-    withNewName();
+        // If not read in, read it in with the orgName and these constraints.
+        if (!_pArray->read_p())
+        {
+            //withOrgName();
+            _pArray->read();
+            set_read_p(true);
+        }
 
+        // Now we're back to the new name for printing purposes.
+        //withNewName();
+    }
     // So call the actual serialize, which should hopefully respect read_p() being set!!
+    return _pArray->serialize(eval, dds, m, ce_eval);
+}
+#endif
+
+bool RenamedArrayWrapper::serialize(ConstraintEvaluator &eval, DDS &dds, Marshaller &m, bool ce_eval /* = true */)
+{
+    BESDEBUG("ncml_rename", "RenamedArrayWrapper::serialize(): Doing the magic for renamed read()!!" << endl);
+    //syncConstraints();
     return _pArray->serialize(eval, dds, m, ce_eval);
 }
 
 bool RenamedArrayWrapper::deserialize(UnMarshaller &um, DDS *dds, bool reuse /* = false */)
 {
     // I *think* this should work
-    syncConstraints();
+    //syncConstraints();
     return _pArray->deserialize(um, dds, reuse);
 }
 
@@ -556,15 +704,19 @@ void RenamedArrayWrapper::destroy()
     _orgName = "";
 }
 
-void RenamedArrayWrapper::withNewName()
+#if 0
+void
+RenamedArrayWrapper::withNewName()
 {
     NCMLUtil::setVariableNameProperly(_pArray, name());
 }
 
-void RenamedArrayWrapper::withOrgName()
+void
+RenamedArrayWrapper::withOrgName()
 {
     NCMLUtil::setVariableNameProperly(_pArray, _orgName);
 }
+#endif
 
 void RenamedArrayWrapper::syncConstraints()
 {
