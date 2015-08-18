@@ -58,11 +58,21 @@ namespace agg_util {
  * In other words, read() on this subclass will respect the constraints
  * given to the superclass Array.
  *
- * Note: this class is designed to lazy-load the member
+ * @note This class is designed to lazy-load the member
  * datasets _only if there are needed for the actual serialization_
- * at read() call time.
+ * at read() call time. Also note that this class specializes the
+ * BaseType::serialize() method such that data reads (from datasets
+ * and writes (to the network) are interleaved, reducing latency. In
+ * addition, the data for the response is not stored in the object;
+ * only the parts about to be serialized are even held in memory and
+ * then only until they are sent to the client. Calls to the read()
+ * method still read all of the data in to the variable's local storage
+ * so that code that depends on that behavior will still work. If all
+ * of the data are in memory, the overloaded serialize() method will
+ * call libdap::Array::serialize(), preserving the expected behavior
+ * in that case.
  *
- * Note: the member datasets might be external files or might be
+ * @note The member datasets might be external files or might be
  * wrapped virtual datasets (specified in NcML) or nested
  * aggregation's.
  */

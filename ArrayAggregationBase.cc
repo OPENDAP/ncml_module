@@ -47,8 +47,8 @@ using namespace libdap;
 namespace agg_util {
 ArrayAggregationBase::ArrayAggregationBase(const libdap::Array& proto, const AMDList& aggMembers,
     std::auto_ptr<ArrayGetterInterface>& arrayGetter) :
-    Array(proto), _pSubArrayProto(static_cast<Array*>(const_cast<Array&>(proto).ptr_duplicate())), _pArrayGetter(
-        arrayGetter), _datasetDescs(aggMembers)
+    Array(proto), _pSubArrayProto(static_cast<Array*>(const_cast<Array&>(proto).ptr_duplicate())),
+    _pArrayGetter(arrayGetter), _datasetDescs(aggMembers)
 {
 }
 
@@ -85,38 +85,12 @@ ArrayAggregationBase::ptr_duplicate()
     return new ArrayAggregationBase(*this);
 }
 
-#if 0
 /* virtual */
-
-// begin modifying here for the double buffering
-bool ArrayAggregationBase::serialize(libdap::ConstraintEvaluator &eval, libdap::DDS &dds, libdap::Marshaller &m,
-    bool ce_eval)
-{
-    BESStopWatch sw;
-    if (BESISDEBUG(TIMING_LOG)) sw.start("ArrayAggregationBase::serialize", "");
-
-#if 0
-    return libdap::Array::serialize(eval, dds, m, ce_eval);
-#endif
-
-    // TODO Time out here? or in ResponseBuilder?
-    dds.timeout_on();
-
-    if (!read_p())
-        read(); // read() throws Error and InternalErr
-
-    dds.timeout_off();
-
-    bool status = libdap::Array::serialize(eval, dds, m, ce_eval);
-
-    return status;
-}
-#endif
-
-/* virtual */
-
-// This code probably needs to stay as it is so that modules like asciival and server functions
-// that need all of the data 'in the regular way' don't break.
+// In child classes we specialize the BaseType::serialize() method so that
+// as data are read they are also set (using Marshaller::put_vector_part()).
+// In those cases this method is actually not called. We keep this version
+// so that code that depends on read() actually reading in all of the data
+// will still work.
 bool ArrayAggregationBase::read()
 {
     BESStopWatch sw;

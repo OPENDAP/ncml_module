@@ -33,9 +33,6 @@
 #include <DataDDS.h> // libdap::DataDDS
 #include <Marshaller.h>
 
-#define DODS_DEBUG 1
-#include <debug.h>
-
 // only NCML backlinks we want in this agg_util class.
 #include "NCMLDebug.h" // BESDEBUG and throw macros
 #include "NCMLUtil.h" // SAFE_DELETE, NCMLUtil::getVariableNoRecurse
@@ -92,9 +89,29 @@ ArrayAggregateOnOuterDimension::operator=(const ArrayAggregateOnOuterDimension& 
     return *this;
 }
 
+// Set this to 1 to get the old behavior where the entire response
+// (for this variable) is built in memory and then sent to the client.
 #define BUILD_ENTIRE_RESULT 0
 
-// begin modifying here for the double buffering
+/**
+ * Specialization that implements a simple pipelining scheme. If an
+ * aggregation is made up from many 'slices' of different arrays, each
+ * will be read individually. This version sends each part as soon as
+ * it is read instead of building the entire response in memory and
+ * then sending it.
+ *
+ * If this method is called and the variable has read_p set to true,
+ * then libdap::Array::serialize() will be called.
+ *
+ * @note The read() method of ArrayAggregationBase can be used to read
+ * all of the data in one shot.
+ *
+ * @param eval
+ * @param dds
+ * @param m
+ * @param ce_eval
+ * @return true
+ */
 bool ArrayAggregateOnOuterDimension::serialize(libdap::ConstraintEvaluator &eval, libdap::DDS &dds,
     libdap::Marshaller &m, bool ce_eval)
 {
@@ -225,6 +242,10 @@ void ArrayAggregateOnOuterDimension::transferOutputConstraintsIntoGranuleTemplat
 }
 
 /* virtual */
+// In this version of the code, I broke apart the call to
+// agg_util::AggregationUtil::addDatasetArrayDataToAggregationOutputArray()
+// into two calls: AggregationUtil::readDatasetArrayDataForAggregation()
+// and this->set_value_slice_from_row_major_vector(). This
 void ArrayAggregateOnOuterDimension::readConstrainedGranuleArraysAndAggregateDataHook()
 {
     BESStopWatch sw;
@@ -255,18 +276,20 @@ void ArrayAggregateOnOuterDimension::readConstrainedGranuleArraysAndAggregateDat
         AggMemberDataset& dataset = *((getDatasetList())[i]);
 
         try {
-#if 0
             agg_util::AggregationUtil::addDatasetArrayDataToAggregationOutputArray(*this, // into the output buffer of this object
                 nextElementIndex, // into the next open slice
                 getGranuleTemplateArray(), // constraints template
                 name(), // aggvar name
                 dataset, // Dataset who's DDS should be searched
                 getArrayGetterInterface(), DEBUG_CHANNEL);
-#endif
+#if 0
+            // The code above is conceptually similar to this, but
+            // makes more efficient use of memory. jhrg8/18/15
             Array* pDatasetArray = AggregationUtil::readDatasetArrayDataForAggregation(getGranuleTemplateArray(),
                 name(), dataset, getArrayGetterInterface(), DEBUG_CHANNEL);
 
             this->set_value_slice_from_row_major_vector(*pDatasetArray, nextElementIndex);
+#endif
         }
         catch (agg_util::AggregationException& ex) {
             std::ostringstream oss;

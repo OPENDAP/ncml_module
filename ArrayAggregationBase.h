@@ -78,19 +78,22 @@ namespace agg_util
     /** virtual constructor i.e. clone */
     virtual ArrayAggregationBase* ptr_duplicate();
 
-    /** Base implementation that works for both joinNew and joinExisting.
+    /**
+     * Base implementation that works for both joinNew and joinExisting.
      * Sets ups constraints and things and then calls the subclass helper
      * readAndAggregateGranules() for the specialized subclass behaviors.
+     *
+     * @note This implementation of read() will read all of the data
+     * for an aggregated variable. Child classes of this class can use
+     * specialized versions of serialize() to implement a different
+     * behavior so that data that are read in parts (e.g. slices of an
+     * Array) can also be written in parts. This can reduce access latency.
      *
      * @throw Can throw BESError, minimally
      *
      * @return whether it works
      */
     virtual bool read();
-#if 0
-
-    virtual bool serialize(libdap::ConstraintEvaluator &ce, libdap::DDS &dds,  libdap::Marshaller &marshy, bool ce_eval);
-#endif
 
     /**
     * Get the list of AggMemberDataset's that comprise this aggregation

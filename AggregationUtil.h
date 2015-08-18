@@ -413,7 +413,24 @@ public:
     /** Find the given map name in the given Grid and return it if found, else NULL */
     static const libdap::Array* findMapByName(const libdap::Grid& inGrid, const std::string& findName);
 
-    // FIXME Add a comment if this works
+    /**
+     * Read the data that akes up one 'slice' of an aggregation. This method is
+     * used by addDatasetArrayDataToAggregationOutputArray() which calls it and
+     * then transfers the data from the DAP Array that holds the slice's data
+     * to the result (another DAP Array that will eventually hold the entire
+     * collection of slices in a single array). It is also used by specialized
+     * versions of serialize() so that data can be read and written 'slice by slice'
+     * avoiding the latency of reading in all of the data before transmission
+     * starts along with the storage overhead of holding all of the data in
+     * memory at one time.
+     *
+     * @param constrainedTemplateArray
+     * @param varName
+     * @param dataset
+     * @param arrayGetter
+     * @param debugChannel
+     * @return An Array variable with the slice's data
+     */
     static libdap::Array* readDatasetArrayDataForAggregation(const libdap::Array& constrainedTemplateArray,
         const std::string& varName, AggMemberDataset& dataset, const ArrayGetterInterface& arrayGetter,
         const std::string& debugChannel);

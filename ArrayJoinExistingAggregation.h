@@ -102,7 +102,7 @@ private:
     /////////////////////////////////////////////////////////////////////////////
     // Data Rep
 
-    /** The (outer) imension we will be joining along,
+    /** The (outer) dimension we will be joining along,
      *  with post-aggregation cardinality. */
     agg_util::Dimension _joinDim;
 };

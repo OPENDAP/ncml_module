@@ -107,11 +107,6 @@ bool ArrayJoinExistingAggregation::serialize(libdap::ConstraintEvaluator &eval, 
     BESStopWatch sw;
     if (BESISDEBUG(TIMING_LOG)) sw.start("ArrayJoinExistingAggregation::serialize", "");
 
-#if 0
-    return libdap::Array::serialize(eval, dds, m, ce_eval);
-#endif
-
-    // TODO Time out here? or in ResponseBuilder?
     dds.timeout_on();
 
     if (!read_p())
