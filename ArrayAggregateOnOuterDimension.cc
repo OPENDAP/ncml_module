@@ -183,6 +183,8 @@ bool ArrayAggregateOnOuterDimension::serialize(libdap::ConstraintEvaluator &eval
 #else
                 this->set_value_slice_from_row_major_vector(*pDatasetArray, nextElementIndex);
 #endif
+
+                pDatasetArray->clear_local_data();
             }
             catch (agg_util::AggregationException& ex) {
                 std::ostringstream oss;
@@ -205,6 +207,8 @@ bool ArrayAggregateOnOuterDimension::serialize(libdap::ConstraintEvaluator &eval
         m.put_vector_end();
 #else
         status = libdap::Array::serialize(eval, dds, m, ce_eval);
+
+        clear_local_data();
 #endif
 
         // Set the cache bit to avoid recomputing

@@ -259,6 +259,8 @@ bool ArrayJoinExistingAggregation::serialize(libdap::ConstraintEvaluator &eval, 
                     this->set_value_slice_from_row_major_vector(*pDatasetArray, nextOutputBufferElementIndex);
 #endif
 
+                    pDatasetArray->clear_local_data();
+
                     // Jump output buffer index forward by the amount we added.
                     nextOutputBufferElementIndex += getGranuleTemplateArray().length();
                     currDatasetWasRead = true;
@@ -274,18 +276,21 @@ bool ArrayJoinExistingAggregation::serialize(libdap::ConstraintEvaluator &eval, 
 
         // *** end of code inserted from readConstrainedGranuleArraysAndAggregateDataHook
 
-        // Set the cache bit to avoid recomputing
-
-        set_read_p(true);
-
 #if PIPELINING
         m.put_vector_end();
 #else
         status = libdap::Array::serialize(eval, dds, m, ce_eval);
+
+        clear_local_data();
 #endif
+        set_read_p(true);
+
+        status = true;
     }
     else {
         status = libdap::Array::serialize(eval, dds, m, ce_eval);
+
+        clear_local_data();
     }
 
     return status;
