@@ -27,21 +27,25 @@
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
 
+#include <sstream>
+#include <memory> // auto_ptr
+
+
+#include "DataDDS.h" // libdap
+#include "DDS.h" // libdap
+#include "Grid.h" // libdap
+
+#include "DDSLoader.h" // agg_util
+#include "Dimension.h" // agg_util
+#include "NCMLDebug.h" // ncml_module
+#include "NCMLUtil.h"  // ncml_module
+
 #include "GridAggregateOnOuterDimension.h"
 
 #include "AggregationException.h"
 #include "AggregationUtil.h" // agg_util
 #include "Array.h" // libdap
 #include "ArrayAggregateOnOuterDimension.h" // agg_util
-#include "DataDDS.h" // libdap
-#include "DDS.h" // libdap
-#include "DDSLoader.h" // agg_util
-#include "Dimension.h" // agg_util
-#include "Grid.h" // libdap
-#include <memory> // auto_ptr
-#include "NCMLDebug.h" // ncml_module
-#include "NCMLUtil.h"  // ncml_module
-#include <sstream>
 
 using libdap::Array;
 using libdap::DataDDS;

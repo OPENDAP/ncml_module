@@ -27,26 +27,29 @@
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
 
-#include "AggregationUtil.h" // agg_util
+
 #include <Array.h> // libdap
 #include <D4Group.h>
 #include <Constructor.h>
 #include <D4Maps.h>
 #include <InternalErr.h>
 
+#include "BESStopWatch.h"
+
+#include "AggregationUtil.h" // agg_util
 #include "GridAggregationBase.h" // agg_util
+
 #include "NCMLDebug.h"
 
 using libdap::Array;
 using libdap::BaseType;
 using libdap::Grid;
-#if 1
+
 using libdap::D4Group;
 using libdap::Constructor;
 using libdap::InternalErr;
 using libdap::D4Maps;
 using libdap::D4Map;
-#endif
 
 // Local debug flags
 static const string DEBUG_CHANNEL("agg_util");
@@ -90,7 +93,6 @@ GridAggregationBase::operator=(const GridAggregationBase& rhs)
     return *this;
 }
 
-#if 1
 BaseType *
 GridAggregationBase::transform_to_dap4(D4Group *root, Constructor *container)
 {
@@ -134,7 +136,6 @@ GridAggregationBase::transform_to_dap4(D4Group *root, Constructor *container)
     // stuff to the container and group.
     return 0;
 }
-#endif
 
 void GridAggregationBase::setShapeFrom(const libdap::Grid& constProtoSubGrid, bool addMaps)
 {
@@ -200,6 +201,149 @@ bool GridAggregationBase::read()
     set_read_p(true);
     return true;
 }
+
+#define PIPELINING 1
+
+bool
+GridAggregationBase::serialize(libdap::ConstraintEvaluator &eval, libdap::DDS &dds, libdap::Marshaller &m,
+    bool ce_eval)
+{
+    BESStopWatch sw;
+    if (BESISDEBUG(TIMING_LOG)) sw.start("GridAggregationBase::serialize", "");
+
+    bool status = false;
+
+    if (!read_p()) {
+        if (PRINT_CONSTRAINTS) {
+            printConstraints(*(get_array()));
+        }
+
+        dds.timeout_on();
+
+        // Call the subclass hook methods to do this work properly
+        // *** Replace Map code readAndAggregateConstrainedMapsHook();
+
+        // Transfers constraints to the proto grid and reads it
+        readProtoSubGrid();
+
+        // Make the call to serialize the data array.
+        // The aggregation subclass will do the right thing.
+        Array* pAggArray = get_array();
+        VALID_PTR(pAggArray);
+
+        // Only do this portion if the array part is supposed to serialize!
+        if (pAggArray->send_p() || pAggArray->is_in_selection()) {
+#if PIPELINING
+            pAggArray->serialize(eval, dds, m, ce_eval);
+#else
+            pAggArray->read();
+#endif
+        }
+
+        // Get the read-in, constrained maps from the proto grid and serialize them.
+        // *** Replace copyProtoMapsIntoThisGrid(getAggregationDimension());
+
+        Grid* pSubGridTemplate = getSubGridTemplate();
+        VALID_PTR(pSubGridTemplate);
+
+        Map_iter mapIt;
+        Map_iter mapEndIt = map_end();
+        for (mapIt = map_begin(); mapIt != mapEndIt; ++mapIt) {
+            Array* pOutMap = static_cast<Array*>(*mapIt);
+            VALID_PTR(pOutMap);
+
+            // If it isn't getting dumped, then don't bother with it
+            if (!(pOutMap->send_p() || pOutMap->is_in_selection())) {
+                continue;
+            }
+
+            // We don't want to touch the aggregation dimension since it's
+            // handled specially.
+            if (pOutMap->name() == getAggregationDimension().name) {
+                if (PRINT_CONSTRAINTS) {
+                    BESDEBUG_FUNC(DEBUG_CHANNEL,
+                        "About to call read() on the map for the new outer dimension name=" << getAggregationDimension().name << " It's constraints are:" << endl);
+                    printConstraints(*pOutMap);
+                }
+
+                // Make sure it's read with these constraints.
+#if PIPELINING
+                pOutMap->serialize(eval, dds, m, ce_eval);
+#else
+                pOutMap->read();
+#endif
+                continue;
+            }
+
+            // Otherwise, find the map in the protogrid and copy it's data into this.
+            Array* pProtoGridMap = const_cast<Array*>(AggregationUtil::findMapByName(*pSubGridTemplate, pOutMap->name()));
+            NCML_ASSERT_MSG(pProtoGridMap, "Couldn't find map in prototype grid for map name=" + pOutMap->name());
+            BESDEBUG_FUNC(DEBUG_CHANNEL,
+                "About to call read() on prototype map vector name=" << pOutMap->name() << " and calling transfer constraints..." << endl);
+
+            // Make sure the protogrid maps were properly read
+            NCML_ASSERT_MSG(pProtoGridMap->read_p(), "Expected the prototype map to have been read but it wasn't.");
+
+            // Make sure the lengths match to be sure we're not gonna blow memory up
+            NCML_ASSERT_MSG(pOutMap->length() == pProtoGridMap->length(),
+                "Expected the prototype and output maps to have same length() after transfer of constraints, but they were not so we can't copy the data!");
+
+            // The dimensions will have been set up correctly now so length() is correct...
+            // We assume the pProtoGridMap matches at this point as well.
+            // So we can use this call to copy from one vector to the other
+            // so we don't use temp storage in between
+#if PIPELINING
+            pProtoGridMap->serialize(eval, dds, m, ce_eval);
+#else
+            pOutMap->reserve_value_capacity(); // reserves mem for length
+            pOutMap->set_value_slice_from_row_major_vector(*pProtoGridMap, 0);
+#endif
+            pOutMap->set_read_p(true);
+        }
+
+        // *** End replaced Map code
+
+        dds.timeout_off();
+
+        // Set the cache bit.
+        set_read_p(true);
+
+#if PIPELINING
+        status = true;
+#else
+    status = libdap::Grid::serialize(eval, dds, m, ce_eval);
+#endif
+    }
+    else {
+        status = libdap::Grid::serialize(eval, dds, m, ce_eval);
+    }
+
+    return status;
+}
+
+#if 0
+// Initial version of serialize() that I hacked up during the refactor to implement
+// pipelining for Grid aggregations. I followed the same pattern as in the Array
+// aggregation code. jhrg 8/18/15
+bool
+GridAggregationBase::serialize(libdap::ConstraintEvaluator &eval, libdap::DDS &dds, libdap::Marshaller &m,
+    bool ce_eval)
+{
+    BESStopWatch sw;
+    if (BESISDEBUG(TIMING_LOG)) sw.start("GridAggregationBase::serialize", "");
+
+    dds.timeout_on();
+
+    if (!read_p())
+        read(); // read() throws Error and InternalErr
+
+    dds.timeout_off();
+
+    bool status = libdap::Grid::serialize(eval, dds, m, ce_eval);
+
+    return status;
+}
+#endif
 
 /////////////////////////////////////////
 ///////////// Helpers

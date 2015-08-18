@@ -109,6 +109,9 @@ ArrayJoinExistingAggregation::ptr_duplicate()
 /* virtual */
 // begin modifying here for the double buffering
 // see notes about how this was written marked with '***'
+// Following this method is an older version of serialize that
+// provides no new functionality but does get run instead of the
+// more general implementation in libdap::Array.
 bool ArrayJoinExistingAggregation::serialize(libdap::ConstraintEvaluator &eval, libdap::DDS &dds, libdap::Marshaller &m,
     bool ce_eval)
 {
@@ -287,6 +290,30 @@ bool ArrayJoinExistingAggregation::serialize(libdap::ConstraintEvaluator &eval, 
 
     return status;
 }
+
+#if 0
+// Here is the version I used when moving code from
+// readConstrainedGranuleArraysAndAggregateDataHook
+// into serialize() to get the 'pipelining' version. jhrg 8/18/15
+bool ArrayJoinExistingAggregation::serialize(libdap::ConstraintEvaluator &eval, libdap::DDS &dds, libdap::Marshaller &m,
+    bool ce_eval)
+{
+    BESStopWatch sw;
+    if (BESISDEBUG(TIMING_LOG)) sw.start("ArrayJoinExistingAggregation::serialize", "");
+
+    // TODO Time out here? or in ResponseBuilder?
+    dds.timeout_on();
+
+    if (!read_p())
+        read(); // read() throws Error and InternalErr
+
+    dds.timeout_off();
+
+    bool status = libdap::Array::serialize(eval, dds, m, ce_eval);
+
+    return status;
+}
+#endif
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Private Impl Below

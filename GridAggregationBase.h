@@ -40,7 +40,6 @@ class Array;
 class Grid;
 class D4Group;
 }
-;
 
 namespace agg_util {
 
@@ -70,9 +69,8 @@ public:
     virtual ~GridAggregationBase();
 
     GridAggregationBase& operator=(const GridAggregationBase& rhs);
-#if 1
+
     BaseType *transform_to_dap4(libdap::D4Group *root, libdap::Constructor *container);
-#endif
 
     /**
      * Use the data array and maps from protoSubGrid as the initial
@@ -103,6 +101,9 @@ public:
      * @return success.
      */
     virtual bool read();
+
+    virtual bool serialize(libdap::ConstraintEvaluator &eval, libdap::DDS &dds, libdap::Marshaller &m, bool ce_eval);
+
 
 protected:
     // subclass interface
