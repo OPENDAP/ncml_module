@@ -91,7 +91,7 @@ ArrayAggregateOnOuterDimension::operator=(const ArrayAggregateOnOuterDimension& 
 
 // Set this to 1 to get the old behavior where the entire response
 // (for this variable) is built in memory and then sent to the client.
-#define BUILD_ENTIRE_RESULT 0
+#define PIPELINING 1
 
 /**
  * Specialization that implements a simple pipelining scheme. If an
@@ -124,8 +124,9 @@ bool ArrayAggregateOnOuterDimension::serialize(libdap::ConstraintEvaluator &eval
         return true;
     }
 
+    bool status = false;
+
     if (!read_p()) {
-        BESDEBUG_FUNC(DEBUG_CHANNEL, " function entered..." << endl);
 
         if (PRINT_CONSTRAINTS) {
             BESDEBUG_FUNC(DEBUG_CHANNEL, "Constraints on this Array are:" << endl);
@@ -152,11 +153,11 @@ bool ArrayAggregateOnOuterDimension::serialize(libdap::ConstraintEvaluator &eval
                 " have the same size as the number of datasets in the aggregation!");
         }
 
-#if BUILD_ENTIRE_RESULT
+#if PIPELINING
         // Prepare our output buffer for our constrained length
-        reserve_value_capacity();
-#else
         m.put_vector_start(length());
+#else
+        reserve_value_capacity();
 #endif
         // this index pointing into the value buffer for where to write.
         // The buffer has a stride equal to the _pSubArrayProto->length().
@@ -176,11 +177,11 @@ bool ArrayAggregateOnOuterDimension::serialize(libdap::ConstraintEvaluator &eval
 
                 dds.timeout_off();
 
-#if BUILD_ENTIRE_RESULT
-                this->set_value_slice_from_row_major_vector(*pDatasetArray, nextElementIndex);
-#else
+#if PIPELINING
                 m.put_vector_part(pDatasetArray->get_buf(), getGranuleTemplateArray().length(), var()->width(),
                     var()->type());
+#else
+                this->set_value_slice_from_row_major_vector(*pDatasetArray, nextElementIndex);
 #endif
             }
             catch (agg_util::AggregationException& ex) {
@@ -200,20 +201,22 @@ bool ArrayAggregateOnOuterDimension::serialize(libdap::ConstraintEvaluator &eval
             "At end of aggregating, expected the nextElementIndex to be the length of the "
             "aggregated array, but it wasn't!");
 
-#if BUILD_ENTIRE_RESULT
-        libdap::Array::serialize(eval, dds, m, ce_eval);
-#else
+#if PIPELINING
         m.put_vector_end();
+#else
+        status = libdap::Array::serialize(eval, dds, m, ce_eval);
 #endif
 
         // Set the cache bit to avoid recomputing
         set_read_p(true);
+
+        status = true;
     }
     else {
-        libdap::Array::serialize(eval, dds, m, ce_eval);
+        status = libdap::Array::serialize(eval, dds, m, ce_eval);
     }
 
-    return true;
+    return status;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
