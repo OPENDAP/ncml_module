@@ -44,7 +44,6 @@ namespace libdap {
 class Array;
 class Grid;
 }
-;
 
 using std::string;
 using std::vector;
