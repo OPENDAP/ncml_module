@@ -204,6 +204,26 @@ bool GridAggregationBase::read()
 
 #define PIPELINING 1
 
+/**
+ * Pipelining data reads and network writes. This version of serialize(),
+ * like the versions in ArrayAggregation... also here in the NCML module,
+ * handles interleaved data reads and network write operations.
+ *
+ * @note The read() method for this class reads the entire Aggregated
+ * Grid variable into memory, so code that depends on that behavior will
+ * continue to work. When this serialize() code is called and the variable
+ * is 'loaded' with data, the libdap::Grid::serialize() code is called,
+ * so that will work as well. When this method is called and the data still
+ * need to be read, the new behavior will take over and latency, from the
+ * client program's perspective, will be small compared to reading then
+ * entire variable and then transmitting its values.
+ *
+ * @param eval
+ * @param dds
+ * @param m
+ * @param ce_eval
+ * @return
+ */
 bool
 GridAggregationBase::serialize(libdap::ConstraintEvaluator &eval, libdap::DDS &dds, libdap::Marshaller &m,
     bool ce_eval)
