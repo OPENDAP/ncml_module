@@ -92,9 +92,9 @@ ArrayAggregateOnOuterDimension::operator=(const ArrayAggregateOnOuterDimension& 
     return *this;
 }
 
-// Set this to 1 to get the old behavior where the entire response
+// Set this to 0 to get the old behavior where the entire response
 // (for this variable) is built in memory and then sent to the client.
-#define PIPELINING 0
+#define PIPELINING 1
 
 /**
  * Specialization that implements a simple pipelining scheme. If an
@@ -188,7 +188,6 @@ bool ArrayAggregateOnOuterDimension::serialize(libdap::ConstraintEvaluator &eval
 #if PIPELINING
                 delete bes_timing::elapsedTimeToTransmitStart;
                 bes_timing::elapsedTimeToTransmitStart = 0;
-
                 m.put_vector_part(pDatasetArray->get_buf(), getGranuleTemplateArray().length(), var()->width(),
                     var()->type());
 #else
@@ -216,18 +215,15 @@ bool ArrayAggregateOnOuterDimension::serialize(libdap::ConstraintEvaluator &eval
 
 #if PIPELINING
         m.put_vector_end();
+        status = true;
 #else
-        delete bes_timing::elapsedTimeToTransmitStart;
-        bes_timing::elapsedTimeToTransmitStart = 0;
-        status = libdap::Array::serialize(eval, dds, m, ce_eval);
-
-        clear_local_data();
-#endif
-
         // Set the cache bit to avoid recomputing
         set_read_p(true);
 
-        status = true;
+        delete bes_timing::elapsedTimeToTransmitStart;
+        bes_timing::elapsedTimeToTransmitStart = 0;
+        status = libdap::Array::serialize(eval, dds, m, ce_eval);
+#endif
     }
     else {
         status = libdap::Array::serialize(eval, dds, m, ce_eval);

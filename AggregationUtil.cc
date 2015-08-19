@@ -930,7 +930,7 @@ void AggregationUtil::addDatasetArrayDataToAggregationOutputArray(libdap::Array&
     // FINALLY, we get to stream the data!
     oOutputArray.set_value_slice_from_row_major_vector(*pDatasetArray, atIndex);
 
-    // Now that we have sent it - let the memory go! Free! Let the bytes be freed! - ndp 08/12/2015
+    // Now that we have copied it - let the memory go! Free! Let the bytes be freed! - ndp 08/12/2015
     pDatasetArray->clear_local_data();
 }
 

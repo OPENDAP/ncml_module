@@ -102,7 +102,7 @@ ArrayJoinExistingAggregation::ptr_duplicate()
     return new ArrayJoinExistingAggregation(*this);
 }
 
-// Set this to 1 to get the old behavior where the entire response
+// Set this to 0 to get the old behavior where the entire response
 // (for this variable) is built in memory and then sent to the client.
 #define PIPELINING 1
 
@@ -278,19 +278,14 @@ bool ArrayJoinExistingAggregation::serialize(libdap::ConstraintEvaluator &eval, 
 
 #if PIPELINING
         m.put_vector_end();
-#else
-        status = libdap::Array::serialize(eval, dds, m, ce_eval);
-
-        clear_local_data();
-#endif
-        set_read_p(true);
-
         status = true;
+#else
+        set_read_p(true);
+        status = libdap::Array::serialize(eval, dds, m, ce_eval);
+#endif
     }
     else {
         status = libdap::Array::serialize(eval, dds, m, ce_eval);
-
-        clear_local_data();
     }
 
     return status;
