@@ -203,14 +203,12 @@ bool ArrayAggregateOnOuterDimension::serialize(libdap::ConstraintEvaluator &eval
             "At end of aggregating, expected the nextElementIndex to be the length of the "
             "aggregated array, but it wasn't!");
 
-        // Set the cache bit to avoid recomputing
-        set_read_p(true);
-
 #if PIPELINING
         m.put_vector_end();
-
         status = true;
 #else
+        // Set the cache bit to avoid recomputing
+        set_read_p(true);
         status = libdap::Array::serialize(eval, dds, m, ce_eval);
 #endif
     }

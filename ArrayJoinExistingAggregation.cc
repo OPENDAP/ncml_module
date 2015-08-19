@@ -276,13 +276,11 @@ bool ArrayJoinExistingAggregation::serialize(libdap::ConstraintEvaluator &eval, 
 
         // *** end of code inserted from readConstrainedGranuleArraysAndAggregateDataHook
 
-        set_read_p(true);
-
 #if PIPELINING
         m.put_vector_end();
-
         status = true;
 #else
+        set_read_p(true);
         status = libdap::Array::serialize(eval, dds, m, ce_eval);
 #endif
     }
