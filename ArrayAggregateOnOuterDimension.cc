@@ -45,6 +45,9 @@ static const string DEBUG_CHANNEL("agg_util");
 // Local flag for whether to print constraints, to help debugging
 static const bool PRINT_CONSTRAINTS = false;
 
+extern BESStopWatch *bes_timing::elapsedTimeToReadStart;
+extern BESStopWatch *bes_timing::elapsedTimeToTransmitStart;
+
 namespace agg_util {
 
 ArrayAggregateOnOuterDimension::ArrayAggregateOnOuterDimension(const libdap::Array& proto,
@@ -91,7 +94,7 @@ ArrayAggregateOnOuterDimension::operator=(const ArrayAggregateOnOuterDimension& 
 
 // Set this to 1 to get the old behavior where the entire response
 // (for this variable) is built in memory and then sent to the client.
-#define PIPELINING 1
+#define PIPELINING 0
 
 /**
  * Specialization that implements a simple pipelining scheme. If an
@@ -112,10 +115,12 @@ ArrayAggregateOnOuterDimension::operator=(const ArrayAggregateOnOuterDimension& 
  * @param ce_eval
  * @return true
  */
+
 bool ArrayAggregateOnOuterDimension::serialize(libdap::ConstraintEvaluator &eval, libdap::DDS &dds,
     libdap::Marshaller &m, bool ce_eval)
 {
-    BESStopWatch sw;
+
+	BESStopWatch sw;
     if (BESISDEBUG(TIMING_LOG)) sw.start("ArrayAggregateOnOuterDimension::serialize", "");
 
     // Only continue if we are supposed to serialize this object at all.
@@ -125,6 +130,9 @@ bool ArrayAggregateOnOuterDimension::serialize(libdap::ConstraintEvaluator &eval
     }
 
     bool status = false;
+
+    delete bes_timing::elapsedTimeToReadStart;
+    bes_timing::elapsedTimeToReadStart = 0;
 
     if (!read_p()) {
 
@@ -178,6 +186,8 @@ bool ArrayAggregateOnOuterDimension::serialize(libdap::ConstraintEvaluator &eval
                 dds.timeout_off();
 
 #if PIPELINING
+                delete bes_timing::elapsedTimeToTransmitStart;
+                bes_timing::elapsedTimeToTransmitStart = 0;
                 m.put_vector_part(pDatasetArray->get_buf(), getGranuleTemplateArray().length(), var()->width(),
                     var()->type());
 #else
@@ -206,6 +216,8 @@ bool ArrayAggregateOnOuterDimension::serialize(libdap::ConstraintEvaluator &eval
 #if PIPELINING
         m.put_vector_end();
 #else
+        delete bes_timing::elapsedTimeToTransmitStart;
+        bes_timing::elapsedTimeToTransmitStart = 0;
         status = libdap::Array::serialize(eval, dds, m, ce_eval);
 
         clear_local_data();
