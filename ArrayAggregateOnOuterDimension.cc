@@ -178,7 +178,6 @@ bool ArrayAggregateOnOuterDimension::serialize(libdap::ConstraintEvaluator &eval
                 dds.timeout_off();
 
 #if PIPELINING
-                BESDEBUG_FUNC("ncml:pipeline", "Variable: " << name() << ", writing slice " << i << endl);
                 m.put_vector_part(pDatasetArray->get_buf(), getGranuleTemplateArray().length(), var()->width(),
                     var()->type());
 #else
@@ -204,18 +203,16 @@ bool ArrayAggregateOnOuterDimension::serialize(libdap::ConstraintEvaluator &eval
             "At end of aggregating, expected the nextElementIndex to be the length of the "
             "aggregated array, but it wasn't!");
 
-#if PIPELINING
-        m.put_vector_end();
-#else
-        status = libdap::Array::serialize(eval, dds, m, ce_eval);
-
-        clear_local_data();
-#endif
-
         // Set the cache bit to avoid recomputing
         set_read_p(true);
 
+#if PIPELINING
+        m.put_vector_end();
+
         status = true;
+#else
+        status = libdap::Array::serialize(eval, dds, m, ce_eval);
+#endif
     }
     else {
         status = libdap::Array::serialize(eval, dds, m, ce_eval);
