@@ -259,6 +259,7 @@ public:
     template<class LibdapType> static LibdapType* findTypedVariableAtDDSTopLevel(const libdap::DDS& dds,
         const string& name);
 
+#if 0
     /**
      *  Basic joinNew aggregation into pJoinedArray on the array of inputs fromVars.
      *
@@ -285,6 +286,7 @@ public:
      */
     static void produceOuterDimensionJoinedArray(libdap::Array* pJoinedArray, const std::string& joinedArrayName,
         const std::string& newOuterDimName, const std::vector<libdap::Array*>& fromVars, bool copyData);
+#endif
 
     /**
      * Scan all the arrays in _arrays_ using the first as a template
@@ -321,6 +323,7 @@ public:
      */
     static bool couldBeCoordinateVariable(libdap::BaseType* pBT);
 
+#if 0
     /**
      * Copy the simple type data Vector for each Array in varArrays into pAggArray, sequentially,
      * effectively appending all the row major data in each entry in varArray into the row major order
@@ -344,6 +347,7 @@ public:
      */
     static void joinArrayData(libdap::Array* pAggArray, const std::vector<libdap::Array*>& varArrays,
         bool reserveStorage = true, bool clearDataAfterUse = false);
+#endif
 
     /** Print out the dimensions name and size for the given Array into os */
     static void printDimensions(std::ostream& os, const libdap::Array& fromArray);

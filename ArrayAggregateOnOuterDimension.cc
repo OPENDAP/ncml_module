@@ -188,6 +188,7 @@ bool ArrayAggregateOnOuterDimension::serialize(libdap::ConstraintEvaluator &eval
 #if PIPELINING
                 delete bes_timing::elapsedTimeToTransmitStart;
                 bes_timing::elapsedTimeToTransmitStart = 0;
+
                 m.put_vector_part(pDatasetArray->get_buf(), getGranuleTemplateArray().length(), var()->width(),
                     var()->type());
 #else
