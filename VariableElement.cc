@@ -245,6 +245,14 @@ void VariableElement::processExistingVariable(NCMLParser& p, BaseType* pVar)
     enterScope(p, pVar);
 }
 
+#if 0
+
+/**
+ * I added this method as a place holder for repairing (potentially) broken behavior regarding the
+ * the renmaing of libdap::Structre and libdap::Grid objects which I beleive is not curretnly being handled
+ * correctly. The implementation is incomplete, so I am disabling the code  using a #if statement.
+ * ndp - 08/21/2015
+ */
 void VariableElement::processRenameVariableDataWorker(NCMLParser& p, BaseType* pOrgVar)
 {
 
@@ -268,6 +276,7 @@ void VariableElement::processRenameVariableDataWorker(NCMLParser& p, BaseType* p
     // This is safe whether we converted it or not.  Rename!
     NCMLUtil::setVariableNameProperly(pOrgVar, _name);
 }
+#endif
 
 void VariableElement::processRenameVariable(NCMLParser& p)
 {

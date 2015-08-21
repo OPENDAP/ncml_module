@@ -146,8 +146,10 @@ private:
      * Assumes: !_orgName.empty()
      * On exit, the scope of p will be the renamed variable.
      */
+#if 0
+    // Disabled for now. See comment in the .cc file ndp - 08/12/2015
     void processRenameVariableDataWorker(NCMLParser& p, libdap::BaseType* pOrgVar);
-
+#endif
     void processRenameVariable(NCMLParser& p);
 
     /**
