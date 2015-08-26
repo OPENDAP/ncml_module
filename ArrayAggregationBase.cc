@@ -90,6 +90,14 @@ bool ArrayAggregationBase::serialize(libdap::ConstraintEvaluator &ce, libdap::DD
     BESStopWatch sw;
     if (BESISDEBUG(TIMING_LOG)) sw.start("ArrayAggregationBase::serialize", "");
 
+    if (!read_p()){
+        delete bes_timing::elapsedTimeToReadStart;
+        bes_timing::elapsedTimeToReadStart = 0;
+        read(); // read() throws Error and InternalErr
+    }
+
+    delete bes_timing::elapsedTimeToTransmitStart;
+    bes_timing::elapsedTimeToTransmitStart = 0;
     return libdap::Array::serialize(ce, dds, marshy, ce_eval);
 }
 
