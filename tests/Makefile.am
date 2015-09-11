@@ -1,3 +1,4 @@
+
 AUTOMAKE_OPTIONS = foreign
 
 TESTSUITE = $(srcdir)/testsuite
@@ -5,24 +6,21 @@ TESTSUITE = $(srcdir)/testsuite
 TESTSUITEFLAGS =
 # -j9
 
-TEST_FILES = aggregations.at \
-		attribute_tests.at \
-		parse_error_misc.at \
-		variable_misc.at \
-		variable_new_arrays.at \
-		variable_new_multi_arrays.at \
-		variable_new_scalars.at \
-		variable_new_structures.at \
-		variable_remove.at \
-		variable_rename.at 
+TEST_FILES = aggregations.at attribute_tests.at parse_error_misc.at	\
+variable_misc.at variable_new_arrays.at variable_new_multi_arrays.at	\
+variable_new_scalars.at variable_new_structures.at variable_remove.at	\
+variable_rename.at
 
-EXTRA_DIST = testsuite.at $(TEST_FILES) $(srcdir)/package.m4 \
+EXTRA_DIST = $(TESTSUITE).at $(TEST_FILES) $(srcdir)/package.m4 \
 $(TESTSUITE) atlocal.in template.bescmd.in bes.conf.in \
 bes_no_nc_global.conf.in bes.conf.modules.in \
 bes_no_nc_global.conf.modules.in baselines
 
 noinst_DATA = bes.conf bes_no_nc_global.conf
-DISTCLEANFILES = bes.conf bes_no_nc_global.conf
+
+CLEANFILES = $(TESTSUITE) $(srcdir)/package.m4
+
+DISTCLEANFILES = bes.conf bes_no_nc_global.conf atconfig
 
 if DAP_MODULES
 BES_CONF_IN = bes.conf.modules.in
@@ -54,18 +52,12 @@ check-local: atconfig atlocal $(srcdir)/package.m4 $(TESTSUITE)
 # with 'make bes-conf' to add the NCML module.  We'd have to figure
 # out a way to let the testsuite script know whether to use the local
 # bes.conf or the installed one.  
-installcheck-local: atconfig atlocal
+# installcheck-local: atconfig atlocal
 # $(TESTSUITE) $(SHELL) '$(TESTSUITE)' AUTOTEST_PATH='$(bindir)' \
 # $(TESTSUITEFLAGS)
 
 clean-local:
 	test ! -f '$(TESTSUITE)' || $(SHELL) '$(TESTSUITE)' --clean
-	-rm $(srcdir)/package.m4
-	
-distclean-local:
-	-rm atconfig
-	-rm bes.conf
-
 
 # Use the missing script for better error checking on autom4te run.
 AUTOM4TE = $(SHELL) $(top_srcdir)/conf/missing --run autom4te
@@ -94,5 +86,3 @@ $(srcdir)/package.m4: $(top_srcdir)/configure.ac
 	echo 'm4_define([AT_PACKAGE_BUGREPORT],' && \
 	echo '  [@PACKAGE_BUGREPORT@])'; \
 	} >'$(srcdir)/package.m4'
-
-
