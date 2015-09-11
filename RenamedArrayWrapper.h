@@ -75,15 +75,14 @@ public:
     virtual RenamedArrayWrapper* ptr_duplicate();
     RenamedArrayWrapper& operator=(const RenamedArrayWrapper& rhs);
 
-    // OVERRIDES OF ALL VIRTUALS!
+    // Specializations
 
-#if 1
     virtual void add_constraint(Dim_iter i, int start, int stride, int stop);
     virtual void reset_constraint();
 
     /** @deprecated */
     virtual void clear_constraint();
-#endif
+
     virtual string toString();
     virtual string toString() const;
     virtual void dump(ostream &strm) const;

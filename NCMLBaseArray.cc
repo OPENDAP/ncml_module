@@ -28,7 +28,7 @@
 /////////////////////////////////////////////////////////////////////////////
 
 #include <BaseType.h>
-#include "MyBaseTypeFactory.h"
+//#include "MyBaseTypeFactory.h"
 #include "NCMLBaseArray.h"
 #include "NCMLDebug.h"
 #include "Shape.h"

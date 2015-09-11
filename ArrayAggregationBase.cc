@@ -38,15 +38,17 @@
 static const string DEBUG_CHANNEL("agg_util");
 
 // Local flag for whether to print constraints, to help debugging
-static const bool PRINT_CONSTRAINTS = true;
+static const bool PRINT_CONSTRAINTS = false;
 
-using libdap::Array;
+//using libdap::Array;
+
+using namespace libdap;
 
 namespace agg_util {
 ArrayAggregationBase::ArrayAggregationBase(const libdap::Array& proto, const AMDList& aggMembers,
     std::auto_ptr<ArrayGetterInterface>& arrayGetter) :
-    Array(proto), _pSubArrayProto(static_cast<Array*>(const_cast<Array&>(proto).ptr_duplicate())), _pArrayGetter(
-        arrayGetter), _datasetDescs(aggMembers)
+    Array(proto), _pSubArrayProto(static_cast<Array*>(const_cast<Array&>(proto).ptr_duplicate())),
+    _pArrayGetter(arrayGetter), _datasetDescs(aggMembers)
 {
 }
 
@@ -84,16 +86,11 @@ ArrayAggregationBase::ptr_duplicate()
 }
 
 /* virtual */
-bool ArrayAggregationBase::serialize(libdap::ConstraintEvaluator &ce, libdap::DDS &dds, libdap::Marshaller &marshy,
-    bool ce_eval)
-{
-    BESStopWatch sw;
-    if (BESISDEBUG(TIMING_LOG)) sw.start("ArrayAggregationBase::serialize", "");
-
-    return libdap::Array::serialize(ce, dds, marshy, ce_eval);
-}
-
-/* virtual */
+// In child classes we specialize the BaseType::serialize() method so that
+// as data are read they are also set (using Marshaller::put_vector_part()).
+// In those cases this method is actually not called. We keep this version
+// so that code that depends on read() actually reading in all of the data
+// will still work.
 bool ArrayAggregationBase::read()
 {
     BESStopWatch sw;

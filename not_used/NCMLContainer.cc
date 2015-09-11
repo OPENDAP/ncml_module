@@ -138,12 +138,12 @@ string NCMLContainer::access()
 
         _tmp_file_name = NCMLContainerStorage::NCML_TempDir + "/" + tempfile + ".ncml";
 #endif
+        // FIXME Don't close the stream 'ostrm' and instead store it in a field of the
+        // object. see the class comment. jhrg 8/12/15
+
         ofstream ostrm;
-        //int my_errno = 0;
         string _tmp_file_name = libdap::open_temp_fstream(ostrm,
             NCMLContainerStorage::NCML_TempDir + "/ncml_module_XXXXXX", ".ncml");
-        //ostrm.open(_tmp_file_name.c_str(), ios_base::out);
-        //my_errno = errno;
 
         if (!ostrm) {
             string err = (string) "Unable to write out the ncml document " + _tmp_file_name;

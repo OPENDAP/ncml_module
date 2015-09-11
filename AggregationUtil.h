@@ -259,6 +259,7 @@ public:
     template<class LibdapType> static LibdapType* findTypedVariableAtDDSTopLevel(const libdap::DDS& dds,
         const string& name);
 
+#if 0
     /**
      *  Basic joinNew aggregation into pJoinedArray on the array of inputs fromVars.
      *
@@ -285,6 +286,7 @@ public:
      */
     static void produceOuterDimensionJoinedArray(libdap::Array* pJoinedArray, const std::string& joinedArrayName,
         const std::string& newOuterDimName, const std::vector<libdap::Array*>& fromVars, bool copyData);
+#endif
 
     /**
      * Scan all the arrays in _arrays_ using the first as a template
@@ -321,6 +323,7 @@ public:
      */
     static bool couldBeCoordinateVariable(libdap::BaseType* pBT);
 
+#if 0
     /**
      * Copy the simple type data Vector for each Array in varArrays into pAggArray, sequentially,
      * effectively appending all the row major data in each entry in varArray into the row major order
@@ -344,6 +347,7 @@ public:
      */
     static void joinArrayData(libdap::Array* pAggArray, const std::vector<libdap::Array*>& varArrays,
         bool reserveStorage = true, bool clearDataAfterUse = false);
+#endif
 
     /** Print out the dimensions name and size for the given Array into os */
     static void printDimensions(std::ostream& os, const libdap::Array& fromArray);
@@ -412,6 +416,28 @@ public:
 
     /** Find the given map name in the given Grid and return it if found, else NULL */
     static const libdap::Array* findMapByName(const libdap::Grid& inGrid, const std::string& findName);
+
+    /**
+     * Read the data that akes up one 'slice' of an aggregation. This method is
+     * used by addDatasetArrayDataToAggregationOutputArray() which calls it and
+     * then transfers the data from the DAP Array that holds the slice's data
+     * to the result (another DAP Array that will eventually hold the entire
+     * collection of slices in a single array). It is also used by specialized
+     * versions of serialize() so that data can be read and written 'slice by slice'
+     * avoiding the latency of reading in all of the data before transmission
+     * starts along with the storage overhead of holding all of the data in
+     * memory at one time.
+     *
+     * @param constrainedTemplateArray
+     * @param varName
+     * @param dataset
+     * @param arrayGetter
+     * @param debugChannel
+     * @return An Array variable with the slice's data
+     */
+    static libdap::Array* readDatasetArrayDataForAggregation(const libdap::Array& constrainedTemplateArray,
+        const std::string& varName, AggMemberDataset& dataset, const ArrayGetterInterface& arrayGetter,
+        const std::string& debugChannel);
 
     /**
      * Load the given dataset's DataDDS.

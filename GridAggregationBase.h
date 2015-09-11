@@ -35,22 +35,17 @@
 #include <Grid.h> // libdap
 #include <memory> // std
 
-namespace libdap
-{
-  class Array;
-  class Grid;
-  class D4Group;
-};
+namespace libdap {
+class Array;
+class Grid;
+class D4Group;
+}
 
-namespace agg_util
-{
+namespace agg_util {
 
-  class GridAggregationBase : public libdap::Grid
-  {
-  public:
-    GridAggregationBase(const libdap::Grid& proto,
-        const AMDList& memberDatasets,
-        const DDSLoader& loaderProto);
+class GridAggregationBase: public libdap::Grid {
+public:
+    GridAggregationBase(const libdap::Grid& proto, const AMDList& memberDatasets, const DDSLoader& loaderProto);
 
     /** Construct an EMPTY Grid structure
      * with given name.
@@ -66,19 +61,16 @@ namespace agg_util
      * @param name  name to give the grid
      * @param memberDatasets  the granules defining the aggregation
      * @param loaderProto  the laoder to use
-    */
-    GridAggregationBase(const string& name,
-        const AMDList& memberDatasets,
-        const DDSLoader& loaderProto);
+     */
+    GridAggregationBase(const string& name, const AMDList& memberDatasets, const DDSLoader& loaderProto);
 
     GridAggregationBase(const GridAggregationBase& proto);
 
     virtual ~GridAggregationBase();
 
     GridAggregationBase& operator=(const GridAggregationBase& rhs);
-#if 1
+
     BaseType *transform_to_dap4(libdap::D4Group *root, libdap::Constructor *container);
-#endif
 
     /**
      * Use the data array and maps from protoSubGrid as the initial
@@ -92,25 +84,29 @@ namespace agg_util
     void setShapeFrom(const libdap::Grid& protoSubGrid, bool addMaps);
 
     /**
-    * Accessor for the dataset description list that describes
-    * this aggregation.
-    * @return a reference to the AggMemberDataset list.
-    */
+     * Accessor for the dataset description list that describes
+     * this aggregation.
+     * @return a reference to the AggMemberDataset list.
+     */
     virtual const AMDList& getDatasetList() const;
 
     /**
-    * Read in only those datasets that are in the constrained output
-    * making sure to apply the internal dimension constraints to the
-    * member datasets properly before reading them!
-    * Stream the data into the output buffer correctly.
-    *
-    * NOTE: Subclasses should implement the protected hooks if possible rather
-    * than overriding this function!
-    * @return success.
-    */
+     * Read in only those datasets that are in the constrained output
+     * making sure to apply the internal dimension constraints to the
+     * member datasets properly before reading them!
+     * Stream the data into the output buffer correctly.
+     *
+     * NOTE: Subclasses should implement the protected hooks if possible rather
+     * than overriding this function!
+     * @return success.
+     */
     virtual bool read();
 
-  protected: // subclass interface
+    virtual bool serialize(libdap::ConstraintEvaluator &eval, libdap::DDS &dds, libdap::Marshaller &m, bool ce_eval);
+
+
+protected:
+    // subclass interface
 
     /**
      * Called from read()!  Invokes the user hooks eventually.
@@ -120,14 +116,13 @@ namespace agg_util
 
     /** Reveals the raw ptr, but only to subclasses.  Don't delete it,
      * but can be changed etc.
-    */
+     */
     Grid* getSubGridTemplate();
 
     /** Get the contained aggregation dimension info */
     virtual const Dimension& getAggregationDimension() const = 0;
 
     void printConstraints(const libdap::Array& fromArray);
-
 
     /** Transfer constraints properly from this object's maps
      * and read in the proto subgrid entirely (respecting constraints) */
@@ -136,11 +131,11 @@ namespace agg_util
     // Support calls for the read()....
 
     /**
-        * Copy the template's read in subgrid maps into this.
-        * Skip any map found in the subgrid named aggDim.name
-        * since we handle the aggregation dimension map specially.
-        * @param aggDim  a map with aggDim.name is NOT copied.
-        */
+     * Copy the template's read in subgrid maps into this.
+     * Skip any map found in the subgrid named aggDim.name
+     * since we handle the aggregation dimension map specially.
+     * @param aggDim  a map with aggDim.name is NOT copied.
+     */
     void copyProtoMapsIntoThisGrid(const Dimension& aggDim);
 
     /** To be specialized in subclass to copy constraints on this
@@ -155,18 +150,19 @@ namespace agg_util
      */
     virtual void transferConstraintsToSubGridHook(Grid* pSubGrid);
 
-  private: // helpers
+private:
+    // helpers
 
     /** Duplicate just the local data rep */
     void duplicate(const GridAggregationBase& rhs);
 
     /** Delete any heap memory */
-    void cleanup() throw();
+    void cleanup() throw ();
 
     static libdap::Grid* cloneSubGridProto(const libdap::Grid& proto);
 
-
-  private: // data rep
+private:
+    // data rep
 
     // Use this to laod the member datasets as needed
     DDSLoader _loader;
@@ -178,8 +174,9 @@ namespace agg_util
     // Maintain a copy here... we may want to move this down...
     AMDList _memberDatasets;
 
-  }; // class GridAggregationBase
+};
+// class GridAggregationBase
 
-} // namespace agg_util
+}// namespace agg_util
 
 #endif /* __AGG_UTIL__GRID_AGGREGATION_BASE_H__ */

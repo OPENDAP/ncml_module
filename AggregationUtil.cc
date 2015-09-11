@@ -483,6 +483,7 @@ AggregationUtil::findTypedVariableAtDDSTopLevel(const libdap::DDS& dds, const st
     }
 }
 
+#if 0
 void AggregationUtil::produceOuterDimensionJoinedArray(Array* pJoinedArray, const std::string& joinedArrayName,
     const std::string& newOuterDimName, const std::vector<libdap::Array*>& fromVars, bool copyData)
 {
@@ -529,6 +530,7 @@ void AggregationUtil::produceOuterDimensionJoinedArray(Array* pJoinedArray, cons
             true); // but please clear the Vector buffers after you use each Array in fromVars to help on memory.
     }
 }
+#endif
 
 bool AggregationUtil::validateArrayTypesAndShapesMatch(const std::vector<libdap::Array*>& arrays,
     bool enforceMatchingDimNames)
@@ -620,6 +622,7 @@ bool AggregationUtil::couldBeCoordinateVariable(BaseType* pBT)
     }
 }
 
+#if 0
 void AggregationUtil::joinArrayData(Array* pAggArray, const std::vector<Array*>& varArrays,
     bool reserveStorage/*=true*/, bool clearDataAfterUse/*=false*/)
 {
@@ -670,6 +673,7 @@ void AggregationUtil::joinArrayData(Array* pAggArray, const std::vector<Array*>&
 
     // That's all folks!
 }
+#endif
 
 //////// Mnemonic for below calls....
 //    struct dimension
@@ -862,13 +866,12 @@ AggregationUtil::findMapByName(const libdap::Grid& inGrid, const string& findNam
     return pRet;
 }
 
-void AggregationUtil::addDatasetArrayDataToAggregationOutputArray(libdap::Array& oOutputArray, unsigned int atIndex,
-    const Array& constrainedTemplateArray, const std::string& varName, AggMemberDataset& dataset,
-    const ArrayGetterInterface& arrayGetter, const std::string& debugChannel)
+Array* AggregationUtil::readDatasetArrayDataForAggregation(const Array& constrainedTemplateArray,
+    const std::string& varName, AggMemberDataset& dataset, const ArrayGetterInterface& arrayGetter,
+    const std::string& debugChannel)
 {
-
     BESStopWatch sw;
-    if (BESISDEBUG(TIMING_LOG)) sw.start("AggregationUtil::addDatasetArrayDataToAggregationOutputArray", "");
+    if (BESISDEBUG(TIMING_LOG)) sw.start("AggregationUtil::readDatasetArrayDataForAggregation", "");
 
     const libdap::DataDDS* pDataDDS = dataset.getDataDDS();
     NCML_ASSERT_MSG(pDataDDS, "GridAggregateOnOuterDimension::read(): Got a null DataDDS "
@@ -911,12 +914,24 @@ void AggregationUtil::addDatasetArrayDataToAggregationOutputArray(libdap::Array&
                 "though their shapes matched. Logic problem.");
     }
 
+    return pDatasetArray;
+}
+
+void AggregationUtil::addDatasetArrayDataToAggregationOutputArray(libdap::Array& oOutputArray, unsigned int atIndex,
+    const Array& constrainedTemplateArray, const std::string& varName, AggMemberDataset& dataset,
+    const ArrayGetterInterface& arrayGetter, const std::string& debugChannel)
+{
+    BESStopWatch sw;
+    if (BESISDEBUG(TIMING_LOG)) sw.start("AggregationUtil::addDatasetArrayDataToAggregationOutputArray", "");
+
+    libdap::Array* pDatasetArray = readDatasetArrayDataForAggregation(constrainedTemplateArray, varName, dataset, arrayGetter,
+        debugChannel);
+
     // FINALLY, we get to stream the data!
     oOutputArray.set_value_slice_from_row_major_vector(*pDatasetArray, atIndex);
 
-    // Now that we have sent it - let the memory go! Free! Let the bytes be freed! - ndp 08/12/2015
+    // Now that we have copied it - let the memory go! Free! Let the bytes be freed! - ndp 08/12/2015
     pDatasetArray->clear_local_data();
-
 }
 
 void AggregationUtil::gatherMetadataChangesFrom(BaseType* pIntoVar, const BaseType& fromVarC)

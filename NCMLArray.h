@@ -34,7 +34,7 @@
 #include <BaseType.h>
 #include <Vector.h>
 #include <memory>
-#include "MyBaseTypeFactory.h"
+// #include "MyBaseTypeFactory.h"
 #include "NCMLBaseArray.h"
 #include "NCMLDebug.h"
 #include "Shape.h"
@@ -311,14 +311,16 @@ protected:
                 "NCMLArray<T>:: we don't have unconstrained values cached, caching from Vector now..." << endl);
             unsigned int spaceSize = _noConstraints->getUnconstrainedSpaceSize();
 
-#if 1
+#if 0
             ostringstream oss;
-            oss << " length(): " << length() << " spaceSize: "<< spaceSize;
-            // These must match or we're not getting all the data and the caller messed up.
+            oss <<"NCMLArray expected superclass Vector length() to be the same as unconstrained space size, but it wasn't!";
+            oss << "length(): " << length() << "' spaceSize: " << spaceSize;
+            NCML_ASSERT_MSG(static_cast<unsigned int>(length()) == spaceSize, oss.str());
+#else
             NCML_ASSERT_MSG(static_cast<unsigned int>(length()) == spaceSize,
-                "NCMLArray expected superclass Vector length() to be the same as unconstrained space size, but it wasn't! "+oss.str() );
-            // Make new default storage with enough space for all the data.
+                "NCMLArray expected superclass Vector length() to be the same as unconstrained space size, but it wasn't!");
 #endif
+            // Make new default storage with enough space for all the data.
             _allValues = new vector<T>(spaceSize);
             NCML_ASSERT(_allValues->size() == spaceSize); // the values should all be default for T().
             // Grab the address of the start of the vector memory block.
@@ -326,6 +328,7 @@ protected:
             T* pFirstElt = &((*_allValues)[0]);
             // Now overwrite the defaults in from the buffer.
             unsigned int stored = buf2val(reinterpret_cast<void**>(&pFirstElt));
+
             NCML_ASSERT((stored / sizeof(T)) == spaceSize); // make sure it did what it was supposed to do.
             // OK, we have our copy now!
         }

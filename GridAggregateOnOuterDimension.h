@@ -40,50 +40,47 @@
 #include <Grid.h> // libdap
 #include "GridAggregationBase.h" // agg_util
 
-namespace libdap
-{
-  class Array;
-  class Grid;
-};
+namespace libdap {
+class Array;
+class Grid;
+}
 
 using std::string;
 using std::vector;
 using libdap::Array;
 using libdap::Grid;
 
-namespace agg_util
-{
-  /**
-   * class GridAggregateOnOuterDimension : public GridAggregationBase
-   *
-   * Grid that performs a joinNew aggregation by taking
-   * an ordered list of datatsets which contain Grid's with
-   * matching signatures (ie array name, dimensions, maps)
-   * and creating a new outer dimension with cardinality the
-   * number of datasets in the aggregation.
-   *
-   * The resulting aggregated grid will be one plus the
-   * rank of the array's of the member dataset Grids.
-   *
-   * We assume we have created the proper shape of this
-   * Grid so that the map vectors in the Grid superclass
-   * are correct (as loaded from the first dataset!)
-   *
-   * The data itself will be loaded as needed during serialize
-   * based on the response.
-   *
-   * TODO OPTIMIZE One major issue is we create one of these
-   * objects per aggregation variable, even if these
-   * vars are in the same dataset.  So when we read,
-   * we load the dataset for each variable!  Does the BES
-   * cache them or something?  Maybe we can avoid doing this
-   * with some smarts?  Not sure...  I get the feeling
-   * the other handlers do the same sort of thing,
-   * but can be smarter about seeking, etc.
-   */
-  class GridAggregateOnOuterDimension : public GridAggregationBase
-  {
-  public:
+namespace agg_util {
+/**
+ * class GridAggregateOnOuterDimension : public GridAggregationBase
+ *
+ * Grid that performs a joinNew aggregation by taking
+ * an ordered list of datatsets which contain Grid's with
+ * matching signatures (ie array name, dimensions, maps)
+ * and creating a new outer dimension with cardinality the
+ * number of datasets in the aggregation.
+ *
+ * The resulting aggregated grid will be one plus the
+ * rank of the array's of the member dataset Grids.
+ *
+ * We assume we have created the proper shape of this
+ * Grid so that the map vectors in the Grid superclass
+ * are correct (as loaded from the first dataset!)
+ *
+ * The data itself will be loaded as needed during serialize
+ * based on the response.
+ *
+ * TODO OPTIMIZE One major issue is we create one of these
+ * objects per aggregation variable, even if these
+ * vars are in the same dataset.  So when we read,
+ * we load the dataset for each variable!  Does the BES
+ * cache them or something?  Maybe we can avoid doing this
+ * with some smarts?  Not sure...  I get the feeling
+ * the other handlers do the same sort of thing,
+ * but can be smarter about seeking, etc.
+ */
+class GridAggregateOnOuterDimension: public GridAggregationBase {
+public:
     /** Create the new Grid from the template proto... we'll
      * have the same name, dimension and attributes.
      * @param proto  template to use, will be the aggVar from the FIRST member dataset!
@@ -92,9 +89,7 @@ namespace agg_util
      *                  matches rank and maps, etc!!
      * @param loaderProto loaded template to use (borrow dhi from) to load the datasets
      */
-    GridAggregateOnOuterDimension(const Grid& proto,
-        const Dimension& newDim,
-        const AMDList& memberDatasets,
+    GridAggregateOnOuterDimension(const Grid& proto, const Dimension& newDim, const AMDList& memberDatasets,
         const DDSLoader& loaderProto);
 
     GridAggregateOnOuterDimension(const GridAggregateOnOuterDimension& proto);
@@ -105,7 +100,8 @@ namespace agg_util
 
     GridAggregateOnOuterDimension& operator=(const GridAggregateOnOuterDimension& rhs);
 
-  protected: // Subclass Impl
+protected:
+    // Subclass Impl
 
     /**
      * For the data array and all maps, transfer the constraints
@@ -116,37 +112,37 @@ namespace agg_util
      * subgrid, so the first one on this will clearly be skipped.
      *
      * @param pToGrid
-    */
+     */
     virtual void transferConstraintsToSubGridHook(Grid* pSubGrid);
 
     virtual const Dimension& getAggregationDimension() const;
 
-
-  private: // helpers
+private:
+    // helpers
 
     /** Duplicate just the local data rep */
     void duplicate(const GridAggregateOnOuterDimension& rhs);
 
     /** Delete any heap memory */
-    void cleanup() throw();
+    void cleanup() throw ();
 
     /**
-      * Helper for constructor to create replace our data array
-      * with an ArrayAggregateOnOuterDimension based on memberDatasets.
-      * @param memberDatasets the dataset description for this agg.
+     * Helper for constructor to create replace our data array
+     * with an ArrayAggregateOnOuterDimension based on memberDatasets.
+     * @param memberDatasets the dataset description for this agg.
      */
     void createRep(const AMDList& memberDatasets);
-
 
     // Local helpers called from transferConstraintsToSubGridMapsHook()
     void transferConstraintsToSubGridMaps(Grid* pSubGrid);
     void transferConstraintsToSubGridArray(Grid* pSubGrid);
 
-  private: // data rep
+private:
+    // data rep
     // The new outer dimension description
     Dimension _newDim;
 
-  };
+};
 
 }
 
