@@ -167,7 +167,7 @@ public:
      * Probably not needed by users, but in case they want to catch an exception
      * and then retry or something
      */
-    void cleanup() throw ();
+    void cleanup();
 
     //////////////////////// Public Class Methods ////////////////////////////////////////////////////////////////
 
@@ -218,7 +218,7 @@ private:
     /** Make sure we clean up anything we've touched.
      * On exit, everything should be in the same state as construction.
      */
-    void ensureClean() throw ();
+    void ensureClean();
 
     /** Increment _gensymID and use it to generate a container name
      * string unique to the class and return it.

@@ -70,7 +70,7 @@ int RCObject::ref() const
     return _count;
 }
 
-int RCObject::unref() const throw ()
+int RCObject::unref() const
 {
     int tmp = --_count; // need tmp since might delete and need _count valid at end
     if (tmp == 0) {

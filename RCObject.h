@@ -198,7 +198,7 @@ public:
      *
      * const since the reference count is not part of the semantic constness of the rep
      */
-    virtual int unref() const throw ();
+    virtual int unref() const;
 
     /** Get the current reference count */
     virtual int getRefCount() const;
