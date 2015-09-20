@@ -1,3 +1,15 @@
+Version 1.3.0 (19 Sept 2015)
+
+This version specializes the serialization of values - normally
+handled by libdap - so that the results of arge aggregations are
+streamed back to clients as soon as any data are available. This
+typically means as soon as the first 'granule' is read. This change
+drops response latency significantly, often to a fraction of a second.
+
+This version also frees memory for serialized data as soon as
+possible, dramtically lowering the memory footprint of the server for
+aggregations.
+
 Version 1.2.4 (22 April 2014)
 
 Bug fixes for clang vs gnu compilation 
