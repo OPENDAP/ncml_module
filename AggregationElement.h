@@ -212,6 +212,11 @@ private:
      */
     void loadDimensionCacheFromCacheFile(agg_util::AMDList& rGranuleList);
 
+    /** Save the cached Dimension objects stored in each of the rGrnauleList entries
+     * using a BESFileLockingCache instance.
+     */
+    void cacheGranulesDimensions(agg_util::AMDList& rGranuleList);
+
     /** false if _datasets.empty() */
     bool doesFirstGranuleSpecifyNcoords() const;
 

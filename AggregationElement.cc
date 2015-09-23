@@ -647,6 +647,24 @@ void AggregationElement::loadDimensionCacheFromCacheFile(agg_util::AMDList& /* r
     THROW_NCML_INTERNAL_ERROR("loadDimensionCacheFromCacheFile(): impl me!");
 }
 
+
+void AggregationElement::cacheGranulesDimensions(agg_util::AMDList& rGranuleList)
+{
+    BESDEBUG("ncml","AggregationElement::cacheGranulesDimensions() - Caching Aggregation Member Datasets (granules) dimensions. " << endl);
+    BESDEBUG("ncml", "AggregationElement::cacheGranulesDimensions() - There are " << rGranuleList.size() << " granules." << endl);
+    AMDList::iterator endIt = rGranuleList.end();
+    for (AMDList::iterator it = rGranuleList.begin(); it != endIt; ++it) {
+    	// AggMemberDataset *amd = (*it);
+        BESDEBUG("ncml", "AggregationElement::cacheGranulesDimensions() - Caching joinExisting dimension for: " << (*it)->getLocation() << "..." << endl);
+        (*it)->saveDimensionCache(cout);
+    }
+    BESDEBUG("ncml", "AggregationElement::cacheGranulesDimensions() - END" << endl);
+}
+
+
+
+
+
 bool AggregationElement::doesFirstGranuleSpecifyNcoords() const
 {
     if (_datasets.size() > 0) {
@@ -712,6 +730,7 @@ void AggregationElement::seedDimensionCacheByQueryOfDatasets(agg_util::AMDList& 
         (*it)->fillDimensionCacheByUsingDataDDS();
         BESDEBUG("ncml", "... done." << endl);
     }
+    // cacheGranulesDimensions(rGranuleList);
 }
 
 // For now, just count up the ncoords...
