@@ -628,7 +628,7 @@ void AggregationElement::fillDimensionCacheForJoinExistingDimension(AMDList& gra
         // 2) Else do the slow load on the dimension cache
         //     and optionally save the cache file out.
         else {
-            // SLOW!  Probably shoudl warn the user.
+            // SLOW!  Probably should warn the user.
             seedDimensionCacheByQueryOfDatasets(granuleList);
         }
     }

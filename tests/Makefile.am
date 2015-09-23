@@ -18,9 +18,9 @@ bes_no_nc_global.conf.modules.in baselines
 
 noinst_DATA = bes.conf bes_no_nc_global.conf
 
-CLEANFILES = $(TESTSUITE) $(srcdir)/package.m4
+CLEANFILES = bes.conf bes_no_nc_global.conf
 
-DISTCLEANFILES = bes.conf bes_no_nc_global.conf atconfig
+DISTCLEANFILES = atconfig
 
 if DAP_MODULES
 BES_CONF_IN = bes.conf.modules.in
@@ -58,6 +58,7 @@ check-local: atconfig atlocal $(srcdir)/package.m4 $(TESTSUITE)
 
 clean-local:
 	test ! -f '$(TESTSUITE)' || $(SHELL) '$(TESTSUITE)' --clean
+	-rm -f $(TESTSUITE) $(srcdir)/package.m4 
 
 # Use the missing script for better error checking on autom4te run.
 AUTOM4TE = $(SHELL) $(top_srcdir)/conf/missing --run autom4te

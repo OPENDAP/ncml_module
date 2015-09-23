@@ -106,6 +106,10 @@ void AggMemberDatasetWithDimensionCacheBase::setDimensionCacheFor(const Dimensio
     Dimension* pExistingDim = findDimension(dim.name);
     if (pExistingDim) {
         if (!throwIfFound) {
+            // This discards the object that was in the vector with this name
+            // and replaces it with the information passed in via 'dim'. NB:
+            // the values of the object referenced by 'dim' are copied into
+            // the object pointed to by 'pExistingDim'.
             *pExistingDim = dim;
         }
         else {
