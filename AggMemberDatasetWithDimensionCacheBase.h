@@ -79,6 +79,23 @@ private:
     void saveDimensionCacheInternal(std::ostream& ostr);
     void loadDimensionCacheInternal(std::istream& istr);
 
+
+//#######################################################################
+/**
+ *  New dimension caching API
+ */
+
+private:
+	std::string getDimensionCacheFileName();
+	void saveDimensionCacheToDiskCache();
+	void loadDimensionCacheFromDiskCache();
+	bool dimensionCacheFileNeedsUpdate();
+public:
+
+	void loadDimensionCache();
+//#######################################################################
+
+
 private:
     // Data Rep
     std::vector<Dimension> _dimensionCache;
