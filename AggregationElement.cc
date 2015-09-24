@@ -53,6 +53,9 @@
 #include "BESDebug.h"
 #include "BESStopWatch.h"
 #include <sstream>
+#include <fstream>
+#include <sys/stat.h>
+
 
 using agg_util::AggregationUtil;
 using agg_util::AggMemberDataset;
@@ -637,27 +640,68 @@ void AggregationElement::fillDimensionCacheForJoinExistingDimension(AMDList& gra
 bool AggregationElement::doesDimensionCacheExist() const
 {
     // TODO
-    BESDEBUG("ncml",
-        "Warning: joinExisting dimension cache" " is not implemented and we'll force a slow load." << endl);
+    // BESDEBUG("ncml","AggregationElement::doesDimensionCacheExist() - WARNING joinExisting dimension cache" " is not implemented and we'll force a slow load." << endl);
+    BESDEBUG("ncml","AggregationElement::doesDimensionCacheExist() - WARNING Returning true without checking anything." << endl);
+
+
+    struct stat buf;
+    if (stat( "/tmp/ncml_dim_cache_TEST", &buf) != -1)
+    {
+        return true;
+    }
     return false;
+
 }
 
-void AggregationElement::loadDimensionCacheFromCacheFile(agg_util::AMDList& /* rGranuleList */)
+void AggregationElement::loadDimensionCacheFromCacheFile(agg_util::AMDList&  rGranuleList )
 {
-    THROW_NCML_INTERNAL_ERROR("loadDimensionCacheFromCacheFile(): impl me!");
+    string cacheName = "/tmp/ncml_dim_cache_TEST";
+    BESDEBUG("ncml", "AggregationElement::loadDimensionCacheFromCacheFile() - Cache Filename: " << cacheName << endl);
+
+
+    std::fstream fs (cacheName.c_str(), std::fstream::in);
+
+    if(fs.bad()){
+        BESDEBUG("ncml", "AggregationElement::loadDimensionCacheFromCacheFile() - OUCH! Failed to open " << cacheName << endl);
+    }
+    else {
+		AMDList::iterator endIt = rGranuleList.end();
+		for (AMDList::iterator it = rGranuleList.begin(); it != endIt; ++it) {
+			// AggMemberDataset *amd = (*it);
+			BESDEBUG("ncml", "AggregationElement::loadDimensionCacheFromCacheFile() - Loading joinExisting dimension for: " << (*it)->getLocation() << "..." << endl);
+			(*it)->loadDimensionCache(fs);
+		}
+    }
+    fs.close();
+
+
+
 }
 
 
-void AggregationElement::cacheGranulesDimensions(agg_util::AMDList& rGranuleList)
+void AggregationElement::cacheGranulesDimensions(agg_util::AMDList& rGranuleList) const
 {
     BESDEBUG("ncml","AggregationElement::cacheGranulesDimensions() - Caching Aggregation Member Datasets (granules) dimensions. " << endl);
     BESDEBUG("ncml", "AggregationElement::cacheGranulesDimensions() - There are " << rGranuleList.size() << " granules." << endl);
-    AMDList::iterator endIt = rGranuleList.end();
-    for (AMDList::iterator it = rGranuleList.begin(); it != endIt; ++it) {
-    	// AggMemberDataset *amd = (*it);
-        BESDEBUG("ncml", "AggregationElement::cacheGranulesDimensions() - Caching joinExisting dimension for: " << (*it)->getLocation() << "..." << endl);
-        (*it)->saveDimensionCache(cout);
+
+    string cacheName = "/tmp/ncml_dim_cache_TEST";
+    BESDEBUG("ncml", "AggregationElement::cacheGranulesDimensions() - Cache Filename: " << cacheName << endl);
+
+    std::fstream fs (cacheName.c_str(), std::fstream::out | std::fstream::trunc);
+
+    if(fs.fail()){
+        BESDEBUG("ncml", "AggregationElement::cacheGranulesDimensions() - OUCH! Failed to open " << cacheName << endl);
     }
+    else {
+		AMDList::iterator endIt = rGranuleList.end();
+		for (AMDList::iterator it = rGranuleList.begin(); it != endIt; ++it) {
+			// AggMemberDataset *amd = (*it);
+			BESDEBUG("ncml", "AggregationElement::cacheGranulesDimensions() - Caching joinExisting dimension for: " << (*it)->getLocation() << "..." << endl);
+			(*it)->saveDimensionCache(fs);
+		}
+    }
+    fs.close();
+
     BESDEBUG("ncml", "AggregationElement::cacheGranulesDimensions() - END" << endl);
 }
 
@@ -730,7 +774,7 @@ void AggregationElement::seedDimensionCacheByQueryOfDatasets(agg_util::AMDList& 
         (*it)->fillDimensionCacheByUsingDataDDS();
         BESDEBUG("ncml", "... done." << endl);
     }
-    // cacheGranulesDimensions(rGranuleList);
+    cacheGranulesDimensions(rGranuleList);
 }
 
 // For now, just count up the ncoords...

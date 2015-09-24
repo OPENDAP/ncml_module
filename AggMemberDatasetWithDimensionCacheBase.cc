@@ -49,7 +49,7 @@ static const string DEBUG_CHANNEL("agg_util");
 namespace agg_util {
 
 // Used to init the DimensionCache below with an estimated number of dimensions
-static const unsigned int DIMENSION_CACHE_INITIAL_SIZE = 4;
+static const unsigned int DIMENSION_CACHE_INITIAL_SIZE = 0;
 
 AggMemberDatasetWithDimensionCacheBase::AggMemberDatasetWithDimensionCacheBase(const std::string& location) :
     AggMemberDataset(location), _dimensionCache(DIMENSION_CACHE_INITIAL_SIZE)
@@ -247,16 +247,20 @@ void AggMemberDatasetWithDimensionCacheBase::loadDimensionCacheInternal(std::ist
 
     unsigned int n = 0;
     istr >> n >> ws;
+    BESDEBUG("ncml", "AggMemberDatasetWithDimensionCacheBase::loadDimensionCacheInternal() - n: " << n << endl);
     for (unsigned int i = 0; i < n; ++i) {
         Dimension newDim;
         istr >> newDim.name >> ws;
+        BESDEBUG("ncml", "AggMemberDatasetWithDimensionCacheBase::loadDimensionCacheInternal() - newDim.name: " << newDim.name << endl);
         istr >> newDim.size >> ws;
-        if (istr.failbit) {
+        BESDEBUG("ncml", "AggMemberDatasetWithDimensionCacheBase::loadDimensionCacheInternal() - newDim.size: " << newDim.size << endl);
+        if (istr.bad()) {
             // Best we can do is throw an internal error for now.
             // Perhaps later throw something else that causes a
             // recreation of the cache
             THROW_NCML_INTERNAL_ERROR("Parsing dimension cache failed to deserialize from stream.");
         }
+        _dimensionCache.push_back(newDim);
     }
 }
 
