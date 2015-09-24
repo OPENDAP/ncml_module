@@ -267,8 +267,6 @@ NCMLUtil::getDDSFromEitherResponse(BESDapResponse* response)
         pDDS = 0; // return null on error
     }
 
-    BESDEBUG("ncml_attr", "DDS' global table contains " << pDDS->get_attr_table().get_size() << " attributes." << endl);
-
     return pDDS;
 }
 

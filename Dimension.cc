@@ -76,6 +76,7 @@ std::istream& operator>>(std::istream& is, Dimension& dim)
     return is;
 }
 
+#if 0
 bool DimensionTable::findDimension(const std::string& name, Dimension* pOut) const
 {
     bool foundIt = false;
@@ -108,5 +109,6 @@ DimensionTable::getDimensions() const
 {
     return _dimensions;
 }
+#endif
 
 }

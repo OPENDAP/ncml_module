@@ -1,3 +1,293 @@
+2015-09-17  James Gallagher  <jgallagher@opendap.org>
+
+	Fixes for issues found by Coverity
+
+2015-09-11  James Gallagher  <jgallagher@opendap.org>
+
+	Merge branch 'pipelining' to master
+
+	Fixed Makefile.am in tests so distcheck works
+
+2015-08-27  James Gallagher  <jgallagher@opendap.org>
+
+	Changes to match the Parallel I/O code refactor in libdap.
+
+2015-08-24  James Gallagher  <jgallagher@opendap.org>
+
+	Use parallel I/O interface of Marshaller in the PIPELINING code
+
+2015-08-21  Nathan Potter  <ndp@opendap.org>
+
+	Disabled prototype code for correctly renaming structures and
+	grids without 'prereading' their data. The protoype implmentation
+	is incomplete and not used.
+
+2015-08-19  Nathan Potter  <ndp@opendap.org>
+
+	Merged github for James' changes.
+
+	 merged from github
+
+2015-08-19  James Gallagher  <jgallagher@opendap.org>
+
+	Another fix for set_read_p() in the Array aggregation classes.
+
+	Fixed a minor error in the Array aggregation classes
+	The read_p predicate was not set correctly in the !PIPELINING
+	case and clear_local_data() was called when libdap::Array::serialize()
+	would have done it.
+
+2015-08-19  Nathan Potter  <ndp@opendap.org>
+
+	Added triggers (delete calls) for the global timing variables so
+	that time to first read and time to first transmit are computed.
+
+2015-08-18  James Gallagher  <jgallagher@opendap.org>
+
+	Removed unused code in AggregationUtil; added instrumentation
+	...to my new 'pipelining' code so I can see it getting called.
+	I can, it is. Remove this once we merge.
+
+	Put calls to clear_local_data() back in the code - were lost in
+	the shuffle During the merge of the master branch to this branch,
+	I lost the calls to clear_local_data() that were put inthe
+	overloaded serialize() methods in the ArrayAggregation... classes.
+	I've added them back, in the correct places I hope.
+
+	Added a commet and the new pipelining serialize()
+
+	Pipelining for Grids now works.
+
+	Code formatting in GridAgg...
+
+	JoinExisting aggregations now support pipelining
+
+	Comment updates plus one minor fix to use code in AggregationUtil
+	The later ensures a small memory footprint when code calls the
+	read() method (which will read the entire data for an aggregated
+	variable into memory).
+
+	Merge branch 'master' into double_buffer
+	 Conflicts:
+		NCMLArray.h
+		RenamedArrayWrapper.cc
+		RenamedArrayWrapper.h
+	There were many conflicts in the latter two files, so I used
+	'git checkout master -- RenamedArrayWrapper.cc' (also for the .h)
+	to simply pull the versions from the current master branch. The
+	code passes all its tests.
+
+	Modified ArrayAggregateOnOuterDimension::serialize() so it works!
+	The new code handles the case when code in
+	GridAggregateOnOuterDimension calls ArrayAgg...::read(). We can
+	fix teh GridAgg... code later but this gets all the tests working
+	and the improvement of interleaved reads and writes in place for
+	at least the tests for 'pure' arrays. (join new aggregations
+	only).
+
+2015-08-17  Nathan Potter  <ndp@opendap.org>
+
+	Empty commit to end a failed merge
+
+	Merge branch 'serialize_n_release'
+
+2015-08-17  James Gallagher  <jgallagher@opendap.org>
+
+	Checkpoint: more work on interleaving data reads and writes
+
+2015-08-17  Nathan Potter  <ndp@opendap.org>
+
+	Somehow git wants me to commit a file that I don't understand why - nthgin ahs changed. meh.
+
+	Removed expected failures of the BES-7 (Werpy's) bug. Now all tests pass correctly.
+
+2015-08-14  Nathan Potter  <ndp@opendap.org>
+
+	Fixed ncml_module::RenamedArrayWrapper to correctly override the libdap:Vector::value() and  libdap:Vector::set_value() methods. This was accomplished by making the use of templates in libdap::Vector private and adding virtual functions for all of the various overloaded versions of libdap::Vector::value() and libdap::Vector::set_value (one version for each DAP atomic type). This fixes the JSON output for renamed array's, but unfortunately not the ascii output.
+
+2015-08-13  James Gallagher  <jgallagher@opendap.org>
+
+	Interleaved reads and accumulation for Join New
+	The code in ArrayAggregateOnOuterDimension::serialize() is close to
+	providing interleaved (file) read / (socket) write behavior. Some
+	aspects of libdap are not cooperating, but that's all. In particular,
+	Marshaller::put_vector() is limited by its baskic design of writing
+	the array size and data atomically. For this modification to the NCML
+	handler, we need to write the size of the data blob to be sent and
+	then make several calls to write the actual data.
+
+	Reformatting and simple modifications in preparation for double buffering
+	I reformated more of the source files, using hte OPeNDAP_Eclipse...xml
+	settings and changed how NCMLRequestHandler.cc builds the DDS response
+	to match the simpler way it builds the DataDDS response.
+
+2015-08-12  Nathan Potter  <ndp@opendap.org>
+
+	Added instrumentation
+
+	Added instrumentation
+
+	Added a crucial call to clear_local_data()
+
+2015-08-12  James Gallagher  <jgallagher@opendap.org>
+
+	Swapped back into the code the modified/refactored RenamedArrayWrapper class
+
+	Merge branch 'master' of https://github.com/opendap/ncml_module
+
+	I moved unused classes to the 'not_used' directory
+
+	I reformated about 80% of the .cc and .h files fr readability
+	...using the OPeNDAP_Eclipse_C_Formatting.xml setting that I added
+	to the bes repo. If only I could eclpse to reformat all the files.
+
+	I reverted the RenameArrayWrapper class changes, saving them in files named *.modified
+
+2015-08-10  Nathan Potter  <ndp@opendap.org>
+
+	Disabled cruft code, comments
+
+2015-08-06  Nathan Potter  <ndp@opendap.org>
+
+	Removed NCMLBaseArray::createFromArray() method from code base.
+
+2015-08-05  Nathan Potter  <ndp@opendap.org>
+
+	Second pass at cleaning up RenamedArrayWrapper class
+
+	Second pass at cleaning up RenamedArrayWrapper class
+
+	First cut at cleaning up RenamedArrayWrapper class
+
+	Documentation...
+
+2015-08-04  James Gallagher  <jgallagher@opendap.org>
+
+	Fixed package.m4 in the autoconf dirs Makefile.am files
+
+2015-07-30  Nathan Potter  <ndp@opendap.org>
+
+	Started on code to handle the renaming of complex types.
+
+	Added debugging keyword control to the preloading of renamed arrays. Keyword is no_preload_for_renamed_arrays
+
+2015-07-24  Nathan Potter  <ndp@opendap.org>
+
+	Added OS-X .DS_Store to the ignore list
+
+	Added OS-X .DS_Store to the ignore list
+
+	Post serialization call to clear_local_data() now runtime switchable
+
+2015-07-22  Nathan Potter  <ndp@opendap.org>
+
+	Added call to clear_local_data() post serialization. This can be controled by adding the debug flag clear_local_data
+
+2015-07-09  James Gallagher  <jgallagher@opendap.org>
+
+	Fixed forward class decl
+	Use namespace libdap { class ...; } and not libdap::...
+
+	Merge branch 'master' of https://github.com/opendap/ncml_module
+
+	Added files related to agg performance improvements
+
+	Fixed the URL in joinNew_scan_dfm.ncml
+
+2015-07-09  Nathan Potter  <ndp@opendap.org>
+
+	More instrumentation. I think with this all major activities are now inside timing blocks.
+
+2015-07-06  James Gallagher  <jgallagher@opendap.org>
+
+	Merge branch 'timing_instrumentation'
+
+	Added a call to xmlCleanupParser in the module's terminate() function.
+	This fixes a memory leak that is not really that big a deal,
+	bug why not fix it? The leak is for a constant amount of
+	memory per-process (I think) and the only real issue is if
+	that's not true or if we might initialize the library more
+	than once. Anyway, it's called now by NCMLModule's terminate
+	and also in the server abnd besstandalone App code.
+
+	Arrgh... bungled the name change of (now) valgrind_osx_libxml_bes.txt
+
+	Fiddled with the valgrind suppression files for OSX
+
+2015-07-03  James Gallagher  <jgallagher@opendap.org>
+
+	Merge branch 'timing_instrumentation'
+	Had to fix an errant change to DDSLoader made back in the
+	timing_leaks_fixes (local) branch that was then merged to
+	timing_instrumentation before being merged to master. Gads.
+
+	Mistake fixed: Broken version of DDSLoader fixed
+	On the timing_leak_fixes local branch I commited (and then merged that
+	branch to timing_instr...) a version of DDSLoader that used
+	Request_handler-->TheList()->execute_each() instead of
+	...->execute_current(). Fixed. So, now this code passes it's tests
+	again, and the leak I found in DDSLoader is patched.
+
+	Revert "Fixed a memory leak in DDSLoader"
+	This reverts commit 5f8f1addc64abcdd03fc89aa5c9cabfd0b11cf94.
+	I merged my timing_memory_leak branch back into the
+	timing_instrumentation branch and then merged that back into
+	the master. Not so good. I'm hoping this 'git revert' will get
+	us back to having the master branch pass its tests. I can then
+	sort out the problems on the timing_instr... branch.
+
+2015-07-02  James Gallagher  <jgallagher@opendap.org>
+
+	Fixed a memory leak in DDSLoader
+
+2015-06-30  James Gallagher  <jgallagher@opendap.org>
+
+	Fixed a leak in DDSLoader
+	The BESContainerVolatileStorage::look_for() method returns a
+	pointer to a copy of the BESContainer but this code was not
+	recording that so it could delete it later on. I also added a
+	small aggregation to test for leaks and a valgrind suppressions
+	file to cut down on the noise from valgrind on OSX 10.10 and
+	from the BES (which still does not completely cleanup after
+	itself).
+
+2015-06-12  Nathan Potter  <ndp@opendap.org>
+
+	More instrumentation tweaks for AWS system.
+
+	More instrumentation tweaks for AWS system.
+
+	More instrumentation tweaks for AWS system.
+
+	More instrumentation for AWS.
+
+	Toned the ncml debug ouput by changing the key for dumping the Data Handler Interface to the log
+
+2015-06-03  Nathan Potter  <ndp@opendap.org>
+
+	Timing Instrumentation.
+
+2015-05-22  Nathan Potter  <ndp@opendap.org>
+
+	Merge branch 'master' of https://github.com/opendap/ncml_module
+
+	Added new BESStopWatch support.
+
+2015-05-14  James Gallagher  <jgallagher@opendap.org>
+
+	Replaced the call to mktemp with one that calls mkstemps()
+	From a bug report by O. Poplawski. The new code to make a
+	temp file using mkstemps() is in libdap::util.cc
+
+2015-04-09  James Gallagher  <jgallagher@opendap.org>
+
+	Merge branch 'master' of https://github.com/opendap/ncml_module
+
+	Modified Makefile.am to support bes distcheck
+
+2015-04-06  James Gallagher  <jgallagher@opendap.org>
+
+	version 1.2.5
 2015-03-31  James Gallagher  <jgallagher@opendap.org>
 
 	Added to gitignore

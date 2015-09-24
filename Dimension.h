@@ -75,6 +75,7 @@ std::ostream& operator<<(std::ostream& os, const Dimension& dim);
 /* Read back in */
 std::istream& operator>>(std::istream& is, Dimension& dim);
 
+#if 0
 /** Container class for a table of dimensions for a given dataset */
 class DimensionTable {
 public:
@@ -99,7 +100,7 @@ public:
 private:
     std::vector<Dimension> _dimensions;
 };
-
+#endif
 }
 
 #endif /* __AGG_UTIL__DIMENSION_H__ */

@@ -645,9 +645,9 @@ void AggregationElement::fillDimensionCacheForJoinExistingDimension(AMDList& gra
         // 2) Else do the slow load on the dimension cache
         //     and optionally save the cache file out.
         else {
-            // SLOW!  Probably shoudl warn the user.
         	BESStopWatch sw;
             if (BESISDEBUG(TIMING_LOG)) sw.start("BUILD_AGGREGATION_DIMENSIONS_CACHE", "");
+            // SLOW!  Probably should warn the user.
             seedDimensionCacheByQueryOfDatasets(granuleList);
         }
         */

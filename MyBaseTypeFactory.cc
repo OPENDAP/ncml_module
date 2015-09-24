@@ -104,10 +104,7 @@ auto_ptr<libdap::BaseType> MyBaseTypeFactory::makeVariable(const libdap::Type& t
         break;
 
     case dods_array_c:
-        THROW_NCML_INTERNAL_ERROR(
-            "MyBaseTypeFactory::makeVariable(): no longer can make Array, instead use Array<T> form!")
-        ;
-        return auto_ptr<BaseType>(_spFactory->NewArray(name));
+        THROW_NCML_INTERNAL_ERROR("MyBaseTypeFactory::makeVariable(): no longer can make Array, instead use Array<T> form!");
         break;
 
     case dods_structure_c:

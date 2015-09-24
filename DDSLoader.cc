@@ -209,7 +209,7 @@ void DDSLoader::loadInto(const std::string& location, ResponseType type, BESDapR
     ensureClean();
 }
 
-void DDSLoader::cleanup() throw ()
+void DDSLoader::cleanup()
 {
     ensureClean();
 }
@@ -316,7 +316,7 @@ void DDSLoader::restoreDHI()
     _hijacked = false;
 }
 
-void DDSLoader::ensureClean() throw ()
+void DDSLoader::ensureClean()
 {
     // If we're still hijacked here, there was an exception in load, so clean
     // up if needed.
