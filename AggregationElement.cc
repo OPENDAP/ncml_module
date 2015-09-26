@@ -633,7 +633,8 @@ void AggregationElement::fillDimensionCacheForJoinExistingDimension(AMDList& gra
 			(*it)->loadDimensionCache();
 		}
 
-		/*
+#if 0
+		// OLD WAY
 
         // If there is NOT an ncoords for all, then:
         // 1) If there's a dimension cache file, load it.
@@ -650,7 +651,8 @@ void AggregationElement::fillDimensionCacheForJoinExistingDimension(AMDList& gra
             // SLOW!  Probably should warn the user.
             seedDimensionCacheByQueryOfDatasets(granuleList);
         }
-        */
+#endif
+
     }
 }
 

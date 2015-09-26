@@ -242,7 +242,7 @@ void AggMemberDatasetWithDimensionCacheBase::saveDimensionCacheInternal(std::ost
 
 void AggMemberDatasetWithDimensionCacheBase::loadDimensionCacheInternal(std::istream& istr)
 {
-    BESDEBUG("agg_util", "Loading dimension cache for dataset location = " << getLocation() << " ..." << endl);
+    BESDEBUG("agg_util", "Loading dimension cache for dataset location = " << getLocation() << endl);
 
     // Read in the location string
     std::string loc;
@@ -281,7 +281,7 @@ void AggMemberDatasetWithDimensionCacheBase::loadDimensionCacheInternal(std::ist
 //################################### NEW DIMENSION CACHE API ########################################
 
 #define CACHE_DIR "/tmp"
-#define CACHE_FILE_PREFIX "/ncml_dimension_cache"
+#define CACHE_FILE_PREFIX "/ncml_dimension_cache-"
 
 
 /**
