@@ -26,24 +26,29 @@
 //
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
+#include <sstream>
+#include <fstream>
+#include <sys/stat.h>
+
+#include "AggregationElement.h"
+#include "AggMemberDatasetUsingLocationRef.h" // agg_util
+#include "AggMemberDatasetSharedDDSWrapper.h" // agg_util
+#include "AggregationUtil.h" // agg_util
+#include "ArrayAggregateOnOuterDimension.h" // agg_util
+#include "ArrayJoinExistingAggregation.h" // agg_util
+#include "GridAggregateOnOuterDimension.h" // agg_util
+#include "GridJoinExistingAggregation.h" // agg_util
+#include "AggMemberDatasetDimensionCache.h"
 
 #include "config.h"
 
 #include <AttrTable.h> // libdap
-#include "AggMemberDatasetUsingLocationRef.h" // agg_util
-#include "AggMemberDatasetSharedDDSWrapper.h" // agg_util
-#include "AggregationElement.h"
-#include "AggregationUtil.h" // agg_util
 #include <Array.h> // libdap
-#include "ArrayAggregateOnOuterDimension.h" // agg_util
-#include "ArrayJoinExistingAggregation.h" // agg_util
 #include <AttrTable.h> // libdap
 #include "DDSAccessInterface.h" // agg_util
 #include "Dimension.h" // agg_util
 #include "DimensionElement.h"
 #include <Grid.h> // libdap
-#include "GridAggregateOnOuterDimension.h" // agg_util
-#include "GridJoinExistingAggregation.h" // agg_util
 #include "MyBaseTypeFactory.h"
 #include "NCMLBaseArray.h"
 #include "NCMLDebug.h"
@@ -52,9 +57,7 @@
 #include "ScanElement.h"
 #include "BESDebug.h"
 #include "BESStopWatch.h"
-#include <sstream>
-#include <fstream>
-#include <sys/stat.h>
+
 
 
 using agg_util::AggregationUtil;
@@ -626,11 +629,25 @@ void AggregationElement::fillDimensionCacheForJoinExistingDimension(AMDList& gra
     	BESStopWatch sw;
         if (BESISDEBUG(TIMING_LOG)) sw.start("LOAD_AGGREGATION_DIMENSIONS_CACHE", "");
 
+    	agg_util::AggMemberDatasetDimensionCache *aggDimCache = agg_util::AggMemberDatasetDimensionCache::get_instance();
+
 		AMDList::iterator endIt = granuleList.end();
 		for (AMDList::iterator it = granuleList.begin(); it != endIt; ++it) {
-			// AggMemberDataset *amd = (*it);
-			BESDEBUG("ncml", "AggregationElement::loadDimensionCacheFromCacheFile() - Loading joinExisting dimension for: " << (*it)->getLocation() << "..." << endl);
+			AggMemberDataset *amd = (*it).get();
+			if(aggDimCache) {
+				BESDEBUG("ncml", "AggregationElement::fillDimensionCacheForJoinExistingDimension() - Loading dimension cache for: " << (*it)->getLocation() << "..." << endl);
+				aggDimCache->loadDimensionCache(amd);
+			}
+			else {
+				BESDEBUG("ncml", "AggregationElement::fillDimensionCacheForJoinExistingDimension() - " <<
+						"WARNING NcML Dimension Caching is not configured or is not working! Loading dimensions from DDS for dataset: " <<
+						(*it)->getLocation() << "" << endl);
+				amd->fillDimensionCacheByUsingDataDDS();
+			}
+#if 0
+			BESDEBUG("ncml", "AggregationElement::loadDimensionCacheFromCacheFile() - Loading joinExisting dimension for: " << (*it)->getLocation()  << endl);
 			(*it)->loadDimensionCache();
+#endif
 		}
 
 #if 0
@@ -714,6 +731,7 @@ void AggregationElement::seedDimensionCacheFromUserSpecs(agg_util::AMDList& rGra
     NCML_ASSERT(amdIt == rGranuleList.end());
 }
 
+#if 0
 void AggregationElement::seedDimensionCacheByQueryOfDatasets(agg_util::AMDList& rGranuleList) const
 {
     BESDEBUG("ncml",
@@ -727,6 +745,7 @@ void AggregationElement::seedDimensionCacheByQueryOfDatasets(agg_util::AMDList& 
     }
     cacheGranulesDimensions(rGranuleList);
 }
+#endif
 
 // For now, just count up the ncoords...
 void AggregationElement::addNewDimensionForJoinExisting(const agg_util::AMDList& rGranuleList)
@@ -1568,7 +1587,7 @@ vector<string> AggregationElement::getValidAttributes()
 //########################################################################################
 //########################################################################################
 //########################################################################################
-
+#if 0
 #define CACHE_FILE_NAME "/tmp/ncml_dim_cache_TEST"
 bool AggregationElement::doesDimensionCacheExist() const
 {
@@ -1637,7 +1656,7 @@ void AggregationElement::cacheGranulesDimensions(agg_util::AMDList& rGranuleList
     BESDEBUG("ncml", "AggregationElement::cacheGranulesDimensions() - END" << endl);
 }
 
-
+#endif
 
 
 

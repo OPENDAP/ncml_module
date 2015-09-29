@@ -6,7 +6,7 @@
  */
 
 #include "AggMemberDatasetDimensionCache.h"
-#include "AggMemberDatasetWithDimensionCacheBase.h"
+#include "AggMemberDataset.h"
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -309,7 +309,7 @@ string AggMemberDatasetDimensionCache::get_cache_file_name(const string &local_i
  *
  * @return The local ID (relative to the BES data root directory) of the stored dataset.
  */
-string AggMemberDatasetDimensionCache::loadDimensionCache(AggMemberDatasetWithDimensionCacheBase *amd){
+string AggMemberDatasetDimensionCache::loadDimensionCache(AggMemberDataset *amd){
     BESDEBUG("cache", "AggMemberDatasetDimensionCache::loadDimensionCache() - BEGIN" << endl );
 
     // Get the cache filename for this thing, mangle name.

@@ -13,7 +13,7 @@
 namespace agg_util
 {
 // Forward declaration
-class AggMemberDatasetWithDimensionCacheBase;
+class AggMemberDataset;
 
 class AggMemberDatasetDimensionCache: public BESFileLockingCache
 {
@@ -54,7 +54,8 @@ public:
     // Overrides parent method
     virtual string get_cache_file_name(const string &src, bool mangle = false);
 
-    string loadDimensionCache(AggMemberDatasetWithDimensionCacheBase *amd);
+    // string loadDimensionCache(AggMemberDatasetWithDimensionCacheBase *amd);
+    string loadDimensionCache(AggMemberDataset *amd);
 
 	virtual ~AggMemberDatasetDimensionCache();
 };

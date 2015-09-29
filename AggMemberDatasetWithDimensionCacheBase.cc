@@ -278,10 +278,10 @@ void AggMemberDatasetWithDimensionCacheBase::loadDimensionCacheInternal(std::ist
     }
 }
 
+#if 0
 //####################################################################################################
 //################################### NEW DIMENSION CACHE API ########################################
 
-#if 0
 #define CACHE_DIR "/tmp"
 #define CACHE_FILE_PREFIX "/ncml_dimension_cache-"
 
@@ -413,7 +413,6 @@ bool AggMemberDatasetWithDimensionCacheBase::dimensionCacheFileNeedsUpdate(){
 
 }
 
-#endif
 
 
 /**
@@ -428,7 +427,7 @@ void AggMemberDatasetWithDimensionCacheBase::loadDimensionCache()
 
 	cache->loadDimensionCache(this);
 
-#if 0
+/*
 	if(dimensionCacheFileNeedsUpdate()){
 		fillDimensionCacheByUsingDataDDS();
 		saveDimensionCacheToDiskCache();
@@ -436,8 +435,8 @@ void AggMemberDatasetWithDimensionCacheBase::loadDimensionCache()
 	else {
 		loadDimensionCacheFromDiskCache();
 	}
-#endif
-
+*/
 }
+#endif
 
 }
