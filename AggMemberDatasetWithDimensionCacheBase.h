@@ -85,11 +85,14 @@ private:
  *  New dimension caching API
  */
 
+#if 0
 private:
 	std::string getDimensionCacheFileName();
 	void saveDimensionCacheToDiskCache();
 	void loadDimensionCacheFromDiskCache();
 	bool dimensionCacheFileNeedsUpdate();
+#endif
+
 public:
 
 	void loadDimensionCache();

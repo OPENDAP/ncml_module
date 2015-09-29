@@ -44,3 +44,16 @@ BES.Catalog.catalog.TypeMatch+=ncml:.*\.ncml(\.bz2|\.gz|\.Z)?$;
 #                      ncml documents.
 NCML.TempDirectory=/tmp
 
+#-----------------------------------------------------------------------#
+# NcML Aggregation Dimension Cache Parameters                           #
+#-----------------------------------------------------------------------#
+
+# Directory into which the cache files will be stored.
+NCML.DimensionCache.directory=/tmp
+
+# Filename prefix to be used for the cache files
+NCML.DimensionCache.prefix=ncml_dimension_cache
+
+# This is the size of the cache in megabytes; e.g., 2,000 is a 2GB cache
+NCML.DimensionCache.size=2000
+

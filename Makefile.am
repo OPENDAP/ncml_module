@@ -38,6 +38,7 @@ NCML_SRCS = \
 		AggMemberDatasetSharedDDSWrapper.cc \
 		AggMemberDatasetUsingLocationRef.cc \
 		AggMemberDatasetWithDimensionCacheBase.cc \
+		AggMemberDatasetDimensionCache.cc \
 		AggregationElement.cc \
 		AggregationException.cc \
 		AggregationUtil.cc \
@@ -93,6 +94,7 @@ NCML_HDRS = \
 		AggMemberDatasetSharedDDSWrapper.h \
 		AggMemberDatasetUsingLocationRef.h \
 		AggMemberDatasetWithDimensionCacheBase.h \
+		AggMemberDatasetDimensionCache.h \
 		AggregationElement.h \
 		AggregationException.h \
 		AggregationUtil.h \

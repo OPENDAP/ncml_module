@@ -34,6 +34,7 @@
 #include <sys/stat.h>
 
 #include "AggregationException.h" // agg_util
+#include "AggMemberDatasetDimensionCache.h"
 #include "Array.h" // libdap
 #include "BaseType.h" // libdap
 #include "Constructor.h" // libdap
@@ -280,6 +281,7 @@ void AggMemberDatasetWithDimensionCacheBase::loadDimensionCacheInternal(std::ist
 //####################################################################################################
 //################################### NEW DIMENSION CACHE API ########################################
 
+#if 0
 #define CACHE_DIR "/tmp"
 #define CACHE_FILE_PREFIX "/ncml_dimension_cache-"
 
@@ -411,15 +413,22 @@ bool AggMemberDatasetWithDimensionCacheBase::dimensionCacheFileNeedsUpdate(){
 
 }
 
+#endif
+
+
 /**
  * This method will load this AMD's dimension cache. It will attempt to locate it in the appropriate disk
- * cache file. If that file is missing or older than the source data file for this AMD this will cause the
- * the source data file to be interrogated (via it's DDS) and the dimension cache will be built and then
+ * cache file. If that file is missing or older than the source data file for the AMD this will cause the
+ * the source data file to be interrogated (via it's DDS) and the dimension cache will be (re)built and then
  * saved into the appropriate disk cache file for future use.
  */
 void AggMemberDatasetWithDimensionCacheBase::loadDimensionCache()
 {
+	AggMemberDatasetDimensionCache *cache = AggMemberDatasetDimensionCache::get_instance();
 
+	cache->loadDimensionCache(this);
+
+#if 0
 	if(dimensionCacheFileNeedsUpdate()){
 		fillDimensionCacheByUsingDataDDS();
 		saveDimensionCacheToDiskCache();
@@ -427,6 +436,8 @@ void AggMemberDatasetWithDimensionCacheBase::loadDimensionCache()
 	else {
 		loadDimensionCacheFromDiskCache();
 	}
+#endif
+
 }
 
 }
