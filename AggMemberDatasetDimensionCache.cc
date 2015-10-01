@@ -29,6 +29,7 @@ AggMemberDatasetDimensionCache *AggMemberDatasetDimensionCache::d_instance = 0;
 const string AggMemberDatasetDimensionCache::CACHE_DIR_KEY = "NCML.DimensionCache.directory";
 const string AggMemberDatasetDimensionCache::PREFIX_KEY    = "NCML.DimensionCache.prefix";
 const string AggMemberDatasetDimensionCache::SIZE_KEY      = "NCML.DimensionCache.size";
+// const string AggMemberDatasetDimensionCache::CACHE_CONTROL_FILE  = "ncmlAggDimensions.cache.info";
 
 unsigned long AggMemberDatasetDimensionCache::getCacheSizeFromConfig(){
 
@@ -116,6 +117,7 @@ AggMemberDatasetDimensionCache::AggMemberDatasetDimensionCache()
 
     BESDEBUG("cache", "AggMemberDatasetDimensionCache() - Stored results cache configuration params: " << d_dimCacheDir << ", " << d_dimCacheFilePrefix << ", " << d_maxCacheSize << endl);
 
+  	// initialize(d_dimCacheDir, CACHE_CONTROL_FILE, d_dimCacheFilePrefix, d_maxCacheSize);
   	initialize(d_dimCacheDir, d_dimCacheFilePrefix, d_maxCacheSize);
 
     BESDEBUG("cache", "AggMemberDatasetDimensionCache::AggMemberDatasetDimensionCache() -  END" << endl);
@@ -130,6 +132,7 @@ AggMemberDatasetDimensionCache::AggMemberDatasetDimensionCache(const string &dat
 	d_dimCacheFilePrefix = prefix;
 	d_maxCacheSize = size;
 
+//  	initialize(d_dimCacheDir, CACHE_CONTROL_FILE, d_dimCacheFilePrefix, d_maxCacheSize);
   	initialize(d_dimCacheDir, d_dimCacheFilePrefix, d_maxCacheSize);
 
   	BESDEBUG("cache", "AggMemberDatasetDimensionCache::AggMemberDatasetDimensionCache() -  END" << endl);
@@ -309,7 +312,7 @@ string AggMemberDatasetDimensionCache::get_cache_file_name(const string &local_i
  *
  * @return The local ID (relative to the BES data root directory) of the stored dataset.
  */
-string AggMemberDatasetDimensionCache::loadDimensionCache(AggMemberDataset *amd){
+void AggMemberDatasetDimensionCache::loadDimensionCache(AggMemberDataset *amd){
     BESDEBUG("cache", "AggMemberDatasetDimensionCache::loadDimensionCache() - BEGIN" << endl );
 
     // Get the cache filename for this thing, mangle name.
@@ -405,7 +408,6 @@ string AggMemberDatasetDimensionCache::loadDimensionCache(AggMemberDataset *amd)
     }
 
     BESDEBUG("cache", "AggMemberDatasetDimensionCache::loadDimensionCache() - END (local_id=`"<< local_id << "')" << endl );
-    return local_id;
 
 }
 

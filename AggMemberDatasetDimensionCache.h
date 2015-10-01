@@ -46,6 +46,7 @@ public:
 	static const string CACHE_DIR_KEY;
 	static const string PREFIX_KEY;
 	static const string SIZE_KEY;
+	 // static const string CACHE_CONTROL_FILE;
 
     static AggMemberDatasetDimensionCache *get_instance(const string &bes_catalog_root_dir, const string &stored_results_subdir, const string &prefix, unsigned long long size);
     static AggMemberDatasetDimensionCache *get_instance();
@@ -55,7 +56,7 @@ public:
     virtual string get_cache_file_name(const string &src, bool mangle = false);
 
     // string loadDimensionCache(AggMemberDatasetWithDimensionCacheBase *amd);
-    string loadDimensionCache(AggMemberDataset *amd);
+    void loadDimensionCache(AggMemberDataset *amd);
 
 	virtual ~AggMemberDatasetDimensionCache();
 };
