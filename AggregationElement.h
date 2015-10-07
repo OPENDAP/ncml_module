@@ -203,20 +203,7 @@ private:
      * @param aggDimName  the dimension name for the aggregation
      */
     void fillDimensionCacheForJoinExistingDimension(agg_util::AMDList& granuleList, const std::string& aggDimName);
-#if 0
-    /** Go see if the cache file exists using some magic */
-    bool doesDimensionCacheExist() const;
 
-    /** fill the rGrnauleList entries with numbers saved in the
-     * cache file for this aggregation.
-     */
-    void loadDimensionCacheFromCacheFile(agg_util::AMDList& rGranuleList);
-
-    /** Save the cached Dimension objects stored in each of the rGrnauleList entries
-     * using a BESFileLockingCache instance.
-     */
-    void cacheGranulesDimensions(agg_util::AMDList& rGranuleList) const;
-#endif
     /** false if _datasets.empty() */
     bool doesFirstGranuleSpecifyNcoords() const;
 
@@ -228,15 +215,6 @@ private:
      * ASSUMES:  all entries in _datasets have ncoords specified!
      */
     void seedDimensionCacheFromUserSpecs(agg_util::AMDList& rGranuleList) const;
-
-#if 0
-    /** Force the dimension caches to load by doing a DDX query on them.
-     * SLOW!
-     * @OPTIMIZE Ideally this could be made parallel in the future as well, to
-     * load each one in parallel and save the caches.
-     */
-    void seedDimensionCacheByQueryOfDatasets(agg_util::AMDList& rGranuleList) const;
-#endif
 
     /**
      * Figure out the size of the fully aggregated outer dimension

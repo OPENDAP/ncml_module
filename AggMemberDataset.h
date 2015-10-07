@@ -147,20 +147,6 @@ public:
     /** Load the values in the dimension cache from the input stream */
     virtual void loadDimensionCache(std::istream& istr) = 0;
 
-#if 0
-    /**
-     * Load the values in the dimension cache from the
-     * file locking disk cache if possible. If the cache is missing, or if it's LMT is older
-     * than the source data file's LMT, then interrogate the source data file (via it's DDS)
-     * to build fresh dimension cache, and then write that the to the appropriate file in the
-     * file locking disk cache.
-     */
-    virtual void loadDimensionCache() = 0;
-
-
-    /** Load the values of the dimension cache from the dimension cache file for this dataset */
-    //virtual void loadDimensionCache() = 0;
-#endif
 
 private:
     // data rep
