@@ -15,6 +15,20 @@ namespace agg_util
 // Forward declaration
 class AggMemberDataset;
 
+/**
+ * This child of BESFileLockingCache manifests a cache for the ncml_handler in which
+ * AggMemberDataset's dimension values are stored. This allows the ncml_handler
+ * to make one (slow) pass over the aggregation member dataset list, collect all of the
+ * dimension information anmd cache it. Then, the next time the aggregation is accessed
+ * loading the dimension information from the cache goes lickety-split compared with
+ * the time needed to retrieve the DDSs from the source datasets. (This is especially
+ * true for the hdf4 handler)
+ *
+ * This implementation utilizes the BES.Catalog.catalog.RootDirectory/BES.Data.RootDirectory
+ * to locate the source dataset files in order to verify of the cache is up-to-date
+ * and updates cache components as needed.
+ *
+ */
 class AggMemberDatasetDimensionCache: public BESFileLockingCache
 {
 private:
@@ -50,12 +64,7 @@ public:
 
     static AggMemberDatasetDimensionCache *get_instance(const string &bes_catalog_root_dir, const string &stored_results_subdir, const string &prefix, unsigned long long size);
     static AggMemberDatasetDimensionCache *get_instance();
-    static string assemblePath(const string &firstPart, const string &secondPart, bool addLeadingSlash =  false);
 
-    // Overrides parent method
-    virtual string get_cache_file_name(const string &src, bool mangle = false);
-
-    // string loadDimensionCache(AggMemberDatasetWithDimensionCacheBase *amd);
     void loadDimensionCache(AggMemberDataset *amd);
 
 	virtual ~AggMemberDatasetDimensionCache();

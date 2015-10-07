@@ -31,6 +31,10 @@ const string AggMemberDatasetDimensionCache::PREFIX_KEY    = "NCML.DimensionCach
 const string AggMemberDatasetDimensionCache::SIZE_KEY      = "NCML.DimensionCache.size";
 // const string AggMemberDatasetDimensionCache::CACHE_CONTROL_FILE  = "ncmlAggDimensions.cache.info";
 
+/**
+ * Checks TheBESKeys for the AggMemberDatasetDimensionCache::SIZE_KEY
+ * Returns the value if found, throws an exception otherwise.
+ */
 unsigned long AggMemberDatasetDimensionCache::getCacheSizeFromConfig(){
 
 	bool found;
@@ -49,6 +53,10 @@ unsigned long AggMemberDatasetDimensionCache::getCacheSizeFromConfig(){
     return size_in_megabytes;
 }
 
+/**
+ * Checks TheBESKeys for the AggMemberDatasetDimensionCache::CACHE_DIR_KEY
+ * Returns the value if found, throws an exception otherwise.
+ */
 string AggMemberDatasetDimensionCache::getCacheDirFromConfig(){
 	bool found;
     string subdir = "";
@@ -71,6 +79,10 @@ string AggMemberDatasetDimensionCache::getCacheDirFromConfig(){
 }
 
 
+/**
+ * Checks TheBESKeys for the AggMemberDatasetDimensionCache::PREFIX_KEY
+ * Returns the value if found, throws an exception otherwise.
+ */
 string AggMemberDatasetDimensionCache::getDimCachePrefixFromConfig(){
 	bool found;
     string prefix = "";
@@ -88,6 +100,11 @@ string AggMemberDatasetDimensionCache::getDimCachePrefixFromConfig(){
 }
 
 
+/**
+ * Checks TheBESKeys for BES_CATALOG_ROOT, and failing that for
+ * BES_DATA_ROOT.
+ * Returns the value if found, throws an exception otherwise.
+ */
 string AggMemberDatasetDimensionCache::getBesDataRootDirFromConfig(){
 	bool found;
     string cacheDir = "";
@@ -105,6 +122,9 @@ string AggMemberDatasetDimensionCache::getBesDataRootDirFromConfig(){
 
 }
 
+/**
+ * Builds a instance of the cache object using the values found in TheBESKeys
+ */
 AggMemberDatasetDimensionCache::AggMemberDatasetDimensionCache()
 {
 	BESDEBUG("cache", "AggMemberDatasetDimensionCache::AggMemberDatasetDimensionCache() -  BEGIN" << endl);
@@ -123,6 +143,10 @@ AggMemberDatasetDimensionCache::AggMemberDatasetDimensionCache()
     BESDEBUG("cache", "AggMemberDatasetDimensionCache::AggMemberDatasetDimensionCache() -  END" << endl);
 
 }
+
+/**
+ * Builds a instance of the cache object using the values passed in.
+ */
 AggMemberDatasetDimensionCache::AggMemberDatasetDimensionCache(const string &data_root_dir, const string &cache_dir, const string &prefix, unsigned long long size){
 
 	BESDEBUG("cache", "AggMemberDatasetDimensionCache::AggMemberDatasetDimensionCache() -  BEGIN" << endl);
@@ -139,7 +163,10 @@ AggMemberDatasetDimensionCache::AggMemberDatasetDimensionCache(const string &dat
 }
 
 
-
+/**
+ * Get an instance of this singleton class, if one has not already been built a new one will be built using the passed parameters.
+ * NB: This method is meant for unit tests and is not expected to be utilized during the normal use pattern in the server.
+ */
 AggMemberDatasetDimensionCache *
 AggMemberDatasetDimensionCache::get_instance(const string &data_root_dir, const string &cache_dir, const string &result_file_prefix, unsigned long long max_cache_size)
 {
@@ -147,6 +174,9 @@ AggMemberDatasetDimensionCache::get_instance(const string &data_root_dir, const 
         if (libdap::dir_exists(cache_dir)) {
         	try {
                 d_instance = new AggMemberDatasetDimensionCache(data_root_dir, cache_dir, result_file_prefix, max_cache_size);
+#ifdef HAVE_ATEXIT
+                atexit(delete_instance);
+#endif
         	}
         	catch(BESInternalError &bie){
         	    BESDEBUG("cache", "[ERROR] AggMemberDatasetDimensionCache::get_instance(): Failed to obtain cache! msg: " << bie.get_message() << endl);
@@ -156,8 +186,10 @@ AggMemberDatasetDimensionCache::get_instance(const string &data_root_dir, const 
     return d_instance;
 }
 
-/** Get the default instance of the AggMemberDatasetDimensionCache object. This will read "TheBESKeys" looking for the values
- * of SUBDIR_KEY, PREFIX_KEY, an SIZE_KEY to initialize the cache.
+/**
+ * Get the instance of the singleton AggMemberDatasetDimensionCache object. If one has not yet been built a new
+ * one will be by interrogating "TheBESKeys" looking for the values
+ * of CACHE_DIR_KEY, PREFIX_KEY, and SIZE_KEY to initialize the cache.
  */
 AggMemberDatasetDimensionCache *
 AggMemberDatasetDimensionCache::get_instance()
@@ -165,6 +197,9 @@ AggMemberDatasetDimensionCache::get_instance()
     if (d_instance == 0) {
 		try {
 			d_instance = new AggMemberDatasetDimensionCache();
+#ifdef HAVE_ATEXIT
+            atexit(delete_instance);
+#endif
 		}
 		catch(BESInternalError &bie){
 			BESDEBUG("cache", "[ERROR] AggMemberDatasetDimensionCache::get_instance(): Failed to obtain cache! msg: " << bie.get_message() << endl);
@@ -175,6 +210,9 @@ AggMemberDatasetDimensionCache::get_instance()
 }
 
 
+/**
+ * Deletes the instance of this singleton, Called on exit by atexit()
+ */
 void AggMemberDatasetDimensionCache::delete_instance() {
     BESDEBUG("cache","AggMemberDatasetDimensionCache::delete_instance() - Deleting singleton BESStoredDapResultCache instance." << endl);
     delete d_instance;
@@ -183,13 +221,9 @@ void AggMemberDatasetDimensionCache::delete_instance() {
 
 
 
-
-
-
-
 AggMemberDatasetDimensionCache::~AggMemberDatasetDimensionCache()
 {
-	// TODO Auto-generated destructor stub
+	// Nothing to do here....
 }
 
 /**
@@ -239,78 +273,13 @@ bool AggMemberDatasetDimensionCache::is_valid(const string &cache_file_name, con
     return true;
 }
 
-string AggMemberDatasetDimensionCache::assemblePath(const string &firstPart, const string &secondPart, bool addLeadingSlash){
-
-	//BESDEBUG("cache", "AggMemberDatasetDimensionCache::assemblePath() -  BEGIN" << endl);
-	//BESDEBUG("cache", "AggMemberDatasetDimensionCache::assemblePath() -  firstPart: "<< firstPart << endl);
-	//BESDEBUG("cache", "AggMemberDatasetDimensionCache::assemblePath() -  secondPart: "<< secondPart << endl);
-
-	string firstPathFragment = firstPart;
-	string secondPathFragment = secondPart;
-
-
-	if(addLeadingSlash){
-	    if(*firstPathFragment.begin() != '/')
-	    	firstPathFragment = "/" + firstPathFragment;
-	}
-
-	// make sure there are not multiple slashes at the end of the first part...
-	while(*firstPathFragment.rbegin() == '/' && firstPathFragment.length()>0){
-		firstPathFragment = firstPathFragment.substr(0,firstPathFragment.length()-1);
-		//BESDEBUG("cache", "AggMemberDatasetDimensionCache::assemblePath() -  firstPathFragment: "<< firstPathFragment << endl);
-	}
-
-	// make sure first part ends with a "/"
-    if(*firstPathFragment.rbegin() != '/'){
-    	firstPathFragment += "/";
-    }
-	//BESDEBUG("cache", "AggMemberDatasetDimensionCache::assemblePath() -  firstPathFragment: "<< firstPathFragment << endl);
-
-	// make sure second part does not BEGIN with a slash
-	while(*secondPathFragment.begin() == '/' && secondPathFragment.length()>0){
-		secondPathFragment = secondPathFragment.substr(1);
-	}
-
-	//BESDEBUG("cache", "AggMemberDatasetDimensionCache::assemblePath() -  secondPathFragment: "<< secondPathFragment << endl);
-
-	string newPath = firstPathFragment + secondPathFragment;
-
-	//BESDEBUG("cache", "AggMemberDatasetDimensionCache::assemblePath() -  newPath: "<< newPath << endl);
-	//BESDEBUG("cache", "AggMemberDatasetDimensionCache::assemblePath() -  END" << endl);
-
-	return newPath;
-}
 
 
 /**
- * Returns the full qualified file system path name for the dimension cache file associated with this
- * AMD.
- */
-string AggMemberDatasetDimensionCache::get_cache_file_name(const string &local_id, bool mangle)
-{
-
-	BESDEBUG("cache", "AggMemberDatasetDimensionCache::get_cache_file_name() - Starting with local_id: " << local_id << endl);
-
-	std::string cacheFileName(local_id);
-
-	cacheFileName = assemblePath( getCacheFilePrefix(), cacheFileName);
-
-	if(mangle){
-		std::replace( cacheFileName.begin(), cacheFileName.end(), ' ', '#'); // replace all ' ' with '#'
-		std::replace( cacheFileName.begin(), cacheFileName.end(), '/', '#'); // replace all '/' with '#'
-	}
-
-	cacheFileName = assemblePath( getCacheDirectory(),  cacheFileName,true);
-
-	BESDEBUG("cache","AggMemberDatasetDimensionCache::get_cache_file_name() - cacheFileName: " <<  cacheFileName << endl);
-
-	return cacheFileName;
-}
-
-
-/**
- *
- * @return The local ID (relative to the BES data root directory) of the stored dataset.
+ * Loads the dimensions of the passed  AggMemberDataset. If the dimensions are in the cache, and the cache file
+ * is valid (length>0 and LMT < the LMT of the source dataset file) then the dimensions will be read from the
+ * cache file. Otherwise the source data file will be used to build a DDS from which the dimension can be extracted
+ * and subsequently cached.
  */
 void AggMemberDatasetDimensionCache::loadDimensionCache(AggMemberDataset *amd){
     BESDEBUG("cache", "AggMemberDatasetDimensionCache::loadDimensionCache() - BEGIN" << endl );
