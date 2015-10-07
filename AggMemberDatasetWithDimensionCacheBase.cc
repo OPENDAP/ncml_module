@@ -28,15 +28,20 @@
 /////////////////////////////////////////////////////////////////////////////
 #include "AggMemberDatasetWithDimensionCacheBase.h"
 
+#include <sstream>
+#include <algorithm>
+#include <fstream>
+#include <sys/stat.h>
+
 #include "AggregationException.h" // agg_util
+#include "AggMemberDatasetDimensionCache.h"
 #include "Array.h" // libdap
 #include "BaseType.h" // libdap
 #include "Constructor.h" // libdap
 #include "DataDDS.h" // libdap
 #include "DDS.h" // libdap
 #include "NCMLDebug.h"
-#include <sstream>
-#include <algorithm>
+#include "TheBESKeys.h"
 
 using std::string;
 using libdap::BaseType;
@@ -44,12 +49,16 @@ using libdap::Constructor;
 using libdap::DataDDS;
 using libdap::DDS;
 
+static const string BES_DATA_ROOT("BES.Data.RootDirectory");
+static const string BES_CATALOG_ROOT("BES.Catalog.catalog.RootDirectory");
+
+
 static const string DEBUG_CHANNEL("agg_util");
 
 namespace agg_util {
 
 // Used to init the DimensionCache below with an estimated number of dimensions
-static const unsigned int DIMENSION_CACHE_INITIAL_SIZE = 4;
+static const unsigned int DIMENSION_CACHE_INITIAL_SIZE = 0;
 
 AggMemberDatasetWithDimensionCacheBase::AggMemberDatasetWithDimensionCacheBase(const std::string& location) :
     AggMemberDataset(location), _dimensionCache(DIMENSION_CACHE_INITIAL_SIZE)
@@ -166,6 +175,8 @@ AggMemberDatasetWithDimensionCacheBase::findDimension(const std::string& dimName
             ret = &(*it);
         }
     }
+    BESDEBUG(DEBUG_CHANNEL,"AggMemberDatasetWithDimensionCacheBase::findDimension(dimName="<<dimName<<") -  " << (ret?"Found " + ret->name:"Dimension Not Found") << endl);
+
     return ret;
 }
 
@@ -226,14 +237,15 @@ void AggMemberDatasetWithDimensionCacheBase::saveDimensionCacheInternal(std::ost
     ostr << n << '\n';
     for (unsigned int i = 0; i < n; ++i) {
         const Dimension& dim = _dimensionCache.at(i);
-        // note this assumes the dimension names don't contain spaces.
+        // @TODO This assumes the dimension names don't contain spaces. We should fix this, and the loader, to work with any name.
         ostr << dim.name << '\n' << dim.size << '\n';
     }
 }
 
+
 void AggMemberDatasetWithDimensionCacheBase::loadDimensionCacheInternal(std::istream& istr)
 {
-    BESDEBUG("agg_util", "Loading dimension cache for dataset location = " << getLocation() << " ..." << endl);
+    BESDEBUG("agg_util", "Loading dimension cache for dataset location = " << getLocation() << endl);
 
     // Read in the location string
     std::string loc;
@@ -251,16 +263,20 @@ void AggMemberDatasetWithDimensionCacheBase::loadDimensionCacheInternal(std::ist
 
     unsigned int n = 0;
     istr >> n >> ws;
+    BESDEBUG("ncml", "AggMemberDatasetWithDimensionCacheBase::loadDimensionCacheInternal() - n: " << n << endl);
     for (unsigned int i = 0; i < n; ++i) {
         Dimension newDim;
         istr >> newDim.name >> ws;
+        BESDEBUG("ncml", "AggMemberDatasetWithDimensionCacheBase::loadDimensionCacheInternal() - newDim.name: " << newDim.name << endl);
         istr >> newDim.size >> ws;
-        if (istr.failbit) {
+        BESDEBUG("ncml", "AggMemberDatasetWithDimensionCacheBase::loadDimensionCacheInternal() - newDim.size: " << newDim.size << endl);
+        if (istr.bad()) {
             // Best we can do is throw an internal error for now.
             // Perhaps later throw something else that causes a
             // recreation of the cache
             THROW_NCML_INTERNAL_ERROR("Parsing dimension cache failed to deserialize from stream.");
         }
+        _dimensionCache.push_back(newDim);
     }
 }
 

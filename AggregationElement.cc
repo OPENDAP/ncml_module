@@ -26,24 +26,29 @@
 //
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
+#include <sstream>
+#include <fstream>
+#include <sys/stat.h>
+
+#include "AggregationElement.h"
+#include "AggMemberDatasetUsingLocationRef.h" // agg_util
+#include "AggMemberDatasetSharedDDSWrapper.h" // agg_util
+#include "AggregationUtil.h" // agg_util
+#include "ArrayAggregateOnOuterDimension.h" // agg_util
+#include "ArrayJoinExistingAggregation.h" // agg_util
+#include "GridAggregateOnOuterDimension.h" // agg_util
+#include "GridJoinExistingAggregation.h" // agg_util
+#include "AggMemberDatasetDimensionCache.h"
 
 #include "config.h"
 
 #include <AttrTable.h> // libdap
-#include "AggMemberDatasetUsingLocationRef.h" // agg_util
-#include "AggMemberDatasetSharedDDSWrapper.h" // agg_util
-#include "AggregationElement.h"
-#include "AggregationUtil.h" // agg_util
 #include <Array.h> // libdap
-#include "ArrayAggregateOnOuterDimension.h" // agg_util
-#include "ArrayJoinExistingAggregation.h" // agg_util
 #include <AttrTable.h> // libdap
 #include "DDSAccessInterface.h" // agg_util
 #include "Dimension.h" // agg_util
 #include "DimensionElement.h"
 #include <Grid.h> // libdap
-#include "GridAggregateOnOuterDimension.h" // agg_util
-#include "GridJoinExistingAggregation.h" // agg_util
 #include "MyBaseTypeFactory.h"
 #include "NCMLBaseArray.h"
 #include "NCMLDebug.h"
@@ -52,7 +57,8 @@
 #include "ScanElement.h"
 #include "BESDebug.h"
 #include "BESStopWatch.h"
-#include <sstream>
+
+
 
 using agg_util::AggregationUtil;
 using agg_util::AggMemberDataset;
@@ -620,32 +626,31 @@ void AggregationElement::fillDimensionCacheForJoinExistingDimension(AMDList& gra
     }
     else // look for cached dimension file or load dimensionalities from granules
     {
-        // If there is NOT an ncoords for all, then:
-        // 1) If there's a dimension cache file, load it.
-        if (doesDimensionCacheExist()) {
-            loadDimensionCacheFromCacheFile(granuleList);
-        }
-        // 2) Else do the slow load on the dimension cache
-        //     and optionally save the cache file out.
-        else {
-            // SLOW!  Probably should warn the user.
-            seedDimensionCacheByQueryOfDatasets(granuleList);
-        }
+    	BESStopWatch sw;
+        if (BESISDEBUG(TIMING_LOG)) sw.start("LOAD_AGGREGATION_DIMENSIONS_CACHE", "");
+
+    	agg_util::AggMemberDatasetDimensionCache *aggDimCache = agg_util::AggMemberDatasetDimensionCache::get_instance();
+
+		AMDList::iterator endIt = granuleList.end();
+		for (AMDList::iterator it = granuleList.begin(); it != endIt; ++it) {
+			AggMemberDataset *amd = (*it).get();
+			if(aggDimCache) {
+				BESDEBUG("ncml", "AggregationElement::fillDimensionCacheForJoinExistingDimension() - Loading dimension cache for: " << (*it)->getLocation() << "..." << endl);
+				aggDimCache->loadDimensionCache(amd);
+			}
+			else {
+				BESDEBUG("ncml", "AggregationElement::fillDimensionCacheForJoinExistingDimension() - " <<
+						"WARNING NcML Dimension Caching is not configured or is not working! Loading dimensions from DDS for dataset: " <<
+						(*it)->getLocation() << "" << endl);
+				amd->fillDimensionCacheByUsingDataDDS();
+			}
+		}
     }
 }
 
-bool AggregationElement::doesDimensionCacheExist() const
-{
-    // TODO
-    BESDEBUG("ncml",
-        "Warning: joinExisting dimension cache" " is not implemented and we'll force a slow load." << endl);
-    return false;
-}
 
-void AggregationElement::loadDimensionCacheFromCacheFile(agg_util::AMDList& /* rGranuleList */)
-{
-    THROW_NCML_INTERNAL_ERROR("loadDimensionCacheFromCacheFile(): impl me!");
-}
+
+
 
 bool AggregationElement::doesFirstGranuleSpecifyNcoords() const
 {
@@ -701,18 +706,6 @@ void AggregationElement::seedDimensionCacheFromUserSpecs(agg_util::AMDList& rGra
     NCML_ASSERT(amdIt == rGranuleList.end());
 }
 
-void AggregationElement::seedDimensionCacheByQueryOfDatasets(agg_util::AMDList& rGranuleList) const
-{
-    BESDEBUG("ncml",
-        "WARNING: netcdf@ncoords attribute not specified for the granules in joinExisting." " We will query the granules serially for the dimensions size.  NOTE:  This is " "potentially a very slow operation until cached!" << endl);
-    BESDEBUG("ncml", "We will be loading " << rGranuleList.size() << " granules." << endl);
-    AMDList::iterator endIt = rGranuleList.end();
-    for (AMDList::iterator it = rGranuleList.begin(); it != endIt; ++it) {
-        BESDEBUG("ncml", "Getting joinExisting dimension for: " << (*it)->getLocation() << "..." << endl);
-        (*it)->fillDimensionCacheByUsingDataDDS();
-        BESDEBUG("ncml", "... done." << endl);
-    }
-}
 
 // For now, just count up the ncoords...
 void AggregationElement::addNewDimensionForJoinExisting(const agg_util::AMDList& rGranuleList)
@@ -1550,6 +1543,7 @@ vector<string> AggregationElement::getValidAttributes()
     attrs.push_back("recheckEvery");
     return attrs;
 }
+
 
 }
 ;

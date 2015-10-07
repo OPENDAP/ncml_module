@@ -79,6 +79,7 @@ private:
     void saveDimensionCacheInternal(std::ostream& ostr);
     void loadDimensionCacheInternal(std::istream& istr);
 
+
 private:
     // Data Rep
     std::vector<Dimension> _dimensionCache;

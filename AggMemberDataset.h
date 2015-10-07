@@ -147,6 +147,7 @@ public:
     /** Load the values in the dimension cache from the input stream */
     virtual void loadDimensionCache(std::istream& istr) = 0;
 
+
 private:
     // data rep
     std::string _location; // non-empty location from which to load DataDDS
