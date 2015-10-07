@@ -45,9 +45,11 @@ DAP.Help.XML=@pkgdatadir@/dap_help.txt
 BES.Info.Buffered=no
 BES.Info.Type=xml
 
-BES.CacheDir=/tmp
-BES.CachePrefix=bes_cache
-BES.CacheSize=500
+BES.UncompressCache.dir=@abs_top_srcdir@/modules/ncml_module/tests/cache
+BES.UncompressCache.prefix=uncompress_cache
+BES.UncompressCache.size=500
+BES.Uncompress.Retry=2000
+BES.Uncompress.NumTries=10
 
 BES.Container.Persistence=strict
 
@@ -62,14 +64,22 @@ BES.DefaultResponseMethod=POST
 
 #-----------------------------------------------------------------------#
 #                                                                       #
+# HDF4 parameters                                                       #
+#                                                                       #
+#-----------------------------------------------------------------------#
+# - - Make the HDF4 Handler do CF compliance - - 
+H4.EnableCF=true
+
+#-----------------------------------------------------------------------#
+#                                                                       #
 # Data Handler Specific key/value parameters                            #
 #                                                                       #
 #-----------------------------------------------------------------------#
-NCML.TempDirectory=/tmp
+NCML.TempDirectory=@abs_top_srcdir@/modules/ncml_module/tests/cache
 NCML.GlobalAttributesContainerName=NC_GLOBAL
 
 # Directory into which the cache files will be stored.
-NCML.DimensionCache.directory=/tmp
+NCML.DimensionCache.directory=@abs_top_srcdir@/modules/ncml_module/tests/cache
 
 # Filename prefix to be used for the cache files
 NCML.DimensionCache.prefix=ncml_dimension_cache

@@ -67,13 +67,6 @@ string AggMemberDatasetDimensionCache::getCacheDirFromConfig(){
     	BESDEBUG("cache", msg << endl);
         throw BESInternalError(msg , __FILE__, __LINE__);
 	}
-	else {
-		while(*subdir.begin() == '/' && subdir.length()>0){
-			subdir = subdir.substr(1);
-		}
-		// So if it's value is "/" or the empty string then the subdir will default to the root
-		// directory of the BES data system.
-	}
 
     return subdir;
 }

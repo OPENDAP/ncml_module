@@ -96,7 +96,7 @@ BES.module.ncml=@abs_top_builddir@/.libs/libncml_module.so
 # to change this to point to your data! At this time the BES does not support
 # multiple RootDirectory values. 3/5/07 jhrg
 
-BES.Catalog.catalog.RootDirectory=@abs_top_srcdir@
+BES.Catalog.catalog.RootDirectory=@abs_top_srcdir@/modules/ncml_module
 BES.Data.RootDirectory=/dev/null
 
 # The TypeMatch parameter is a list of handler/module names and a regular
@@ -228,9 +228,9 @@ BES.Info.Type=xml
 # microseconds. If you have really large files (e.g., decompressed they are
 # 500MB), try setting NumTries to 100.
 
-BES.CacheDir=/tmp
-BES.CachePrefix=bes_cache
-BES.CacheSize=500
+BES.UncompressCache.dir=@abs_top_srcdir@/modules/ncml_module/tests/cache
+BES.UncompressCache.prefix=uncompress_cache
+BES.UncompressCache.size=500
 BES.Uncompress.Retry=2000
 BES.Uncompress.NumTries=10
 
@@ -270,13 +270,25 @@ BES.DefaultResponseMethod=POST
 
 #-----------------------------------------------------------------------#
 #                                                                       #
+# HDF4 parameters                                                       #
+#                                                                       #
+#-----------------------------------------------------------------------#
+# - - Make the HDF4 Handler do CF compliance - - 
+H4.EnableCF=true
+
+#-----------------------------------------------------------------------#
+#                                                                       #
 # Data Handler Specific key/value parameters                            #
 #                                                                       #
 #-----------------------------------------------------------------------#
-NCML.TempDirectory=/tmp
-# 
-# This conf file lets us run tests without the global attributes being
-# moved into the NC_GLOBAL container (which the bes.conf file configures
-# the handler to use).
-#
-# NCML.GlobalAttributesContainerName=NC_GLOBAL
+NCML.TempDirectory=@abs_top_srcdir@/modules/ncml_module/tests/cache
+NCML.GlobalAttributesContainerName=NC_GLOBAL
+
+# Directory into which the cache files will be stored.
+NCML.DimensionCache.directory=@abs_top_srcdir@/modules/ncml_module/tests/cache
+
+# Filename prefix to be used for the cache files
+NCML.DimensionCache.prefix=ncml_dimension_cache
+
+# This is the size of the cache in megabytes; e.g., 2,000 is a 2GB cache
+NCML.DimensionCache.size=2000

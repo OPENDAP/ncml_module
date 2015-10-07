@@ -175,6 +175,8 @@ AggMemberDatasetWithDimensionCacheBase::findDimension(const std::string& dimName
             ret = &(*it);
         }
     }
+    BESDEBUG(DEBUG_CHANNEL,"AggMemberDatasetWithDimensionCacheBase::findDimension(dimName="<<dimName<<") -  " << (ret?"Found " + ret->name:"Dimension Not Found") << endl);
+
     return ret;
 }
 
