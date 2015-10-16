@@ -939,10 +939,19 @@ static bool isDAPType(const string& type)
 /* static */
 string NCMLParser::convertNcmlTypeToCanonicalType(const string& ncmlType)
 {
-    NCML_ASSERT_MSG(!ncmlType.empty(), "Logic error: convertNcmlTypeToCanonicalType disallows empty() input.");
+
+#if 0
+	// OLD WAY - Disallows attributes that do not specify type
+	NCML_ASSERT_MSG(!daType.empty(), "Logic error: convertNcmlTypeToCanonicalType disallows empty() input.");
+#endif
+
+	// NEW WAY - If the attribute does not specify a type them the type is defaulted to "string"
+	string daType = ncmlType;
+	if(daType.empty())
+		daType = "string";
 
     const TypeConverter& tc = getTypeConverter();
-    TypeConverter::const_iterator it = tc.find(ncmlType);
+    TypeConverter::const_iterator it = tc.find(daType);
 
     if (it == tc.end()) {
         return ""; // error condition
