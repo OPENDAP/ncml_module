@@ -14,6 +14,7 @@
 
 #include "util.h"
 #include "BESInternalError.h"
+#include "BESUtil.h"
 #include "BESDebug.h"
 #include "TheBESKeys.h"
 
@@ -233,7 +234,7 @@ bool AggMemberDatasetDimensionCache::is_valid(const string &cache_file_name, con
 {
     // If the cached response is zero bytes in size, it's not valid.
     // (hmmm...)
-	string datasetFileName = assemblePath(d_dataRootDir,local_id, true);
+	string datasetFileName = BESUtil::assemblePath(d_dataRootDir,local_id, true);
 
     off_t entry_size = 0;
     time_t entry_time = 0;
