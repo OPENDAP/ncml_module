@@ -30,7 +30,8 @@
 #ifndef __NCML_MODULE__NCML_DEBUG__
 #define __NCML_MODULE__NCML_DEBUG__
 
-#include <assert.h>
+#include "config.h"
+
 #include <sstream>
 #include <string>
 #include "BESDebug.h"
@@ -42,7 +43,11 @@
  * Some basic macros to reduce code clutter, cut & pasting, and to greatly improve readability.
  * I would have made them functions somewhere, but the __FILE__ and __LINE__ are useful.
  * We can also specialize these based on debug vs release builds etc. or new error types later as well.
- * */
+ */
+
+// I modified these macros so that the assert-like things compile to null statements
+// when NDEBUG is defined. The bes configure script's --enable-developer will suppress
+// that, otherwise it is defined. 10/16/15 jhrg
 
 // Where my BESDEBUG output goes
 #define NCML_MODULE_DBG_CHANNEL "ncml"
@@ -55,7 +60,8 @@
 // Switch this out if it gets too ugly...
 #define NCML_MODULE_FUNCTION_NAME_MACRO __PRETTY_FUNCTION__
 // #define NCML_MODULE_FUNCTION_NAME_MACRO __func__
-#define BESDEBUG_FUNC(channel, info) BESDEBUG( (channel), "[" << std::string(NCML_MODULE_FUNCTION_NAME_MACRO) << "]: " << info )
+
+// These are called only when performance no longer matters... 10/16/15 jhrg
 
 // Spew the std::string msg to debug channel then throw BESInternalError.  for those errors that are internal problems, not user/parse errors.
 #define THROW_NCML_INTERNAL_ERROR(msg) { \
@@ -76,15 +82,34 @@
               __FILE__, \
               __LINE__); }
 
+
+#ifdef NDEBUG
+#define BESDEBUG_FUNC(channel, info)
+#else
+#define BESDEBUG_FUNC(channel, info) BESDEBUG( (channel), "[" << std::string(NCML_MODULE_FUNCTION_NAME_MACRO) << "]: " << info )
+#endif
+
+#ifdef NDEBUG
+#define NCML_ASSERT(cond)
+#else
 // My own assert to throw an internal error instead of assert() which calls abort(), which is not so nice to do on a server.
 #define NCML_ASSERT(cond)   { if (!(cond)) { THROW_NCML_INTERNAL_ERROR(std::string("ASSERTION FAILED: ") + std::string(#cond)); } }
+#endif
 
+#ifdef NDEBUG
+#define NCML_ASSERT_MSG(cond, msg)
+#else
 // An assert that can carry a std::string msg
 #define NCML_ASSERT_MSG(cond, msg)  { if (!(cond)) { \
   BESDEBUG(NCML_MODULE_DBG_CHANNEL, __PRETTY_FUNCTION__ << ": " << (msg) << endl); \
   THROW_NCML_INTERNAL_ERROR(std::string("ASSERTION FAILED: condition=( ") + std::string(#cond) + std::string(" ) ") + std::string(msg)); } }
+#endif
 
+#ifdef NDEBUG
+#define VALID_PTR(ptr)
+#else
 // Quick macro to check pointers before dereferencing them.
 #define VALID_PTR(ptr) NCML_ASSERT_MSG((ptr), std::string("Null pointer:" + std::string(#ptr)));
+#endif
 
 #endif // __NCML_MODULE__NCML_DEBUG__
