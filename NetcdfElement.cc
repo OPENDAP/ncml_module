@@ -563,8 +563,7 @@ bool NetcdfElement::validateAttributeContextOrThrow() const
 vector<string> NetcdfElement::getValidAttributes()
 {
     vector<string> validAttrs;
-    validAttrs.reserve(9);
-
+    validAttrs.push_back("schemaLocation");
     validAttrs.push_back("location");
     validAttrs.push_back("id");
     validAttrs.push_back("title");
