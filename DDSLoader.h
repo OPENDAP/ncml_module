@@ -121,7 +121,7 @@ public:
     {
         return _dhi;
     }
-
+#if 0
     /**
      * @brief Load and return a new DDX or DataDDS structure for the local dataset referred to by location.
      *
@@ -140,7 +140,7 @@ public:
      * @exception if the underlying location cannot be loaded.
      */
     std::auto_ptr<BESDapResponse> load(const std::string& location, ResponseType type);
-
+#endif
     /** @brief Load a DDX or DataDDS response into the given pResponse object, which must be non-null.
      *
      *  Similar to load(), but the caller passes in the response object to fill rather than wanting a new one.

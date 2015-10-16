@@ -39,7 +39,6 @@
 #include <BESDataDDSResponse.h>
 #include <BESDataHandlerInterface.h>
 #include <BESDDSResponse.h>
-#include <BESDebug.h>
 #include <BESStopWatch.h>
 #include <BESInternalError.h>
 #include <BESResponseHandler.h>
@@ -50,7 +49,9 @@
 #include <BESUtil.h>
 #include <BESVersionInfo.h>
 
-//#include <mime_util.h>
+#include <BESDebug.h>
+#include <BESLog.h>
+
 #include "NCMLDebug.h"
 #include "NCMLUtil.h"
 
@@ -130,6 +131,8 @@ DDSLoader::~DDSLoader()
     ensureClean();
 }
 
+#if 0
+// Never used. 10/16/15 jhrg
 auto_ptr<BESDapResponse> DDSLoader::load(const string& location, ResponseType type)
 {
     // We need to make the proper response object as well, since in this call the dhi is coming in with the
@@ -138,6 +141,7 @@ auto_ptr<BESDapResponse> DDSLoader::load(const string& location, ResponseType ty
     loadInto(location, type, response.get());
     return response; // relinquish
 }
+#endif
 
 void DDSLoader::loadInto(const std::string& location, ResponseType type, BESDapResponse* pResponse)
 {
@@ -165,24 +169,12 @@ void DDSLoader::loadInto(const std::string& location, ResponseType type, BESDapR
     _dhi.action = getActionForType(type);
     _dhi.action_name = getActionNameForType(type);
 
-    // TODO mpj do we need to do these calls?
-    BESDEBUG("ncml", "about to set dap version to: " << pResponse->get_dap_client_protocol() << endl);
-    BESDEBUG("ncml", "about to set xml:base to: " << pResponse->get_request_xml_base() << endl);
-
     // Figure out which underlying type of response it is to get the DDS (or DataDDS via DDS super).
     DDS* pDDS = ncml_module::NCMLUtil::getDDSFromEitherResponse(pResponse);
     if (!pDDS) {
         THROW_NCML_INTERNAL_ERROR("DDSLoader::load expected BESDDSResponse or BESDataDDSResponse but got neither!");
     }
     pDDS->set_request_xml_base(pResponse->get_request_xml_base());
-
-#if 0
-    // I think this should be removed. pDDSResponse was likely changed to pResponse
-    // and pDDS is the same object. The BES will set these for us.
-    // I took these out since they seem to have changed and I am not sure what the right thing to do is...
-    pDDS->set_dap_major( pDDSResponse->get_dds()->get_dap_major() );
-    pDDS->set_dap_minor( pDDSResponse->get_dds()->get_dap_major() );
-#endif
 
     // DO IT!
     try {
@@ -194,7 +186,9 @@ void DDSLoader::loadInto(const std::string& location, ResponseType type, BESDapR
         BESDEBUG("ncml", "After BESRequestHandlerList::TheList()->execute_current" << endl);
     }
     catch (BESError &e) {
-        cerr << "BESError: " << e.get_file() << ":" << e.get_line() << ": " << e.get_message();
+        *(BESLog::TheLog()) << "WARNING - " << string(__PRETTY_FUNCTION__) << ": " << e.get_file() << ":" << e.get_line() << ": "
+            << e.get_message() << " (the exception was re-thrown)."<< endl;
+        throw e;
     }
 
     // Put back the dhi state we hijacked
@@ -259,8 +253,8 @@ void DDSLoader::removeContainerFromStorage() throw ()
             _store->del_container(_containerSymbol);
         }
         catch (BESError& besErr) {
-            BESDEBUG("ncml",
-                "WARNING: tried to remove symbol " << _containerSymbol << " from singleton but unexpectedly it was not there." << endl);
+            *(BESLog::TheLog()) << "WARNING: tried to remove symbol " << _containerSymbol
+                << " from singleton but unexpectedly it was not there." << endl;
         }
         _containerSymbol = "";
         _store = 0;
@@ -294,6 +288,15 @@ void DDSLoader::restoreDHI()
     if (!_hijacked) {
         return;
     }
+
+    // Before we overwrite the 'high jacked' DHI's container, call
+    // release(). If this is a simple file, it's no big deal to
+    // skip this (because the file is closed elsewhere). But, if the
+    // DHI is working with a _compressed_ file, it is a big deal
+    // because this is the call the closes and the cached uncompressed
+    // file and frees the lock. This was the bug associated with
+    // ticket HR-64. jhrg 10/16/15
+    _dhi.container->release();
 
     // Restore saved state
     _dhi.container = _origContainer;
