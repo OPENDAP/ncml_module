@@ -238,7 +238,7 @@ void VariableElement::processExistingVariable(NCMLParser& p, BaseType* pVar)
         THROW_NCML_PARSE_ERROR(_parser->getParseLineNumber(),
             "Type Mismatch in variable element with name=" + _name + " at scope=" + p.getScopeString()
                 + " Expected type=" + _type + " but found variable with type=" + pVar->type_name()
-                + "  To match a variable of any type, please do not specify variable@type.");
+                + "  In order to match a variable of any type, please do not specify variable@type attribute in your NcML file.");
     }
 
     // Use this variable as the new scope until we get a handleEnd()
