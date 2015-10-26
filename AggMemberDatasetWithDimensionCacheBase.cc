@@ -223,7 +223,7 @@ static bool sIsDimNameLessThan(const Dimension& lhs, const Dimension& rhs)
 
 void AggMemberDatasetWithDimensionCacheBase::saveDimensionCacheInternal(std::ostream& ostr)
 {
-    BESDEBUG("agg_util", "Saving dimension cache for dataset location = " << getLocation() << " ..." << endl);
+    BESDEBUG("ncml", "Saving dimension cache for dataset location = " << getLocation() << " ..." << endl);
 
     // Not really necessary, but might help with trying to read output
     std::sort(_dimensionCache.begin(), _dimensionCache.end(), sIsDimNameLessThan);
@@ -245,7 +245,7 @@ void AggMemberDatasetWithDimensionCacheBase::saveDimensionCacheInternal(std::ost
 
 void AggMemberDatasetWithDimensionCacheBase::loadDimensionCacheInternal(std::istream& istr)
 {
-    BESDEBUG("agg_util", "Loading dimension cache for dataset location = " << getLocation() << endl);
+    BESDEBUG("ncml", "Loading dimension cache for dataset location = " << getLocation() << endl);
 
     // Read in the location string
     std::string loc;
@@ -261,6 +261,7 @@ void AggMemberDatasetWithDimensionCacheBase::loadDimensionCacheInternal(std::ist
         THROW_NCML_INTERNAL_ERROR(ss.str());
     }
 
+#if 0
     unsigned int n = 0;
     istr >> n >> ws;
     BESDEBUG("ncml", "AggMemberDatasetWithDimensionCacheBase::loadDimensionCacheInternal() - n: " << n << endl);
@@ -278,6 +279,63 @@ void AggMemberDatasetWithDimensionCacheBase::loadDimensionCacheInternal(std::ist
         }
         _dimensionCache.push_back(newDim);
     }
+#endif
+
+
+
+
+    unsigned int numDims = 0;
+    unsigned int dimCount = 0;
+    string dimName;
+
+    istr >> numDims >> ws;
+    if(istr.fail()){
+        THROW_NCML_INTERNAL_ERROR("Parsing dimension cache FAIL. Unable to read number of dimensions from cache file.");
+    }
+
+    while(istr.peek()!=EOF){
+        Dimension newDim;
+        istr >> newDim.name >> ws;
+        if(istr.fail()){
+            THROW_NCML_INTERNAL_ERROR("Parsing dimension cache FAIL. Unable to read dimension name from cache.");
+        }
+        BESDEBUG("ncml", "AggMemberDatasetWithDimensionCacheBase::loadDimensionCacheInternal() - newDim.name: " << newDim.name << endl);
+
+
+        if(istr.peek()==EOF){
+            THROW_NCML_INTERNAL_ERROR("Parsing dimension cache FAIL. Unexpected EOF. Expected to find dimension size value.");
+        }
+
+        istr >> newDim.size >> ws;
+        if(istr.fail()){
+            THROW_NCML_INTERNAL_ERROR("Parsing dimension cache FAIL. Unable to read dimension size from cache.");
+        }
+        BESDEBUG("ncml", "AggMemberDatasetWithDimensionCacheBase::loadDimensionCacheInternal() - newDim.size: " << newDim.size << endl);
+
+        dimCount++;
+
+        if(dimCount > numDims){
+            stringstream msg;
+            msg << "Parsing the dimension cache failed because the number of dimensions found in the cache did "
+                "not match the number indicated in the cache header. Expected " << numDims << " Found: " << dimCount;
+            BESDEBUG("ncml", "AggMemberDatasetWithDimensionCacheBase::loadDimensionCacheInternal() - " << msg.str() << endl);
+            THROW_NCML_INTERNAL_ERROR(msg.str());
+        }
+        _dimensionCache.push_back(newDim);
+    }
+
+    if(dimCount != numDims){
+        stringstream msg;
+        msg << "Parsing the dimension cache failed because the number of dimensions found in the cache did "
+            "not match the number indicated in the cache header. Expected " << numDims << " Found: " << dimCount;
+        BESDEBUG("ncml", "AggMemberDatasetWithDimensionCacheBase::loadDimensionCacheInternal() - " << msg.str() << endl);
+        THROW_NCML_INTERNAL_ERROR(msg.str());
+    }
+
+
+    BESDEBUG("ncml", "Loaded dimension cache ("<< numDims << " dimensions) for dataset location = " << getLocation() << endl);
+
+
 }
 
 }
