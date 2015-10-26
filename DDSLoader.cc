@@ -242,7 +242,7 @@ DDSLoader::addNewContainerToStorage()
     return container;
 }
 
-void DDSLoader::removeContainerFromStorage() throw ()
+void DDSLoader::removeContainerFromStorage()
 {
     // If we have non-null _store, we added the container symbol,
     // so get rid of it

@@ -511,7 +511,7 @@ VariableElement::replaceArrayIfNeeded(NCMLParser& p, libdap::BaseType* pOrgVar, 
 
     // Must make a clone() since deleteVariableAtCurrentScope from container below will destroy pOrgArray!
     auto_ptr<RenamedArrayWrapper> pNewArray = auto_ptr<RenamedArrayWrapper>(
-        new RenamedArrayWrapper(dynamic_cast<Array*>(pOrgArray->ptr_duplicate())));
+        new RenamedArrayWrapper(static_cast<Array*>(pOrgArray->ptr_duplicate())));
     p.deleteVariableAtCurrentScope(pOrgArray->name());
 
     // Make sure the new name is set.

@@ -213,7 +213,7 @@ private:
 
     /** Remove the symbol we added in addNewContainerToStorage if it's there.
      * Used in dtor, can't throw */
-    void removeContainerFromStorage() throw ();
+    void removeContainerFromStorage();
 
     /** Make sure we clean up anything we've touched.
      * On exit, everything should be in the same state as construction.
