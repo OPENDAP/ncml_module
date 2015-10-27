@@ -54,6 +54,9 @@ static const string BES_DATA_ROOT("BES.Data.RootDirectory");
 static const string BES_CATALOG_ROOT("BES.Catalog.catalog.RootDirectory");
 #endif
 
+#define MAX_DIMENSION_COUNT_KEY "NCML.DimensionCache.maxDimensions"
+#define DEFAULT_MAX_DIMENSIONS 100
+
 static const string DEBUG_CHANNEL("agg_util");
 
 namespace agg_util {
@@ -248,6 +251,17 @@ void AggMemberDatasetWithDimensionCacheBase::loadDimensionCacheInternal(std::ist
 {
     BESDEBUG("ncml", "Loading dimension cache for dataset location = " << getLocation() << endl);
 
+    string maxDimsStr;
+    unsigned int maxDims;
+    bool found;
+    TheBESKeys::TheKeys()->get_value(MAX_DIMENSION_COUNT_KEY,maxDimsStr, found);
+    if(found){
+        maxDims = stoul(maxDimsStr,0);
+    }
+    else {
+        maxDims = DEFAULT_MAX_DIMENSIONS;
+    }
+
     // Read in the location string
     std::string loc;
     getline(istr, loc, '\n');
@@ -282,9 +296,6 @@ void AggMemberDatasetWithDimensionCacheBase::loadDimensionCacheInternal(std::ist
     }
 #endif
 
-
-
-
     unsigned int numDims = 0;
     unsigned int dimCount = 0;
     string dimName;
@@ -292,6 +303,12 @@ void AggMemberDatasetWithDimensionCacheBase::loadDimensionCacheInternal(std::ist
     istr >> numDims >> ws;
     if(istr.fail()){
         THROW_NCML_INTERNAL_ERROR("Parsing dimension cache FAIL. Unable to read number of dimensions from cache file.");
+    }
+    if(numDims>maxDims){
+        stringstream msg;
+        msg << "Parsing dimension cache FAIL. Dimension count exceeds limits. Changing value of the ncml module configuration "
+            "key " << MAX_DIMENSION_COUNT_KEY << " may help. numDims: "<< numDims << "  maxDims: "<< maxDims;
+        THROW_NCML_INTERNAL_ERROR(msg.str());
     }
 
     while(istr.peek()!=EOF){
