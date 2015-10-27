@@ -385,7 +385,7 @@ void GridAggregationBase::duplicate(const GridAggregationBase& rhs)
     _memberDatasets = rhs._memberDatasets;
 }
 
-void GridAggregationBase::cleanup() throw ()
+void GridAggregationBase::cleanup()
 {
     _loader.cleanup();
 
