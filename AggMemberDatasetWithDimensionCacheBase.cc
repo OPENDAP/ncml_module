@@ -252,11 +252,17 @@ void AggMemberDatasetWithDimensionCacheBase::loadDimensionCacheInternal(std::ist
     BESDEBUG("ncml", "Loading dimension cache for dataset location = " << getLocation() << endl);
 
     string maxDimsStr;
-    unsigned int maxDims;
+    unsigned long maxDims;
     bool found;
     TheBESKeys::TheKeys()->get_value(MAX_DIMENSION_COUNT_KEY,maxDimsStr, found);
     if(found){
-        maxDims = stoul(maxDimsStr,0);
+        maxDims = strtoul(maxDimsStr.c_str(), 0, 0);
+        if (maxDims == 0)
+            throw BESError(string("The value '") + maxDimsStr + "' is not valid: " + strerror(errno),
+                BES_SYNTAX_USER_ERROR, __FILE__, __LINE__);
+        // Replace 2011 string function for Debian (and CentOS?).
+        // jhrg 10/27/15
+        // maxDims = stoul(maxDimsStr,0);
     }
     else {
         maxDims = DEFAULT_MAX_DIMENSIONS;
@@ -296,7 +302,7 @@ void AggMemberDatasetWithDimensionCacheBase::loadDimensionCacheInternal(std::ist
     }
 #endif
 
-    unsigned int numDims = 0;
+    unsigned long numDims = 0;
     unsigned int dimCount = 0;
     string dimName;
 
