@@ -1,3 +1,139 @@
+2015-10-27  Nathan Potter  <ndp@opendap.org>
+
+	Improved bounds checking for ncml dimension cache ingest
+
+	Merge branch 'master' of https://github.com/opendap/ncml_module
+
+	Improved bounds checking for ncml dimension cache ingest
+
+2015-10-26  James Gallagher  <jgallagher@opendap.org>
+
+	Fixed a coverity issue (mistaken throw())
+
+	Fixed a break in tests/Makefile.am
+	Needed to add the cache directory to EXTRA_DIST
+
+2015-10-26  Nathan Potter  <ndp@opendap.org>
+
+	Merge branch 'master' of https://github.com/opendap/ncml_module
+
+	Improved inout handling in loadDimensionCacheInternal()
+
+2015-10-26  James Gallagher  <jgallagher@opendap.org>
+
+	Removed unused stuff
+
+2015-10-25  Nathan Potter  <ndp@opendap.org>
+
+	bug fixes
+
+2015-10-20  Nathan Potter  <ndp@opendap.org>
+
+	Amended error message for type match conflicts so that it's more informative.
+
+2015-10-16  James Gallagher  <jgallagher@opendap.org>
+
+	I modified NCMLDebug.h so that the NCML_ASSERT() macros use NDEBUG
+	That is, so that when NDEBUG is defined, the assertions are not used,
+	as would be the case if assert() was used. The bes configure script
+	--enable-developer controls whether NDEBUG is defined.
+
+	Fix for HR-64. The DDSLoader class was not closing the cached uompressed file.
+	HR-64 has more details, but the short version is that DDSLoader::
+	restoreDHI() was not calling BESContainer::release(). Now it is
+	and all of the four cases in the ticket can run without any left over
+	open files. (but see HR-65 - bes.conf and bes.log are open multiple
+	times, which seems odd).
+
+2015-10-16  Nathan Potter  <ndp@opendap.org>
+
+	Merge branch 'cachename_bug'
+
+	Modifyied the NCMLParser so that if an Attribute declaration does
+	not specify a type then the type defaults to string.
+
+	Added 'schemaLocation' to the list of valid attributes for NcML.
+
+2015-10-15  Nathan Potter  <ndp@opendap.org>
+
+	Merge branch 'master' into cachename_bug
+
+	Added new tests to tests/aggregations.at
+
+	Added new tests to ensure that we are checking the combination of
+	a joinExisting aggregation with a scan element over a set of files
+	in which the aggregation variable's size (dimension) changes in
+	each file.
+
+2015-10-14  Nathan Potter  <ndp@opendap.org>
+
+	This patch moves the static method
+	BESFileLockingCache::assemblePath() to BESUtil::assemblePath().
+	This was done to make better use of this code, for the rest of the
+	patch, a modification to
+	BESContainerStorageVolatile::add_container() to ensure the real
+	name of the resource was a proper path with no double '/' slash
+	characters.
+
+2015-10-07  Nathan Potter  <ndp@opendap.org>
+
+	Merged joinExisiting_improvements to master branch in ncml_module.
+
+	Adding cache directory to test harness
+
+	Patched bes configuration prototypes, added some instrumentation.
+
+	Patched bes configuration prototypes, added some instrumentation.
+
+2015-10-06  Nathan Potter  <ndp@opendap.org>
+
+	Pruned unsed blocks of code.
+
+	Pruned unsed blocks of code.
+
+	Comments, comments, comments
+
+2015-10-01  Nathan Potter  <ndp@opendap.org>
+
+	Committing changes (mostly to bes.conf.in files) in support of changing ubiquitos use of BES.CacheDir, BES.CachePrefix, and BES.CacheSize to specifically reference the decompression cache (which is waht it actually is) so as to avoid cache configuration collisions with various handlers that also were utilizing teh same cache with different expectations. Now, by calling these BES keys BES.UncompressCache.dir, BES.UncompressCache.prefix, and BES.UncompressCache.size we specifically isolate the decompression cache configuration from the other caches.
+
+	Rewinding changes for BESFileLocking API in favor of less invasive use of the cache prefix as base for control file name.
+
+2015-09-29  Nathan Potter  <ndp@opendap.org>
+
+	Refactored code to eliminate changes to the API
+
+	Refactored dimension caching to use a child of BESFileLockingCache for multiprocess safety. Works. woot.
+
+2015-09-26  Nathan Potter  <ndp@opendap.org>
+
+	Small changes to dimension caching
+
+2015-09-24  Nathan Potter  <ndp@opendap.org>
+
+	Merged master to joinExisiting_improvements branch
+
+	Reworked caching to use a separate disk file for each granule's (data file's) dimension cache. This way if the file is used in multiple aggregations it only needs a single cache, if the file get's dropped from the aggregation (ala FMRC) no harm is done, and if the source data for a single granule/file changes then only that one dimension cache file needs to be updated.
+
+2015-09-23  Nathan Potter  <ndp@opendap.org>
+
+	First crack at caching granule dimensions is working
+
+2015-09-23  James Gallagher  <jgallagher@opendap.org>
+
+	Fixes to Makefile.am in the autotest dirs; clean removes bes.conf
+
+2015-09-23  Nathan Potter  <ndp@opendap.org>
+
+	Starting to hookup dimension caching prototype
+
+2015-09-20  James Gallagher  <jgallagher@opendap.org>
+
+	Version 1.3.0
+
+2015-09-17  James Gallagher  <jgallagher@opendap.org>
+
+	Fixes for issues found by Coverity
 2015-09-17  James Gallagher  <jgallagher@opendap.org>
 
 	Fixes for issues found by Coverity

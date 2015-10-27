@@ -1,3 +1,14 @@
+
+News for version 1.4.0
+
+More response-time reductions - the 1.3 release focused on JoinNew,
+this release introduces performance enhancements for JoinExisting. 
+Caching is employed to drop the response times for JoinExisting 
+aggregations once aninitial request is made.
+
+Other fixes are included; The NCML is parser is better behaved.
+See teh ChangeLog for a list of bug fixes.
+
 Version 1.3.0 (19 Sept 2015)
 
 This version specializes the serialization of values - normally
