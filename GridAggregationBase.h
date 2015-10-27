@@ -157,7 +157,7 @@ private:
     void duplicate(const GridAggregationBase& rhs);
 
     /** Delete any heap memory */
-    void cleanup() throw ();
+    void cleanup();
 
     static libdap::Grid* cloneSubGridProto(const libdap::Grid& proto);
 
