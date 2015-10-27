@@ -14,7 +14,7 @@ variable_rename.at
 EXTRA_DIST = $(TESTSUITE).at $(TEST_FILES) $(srcdir)/package.m4 \
 $(TESTSUITE) atlocal.in template.bescmd.in bes.conf.in \
 bes_no_nc_global.conf.in bes.conf.modules.in \
-bes_no_nc_global.conf.modules.in baselines
+bes_no_nc_global.conf.modules.in baselines cache
 
 noinst_DATA = bes.conf bes_no_nc_global.conf
 
