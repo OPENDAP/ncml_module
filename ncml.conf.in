@@ -57,5 +57,6 @@ NCML.DimensionCache.prefix=ncml_dimension_cache
 # This is the size of the cache in megabytes; e.g., 2,000 is a 2GB cache
 NCML.DimensionCache.size=2000
 
-# Maximum number of dimension allowed in any particular dataset. Defaults to 100.
+# Maximum number of dimension allowed in any particular dataset. 
+# If not set in this configuration the value defaults to 100.
 # NCML.DimensionCache.maxDimensions=100
