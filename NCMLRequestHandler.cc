@@ -50,6 +50,7 @@
 #include "BESStopWatch.h"
 #include <BESInternalError.h>
 #include <BESDapError.h>
+#include <BESError.h>
 #include <BESRequestHandlerList.h>
 #include <BESResponseHandler.h>
 #include <BESResponseNames.h>
@@ -338,6 +339,9 @@ bool NCMLRequestHandler::ncml_build_dmr(BESDataHandlerInterface &dhi)
     }
     catch (Error &e) {
         throw BESDapError(e.get_error_message(), false, e.get_error_code(), __FILE__, __LINE__);
+    }
+    catch (BESError &e){
+        throw;
     }
     catch (...) {
         throw BESDapError("Caught unknown error build ** DMR response", true, unknown_error, __FILE__, __LINE__);
