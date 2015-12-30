@@ -48,6 +48,10 @@ static const bool PRINT_CONSTRAINTS = false;
 extern BESStopWatch *bes_timing::elapsedTimeToReadStart;
 extern BESStopWatch *bes_timing::elapsedTimeToTransmitStart;
 
+// Timeouts are now handled in/by the BES framework in BESInterface.
+// jhrg 12/29/15
+#undef USE_LOCAL_TIMEOUT_SCHEME
+
 namespace agg_util {
 
 ArrayAggregateOnOuterDimension::ArrayAggregateOnOuterDimension(const libdap::Array& proto,
@@ -178,13 +182,14 @@ bool ArrayAggregateOnOuterDimension::serialize(libdap::ConstraintEvaluator &eval
             AggMemberDataset& dataset = *((getDatasetList())[i]);
 
             try {
+#if USE_LOCAL_TIMEOUT_SCHEME
                 dds.timeout_on();
-
+#endif
                 Array* pDatasetArray = AggregationUtil::readDatasetArrayDataForAggregation(getGranuleTemplateArray(),
                     name(), dataset, getArrayGetterInterface(), DEBUG_CHANNEL);
-
+#if USE_LOCAL_TIMEOUT_SCHEME
                 dds.timeout_off();
-
+#endif
 #if PIPELINING
                 delete bes_timing::elapsedTimeToTransmitStart;
                 bes_timing::elapsedTimeToTransmitStart = 0;

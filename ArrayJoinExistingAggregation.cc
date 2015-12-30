@@ -40,9 +40,12 @@
 #include "AggregationUtil.h" // agg_util
 #include "NCMLDebug.h"
 
-
 static const string DEBUG_CHANNEL(NCML_MODULE_DBG_CHANNEL_2);
 static const bool PRINT_CONSTRAINTS = false;
+
+// Timeouts are now handled in/by the BES framework in BESInterface.
+// jhrg 12/29/15
+#undef USE_LOCAL_TIMEOUT_SCHEME
 
 namespace agg_util {
 
@@ -234,8 +237,9 @@ bool ArrayJoinExistingAggregation::serialize(libdap::ConstraintEvaluator &eval, 
                     // mapped endpoint clamped within this granule
                     granuleConstraintTemplate.add_constraint(outerDimIt, localGranuleIndex, clampedStride,
                         granuleStopIndex);
-
+#if USE_LOCAL_TIMEOUT_SCHEME
                     dds.timeout_on();
+#endif
 #if 0
                     // Do the constrained read and copy it into this output buffer
                     agg_util::AggregationUtil::addDatasetArrayDataToAggregationOutputArray(*this,// into the output buffer of this object
@@ -249,8 +253,9 @@ bool ArrayJoinExistingAggregation::serialize(libdap::ConstraintEvaluator &eval, 
                     Array* pDatasetArray = AggregationUtil::readDatasetArrayDataForAggregation(
                         getGranuleTemplateArray(), name(), const_cast<AggMemberDataset&>(*pCurrDataset),
                         getArrayGetterInterface(), DEBUG_CHANNEL);
-
+#if USE_LOCAL_TIMEOUT_SCHEME
                     dds.timeout_off();
+#endif
 
 #if PIPELINING
                     m.put_vector_part(pDatasetArray->get_buf(), getGranuleTemplateArray().length(), var()->width(),
@@ -290,30 +295,6 @@ bool ArrayJoinExistingAggregation::serialize(libdap::ConstraintEvaluator &eval, 
 
     return status;
 }
-
-#if 0
-// Here is the version I used when moving code from
-// readConstrainedGranuleArraysAndAggregateDataHook
-// into serialize() to get the 'pipelining' version. jhrg 8/18/15
-bool ArrayJoinExistingAggregation::serialize(libdap::ConstraintEvaluator &eval, libdap::DDS &dds, libdap::Marshaller &m,
-    bool ce_eval)
-{
-    BESStopWatch sw;
-    if (BESISDEBUG(TIMING_LOG)) sw.start("ArrayJoinExistingAggregation::serialize", "");
-
-    // TODO Time out here? or in ResponseBuilder?
-    dds.timeout_on();
-
-    if (!read_p())
-        read(); // read() throws Error and InternalErr
-
-    dds.timeout_off();
-
-    bool status = libdap::Array::serialize(eval, dds, m, ce_eval);
-
-    return status;
-}
-#endif
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Private Impl Below

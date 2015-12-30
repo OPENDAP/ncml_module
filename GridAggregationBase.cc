@@ -55,6 +55,10 @@ using libdap::D4Map;
 static const string DEBUG_CHANNEL("agg_util");
 static const bool PRINT_CONSTRAINTS(false);
 
+// Timeouts are now handled in/by the BES framework in BESInterface.
+// jhrg 12/29/15
+#undef USE_LOCAL_TIMEOUT_SCHEME
+
 namespace agg_util {
 GridAggregationBase::GridAggregationBase(const libdap::Grid& proto, const AMDList& memberDatasets,
     const DDSLoader& loaderProto) :
@@ -237,9 +241,9 @@ GridAggregationBase::serialize(libdap::ConstraintEvaluator &eval, libdap::DDS &d
         if (PRINT_CONSTRAINTS) {
             printConstraints(*(get_array()));
         }
-
+#if USE_LOCAL_TIMEOUT_SCHEME
         dds.timeout_on();
-
+#endif
         // Call the subclass hook methods to do this work properly
         // *** Replace Map code readAndAggregateConstrainedMapsHook();
 
@@ -322,9 +326,9 @@ GridAggregationBase::serialize(libdap::ConstraintEvaluator &eval, libdap::DDS &d
         }
 
         // *** End replaced Map code
-
+#if USE_LOCAL_TIMEOUT_SCHEME
         dds.timeout_off();
-
+#endif
         // Set the cache bit.
         set_read_p(true);
 
@@ -340,30 +344,6 @@ GridAggregationBase::serialize(libdap::ConstraintEvaluator &eval, libdap::DDS &d
 
     return status;
 }
-
-#if 0
-// Initial version of serialize() that I hacked up during the refactor to implement
-// pipelining for Grid aggregations. I followed the same pattern as in the Array
-// aggregation code. jhrg 8/18/15
-bool
-GridAggregationBase::serialize(libdap::ConstraintEvaluator &eval, libdap::DDS &dds, libdap::Marshaller &m,
-    bool ce_eval)
-{
-    BESStopWatch sw;
-    if (BESISDEBUG(TIMING_LOG)) sw.start("GridAggregationBase::serialize", "");
-
-    dds.timeout_on();
-
-    if (!read_p())
-        read(); // read() throws Error and InternalErr
-
-    dds.timeout_off();
-
-    bool status = libdap::Grid::serialize(eval, dds, m, ce_eval);
-
-    return status;
-}
-#endif
 
 /////////////////////////////////////////
 ///////////// Helpers
