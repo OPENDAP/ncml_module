@@ -16,7 +16,7 @@ This module can be added to the currently released Hyrax 1.7
 installation to extend its data serving capability to NcML 2.2 files
 (see http://www.unidata.ucar.edu/software/netcdf/ncml/).  NcML
 provides a syntax for adding metadata and variables to existing
-datasets of any type also being locally served by a Hyrax 1.6 server.
+datasets of any type also being locally served by a Hyrax server.
 NcML also specifies several ways of aggregating existing datasets.
 This module currently implements a subset of NcML 2.2 functionality
 and also extends it in some ways.

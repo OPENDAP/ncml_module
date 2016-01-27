@@ -1,3 +1,20 @@
+2015-12-30  James Gallagher  <jgallagher@opendap.org>
+
+	Removed calls to dds.timeout - timeout is now completely a BES operation.
+	See bes/dispatch/BESInterface and bes/dap/BESDapResponseBuilder
+
+2015-12-28  Nathan Potter  <ndp@opendap.org>
+
+	Patched error handling problems in Transmitter implmentations. In particular: 
+	1) Ensured that libdap::Error objects are converted to BESDapError objects 
+	when caught. and 2) Catch and rethrow BESError objects whenever they could 
+	be thrown so they don't get swept up as unidentified errors in a catch(...) 
+	clause.
+
+2015-12-02  Nathan Potter  <ndp@opendap.org>
+
+	Removing unused BES keys from conf file.
+	
 2015-10-27  Nathan Potter  <ndp@opendap.org>
 
 	Improved bounds checking for ncml dimension cache ingest
