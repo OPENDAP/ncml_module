@@ -184,7 +184,7 @@ AggMemberDatasetWithDimensionCacheBase::findDimension(const std::string& dimName
             ret = &(*it);
         }
     }
-    BESDEBUG(DEBUG_CHANNEL,"AggMemberDatasetWithDimensionCacheBase::findDimension(dimName="<<dimName<<") -  " << (ret?"Found " + ret->name:"Dimension Not Found") << endl);
+    BESDEBUG(DEBUG_CHANNEL,"AggMemberDatasetWithDimensionCacheBase::findDimension(dimName='"<<dimName<<"') -  " << (ret?"Found " + ret->name:"Dimension Not Found") << endl);
 
     return ret;
 }
@@ -321,6 +321,7 @@ void AggMemberDatasetWithDimensionCacheBase::loadDimensionCacheInternal(std::ist
             "key " << MAX_DIMENSION_COUNT_KEY << " may help. numDims: "<< numDims << "  maxDims: "<< maxDims;
         THROW_NCML_INTERNAL_ERROR(msg.str());
     }
+    BESDEBUG("ncml", "AggMemberDatasetWithDimensionCacheBase::loadDimensionCacheInternal() - numDims: " << numDims << endl);
 
     while(istr.peek()!=EOF){
         Dimension newDim;
