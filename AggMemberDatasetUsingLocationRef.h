@@ -36,11 +36,9 @@
 class BESDataDDSResponse;
 
 namespace libdap {
-class DataDDS;
 class DDS;
 }
 
-using libdap::DataDDS;
 using libdap::DDS;
 
 namespace agg_util {
@@ -48,10 +46,10 @@ namespace agg_util {
 /**
  * class AggMemberDatasetUsingLocationRef:
  * Concrete subclass of AggMemberDataset for lazy-loading
- * a location (file) if the DataDDS for the given dataset is needed.
+ * a location (file) if the DDS for the given dataset is needed.
  *
  * Note: assignment and copy construction do not copy any loaded
- * DataDDS, merely the location.  Therefore, if getDataDDS() is
+ * DDS, merely the location.  Therefore, if getDDS() is
  * used for one of these and modified, a copy of this will see
  * the ORIGINAL dataset (will reload it) and NOT any changes to
  * the version it copied from!
@@ -69,18 +67,18 @@ public:
 
     virtual ~AggMemberDatasetUsingLocationRef();
 
-    /** If not loaded yet, loads the DataDDS response,
+    /** If not loaded yet, loads the DDS response,
      * then returns it.
-     * @return the DataDDS for the location.
+     * @return the DDS for the location.
      */
-    virtual const libdap::DataDDS* getDataDDS();
+    virtual const libdap::DDS* getDDS();
 
 private:
     // helpers
 
-    /** Load the given location as a data response so that we have a valid DataDDS
+    /** Load the given location as a data response so that we have a valid DDS
      * for streaming data from */
-    void loadDataDDS();
+    void loadDDS();
 
     /** copy the local data rep from rhs */
     void copyRepFrom(const AggMemberDatasetUsingLocationRef& rhs);

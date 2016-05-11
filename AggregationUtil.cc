@@ -92,7 +92,7 @@ TopLevelArrayGetter::clone() const
 
 /* virtual */
 libdap::Array*
-TopLevelArrayGetter::readAndGetArray(const std::string& name, const libdap::DataDDS& dds,
+TopLevelArrayGetter::readAndGetArray(const std::string& name, const libdap::DDS& dds,
     const libdap::Array* const pConstraintTemplate, const std::string& debugChannel) const
 {
 
@@ -158,7 +158,7 @@ TopLevelGridDataArrayGetter::clone() const
 
 /* virtual */
 libdap::Array*
-TopLevelGridDataArrayGetter::readAndGetArray(const std::string& name, const libdap::DataDDS& dds,
+TopLevelGridDataArrayGetter::readAndGetArray(const std::string& name, const libdap::DDS& dds,
     const libdap::Array* const pConstraintTemplate, const std::string& debugChannel) const
 {
     BESStopWatch sw;
@@ -241,7 +241,7 @@ TopLevelGridMapArrayGetter::clone() const
 
 /* virtual */
 libdap::Array*
-TopLevelGridMapArrayGetter::readAndGetArray(const std::string& arrayName, const libdap::DataDDS& dds,
+TopLevelGridMapArrayGetter::readAndGetArray(const std::string& arrayName, const libdap::DDS& dds,
     const libdap::Array* const pConstraintTemplate, const std::string& debugChannel) const
 {
 
@@ -873,12 +873,12 @@ Array* AggregationUtil::readDatasetArrayDataForAggregation(const Array& constrai
     BESStopWatch sw;
     if (BESISDEBUG(TIMING_LOG)) sw.start("AggregationUtil::readDatasetArrayDataForAggregation", "");
 
-    const libdap::DataDDS* pDataDDS = dataset.getDataDDS();
-    NCML_ASSERT_MSG(pDataDDS, "GridAggregateOnOuterDimension::read(): Got a null DataDDS "
+    const libdap::DDS* pDDS = dataset.getDDS();
+    NCML_ASSERT_MSG(pDDS, "GridAggregateOnOuterDimension::read(): Got a null DataDDS "
         "while loading dataset = " + dataset.getLocation());
 
     // Grab the Array from the DataDDS with the getter
-    Array* pDatasetArray = arrayGetter.readAndGetArray(varName, *pDataDDS, &constrainedTemplateArray, debugChannel);
+    Array* pDatasetArray = arrayGetter.readAndGetArray(varName, *pDDS, &constrainedTemplateArray, debugChannel);
     NCML_ASSERT_MSG(pDatasetArray, "In aggregation member dataset, failed to get the array! "
         "Dataset location = " + dataset.getLocation());
 

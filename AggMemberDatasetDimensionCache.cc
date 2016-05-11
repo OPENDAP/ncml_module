@@ -315,7 +315,7 @@ void AggMemberDatasetDimensionCache::loadDimensionCache(AggMemberDataset *amd){
         	// We need to build the DDS object and extract the dimensions.
         	// We do not lock before this operation because it may take a _long_ time and
         	// we don't want to monopolize the cache while we do it.
-        	amd->fillDimensionCacheByUsingDataDDS();
+        	amd->fillDimensionCacheByUsingDDS();
 
         	// Now, we try to make an empty cache file and get an exclusive lock on it.
         	if (create_and_lock(cache_file_name, fd)) {

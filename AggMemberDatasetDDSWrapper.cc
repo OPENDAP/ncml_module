@@ -76,15 +76,15 @@ namespace agg_util
   }
 
 
-  const libdap::DataDDS*
-  AggMemberDatasetDDSWrapper::getDataDDS()
+  const libdap::DDS*
+  AggMemberDatasetDDSWrapper::getDDS()
   {
     const libdap::DDS* pDDS = 0;
     if (_pDDSHolder)
       {
         pDDS = _pDDSHolder->getDDS();
       }
-    return dynamic_cast<const libdap::DataDDS*>(pDDS);
+    return dynamic_cast<const libdap::DDS *>(pDDS);
   }
 
   /////////////////////////////// Private Helpers ////////////////////////////////////

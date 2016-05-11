@@ -347,7 +347,7 @@ std::auto_ptr<BESDapResponse> DDSLoader::makeResponseForType(ResponseType type)
         return auto_ptr<BESDapResponse>(new BESDDSResponse(new DDS(new BaseTypeFactory(), "virtual")));
     }
     else if (type == eRT_RequestDataDDS) {
-        return auto_ptr<BESDapResponse>(new BESDataDDSResponse(new DataDDS(new BaseTypeFactory(), "virtual")));
+        return auto_ptr<BESDapResponse>(new BESDataDDSResponse(new DDS(new BaseTypeFactory(), "virtual")));
     }
     else {
         THROW_NCML_INTERNAL_ERROR("DDSLoader::makeResponseForType() got unknown type!");
