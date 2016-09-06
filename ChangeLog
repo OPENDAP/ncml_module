@@ -1,3 +1,16 @@
+2016-03-09  Nathan Potter  <ndp@opendap.org>
+
+	Instrumentation for ncml_handler
+
+2016-01-26  James Gallagher  <jgallagher@opendap.org>
+
+	Updated ChangeLog, etc., for the bes 3.17 release
+
+2015-12-30  James Gallagher  <jgallagher@opendap.org>
+
+	Removed calls to dds.timeout - timeout is now completely a BES operation.
+	See bes/dispatch/BESInterface and bes/dap/BESDapResponseBuilder
+	
 2015-12-30  James Gallagher  <jgallagher@opendap.org>
 
 	Removed calls to dds.timeout - timeout is now completely a BES operation.
