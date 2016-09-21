@@ -293,7 +293,7 @@ void DDSLoader::restoreDHI()
     // release(). If this is a simple file, it's no big deal to
     // skip this (because the file is closed elsewhere). But, if the
     // DHI is working with a _compressed_ file, it is a big deal
-    // because this is the call the closes and the cached uncompressed
+    // because this is the call that closes the cached uncompressed
     // file and frees the lock. This was the bug associated with
     // ticket HR-64. jhrg 10/16/15
     _dhi.container->release();
