@@ -31,6 +31,8 @@
 #include <memory>
 
 #include <DMR.h>
+#include <DataDDS.h>
+
 #include <mime_util.h>
 #include <D4BaseTypeFactory.h>
 
@@ -70,6 +72,7 @@
 
 using namespace agg_util;
 using namespace ncml_module;
+using namespace libdap;
 
 bool NCMLRequestHandler::_global_attributes_container_name_set = false;
 string NCMLRequestHandler::_global_attributes_container_name = "";

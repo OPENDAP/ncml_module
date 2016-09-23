@@ -27,9 +27,10 @@
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
 #include "config.h"
-#include "DDSLoader.h"
 
 #include <sstream>
+
+#include <DataDDS.h>
 
 #include <BESConstraintFuncs.h>
 #include <BESContainerStorage.h>
@@ -52,11 +53,13 @@
 #include <BESDebug.h>
 #include <BESLog.h>
 
+#include "DDSLoader.h"
 #include "NCMLDebug.h"
 #include "NCMLUtil.h"
 
 using namespace std;
 using namespace agg_util;
+using namespace libdap;
 
 // Rep Init
 
