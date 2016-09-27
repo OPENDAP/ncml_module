@@ -60,7 +60,7 @@ public:
      * If the wrapped DDS is NOT a DataDDS, we return NULL!
      * @return null or the wrapped DataDDS
      */
-    virtual const libdap::DataDDS* getDataDDS();
+    virtual const libdap::DDS* getDDS();
 
 private:
 

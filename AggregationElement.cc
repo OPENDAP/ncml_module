@@ -642,7 +642,7 @@ void AggregationElement::fillDimensionCacheForJoinExistingDimension(AMDList& gra
 				BESDEBUG("ncml", "AggregationElement::fillDimensionCacheForJoinExistingDimension() - " <<
 						"WARNING NcML Dimension Caching is not configured or is not working! Loading dimensions from DDS for dataset: " <<
 						(*it)->getLocation() << "" << endl);
-				amd->fillDimensionCacheByUsingDataDDS();
+				amd->fillDimensionCacheByUsingDDS();
 			}
 		}
     }

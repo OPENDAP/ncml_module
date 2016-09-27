@@ -29,7 +29,6 @@
 #include "AggMemberDatasetUsingLocationRef.h"
 
 #include "BESDataDDSResponse.h" // bes
-#include "DataDDS.h"
 #include "DDS.h" // libdap
 #include "NCMLDebug.h" // ncml_module
 #include "NCMLUtil.h" // ncml_module
@@ -67,14 +66,14 @@ AggMemberDatasetUsingLocationRef::operator=(const AggMemberDatasetUsingLocationR
     return *this;
 }
 
-const libdap::DataDDS*
-AggMemberDatasetUsingLocationRef::getDataDDS()
+const libdap::DDS*
+AggMemberDatasetUsingLocationRef::getDDS()
 {
 
     if (!_pDataResponse) {
-        loadDataDDS();
+        loadDDS();
     }
-    DataDDS* pDDSRet = 0;
+    DDS* pDDSRet = 0;
     if (_pDataResponse) {
         pDDSRet = _pDataResponse->get_dds();
     }
@@ -82,10 +81,10 @@ AggMemberDatasetUsingLocationRef::getDataDDS()
 }
 
 /////////////////////////////// Private Helpers ////////////////////////////////////
-void AggMemberDatasetUsingLocationRef::loadDataDDS()
+void AggMemberDatasetUsingLocationRef::loadDDS()
 {
     BESStopWatch sw;
-    if (BESISDEBUG(TIMING_LOG)) sw.start("AggMemberDatasetUsingLocationRef::loadDataDDS", "");
+    if (BESISDEBUG(TIMING_LOG)) sw.start("AggMemberDatasetUsingLocationRef::loadDDS", "");
 
     // We cannot load an empty location, so avoid the exception later.
     if (getLocation().empty()) {
@@ -106,7 +105,7 @@ void AggMemberDatasetUsingLocationRef::loadDataDDS()
     // release after potential for exception to avoid leak
     newResponse.release();
 
-    BESDEBUG("ncml", "Loading DataDDS for aggregation member location = " << getLocation() << endl);
+    BESDEBUG("ncml", "Loading loadDDS for aggregation member location = " << getLocation() << endl);
     _loader.loadInto(getLocation(), DDSLoader::eRT_RequestDataDDS, _pDataResponse);
 }
 

@@ -27,7 +27,6 @@
 // You can contact OPeNDAP, Inc. at PO Box 112, Saunderstown, RI. 02874-0112.
 /////////////////////////////////////////////////////////////////////////////
 #include "AggMemberDatasetSharedDDSWrapper.h"
-#include <DataDDS.h> // libdap
 #include <DDS.h> // libdap
 #include "DDSAccessInterface.h"
 #include "NCMLDebug.h"
@@ -80,15 +79,15 @@ namespace agg_util
   }
 
 
-  const libdap::DataDDS*
-  AggMemberDatasetSharedDDSWrapper::getDataDDS()
+  const libdap::DDS*
+  AggMemberDatasetSharedDDSWrapper::getDDS()
   {
     const libdap::DDS* pDDS = 0;
     if (_pDDSHolder)
       {
         pDDS = _pDDSHolder->getDDS();
       }
-    return dynamic_cast<const libdap::DataDDS*>(pDDS);
+    return dynamic_cast<const libdap::DDS*>(pDDS);
   }
 
   /////////////////////////////// Private Helpers ////////////////////////////////////

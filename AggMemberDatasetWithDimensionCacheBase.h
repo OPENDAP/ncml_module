@@ -49,12 +49,12 @@ public:
     AggMemberDatasetWithDimensionCacheBase& operator=(const AggMemberDatasetWithDimensionCacheBase& rhs);
 
     /* This will stay pure virtual for subclasses */
-    /* virtual const libdap::DataDDS* getDataDDS() = 0; */
+    /* virtual const libdap::DDS* getDDS() = 0; */
 
     virtual unsigned int getCachedDimensionSize(const std::string& dimName) const;
     virtual bool isDimensionCached(const std::string& dimName) const;
     virtual void setDimensionCacheFor(const Dimension& dim, bool throwIfFound);
-    virtual void fillDimensionCacheByUsingDataDDS();
+    virtual void fillDimensionCacheByUsingDDS();
     virtual void flushDimensionCache();
 
     /** Append the values in the dimension cache to the output stream */

@@ -38,7 +38,6 @@ namespace libdap {
 class Array;
 class BaseType;
 class Constructor;
-class DataDDS;
 class DDS;
 class Grid;
 }
@@ -73,14 +72,14 @@ struct ArrayGetterInterface {
      *          note: this need not be the exact FQN, but can be
      *          interpreted by subclasses as "name.name" in the
      *          case of a Grid array, e.g.
-     * @param dds  the DataDDS to search for the Array
+     * @param dds  the DDS to search for the Array
      * @param pConstraintTemplate  if not NULL, use this Array
      *            as a template from which to copy constraints
      *            onto the returned Array prior to read.
      * @param debugChannel  if !empty(), the channel to print
      *            out debug information.
      *  */
-    virtual libdap::Array* readAndGetArray(const std::string& name, const libdap::DataDDS& dds,
+    virtual libdap::Array* readAndGetArray(const std::string& name, const libdap::DDS& dds,
         const libdap::Array* const pConstraintTemplate, const std::string& debugChannel) const = 0;
 };
 // class ArrayGetterInterface
@@ -104,7 +103,7 @@ struct TopLevelArrayGetter: public ArrayGetterInterface {
      * @throw AggregationException if not found or if found but
      *          cannot be cast properly into an Array*
      */
-    virtual libdap::Array* readAndGetArray(const std::string& name, const libdap::DataDDS& dds,
+    virtual libdap::Array* readAndGetArray(const std::string& name, const libdap::DDS& dds,
         const libdap::Array* const pConstraintTemplate, const std::string& debugChannel) const;
 };
 // class TopLevelArrayGetter
@@ -118,7 +117,7 @@ struct TopLevelGridDataArrayGetter: public ArrayGetterInterface {
     /** Find the array as the data Array of a
      * TOP-LEVEL Grid with name.  Therefore,
      * the Array would have name "name.name" as an
-     * qualified name w.r.t. the DataDDS.
+     * qualified name w.r.t. the DDS.
      * @throw AggregationException if not found or illegal shape.
      * @param name name of the Grid to find the Array in.
      * @param dds  DDS to search
@@ -126,7 +125,7 @@ struct TopLevelGridDataArrayGetter: public ArrayGetterInterface {
      * @param debugChannel if !empty() the channel to print to.
      * @return the read in Array* or 0 if not found.
      */
-    virtual libdap::Array* readAndGetArray(const std::string& name, const libdap::DataDDS& dds,
+    virtual libdap::Array* readAndGetArray(const std::string& name, const libdap::DDS& dds,
         const libdap::Array* const pConstraintTemplate, const std::string& debugChannel) const;
 };
 // class TopLevelGridDataArrayGetter
@@ -147,7 +146,7 @@ struct TopLevelGridMapArrayGetter: public ArrayGetterInterface {
      * @param debugChannel if !empty() the channel to print to.
      * @return the read in Array* or 0 if not found.
      */
-    virtual libdap::Array* readAndGetArray(const std::string& name, const libdap::DataDDS& dds,
+    virtual libdap::Array* readAndGetArray(const std::string& name, const libdap::DDS& dds,
         const libdap::Array* const pConstraintTemplate, const std::string& debugChannel) const;
 
     // The name of the Grid within which the desired map is contained.
@@ -440,7 +439,7 @@ public:
         const std::string& debugChannel);
 
     /**
-     * Load the given dataset's DataDDS.
+     * Load the given dataset's DDS.
      * Find the aggVar of the given name in it, must be Array.
      * Transfer the constraints from the local template to it.
      * Call read() on it.

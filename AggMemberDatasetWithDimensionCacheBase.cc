@@ -143,10 +143,10 @@ void AggMemberDatasetWithDimensionCacheBase::setDimensionCacheFor(const Dimensio
 }
 
 /* virtual */
-void AggMemberDatasetWithDimensionCacheBase::fillDimensionCacheByUsingDataDDS()
+void AggMemberDatasetWithDimensionCacheBase::fillDimensionCacheByUsingDDS()
 {
     // Get the dds
-    DataDDS* pDDS = const_cast<DataDDS*>(getDataDDS());
+    DDS* pDDS = const_cast<DDS*>(getDDS());
     VALID_PTR(pDDS);
 
     // Recursive add on all of them

@@ -35,16 +35,14 @@
 #include <vector>
 
 namespace libdap {
-class DataDDS;
 class DDS;
 }
 
-using libdap::DataDDS;
 using libdap::DDS;
 
 namespace agg_util {
 /**
- * Abstract helper superclass for allowing lazy access to the DataDDS
+ * Abstract helper superclass for allowing lazy access to the DDS
  * for an aggregation. This is used during a read() if the dataset
  * is needed in an aggregation.
  *
@@ -54,10 +52,10 @@ namespace agg_util {
  * Currently, there are two concrete subclasses:
  *
  * o AggMemberDatasetUsingLocationRef: to load an external location
- *            into a DataDDS as needed
+ *            into a DDS as needed
  *            (lazy eval so not loaded unless in the output of read() )
  *
- * o AggMemberDatasetDDSWrapper: to hold a pre-loaded DataDDS for the
+ * o AggMemberDatasetDDSWrapper: to hold a pre-loaded DDS for the
  *            case of virtual or pre-loaded datasets
  *            (data declared in NcML file, nested aggregations, e.g.)
  *            In this case, getLocation() is presumed empty().
@@ -76,16 +74,16 @@ public:
     const std::string& getLocation() const;
 
     /**
-     * Return the DataDDS for the location, loading it in
+     * Return the DDS for the location, loading it in
      * if it hasn't yet been loaded.
      * Can return NULL if there's a problem.
      * (Not const due to lazy eval)
-     * @return the DataDDS ptr containing the loaded dataset or NULL.
+     * @return the DDS ptr containing the loaded dataset or NULL.
      */
-    virtual const libdap::DataDDS* getDataDDS() = 0;
+    virtual const libdap::DDS* getDDS() = 0;
 
-    // TODO Consider adding freeDataDDS() or equivalent
-    // to clear the memory made by getDataDDS if it was
+    // TODO Consider adding freeDDS() or equivalent
+    // to clear the memory made by getDDS if it was
     // loaded so we can tighten up the memory usage
     // for large AMD Lists.
 
@@ -93,11 +91,11 @@ public:
      * Get the size of the given dimension named dimName
      * cached within the dataset.  If not found in cache, throws.
      *
-     * If a cached value exists from a prior load of the DataDDS
-     * using loadDimensionCacheFromDataDDS() or from a call to
+     * If a cached value exists from a prior load of the DDS
+     * using loadDimensionCacheFromDDS() or from a call to
      * setDimensionCacheFor(), return that.
      *
-     * Otherwise, this must load the DataDDS to get the values.
+     * Otherwise, this must load the DDS to get the values.
      *
      * Implementation is left up to subclasses for efficiency.
      *
@@ -128,12 +126,12 @@ public:
     virtual void setDimensionCacheFor(const Dimension& dim, bool throwIfFound) = 0;
 
     /**
-     * Uses the getDataDDS() call in order to find all named dimensions
+     * Uses the getDDS() call in order to find all named dimensions
      * within it and to seed them into the dimension cache table for
      * faster later lookups.
      * Potentially slow!
      */
-    virtual void fillDimensionCacheByUsingDataDDS() = 0;
+    virtual void fillDimensionCacheByUsingDDS() = 0;
 
     /**
      * Flush out any cache for the Dimensions so that it will
@@ -150,7 +148,7 @@ public:
 
 private:
     // data rep
-    std::string _location; // non-empty location from which to load DataDDS
+    std::string _location; // non-empty location from which to load DDS
 };
 
 // List is ref-counted ptrs to AggMemberDataset concrete subclasses.
